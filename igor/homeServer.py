@@ -5,6 +5,7 @@ import os
 import re
 import uuid
 import json
+import dbimpl
 
 urls = (
 	'/scripts/(.*)', 'runScript',
@@ -39,26 +40,6 @@ class runScript:
 		except OSError, arg:
 			return web.HTTPError("502 Error running command: %s: %s" % (command, arg.strerror))
 		return rv
-
-VALID_KEY = re.compile('[a-zA-Z0-9_/-]{0,255}')
-def is_valid_key(key):
-	"""Checks to see if the parameter follows the allow pattern of
-	keys.
-	"""
-	if VALID_KEY.match(key) is not None:
-		return True
-	return False
-
-def validate_key(fn):
-	"""Decorator for HTTP methods that validates if resource
-	name is a valid database key. Used to protect against
-	directory traversal.
-	"""
-	def new(*args):
-		if not is_valid_key(args[1]):
-			return web.badrequest()
-		return fn(*args)
-	return new
 	
 class AbstractDB(object):
 	"""Abstract database that handles the high-level HTTP primitives.
@@ -78,7 +59,6 @@ class AbstractDB(object):
 		print 'returned', repr(rv)
 		return rv
 
-	@validate_key
 	def POST(self, name, data=None):
 		if data is None: data = web.data()
 		print 'data=', repr(data)
@@ -86,7 +66,6 @@ class AbstractDB(object):
 		if errorreturn: return errorreturn
 		return str(name)
 
-	@validate_key
 	def DELETE(self, name, data=None):
 		return self.delete_key(str(name))
 
@@ -208,7 +187,38 @@ class FileDB(AbstractDB):
 	def keys(self):
 		return self.database.iterkeys()
 		
-database = FileDB
+class XMLDB(AbstractDB):
+	def __init__(self):
+		self.db = dbimpl.DBImpl("./data/database.xml")
+
+
+	def create_key(self, key):
+		realKey = self.db.hasValue(key)
+		if realKey:
+			return realKey
+		# Otherwise create it
+		self.db.setValue(key, "")
+		realKey = self.db.hasValue(key)
+		assert realKey
+		return realKey
+		
+	def get_key(self, key):
+		if not key:
+			return self.db.pullDocument()
+		return self.db.getValue(key)
+		
+	def put_key(self, key, data):
+		self.db.setValue(key, data)
+		return None
+		
+	def delete_key(self, key):
+		self.db.delValues(key)
+		return None
+		
+	def keys(self):
+		return ["root"]
+		
+database = XMLDB
  
 if __name__ == "__main__":
 	app.run()

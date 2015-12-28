@@ -6,8 +6,9 @@ import SimpleXMLRPCServer
 import threading
 import dbapi
 import time
+import os
 
-DOCUMENT="""<?xml-stylesheet type="text/xsl" href="dbdump.xsl" ?><root><clients/><services><orchestrator/><optimizer/><vr/></services><cues><lastBored/><soundLevel/><trigger/></cues><streamReady/><restrictions/><decisions/><connections/></root>"""
+DOCUMENT="""<root><x>1</x><y>2</y></root>"""
 
 class DBKeyError(KeyError):
     pass
@@ -72,13 +73,23 @@ class DBSerializer:
 class DBImpl(dbapi.DBAPI, DBSerializer):
     """Main implementation of the database API"""
     
-    def __init__(self):
+    def __init__(self, filename):
         dbapi.DBAPI.__init__(self)
         DBSerializer.__init__(self)
         self._terminating = False
         self._domimpl = xml.dom.getDOMImplementation()
-        self.initialize(DOCUMENT)
+        self.filename = filename
+        if os.path.exists(filename):
+        	self.initialize(filename=filename)
+        else:
+	        self.initialize(xmlstring=DOCUMENT)
         
+    def signalNodelist(self, nodelist):
+    	newFilename = self.filename + '.NEW'
+    	self._doc.writexml(open(newFilename, 'w'))
+    	os.rename(newFilename, self.filename)
+    	DBSerializer.signalNodelist(self, nodelist)
+    	
     def getMessageCount(self):
         return self.lockCount
         
@@ -89,9 +100,11 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
     def is_terminating(self):
         return self._terminating
         
-    def initialize(self, xmlstring=DOCUMENT):
+    def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""
-        if xmlstring:
+        if filename:
+        	self._doc = xml.dom.minidom.parse(filename)
+        elif xmlstring:
             self._doc = xml.dom.minidom.parseString(xmlstring)
         else:
             self._doc = self._domimpl.createDocument('', 'root', None)
@@ -258,42 +271,3 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         node = xpath.findnode(location, self._doc.documentElement)
         assert node
         return _getXPath(node), generation
-        
-startRun = time.time()
-def TS():
-    #now = time.time()
-    #subsecond = str(now-int(now))[1:6]
-    #return time.strftime("%H:%M:%S", time.localtime(now)) + subsecond
-    return "%10.4f" % (time.time()-startRun)
-    
-class DBDispatcher(DBImpl):
-    """Wrapper class that implements XMLRPC dispatch while locking the mutex and
-    providing stack traces if wanted"""
-    
-    def __init__(self):
-        self.stacktrace = True
-        self.calltrace = dbapi.LOGGING
-        DBImpl.__init__(self)
-        
-    def _dispatch(self, methodname, params):
-        try:
-            startWait = time.time()
-            self.enter()
-            startCall = time.time()
-            method = SimpleXMLRPCServer.resolve_dotted_attribute(self, methodname, False)
-            rv = method(*params)
-            now = time.time()
-            if self.calltrace:
-                print TS(), '-->  %s%s -> %s [wait=%f, exec=%f, %s]' % (methodname, params, rv, startCall-startWait, now-startCall, threading.currentThread().name)
-            self.leave()
-            return rv
-        except:
-            if self.calltrace:
-                print TS(), 'EXC %s%s' % (methodname, params)
-            elif self.stacktrace:
-                print TS(), '-->  %s%s' % (methodname, params)
-                print TS(), 'EXC %s%s' % (methodname, params)
-            if self.stacktrace:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                traceback.print_exception(exc_type, exc_value, exc_tb)
-            raise

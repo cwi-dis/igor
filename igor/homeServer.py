@@ -4,6 +4,7 @@ import subprocess
 import os
 import re
 import uuid
+import json
 
 urls = (
 	'/scripts/(.*)', 'runScript',
@@ -39,100 +40,116 @@ class runScript:
 			return web.HTTPError("502 Error running command: %s: %s" % (command, arg.strerror))
 		return rv
 
-VALID_KEY = re.compile('[a-zA-Z0-9_-]{1,255}')
+VALID_KEY = re.compile('[a-zA-Z0-9_/-]{0,255}')
 def is_valid_key(key):
-    """Checks to see if the parameter follows the allow pattern of
-    keys.
-    """
-    if VALID_KEY.match(key) is not None:
-        return True
-    return False
+	"""Checks to see if the parameter follows the allow pattern of
+	keys.
+	"""
+	if VALID_KEY.match(key) is not None:
+		return True
+	return False
 
 def validate_key(fn):
-    """Decorator for HTTP methods that validates if resource
-    name is a valid database key. Used to protect against
-    directory traversal.
-    """
-    def new(*args):
-        if not is_valid_key(args[1]):
-            return web.badrequest()
-        return fn(*args)
-    return new
-    
+	"""Decorator for HTTP methods that validates if resource
+	name is a valid database key. Used to protect against
+	directory traversal.
+	"""
+	def new(*args):
+		if not is_valid_key(args[1]):
+			return web.badrequest()
+		return fn(*args)
+	return new
+	
 class AbstractDB(object):
-    """Abstract database that handles the high-level HTTP primitives.
-    """
-    def GET(self, name):
-		return self.get_resource(name)
+	"""Abstract database that handles the high-level HTTP primitives.
+	"""
+	def GET(self, name):
+		optArgs = web.input()
+		if optArgs:
+			optArgs = dict(optArgs)
+			method = self.POST
+			if '.METHOD' in optArgs:
+				method = getattr(self, optArgs['.METHOD'])
+				del optArgs['.METHOD']
+			data = json.dumps(optArgs)
+			return method(name, data)
+		print 'call getResource'
+		rv = self.get_resource(name)
+		print 'returned', repr(rv)
+		return rv
 
-    @validate_key
-    def POST(self, name):
-        data = web.data()
-        errorreturn = self.put_key(str(name), data)
-        if errorreturn: return errorreturn
-        return str(name)
+	@validate_key
+	def POST(self, name, data=None):
+		if data is None: data = web.data()
+		print 'data=', repr(data)
+		errorreturn = self.put_key(str(name), data)
+		if errorreturn: return errorreturn
+		return str(name)
 
-    @validate_key
-    def DELETE(self, name):
-        return self.delete_key(str(name))
+	@validate_key
+	def DELETE(self, name, data=None):
+		return self.delete_key(str(name))
 
-    def PUT(self, name=None):
-        """Creates a new document with the request's data and
-        generates a unique key for that document.
-        """
-        name = self.create_key(name)
-        if not name: return web.notfound()
-        key = str(name)
-        return self.POST(key)
+	def PUT(self, name=None, data=None):
+		"""Creates a new document with the request's data and
+		generates a unique key for that document.
+		"""
+		name = self.create_key(name)
+		if not name: return web.notfound()
+		key = str(name)
+		return self.POST(key, data)
 
-    @validate_key
-    def get_resource(self, name):
-        result = self.get_key(str(name))
-        return result
+	def get_resource(self, name):
+		print 'get_resource', name
+		result = self.get_key(name)
+		return result
 
 class MemoryDB(AbstractDB):
-    """In memory storage engine.  Lacks persistence."""
-    database = {}
-    def create_key(self, key=None):
-    	if str(key) in self.database:
-    		return key
-    	return uuid.uuid4()
-    	
-    def get_key(self, key):
-    	if key == '':
-    		return self.keys()
-        try:
-            return self.database[key]
-        except KeyError:
-            return web.notfound()
+	"""In memory storage engine.  Lacks persistence."""
+	database = {}
+	def create_key(self, key=None):
+		if str(key) in self.database:
+			return key
+		return uuid.uuid4()
+		
+	def get_key(self, key):
+		print 'get_key', repr(key)
+		if not key:
+			return self.keys()
+		try:
+			return self.database[key]
+		except KeyError:
+			return web.notfound()
 
-    def put_key(self, key, data):
-        self.database[key] = data
-        return None
+	def put_key(self, key, data):
+		self.database[key] = data
+		return None
 
-    def delete_key(self, key):
-        try:
-            del(self.database[key])
-        except KeyError:
-            return web.notfound()
+	def delete_key(self, key):
+		try:
+			del(self.database[key])
+		except KeyError:
+			return web.notfound()
 
-    def keys(self):
-        return 'Keys: ' + ' '.join(self.database.keys())
-        
+	def keys(self):
+		rv = 'Keys: ' + ' '.join(self.database.keys())
+		print 'Keys returning', rv
+		return rv
+		
 class FileDB(AbstractDB):
-    """In memory storage engine.  Lacks persistence."""
-    basedir = './data/'
-    
-    def create_key(self, key):
-    	# Creating a key that already exists simply returns it
-    	filename = self.basedir + str(key)
-    	if os.path.exists(filename):
-    		return key
-    	# It doesn't exist yet. See what we must do
-    	basedir, newname = os.path.split(filename)
-    	if not os.path.exists(basedir):
-    		# The parent doesn't exist either. This is an error.
-    		return None
+	"""In memory storage engine.  Lacks persistence."""
+	basedir = './data/'
+	
+	def create_key(self, key):
+		# Creating a key that already exists simply returns it
+		filename = self.basedir + str(key)
+		if os.path.exists(filename):
+			return key
+		# It doesn't exist yet. See what we must do
+		basedir, newname = os.path.split(filename)
+		if not os.path.exists(basedir):
+			# The parent doesn't exist either. This is an error.
+			return None
 		if not os.path.isdir(basedir):
 			# The parent exists, but is a file. Turn it into a directory.
 			tmpname = basedir+'~'
@@ -142,50 +159,56 @@ class FileDB(AbstractDB):
 		assert os.path.isdir(basedir)
 		# If a name was given we use that as-is, otherwise we add a random bit
 		if newname:
+			# Create the file
+			open(filename, 'w')
 			return key
 		assert key == '' or key[-1] == '/'
-		return key + uuid.uuid4()
-    	
-    def get_key(self, key):
-    	filename = self.basedir + key
-    	if os.path.isdir(filename):
-    		subfilename = filename + '/.data'
-    		if os.path.exists(subfilename):
-    			data = open(filename).read()
-    		else:
-    			# XXXJACK is this a good idea? Possibly not...
-    			data = 'Keys:'
-    			for entry in os.listdir(filename):
-    				if entry[0] != '.':
-	    				data += ' ' + entry
-    			data += '\n'
-    		return data
-    	elif os.path.exists(filename):
-    		data = open(filename).read()
-    		return data
-    	else:
-            return web.notfound()
+		key = key + uuid.uuid4()
+		filename = self.basedir + str(key)
+		open(filename, 'w')
+		return key
+		
+	def get_key(self, key):
+		filename = self.basedir + key
+		if os.path.isdir(filename):
+			subfilename = filename + '/.data'
+			if os.path.exists(subfilename):
+				data = open(subfilename).read()
+			else:
+				# XXXJACK is this a good idea? Possibly not...
+				data = 'Keys:'
+				for entry in os.listdir(filename):
+					if entry[0] != '.':
+						data += ' ' + entry
+				data += '\n'
+			return data
+		elif os.path.exists(filename):
+			data = open(filename).read()
+			return data
+		else:
+			return web.notfound()
 
-    def put_key(self, key, data):
-    	filename = self.basedir + key
-    	if os.path.isdir(filename):
-    		filename = filename + '/.data'
-    	if not os.path.exists(filename):
-    		return web.notfound()
-    	open(filename).write(data)
-    	return None
+	def put_key(self, key, data):
+		filename = self.basedir + key
+		print 'put_key', repr(filename)
+		if os.path.isdir(filename):
+			filename = filename + '/.data'
+		if not os.path.exists(filename):
+			return web.notfound()
+		open(filename, 'w').write(data)
+		return None
 
-    def delete_key(self, key):
-    	assert 0
-        try:
-            del(self.database[key])
-        except KeyError:
-            return web.notfound()
+	def delete_key(self, key):
+		assert 0
+		try:
+			del(self.database[key])
+		except KeyError:
+			return web.notfound()
 
-    def keys(self):
-        return self.database.iterkeys()
-        
-database = MemoryDB
+	def keys(self):
+		return self.database.iterkeys()
+		
+database = FileDB
  
 if __name__ == "__main__":
 	app.run()

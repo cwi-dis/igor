@@ -294,8 +294,8 @@ class XMLDB(AbstractDB):
 			if mimetype == "application/json":
 				rv = []
 				for item in value:
-					r = _getXPathForDomNode(item)
-					t, v = _getDictForDomNode(item)
+					r = dbimpl.getXPath(item)
+					t, v = dbimpl.asTagAndDict(item)
 					rv.append({"ref":r, t:v})
 				return json.dumps(rv)
 			elif mimetype == "text/plain":
@@ -303,7 +303,7 @@ class XMLDB(AbstractDB):
 			elif mimetype == "application/xml":
 				rv = "<items>\n"
 				for item in value:
-					r = _getXPathForDomNode(item)
+					r = dbimpl.getXPath(item)
 					v = item.toxml()
 					rv += "<item>\n<ref>%s</ref>\n"
 					rv += v
@@ -316,7 +316,8 @@ class XMLDB(AbstractDB):
 		if mimetype == "application/json":
 			if len(value) != 1:
 				raise web.BadRequest()
-			return json.dumps(_getDictForDomNode(value[0]))
+			t, v = dbimpl.asTagAndDict(value[0])
+			return json.dumps({t:v})
 		elif mimetype == "text/plain":
 			rv = ""
 			for item in value:
@@ -335,31 +336,6 @@ class XMLDB(AbstractDB):
 		raise web.internalError("Conversion from %s not yet implemented" % mimetype)
 		
 database = XMLDB
-
-def _getXPathForDomNode(item):
-	revPath = ''
-	while item:
-		tag = item.tagName
-		tagIndex = ''
-		parent = item.parentNode
-		if parent:
-			sameTagBefore = 0
-			sameTagAfter = 0
-			sibling = item.previousSibling
-			while sibling:
-				if sibling.tagName == tag:
-					sameTagBefore += 1
-				sibling = sibling.previousSibling
-			sibling = item.nextSibling
-			while sibling:
-				if sibling.tagName == tag:
-					sameTagAfter += 1
-				sibling = sibling.nextSibling
-			# See if we need to add an index (if there are more children with this name)
-			if sameTagBefore + sameTagAfter != 0:
-				tagIndex = '[%d]' % (sameTagBefore+1)
-		revPath = tag + tagIndex + revPath
-	return revPath
 
 def _getDictForDomNode(item):
 	t = item.tagName

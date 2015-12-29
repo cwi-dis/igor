@@ -16,7 +16,7 @@ class DBKeyError(KeyError):
 class DBParamError(ValueError):
     pass
     
-def _getXPath(node):
+def getXPath(node):
     if node is None or node.nodeType == node.DOCUMENT_NODE:
         return ""
     count = 0
@@ -25,11 +25,37 @@ def _getXPath(node):
         if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
             count += 1
         sibling = sibling.previousSibling
-    if count:
+    countAfter = 0
+    sibling = node.nextSibling
+    while sibling:
+        if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
+            countAfter += 1
+        sibling = sibling.nextSibling
+    if count+countAfter:
         index = '[%d]' % (count+1)
     else:
         index = ''
-    return _getXPath(node.parentNode) + "/" + node.tagName + index
+    return getXPath(node.parentNode) + "/" + node.tagName + index
+
+def asTagAndDict(node):
+	t = item.tagName
+	v = {}
+	texts = []
+	child = item.firstChild
+	while child:
+		if child.nodeType == ELEMENT_NODE:
+			newv, newt = asTagAndDict(child)
+			v[newv] = newt
+		elif child.nodeType == ATTRIBUTE_NODE:
+			v['@' + child.name] = child.value
+		elif child.nodeType == TEXT_NODE:
+			texts.append(child.data)
+		child = child.nextSibling
+	if len(texts) == 1:
+		v['#text'] = texts[0]
+	elif len(texts) > 1:
+		v['#text'] = texts
+	return t, v
 
 class DBSerializer:
     """Baseclass with methods to provide a mutex and a condition variable"""
@@ -148,7 +174,7 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         self.signalNodelist([node])
         
         # Return the location of the new node
-        return _getXPath(node)
+        return getXPath(node)
         
     def newValue(self, location, where, name, value):
         """Insert a single new node into the document (value passed as a string)"""
@@ -177,7 +203,7 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         self.signalNodelist([newnode, newnode.parentNode])
         
         # Return the location of the new node
-        return _getXPath(newnode)
+        return getXPath(newnode)
         
     def delValue(self, location):
         """Remove a single node from the document"""
@@ -205,7 +231,7 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         """Return xpath if the location exists, None otherwise"""
         node = xpath.findnode(location, self._doc.documentElement)
         if node:
-            return _getXPath(node)
+            return getXPath(node)
         return None
         
     def waitValue(self, location):
@@ -214,12 +240,12 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
             self.waitLocation(location)
             node = xpath.findnode(location, self._doc.documentElement)
             assert node
-        return _getXPath(node)
+        return getXPath(node)
 
     def hasValues(self, location):
         """Return a list of xpaths for the given location"""
         nodelist = xpath.find(location, self._doc.documentElement)
-        return map(_getXPath, nodelist)
+        return map(getXPath, nodelist)
         
     def getValue(self, location):
         """Return a single value from the document (as string)"""
@@ -233,7 +259,7 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
     def _getValueList(self, nodelist):
         rv = []
         for node in nodelist:
-            rv.append((_getXPath(node), xpath.expr.string_value(node)))
+            rv.append((getXPath(node), xpath.expr.string_value(node)))
         return rv
         
     def pullValue(self, location):
@@ -270,4 +296,4 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         generation = self.waitLocation(location, generation)
         node = xpath.findnode(location, self._doc.documentElement)
         assert node
-        return _getXPath(node), generation
+        return getXPath(node), generation

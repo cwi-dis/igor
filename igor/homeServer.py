@@ -6,6 +6,7 @@ import re
 import uuid
 import json
 import dbimpl
+import mimetypematch
 
 urls = (
 	'/scripts/(.*)', 'runScript',
@@ -45,53 +46,82 @@ class AbstractDB(object):
 	"""Abstract database that handles the high-level HTTP primitives.
 	"""
 	def GET(self, name):
+		print 'xxxjack GET env', web.ctx.env
 		optArgs = web.input()
 		if optArgs:
+			# GET with a query is treated as POST with the query as JSON data,
+			# unless the .METHOD argument states it should be treaded as another method.
 			optArgs = dict(optArgs)
 			method = self.POST
 			if '.METHOD' in optArgs:
 				method = getattr(self, optArgs['.METHOD'])
 				del optArgs['.METHOD']
 			data = json.dumps(optArgs)
-			return method(name, data)
-		print 'call getResource'
-		rv = self.get_resource(name)
-		print 'returned', repr(rv)
+			return method(name, data, mimetype="application/json")
+		returnType = self.best_return_mimetype()
+		if not returnType:
+			raise web.NotAcceptable()
+		web.header("Content-Type", returnType)
+		rv = self.get_resource(name, self.best_return_mimetype())
 		return rv
 
-	def POST(self, name, data=None):
-		if data is None: data = web.data()
+	def POST(self, name, data=None, mimetype=None):
+		if data is None: 
+			data = web.data()
+		if not is_acceptable_mimetype(mimetype):
+			return web.HTTPError("415 Unsupported mimetype")
 		print 'data=', repr(data)
 		errorreturn = self.put_key(str(name), data)
 		if errorreturn: return errorreturn
 		return str(name)
 
-	def DELETE(self, name, data=None):
+	def DELETE(self, name, data=None, mimetype=None):
 		return self.delete_key(str(name))
 
-	def PUT(self, name=None, data=None):
+	def PUT(self, name=None, data=None, mimetype=None):
 		"""Creates a new document with the request's data and
 		generates a unique key for that document.
 		"""
 		name = self.create_key(name)
 		if not name: return web.notfound()
 		key = str(name)
-		return self.POST(key, data)
+		return self.POST(key, data, mimetype)
 
-	def get_resource(self, name):
+	def get_resource(self, name, mimetype=None):
 		print 'get_resource', name
-		result = self.get_key(name)
+		result = self.get_key(name, mimetype)
 		return result
 
+	def is_acceptable_mimetype(self, mimetype=None):
+		"""Test whether the mimetype in the request is of an acceptable type"""
+		if not self.MIMETYPES:
+			return True
+		if not mimetype:
+			mimetype = web.ctx.env.get("CONTENT_TYPE")
+		if not mimetype:
+			return True
+		return mimetype in self.MIMETYPES
+		
+	def best_return_mimetype(self):
+		"""Return the best mimetype in which to encode the return data, or None"""
+		if not self.MIMETYPES:
+			return None
+		acceptable = web.ctx.env.get("HTTP_ACCEPT")
+		if not acceptable:
+			return None
+		return mimetypematch.match(acceptable, self.MIMETYPES)
+		
 class MemoryDB(AbstractDB):
 	"""In memory storage engine.  Lacks persistence."""
+	MIMETYPES = None
+	
 	database = {}
 	def create_key(self, key=None):
 		if str(key) in self.database:
 			return key
 		return uuid.uuid4()
 		
-	def get_key(self, key):
+	def get_key(self, key, mimetype=None):
 		print 'get_key', repr(key)
 		if not key:
 			return self.keys()
@@ -100,7 +130,7 @@ class MemoryDB(AbstractDB):
 		except KeyError:
 			return web.notfound()
 
-	def put_key(self, key, data):
+	def put_key(self, key, data, mimetype=None):
 		self.database[key] = data
 		return None
 
@@ -117,6 +147,8 @@ class MemoryDB(AbstractDB):
 		
 class FileDB(AbstractDB):
 	"""In memory storage engine.  Lacks persistence."""
+	MIMETYPES = None
+	
 	basedir = './data/'
 	
 	def create_key(self, key):
@@ -147,7 +179,7 @@ class FileDB(AbstractDB):
 		open(filename, 'w')
 		return key
 		
-	def get_key(self, key):
+	def get_key(self, key, mimetype=None):
 		filename = self.basedir + key
 		if os.path.isdir(filename):
 			subfilename = filename + '/.data'
@@ -167,7 +199,7 @@ class FileDB(AbstractDB):
 		else:
 			return web.notfound()
 
-	def put_key(self, key, data):
+	def put_key(self, key, data, mimetype=None):
 		filename = self.basedir + key
 		print 'put_key', repr(filename)
 		if os.path.isdir(filename):
@@ -188,6 +220,8 @@ class FileDB(AbstractDB):
 		return self.database.iterkeys()
 		
 class XMLDB(AbstractDB):
+	MIMETYPES = ["application/xml"]
+	
 	def __init__(self):
 		self.db = dbimpl.DBImpl("./data/database.xml")
 
@@ -202,12 +236,18 @@ class XMLDB(AbstractDB):
 		assert realKey
 		return realKey
 		
-	def get_key(self, key):
+	def get_key(self, key, mimetype=None):
 		if not key:
-			return self.db.pullDocument()
-		return self.db.getValue(key)
+			rv = self.db.pullDocument()
+		else:
+			rv = self.db.getValue(key)
+		if mimetype and mimetype != "application/xml":
+			rv = self.convertto(rv, mimetype)
+		return rv
 		
-	def put_key(self, key, data):
+	def put_key(self, key, data, mimetype=None):
+		if mimetype and mimetype != "application/xml":
+			data = self.convertfrom(data, mimetype)
 		self.db.setValue(key, data)
 		return None
 		
@@ -218,6 +258,11 @@ class XMLDB(AbstractDB):
 	def keys(self):
 		return ["root"]
 		
+	def convertto(self, value, mimetype):
+		raise web.InternalError("Conversion to %s not yet implemented" % mimetype)
+		
+	def convertfrom(self, value, mimetype):
+		raise web.internalError("Conversion from %s not yet implemented" % mimetype)
 database = XMLDB
  
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ class runScript:
 	def GET(self, command):
 		allArgs = web.input()
 		if '/' in command:
-			return web.HTTPError("401 Cannot use / in command")
+			raise web.HTTPError("401 Cannot use / in command")
 		if allArgs.has_key('args'):
 			args = shlex.split(allArgs.args)
 		else:
@@ -37,9 +37,9 @@ class runScript:
 		try:
 			rv = subprocess.check_call([command] + args)
 		except subprocess.CalledProcessError, arg:
-			return web.HTTPError("502 Command %s exited with status code=%d" % (command, arg.returncode), {"Content-type": "text/plain"}, arg.output)
+			raise web.HTTPError("502 Command %s exited with status code=%d" % (command, arg.returncode), {"Content-type": "text/plain"}, arg.output)
 		except OSError, arg:
-			return web.HTTPError("502 Error running command: %s: %s" % (command, arg.strerror))
+			raise web.HTTPError("502 Error running command: %s: %s" % (command, arg.strerror))
 		return rv
 	
 class AbstractDB(object):
@@ -69,7 +69,7 @@ class AbstractDB(object):
 		if data is None: 
 			data = web.data()
 		if not is_acceptable_mimetype(mimetype):
-			return web.HTTPError("415 Unsupported mimetype")
+			raise web.HTTPError("415 Unsupported mimetype")
 		print 'data=', repr(data)
 		errorreturn = self.put_key(str(name), data)
 		if errorreturn: return errorreturn
@@ -83,7 +83,8 @@ class AbstractDB(object):
 		generates a unique key for that document.
 		"""
 		name = self.create_key(name)
-		if not name: return web.notfound()
+		if not name: 
+			raise web.notfound()
 		key = str(name)
 		return self.POST(key, data, mimetype)
 
@@ -128,7 +129,7 @@ class MemoryDB(AbstractDB):
 		try:
 			return self.database[key]
 		except KeyError:
-			return web.notfound()
+			raise web.notfound()
 
 	def put_key(self, key, data, mimetype=None):
 		self.database[key] = data
@@ -138,7 +139,7 @@ class MemoryDB(AbstractDB):
 		try:
 			del(self.database[key])
 		except KeyError:
-			return web.notfound()
+			raise web.notfound()
 
 	def keys(self):
 		rv = 'Keys: ' + ' '.join(self.database.keys())
@@ -197,7 +198,7 @@ class FileDB(AbstractDB):
 			data = open(filename).read()
 			return data
 		else:
-			return web.notfound()
+			raise web.notfound()
 
 	def put_key(self, key, data, mimetype=None):
 		filename = self.basedir + key
@@ -205,7 +206,7 @@ class FileDB(AbstractDB):
 		if os.path.isdir(filename):
 			filename = filename + '/.data'
 		if not os.path.exists(filename):
-			return web.notfound()
+			raise web.notfound()
 		open(filename, 'w').write(data)
 		return None
 
@@ -214,13 +215,13 @@ class FileDB(AbstractDB):
 		try:
 			del(self.database[key])
 		except KeyError:
-			return web.notfound()
+			raise web.notfound()
 
 	def keys(self):
 		return self.database.iterkeys()
 		
 class XMLDB(AbstractDB):
-	MIMETYPES = ["application/xml"]
+	MIMETYPES = ["application/xml", "application/json", "text/plain"]
 	
 	def __init__(self):
 		self.db = dbimpl.DBImpl("./data/database.xml")
@@ -236,12 +237,20 @@ class XMLDB(AbstractDB):
 		assert realKey
 		return realKey
 		
-	def get_key(self, key, mimetype=None):
+	def get_key(self, key, mimetype=None, variant=None):
 		if not key:
 			rv = self.db.pullDocument()
+			# This always returns XML, so just continue
 		else:
 			rv = self.db.getValue(key)
-		if mimetype and mimetype != "application/xml":
+			# This generally returns plaintext
+			if mimetype == "text/plain":
+				return rv + '\n'
+			# Otherwise convert to XML.
+			# Horrendously wrong:-)
+			if rv:
+				rv = "<value>" + rv + "</value>\n"
+		if mimetype and mimetype != "application/xml" and rv:
 			rv = self.convertto(rv, mimetype)
 		return rv
 		
@@ -258,13 +267,120 @@ class XMLDB(AbstractDB):
 	def keys(self):
 		return ["root"]
 		
-	def convertto(self, value, mimetype):
-		raise web.InternalError("Conversion to %s not yet implemented" % mimetype)
+	def convertto(self, value, mimetype, variant):
+		if variant == 'ref':
+			if not isinstance(value, basestr):
+				raise web.BadRequest()
+			value = "/data/" + value
+			if mimetype == "application/json":
+				return json.dumps({"ref":value})
+			elif mimetype == "text/plain":
+				return value
+			elif mimetype == "application/xml":
+				return "<ref>%s</ref>" % value
+			else:
+				raise web.internalError("Unimplemented mimetype for ref")
+		# Only nodesets need different treatment for default and multi
+		if not isinstance(value, list):
+			if mimetype == "application/json":
+				return json.dumps(dict(value=value))
+			elif mimetype == "text/plain":
+				return unicode(value)
+			elif mimetype == "application/xml":
+				return u"<value>%s</value>" % unicode(value)
+			else:
+				raise web.internalError("Unimplemented mimetype for default or multi, simple value")
+		if variant == 'multi':
+			if mimetype == "application/json":
+				rv = []
+				for item in value:
+					r = _getXPathForDomNode(item)
+					t, v = _getDictForDomNode(item)
+					rv.append({"ref":r, t:v})
+				return json.dumps(rv)
+			elif mimetype == "text/plain":
+				raise web.BadRequest()
+			elif mimetype == "application/xml":
+				rv = "<items>\n"
+				for item in value:
+					r = _getXPathForDomNode(item)
+					v = item.toxml()
+					rv += "<item>\n<ref>%s</ref>\n"
+					rv += v
+					rv += "\n</item>\n"
+				rv += "</items>\n"
+				return rv
+			else:
+				raise web.internalError("Unimplemented mimetype for multi, nodeset")
+		# Final case: single node return
+		if mimetype == "application/json":
+			if len(value) != 1:
+				raise web.BadRequest()
+			return json.dumps(_getDictForDomNode(value[0]))
+		elif mimetype == "text/plain":
+			rv = ""
+			for item in value:
+				v = xpath.expr.string_value(item)
+				rv += v
+				rv += '\n'
+			return rv
+		elif mimetype == "application/xml":
+			if len(value) != 1:
+				raise web.BadRequest()
+			return value[0].toxml()
+		else:
+			raise web.internalError("Unimplemented mimetype for default, single node")			
 		
 	def convertfrom(self, value, mimetype):
 		raise web.internalError("Conversion from %s not yet implemented" % mimetype)
+		
 database = XMLDB
- 
+
+def _getXPathForDomNode(item):
+	revPath = ''
+	while item:
+		tag = item.tagName
+		tagIndex = ''
+		parent = item.parentNode
+		if parent:
+			sameTagBefore = 0
+			sameTagAfter = 0
+			sibling = item.previousSibling
+			while sibling:
+				if sibling.tagName == tag:
+					sameTagBefore += 1
+				sibling = sibling.previousSibling
+			sibling = item.nextSibling
+			while sibling:
+				if sibling.tagName == tag:
+					sameTagAfter += 1
+				sibling = sibling.nextSibling
+			# See if we need to add an index (if there are more children with this name)
+			if sameTagBefore + sameTagAfter != 0:
+				tagIndex = '[%d]' % (sameTagBefore+1)
+		revPath = tag + tagIndex + revPath
+	return revPath
+
+def _getDictForDomNode(item):
+	t = item.tagName
+	v = {}
+	texts = []
+	child = item.firstChild
+	while child:
+		if child.nodeType == ELEMENT_NODE:
+			newv, newt = _getDictForDomNode(child)
+			v[newv] = newt
+		elif child.nodeType == ATTRIBUTE_NODE:
+			v['@' + child.name] = child.value
+		elif child.nodeType == TEXT_NODE:
+			texts.append(child.data)
+		child = child.nextSibling
+	if len(texts) == 1:
+		v['#text'] = texts[0]
+	elif len(texts) > 1:
+		v['#text'] = texts
+	return t, v
+	
 if __name__ == "__main__":
 	app.run()
 		

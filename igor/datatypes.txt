@@ -1,0 +1,47 @@
+Quick note of how objects can be represented.
+
+default:
+		empty or multi-node nodeset:
+			json: []
+			xml: empty
+			txt: empty
+		single node nodeset:
+			json: objdumpjson
+			xml: objdumpxml
+			txt: objtxt
+		multi-node nodeset:
+			json: ERROR
+			xml: ERROR
+			txt: all objtext, one per line
+		other value:
+			json: { "value" : string }
+			xml: <value>string</value>
+			txt: string
+ref:
+		json: {"ref" : /data/xpath }
+		xml: <ref>/data/xpath</ref>
+		txt: /data/xpath
+		
+multi:
+	nodeset
+		empty
+			json: []
+			xml: <items/>
+			txt: ERROR
+		nonempty
+			json: [{"ref":uniquexpath, "value": objdump}, ...]
+			xml: <items><item><ref>uniquexpath</ref><value>objdump</value></item></items>
+			txt: ERROR
+	string
+			json: { "value" : string }
+			xml: <value>string</value>
+			txt: string
+	bool
+			json: { "value" : bool }
+			xml: <value>bool</value>
+			txt: bool
+	number
+			json: { "value" : number }
+			xml: <value>number</value>
+			txt: number
+		

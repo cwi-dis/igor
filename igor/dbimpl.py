@@ -4,9 +4,11 @@ import sys
 import traceback
 import SimpleXMLRPCServer
 import threading
-import dbapi
 import time
 import os
+import re
+
+TAG_PATTERN = re.compile('^[a-zA-Z_:][-_:.a-zA-Z0-9]*$')
 
 DOCUMENT="""<root><x>1</x><y>2</y></root>"""
 
@@ -16,47 +18,7 @@ class DBKeyError(KeyError):
 class DBParamError(ValueError):
     pass
     
-def getXPath(node):
-    if node is None or node.nodeType == node.DOCUMENT_NODE:
-        return ""
-    count = 0
-    sibling = node.previousSibling
-    while sibling:
-        if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
-            count += 1
-        sibling = sibling.previousSibling
-    countAfter = 0
-    sibling = node.nextSibling
-    while sibling:
-        if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
-            countAfter += 1
-        sibling = sibling.nextSibling
-    if count+countAfter:
-        index = '[%d]' % (count+1)
-    else:
-        index = ''
-    return getXPath(node.parentNode) + "/" + node.tagName + index
-
-def asTagAndDict(node):
-	t = item.tagName
-	v = {}
-	texts = []
-	child = item.firstChild
-	while child:
-		if child.nodeType == ELEMENT_NODE:
-			newv, newt = asTagAndDict(child)
-			v[newv] = newt
-		elif child.nodeType == ATTRIBUTE_NODE:
-			v['@' + child.name] = child.value
-		elif child.nodeType == TEXT_NODE:
-			texts.append(child.data)
-		child = child.nextSibling
-	if len(texts) == 1:
-		v['#text'] = texts[0]
-	elif len(texts) > 1:
-		v['#text'] = texts
-	return t, v
-
+    
 class DBSerializer:
     """Baseclass with methods to provide a mutex and a condition variable"""
     def __init__(self):   
@@ -96,26 +58,25 @@ class DBSerializer:
                     cv[0].notify_all()
                     break
         
-class DBImpl(dbapi.DBAPI, DBSerializer):
+class DBImpl(DBSerializer):
     """Main implementation of the database API"""
     
     def __init__(self, filename):
-        dbapi.DBAPI.__init__(self)
         DBSerializer.__init__(self)
         self._terminating = False
         self._domimpl = xml.dom.getDOMImplementation()
         self.filename = filename
         if os.path.exists(filename):
-        	self.initialize(filename=filename)
+            self.initialize(filename=filename)
         else:
-	        self.initialize(xmlstring=DOCUMENT)
+            self.initialize(xmlstring=DOCUMENT)
         
     def signalNodelist(self, nodelist):
-    	newFilename = self.filename + '.NEW'
-    	self._doc.writexml(open(newFilename, 'w'))
-    	os.rename(newFilename, self.filename)
-    	DBSerializer.signalNodelist(self, nodelist)
-    	
+        newFilename = self.filename + '.NEW'
+        self._doc.writexml(open(newFilename, 'w'))
+        os.rename(newFilename, self.filename)
+        DBSerializer.signalNodelist(self, nodelist)
+        
     def getMessageCount(self):
         return self.lockCount
         
@@ -129,7 +90,7 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
     def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""
         if filename:
-        	self._doc = xml.dom.minidom.parse(filename)
+            self._doc = xml.dom.minidom.parse(filename)
         elif xmlstring:
             self._doc = xml.dom.minidom.parseString(xmlstring)
         else:
@@ -139,10 +100,90 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         """Return the argument (for performance testing)"""
         return arg
         
-    def pullDocument(self):
+    def getXMLDocument(self):
         """Return the whole document (as an XML string)"""
         rv = self._doc.toprettyxml()
         return rv
+        
+    def getDocument(self):
+        """Return the whole document (as a DOM element)"""
+        return self._doc.documentElement
+        
+    def splitXPath(self, xpath):
+        lastSlashPos = location.rfind('/')
+        if lastSlashPos > 0:
+            parent = location[:lastSlashPos]
+            child = location[lastSlashPos+1:]
+        else:
+            parent = '.'
+            child = location
+        # Test that child is indeed a tag name
+        if not TAG_PATTERN.match(child):
+            return None, None
+        return parent, child
+
+    def getXPathForElement(self, node):
+        if node is None or node.nodeType == node.DOCUMENT_NODE:
+            return ""
+        count = 0
+        sibling = node.previousSibling
+        while sibling:
+            if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
+                count += 1
+            sibling = sibling.previousSibling
+        countAfter = 0
+        sibling = node.nextSibling
+        while sibling:
+            if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
+                countAfter += 1
+            sibling = sibling.nextSibling
+        if count+countAfter:
+            index = '[%d]' % (count+1)
+        else:
+            index = ''
+        return self.getXPathForElement(node.parentNode) + "/" + node.tagName + index
+
+    def tagAndDictFromElement(self, item):
+        t = item.tagName
+        v = {}
+        texts = []
+        child = item.firstChild
+        while child:
+            if child.nodeType == child.ELEMENT_NODE:
+                newv, newt = self.tagAndDictFromElement(child)
+                v[newv] = newt
+            elif child.nodeType == child.ATTRIBUTE_NODE:
+                v['@' + child.name] = child.value
+            elif child.nodeType == child.TEXT_NODE:
+                texts.append(child.data)
+            child = child.nextSibling
+        if len(texts) == 1:
+        	if v:
+	            v['#text'] = texts[0]
+	        else:
+	        	v = texts[0]
+	        	try:
+	        		v = int(v)
+	        	except ValueError:
+	        		try:
+	        			v = float(v)
+	        		except ValueError:
+	        			pass
+	        	if v == 'null':
+	        		v = None
+	        	elif v == 'true':
+	        		v = True
+	        	elif v == 'false':
+	        		v = False
+        elif len(texts) > 1:
+            v['#text'] = texts
+        return t, v
+
+    def elementFromTagAndDict(self, tag, dict):
+        assert 0
+        
+    def elementFromTagAndText(self, tag, text):
+        pass
         
     def setValue(self, location, value):
         """Set (or insert) a single node by a given value (passed as a string)"""
@@ -151,13 +192,9 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         node = xpath.findnode(location, self._doc.documentElement)
         if node is None:
             # Does not exist yet. Try to add it.
-            lastSlashPos = location.rfind('/')
-            if lastSlashPos > 0:
-                parent = location[:lastSlashPos]
-                child = location[lastSlashPos+1:]
-            else:
-                parent = '.'
-                child = location
+            parent, child = self.splitXPath(location)
+            if not parent or not child:
+                raise DBKeyError("XPath %s does not refer to unique new or existing location" % location)
             return self.newValue(parent, 'child', child, value)
 
         # Sanity check
@@ -167,14 +204,18 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         # Clear out old contents of the node
         while node.firstChild: node.removeChild(node.firstChild)
         
-        # Insert the new text value
-        node.appendChild(self._doc.createTextNode(str(value)))
+        if hasattr(value, 'nodeType'):
+            # It seems to be a DOM node. Insert it.
+            node.appendChild(value)
+        else:
+            # Insert the new text value
+            node.appendChild(self._doc.createTextNode(str(value)))
         
         # Signal anyone waiting
         self.signalNodelist([node])
         
         # Return the location of the new node
-        return getXPath(node)
+        return getXPathForElement(node)
         
     def newValue(self, location, where, name, value):
         """Insert a single new node into the document (value passed as a string)"""
@@ -203,7 +244,7 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         self.signalNodelist([newnode, newnode.parentNode])
         
         # Return the location of the new node
-        return getXPath(newnode)
+        return getXPathForElement(newnode)
         
     def delValue(self, location):
         """Remove a single node from the document"""
@@ -231,7 +272,7 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         """Return xpath if the location exists, None otherwise"""
         node = xpath.findnode(location, self._doc.documentElement)
         if node:
-            return getXPath(node)
+            return getXPathForElement(node)
         return None
         
     def waitValue(self, location):
@@ -240,12 +281,12 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
             self.waitLocation(location)
             node = xpath.findnode(location, self._doc.documentElement)
             assert node
-        return getXPath(node)
+        return getXPathForElement(node)
 
     def hasValues(self, location):
         """Return a list of xpaths for the given location"""
         nodelist = xpath.find(location, self._doc.documentElement)
-        return map(getXPath, nodelist)
+        return map(getXPathForElement, nodelist)
         
     def getValue(self, location):
         """Return a single value from the document (as string)"""
@@ -256,10 +297,15 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         nodelist = xpath.find(location, self._doc.documentElement)
         return self._getValueList(nodelist)
         
+    def getElements(self, location):
+        """Return a list of DOM nodes (elements only, for now) that match the location"""
+        nodeList = xpath.find(location, self._doc.documentElement)
+        return nodeList
+        
     def _getValueList(self, nodelist):
         rv = []
         for node in nodelist:
-            rv.append((getXPath(node), xpath.expr.string_value(node)))
+            rv.append((getXPathForElement(node), xpath.expr.string_value(node)))
         return rv
         
     def pullValue(self, location):
@@ -296,4 +342,4 @@ class DBImpl(dbapi.DBAPI, DBSerializer):
         generation = self.waitLocation(location, generation)
         node = xpath.findnode(location, self._doc.documentElement)
         assert node
-        return getXPath(node), generation
+        return getXPathForElement(node), generation

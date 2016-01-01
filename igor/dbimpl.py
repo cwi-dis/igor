@@ -10,7 +10,7 @@ import re
 
 TAG_PATTERN = re.compile('^[a-zA-Z_:][-_:.a-zA-Z0-9]*$')
 
-DOCUMENT="""<root><x>1</x><y>2</y></root>"""
+DOCUMENT="""<data><x>1</x><y>2</y></data>"""
 
 class DBKeyError(KeyError):
     pass

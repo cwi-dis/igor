@@ -1,5 +1,7 @@
 Quick note of how objects can be represented.
 
+Getting data:
+
 default:
 		empty or multi-node nodeset:
 			json: []
@@ -45,3 +47,65 @@ multi:
 			xml: <value>number</value>
 			txt: number
 		
+
+Storing data:
+
+PUT /path/existing
+	json {a=42, b=42}
+		Replace content of existing with <a>42</a><b>42</b>
+	json {existing={a=42, b=42}}
+		Replace content of existing with <existing><a>42</a><b>42</b></existing> (CHILD!)
+	urlencoded a=42&b=42
+		Replace content of existing with <a>42</a><b>42</b>
+	text hello
+		Replace content of existing with text node "hello"
+	xml <existing><a>42</a><b>42</b></existing>
+		Replace existing itself with <existing><a>42</a><b>42</b></existing>
+	xml <a>42</a>
+		ERROR
+		
+PUT /path/multiexisting
+		ERROR
+		
+PUT /path/new
+	json {a=42, b=42}
+		Create <new><a>42</a><b>42</b></new>
+	json {new={a=42, b=42}}
+		Create <new><new><a>42</a><b>42</b></new></new>
+	urlencoded a=42&b=42
+		Create <new><a>42</a><b>42</b></new>
+	text hello
+		Create <new>hello</new>
+	xml <new><a>42</a><b>42</b></new>
+		Create <new><a>42</a><b>42</b></new>
+	xml <a>42</a>
+		ERROR
+		
+PUT /path/nonexisting/new
+		ERROR
+	
+POST /path/existing
+	json {a=42, b=42}
+		Update content of existing with <a>42</a><b>42</b>
+	json {existing={a=42, b=42}}
+		Update content of existing with <existing><a>42</a><b>42</b></existing> (CHILD!)
+	urlencoded a=42&b=42
+		Update content of existing with <a>42</a><b>42</b>
+	text hello
+		ERROR?
+	xml <existing><a>42</a><b>42</b></existing>
+		ERROR?
+	xml <a>42</a>
+		ERROR?
+POST /path/multiexisting
+		ERROR
+POST /path/new
+		ERROR?
+	json {a=42, b=42}
+	json {new={a=42, b=42}}
+	urlencoded a=42&b=42
+	text hello
+	xml <new><a>42</a><b>42</b></new>
+	xml <a>42</a>
+POST /path/nonexisting/new
+	ERROR

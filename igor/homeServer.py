@@ -190,8 +190,8 @@ class XMLDB(AbstractDB):
 		
 	def convertto(self, value, mimetype, variant):
 		if variant == 'ref':
-			if not isinstance(value, basestr):
-				raise web.BadRequest()
+			if not isinstance(value, basestring):
+				raise web.BadRequest("Bad request, cannot use .VARIANT=ref for this request")
 			value = "/data/" + value
 			if mimetype == "application/json":
 				return json.dumps({"ref":value})+'\n'
@@ -220,13 +220,13 @@ class XMLDB(AbstractDB):
 					rv.append({"ref":r, t:v})
 				return json.dumps(rv)+'\n'
 			elif mimetype == "text/plain":
-				raise web.BadRequest()
+				raise web.BadRequest("Bad request, cannot use .VARIANT=multi for mimetype text/plain")
 			elif mimetype == "application/xml":
 				rv = "<items>\n"
 				for item in value:
 					r = self.db.getXPathForElement(item)
 					v = item.toxml()
-					rv += "<item>\n<ref>%s</ref>\n"
+					rv += "<item>\n<ref>%s</ref>\n" % r
 					rv += v
 					rv += "\n</item>\n"
 				rv += "</items>\n"
@@ -236,7 +236,7 @@ class XMLDB(AbstractDB):
 		# Final case: single node return
 		if mimetype == "application/json":
 			if len(value) != 1:
-				raise web.BadRequest()
+				raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
 			t, v = self.db.tagAndDictFromElement(value[0])
 			return json.dumps({t:v})+'\n'
 		elif mimetype == "text/plain":
@@ -248,7 +248,7 @@ class XMLDB(AbstractDB):
 			return rv
 		elif mimetype == "application/xml":
 			if len(value) != 1:
-				raise web.BadRequest()
+				raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
 			return value[0].toxml()+'\n'
 		else:
 			raise web.internalError("Unimplemented mimetype for default, single node")			
@@ -257,12 +257,12 @@ class XMLDB(AbstractDB):
 		if mimetype == 'application/xml':
 			element = self.db.newElementFromXML(value)
 			if element.tagName != tag:
-				raise web.BadRequest()
+				raise web.BadRequest("Bad request, toplevel XML tag does not match final XPath element")
 			return element
 		elif mimetype == 'application/json':
 			valueDict = json.loads(value)
 			if not isinstance(valueDict, dict):
-				raise web.BadRequest()
+				raise web.BadRequest("Bad request, JSON toplevel object must be object")
 			element = self.db.elementFromTagAndDict(tag, valueDict)
 			return element
 		elif mimetype == 'text/plain':

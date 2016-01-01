@@ -10,7 +10,7 @@ import mimetypematch
 
 urls = (
 	'/scripts/(.*)', 'runScript',
-	'/data(.*)', 'database',
+	'/data/(.*)', 'database',
 	'/(.*)', 'hello',
 )
 app = web.application(urls, globals())
@@ -92,7 +92,8 @@ class AbstractDB(object):
 				mimetype = "application/x-www-form-urlencoded"
 			else:
 				data = web.data()
-				mimetype = "application/unknown" # XXXJACK get from Content-Type	
+				print 'xxxjack data', repr(data)
+				mimetype = web.ctx.env.get('CONTENT_TYPE', 'application/unknown')
 		rv = self.put_key(name, self.best_return_mimetype(), variant, data, mimetype, replace=replace)
 		return rv
 
@@ -126,18 +127,8 @@ class XMLDB(AbstractDB):
 	
 	def __init__(self):
 		self.db = dbimpl.DBImpl("./data/database.xml")
+		self.rootTag = self.db.getDocument().tagName
 
-
-	def create_key(self, key):
-		realKey = self.db.hasValue(key)
-		if realKey:
-			return realKey
-		# Otherwise create it
-		self.db.setValue(key, "")
-		realKey = self.db.hasValue(key)
-		assert realKey
-		return realKey
-		
 	def get_key(self, key, mimetype, variant):
 		"""Get subtree for 'key' as 'mimetype'. Variant can be used
 		to state which data should be returned (single node, multinode,
@@ -146,17 +137,20 @@ class XMLDB(AbstractDB):
 			rv = [self.db.getDocument()]
 			# This always returns XML, so just continue
 		else:
+			key = '/%s/%s' % (self.rootTag, key)
 			rv = self.db.getElements(key)
 		rv = self.convertto(rv, mimetype, variant)
 		return rv
 		
 	def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
+		key = '/%s/%s' % (self.rootTag, key)
 		if not variant: variant = 'ref'
-		element = self.convertfrom(data, key, datamimetype)
+		parentPath, tag = self.db.splitXPath(key)
+		print 'xyzzy put_key split', repr(key), repr(parentPath), repr(tag)
+		element = self.convertfrom(data, tag, datamimetype)
 		oldElements = self.db.getElements(key)
 		if not oldElements:
 			# Does not exist yet. See if we can create it
-			parentPath, tag = self.db.splitXPath(key)
 			if not parentPath or not tag:
 				raise web.notfound()
 			# Find parent
@@ -182,6 +176,8 @@ class XMLDB(AbstractDB):
 		return self.convertto(path, mimetype, variant)
 		
 	def delete_key(self, key):
+		key = '/%s/%s' % (self.rootTag, key)
+		print 'xyzzy jack delete', repr(key)
 		self.db.delValues(key)
 		return None
 		
@@ -253,22 +249,22 @@ class XMLDB(AbstractDB):
 		if mimetype == 'application/xml':
 			element = self.db.elementFromXML(value)
 			if element.tagName != tag:
-				raise web.BadRequest("Bad request, toplevel XML tag does not match final XPath element")
+				raise web.BadRequest("Bad request, toplevel XML tag %s does not match final XPath element %s" % (element.tagName, tag))
 			return element
 		elif mimetype == 'application/x-www-form-urlencoded':
-			element = self.db.elementFromTagAndDict(tag, value)
+			element = self.db.elementFromTagAndData(tag, value)
 			return element
 		elif mimetype == 'application/json':
 			valueDict = json.loads(value)
 			if not isinstance(valueDict, dict):
 				raise web.BadRequest("Bad request, JSON toplevel object must be object")
-			element = self.db.elementFromTagAndDict(tag, valueDict)
+			element = self.db.elementFromTagAndData(tag, valueDict)
 			return element
 		elif mimetype == 'text/plain':
-			element = self.db.elementFromTagAndText(tag, value)
+			element = self.db.elementFromTagAndData(tag, value)
 			return element
 		else:
-			raise web.internalError("Conversion from %s not implemented" % mimetype)
+			raise web.InternalError("Conversion from %s not implemented" % mimetype)
 		
 database = XMLDB
 

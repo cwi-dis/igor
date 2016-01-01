@@ -111,7 +111,10 @@ class DBImpl(DBSerializer):
 		
 	def splitXPath(self, location):
 		lastSlashPos = location.rfind('/')
-		if lastSlashPos > 0:
+		if lastSlashPos == 0:
+			parent = '.'
+			child = location[lastSlashPos+1:]
+		elif lastSlashPos > 0:
 			parent = location[:lastSlashPos]
 			child = location[lastSlashPos+1:]
 		else:
@@ -179,8 +182,13 @@ class DBImpl(DBSerializer):
 			v['#text'] = texts
 		return t, v
 
-	def elementFromTagAndDict(self, tag, data):
+	def elementFromTagAndData(self, tag, data):
 		newnode = self._doc.createElement(tag)
+		if not isinstance(data, dict):
+			# Not key/value, so a raw value. Convert to something string-like
+			data = unicode(data)
+			newnode.appendChild(self._doc.createTextNode(data))
+			return newnode
 		for k, v in data.items():
 			if k == '#text':
 				if not isinstance(v, list):
@@ -197,21 +205,13 @@ class DBImpl(DBSerializer):
 				if not isinstance(v, list):
 					v = [v]
 				for childdef in v:
-					if isinstance(childdef, dict):
-						newchild = self.elementFromTagAndDict(k, childdef)
-					else:
-						newchild = self.elementFromTagAndText(k, childdef)
+					newchild = self.elementFromTagAndData(k, childdef)
 					newnode.appendChild(newchild)
-		return newnode
-		  
-	def elementFromTagAndText(self, tag, text):
-		newnode = self._doc.createElement(tag)
-		newnode.appendChild(self._doc.createTextNode(text))
 		return newnode
 		
 	def elementFromXML(self, xmltext):
-		newnode = xml.dom.minidom.parseString(xmltext)
-		return newnode
+		newdoc = xml.dom.minidom.parseString(xmltext)
+		return newdoc.firstChild
 		
 	def setValue(self, location, value):
 		"""Set (or insert) a single node by a given value (passed as a string)"""
@@ -289,6 +289,7 @@ class DBImpl(DBSerializer):
 		"""Remove a (possibly empty) set of nodes from the document"""
 		nodelist = xpath.find(location, self._doc.documentElement)
 		parentList = []
+		print 'xxxjack delValues', repr(nodelist)
 		for node in nodelist:
 			parentNode = node.parentNode
 			parentNode.removeChild(node)

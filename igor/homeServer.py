@@ -10,7 +10,7 @@ import mimetypematch
 
 urls = (
 	'/scripts/(.*)', 'runScript',
-	'/data/(.*)', 'database',
+	'/data(.*)', 'database',
 	'/(.*)', 'hello',
 )
 app = web.application(urls, globals())
@@ -48,7 +48,6 @@ class AbstractDB(object):
 	def GET(self, name):
 		"""If no query get the content of a section of the database.
 		If there is a query can be used as a 1-url shortcut for POST."""
-		print 'xxxjack GET env', web.ctx.env
 		optArgs = web.input()
 
 		# See whether we have a variant request
@@ -65,8 +64,7 @@ class AbstractDB(object):
 			if '.METHOD' in optArgs:
 				method = getattr(self, optArgs['.METHOD'])
 				del optArgs['.METHOD']
-			data = json.dumps(optArgs)
-			return method(name, data, mimetype="application/json")
+			return method(name, optArgs, mimetype="application/x-www-form-urlencoded")
 			
 		returnType = self.best_return_mimetype()
 		if not returnType:
@@ -79,7 +77,6 @@ class AbstractDB(object):
 		"""Replace part of the document with new data, or inster new data
 		in a specific location.
 		"""
-		print 'xxxjack PUT env', web.ctx.env
 		optArgs = web.input()
 
 		# See whether we have a variant request
@@ -100,7 +97,7 @@ class AbstractDB(object):
 		return rv
 
 	def POST(self, name, data=None, mimetype=None):
-		self.PUT(name, data, mimetype, replace=False)
+		return self.PUT(name, data, mimetype, replace=False)
 
 	def DELETE(self, name, data=None, mimetype=None):
 		return self.delete_key(str(name))
@@ -154,9 +151,8 @@ class XMLDB(AbstractDB):
 		return rv
 		
 	def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
-		if datamimetype and datamimetype != "application/xml":
-			data = self.convertfrom(data, key, mimetype)
-		element = xyzzy
+		if not variant: variant = 'ref'
+		element = self.convertfrom(data, key, datamimetype)
 		oldElements = self.db.getElements(key)
 		if not oldElements:
 			# Does not exist yet. See if we can create it
@@ -168,20 +164,21 @@ class XMLDB(AbstractDB):
 			if not parentElements:
 				raise web.notfound()
 			if len(parentElements) > 1:
-				raise xyzzy
+				raise web.BadRequest("Bad request, XPath parent selects multiple items")
 			parent = parentElements[0]
 			parent.appendChild(element)
-			return
-		if len(oldElements) > 1:
-			raise xyzzy
-		oldElement = oldElements[0]
-		replace = True # XXXJACK
-		if replace:
-			parent = oldElement.parentNode
-			parent.replaceChild(element, oldElement)
+		elif len(oldElements) > 1:
+			raise web.BadRequest("Bad Request, XPath selects multiple items")
 		else:
-			raise web.internalError("Selective replace not implemented yet")
+			oldElement = oldElements[0]
+			replace = True # XXXJACK
+			if replace:
+				parent = oldElement.parentNode
+				parent.replaceChild(element, oldElement)
+			else:
+				raise web.internalError("Selective replace not implemented yet")
 		path = self.db.getXPathForElement(element)
+		self.db.signalNodelist(element)
 		return self.convertto(path, mimetype, variant)
 		
 	def delete_key(self, key):
@@ -191,8 +188,7 @@ class XMLDB(AbstractDB):
 	def convertto(self, value, mimetype, variant):
 		if variant == 'ref':
 			if not isinstance(value, basestring):
-				raise web.BadRequest("Bad request, cannot use .VARIANT=ref for this request")
-			value = "/data/" + value
+				raise web.BadRequest("Bad request, cannot use .VARIANT=ref for this operation")
 			if mimetype == "application/json":
 				return json.dumps({"ref":value})+'\n'
 			elif mimetype == "text/plain":
@@ -255,9 +251,12 @@ class XMLDB(AbstractDB):
 		
 	def convertfrom(self, value, tag, mimetype):
 		if mimetype == 'application/xml':
-			element = self.db.newElementFromXML(value)
+			element = self.db.elementFromXML(value)
 			if element.tagName != tag:
 				raise web.BadRequest("Bad request, toplevel XML tag does not match final XPath element")
+			return element
+		elif mimetype == 'application/x-www-form-urlencoded':
+			element = self.db.elementFromTagAndDict(tag, value)
 			return element
 		elif mimetype == 'application/json':
 			valueDict = json.loads(value)

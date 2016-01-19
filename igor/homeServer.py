@@ -226,9 +226,9 @@ class XMLDB(AbstractDB):
 			else:
 				raise web.internalError("Unimplemented mimetype for multi, nodeset")
 		# Final case: single node return
+		if len(value) == 0:
+			raise web.notfound()
 		if mimetype == "application/json":
-			if len(value) == 0:
-				raise web.notfound()
 			if len(value) > 1:
 				raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
 			t, v = self.db.tagAndDictFromElement(value[0])
@@ -241,7 +241,7 @@ class XMLDB(AbstractDB):
 				rv += '\n'
 			return rv
 		elif mimetype == "application/xml":
-			if len(value) != 1:
+			if len(value) > 1:
 				raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
 			return value[0].toxml()+'\n'
 		else:

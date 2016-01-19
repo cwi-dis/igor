@@ -48,6 +48,8 @@ class HomeServer:
 		if VERBOSE:
 			print >>sys.stderr, ">>> GET", url
 			print >>sys.stderr, "... Headers", headers
+			if data:
+				print >>sys.stderr, "... Data", repr(data)
 		reply, content = h.request(url, method=method, headers=headers, body=data)
 		if VERBOSE:
 			print >>sys.stderr, "<<< Headers", reply

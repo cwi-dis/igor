@@ -1,0 +1,9 @@
+#!/bin/bash
+dir=`dirname $0`
+dirHomeServer=$dir/..
+dirSmartMeter=$dir/../../../smartMeter
+readtelegram="python $dirSmartMeter/readTelegramBluez.py"
+parsetelegram="python $dirSmartMeter/parseTelegram.py"
+meter="D1:59:4C:3C:5C:2E random"
+
+$readtelegram $meter | $parsetelegram --json | python $dirHomeServer/homeVar.py --put application/json sensors/smartMeter

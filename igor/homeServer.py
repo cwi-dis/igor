@@ -92,7 +92,6 @@ class AbstractDB(object):
 				mimetype = "application/x-www-form-urlencoded"
 			else:
 				data = web.data()
-				print 'xxxjack data', repr(data)
 				mimetype = web.ctx.env.get('CONTENT_TYPE', 'application/unknown')
 		rv = self.put_key(name, self.best_return_mimetype(), variant, data, mimetype, replace=replace)
 		return rv
@@ -146,7 +145,6 @@ class XMLDB(AbstractDB):
 		key = '/%s/%s' % (self.rootTag, key)
 		if not variant: variant = 'ref'
 		parentPath, tag = self.db.splitXPath(key)
-		print 'xyzzy put_key split', repr(key), repr(parentPath), repr(tag)
 		element = self.convertfrom(data, tag, datamimetype)
 		oldElements = self.db.getElements(key)
 		if not oldElements:
@@ -177,9 +175,8 @@ class XMLDB(AbstractDB):
 		
 	def delete_key(self, key):
 		key = '/%s/%s' % (self.rootTag, key)
-		print 'xyzzy jack delete', repr(key)
 		self.db.delValues(key)
-		return None
+		return ''
 		
 	def convertto(self, value, mimetype, variant):
 		if variant == 'ref':

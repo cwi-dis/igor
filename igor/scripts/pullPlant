@@ -2,4 +2,5 @@
 dir=`dirname $0`
 dirHomeServer=$dir/..
 plantURL=http://plant.local/stepper/
-python $dirHomeServer/homeVar.py --url $plantURL 0| python $dirHomeServer/homeVar.py --put application/json devices/plant
+# NOTE: currently plant firmware sends single quotes in stead of double quotes as json....
+python $dirHomeServer/homeVar.py --url $plantURL 0 | tr "'" '"' | python $dirHomeServer/homeVar.py --put application/json devices/plant

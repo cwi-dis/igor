@@ -1,0 +1,5 @@
+#!/bin/bash
+dir=`dirname $0`
+dirHomeServer=$dir/..
+plantURL=http://plant.local/stepper/
+python $dirHomeServer/homeVar.py --url $plantURL 0| python $dirHomeServer/homeVar.py --put application/json devices/plant

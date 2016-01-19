@@ -71,6 +71,7 @@ def main():
 	parser.add_argument("--xml", dest="mimetype", action="store_const", const="application/xml", help="Get result as XML")
 	parser.add_argument("--verbose", action="store_true", help="Print what is happening")
 	parser.add_argument("--delete", action="store_true", help="Delete variable")
+	parser.add_argument("--create", action="store_true", help="Create or clear a variable")
 	parser.add_argument("--put", metavar="MIMETYPE", help="PUT data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--post", metavar="MIMETYPE", help="POST data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--data", metavar="DATA", help="POST or PUT DATA, in stead of reading from stdin")
@@ -81,6 +82,8 @@ def main():
 	server = HomeServer(args.url)
 	if args.delete:
 		result = server.delete(args.var)
+	elif args.create:
+		result = server.put(args.var, '{}', 'application/json', variant=args.variant, format=args.mimetype)
 	elif args.put:
 		data = args.data
 		if not data:

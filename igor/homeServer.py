@@ -35,7 +35,7 @@ class runScript:
 		except OSError:
 			pass
 		try:
-			rv = subprocess.check_call([command] + args)
+			rv = subprocess.check_output([command] + args, stderr=subprocess.STDOUT)
 		except subprocess.CalledProcessError, arg:
 			raise web.HTTPError("502 Command %s exited with status code=%d" % (command, arg.returncode), {"Content-type": "text/plain"}, arg.output)
 		except OSError, arg:
@@ -120,14 +120,17 @@ class AbstractDB(object):
 		if not acceptable:
 			return None
 		return mimetypematch.match(acceptable, self.MIMETYPES)
-	
+
+# NOTE: this is a global variable shared by all instances!
+GLOBAL_DB = dbimpl.DBImpl("./data/database.xml")
+
 class XMLDB(AbstractDB):
 	MIMETYPES = ["application/xml", "application/json", "text/plain"]
 	
 	def __init__(self):
-		self.db = dbimpl.DBImpl("./data/database.xml")
+		self.db = GLOBAL_DB
 		self.rootTag = self.db.getDocument().tagName
-
+		
 	def get_key(self, key, mimetype, variant):
 		"""Get subtree for 'key' as 'mimetype'. Variant can be used
 		to state which data should be returned (single node, multinode,

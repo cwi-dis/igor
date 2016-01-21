@@ -71,6 +71,7 @@ class DBImpl(DBSerializer):
 		self._terminating = False
 		self._domimpl = xml.dom.getDOMImplementation()
 		self.filename = filename
+		self.tmpCounter = 1
 		if os.path.exists(filename):
 			self.initialize(filename=filename)
 		else:
@@ -78,9 +79,9 @@ class DBImpl(DBSerializer):
 
 	def signalNodelist(self, nodelist):
 		with self:
-			newFilename = self.filename + '.NEW'
+			newFilename = self.filename + '.NEW' + str(self.tmpCounter)
+			self.tmpCounter += 1
 			self._doc.writexml(open(newFilename, 'w'))
-			print 'xxxjack rename', newFilename, 'to', self.filename
 			os.rename(newFilename, self.filename)
 			DBSerializer.signalNodelist(self, nodelist)
 		

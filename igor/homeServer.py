@@ -147,34 +147,35 @@ class XMLDB(AbstractDB):
 	def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
 		key = '/%s/%s' % (self.rootTag, key)
 		if not variant: variant = 'ref'
-		parentPath, tag = self.db.splitXPath(key)
-		element = self.convertfrom(data, tag, datamimetype)
-		oldElements = self.db.getElements(key)
-		if not oldElements:
-			# Does not exist yet. See if we can create it
-			if not parentPath or not tag:
-				raise web.notfound()
-			# Find parent
-			parentElements = self.db.getElements(parentPath)
-			if not parentElements:
-				raise web.notfound()
-			if len(parentElements) > 1:
-				raise web.BadRequest("Bad request, XPath parent selects multiple items")
-			parent = parentElements[0]
-			parent.appendChild(element)
-		elif len(oldElements) > 1:
-			raise web.BadRequest("Bad Request, XPath selects multiple items")
-		else:
-			oldElement = oldElements[0]
-			replace = True # XXXJACK
-			if replace:
-				parent = oldElement.parentNode
-				parent.replaceChild(element, oldElement)
+		with self.db:
+			parentPath, tag = self.db.splitXPath(key)
+			element = self.convertfrom(data, tag, datamimetype)
+			oldElements = self.db.getElements(key)
+			if not oldElements:
+				# Does not exist yet. See if we can create it
+				if not parentPath or not tag:
+					raise web.notfound()
+				# Find parent
+				parentElements = self.db.getElements(parentPath)
+				if not parentElements:
+					raise web.notfound()
+				if len(parentElements) > 1:
+					raise web.BadRequest("Bad request, XPath parent selects multiple items")
+				parent = parentElements[0]
+				parent.appendChild(element)
+			elif len(oldElements) > 1:
+				raise web.BadRequest("Bad Request, XPath selects multiple items")
 			else:
-				raise web.internalError("Selective replace not implemented yet")
-		path = self.db.getXPathForElement(element)
-		self.db.signalNodelist(element)
-		return self.convertto(path, mimetype, variant)
+				oldElement = oldElements[0]
+				replace = True # XXXJACK
+				if replace:
+					parent = oldElement.parentNode
+					parent.replaceChild(element, oldElement)
+				else:
+					raise web.internalError("Selective replace not implemented yet")
+			path = self.db.getXPathForElement(element)
+			self.db.signalNodelist(element)
+			return self.convertto(path, mimetype, variant)
 		
 	def delete_key(self, key):
 		key = '/%s/%s' % (self.rootTag, key)

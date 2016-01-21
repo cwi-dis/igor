@@ -23,6 +23,7 @@ class DBSerializer:
 	def __init__(self):	  
 		self.lockCount = 0
 		self._waiting = {}
+		self._callbacks = []
 		self._lock = threading.RLock()
 
 	def enter(self):
@@ -39,6 +40,18 @@ class DBSerializer:
 	def __exit__(self, *args):
 		self.leave()
 
+	def registerCallback(self, callback, location):
+		with self:
+			self.unregisterCallback(callback)
+			self._callbacks.append((location, callback))
+			
+	def unregisterCallback(self, callback):
+		with self:
+			for i in range(len(self._callbacks)):
+				if self._callbacks[i][0] == callback:
+					del self._callbacks[i]
+					return
+			
 	def waitLocation(self, location, oldValue=None):
 		"""Register that we are interested in the given XPath. Returns the semaphore"""
 		if not location in self._waiting:
@@ -62,6 +75,12 @@ class DBSerializer:
 					cv[1] += 1
 					cv[0].notify_all()
 					break
+		for location, callback in self._callbacks:
+			waitnodelist = xpath.find(location, self._doc.documentElement)
+			for wn in waitnodelist:
+				if wn in nodelist:
+					print 'DBG callback for', wn
+					callback()	
 		
 class DBImpl(DBSerializer):
 	"""Main implementation of the database API"""

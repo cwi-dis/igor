@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import urlparse
 import urllib

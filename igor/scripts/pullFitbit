@@ -1,0 +1,17 @@
+#!/bin/bash
+dir=`dirname $0`
+dirHomeServer=$dir/..
+dirFitbit=$dir/../../../fitbit
+case "x$user" in
+x)
+	echo $0: need user= argument
+	exit 1
+	;;
+esac
+case "x$userData" in
+x)
+	echo $0: no userData for user=$user
+	exit 1
+	;;
+esac
+echo $userData | python $dirFitbit/getFitbit.py --stdin | python $dirHomeServer/homeVar.py --put application/json sensors/fitbit/$user

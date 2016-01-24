@@ -7,6 +7,7 @@ import uuid
 import json
 import dbimpl
 import mimetypematch
+import copy
 
 urls = (
 	'/scripts/(.*)', 'runScript',
@@ -24,10 +25,26 @@ class runScript:
 		allArgs = web.input()
 		if '/' in command:
 			raise web.HTTPError("401 Cannot use / in command")
+			
 		if allArgs.has_key('args'):
 			args = shlex.split(allArgs.args)
 		else:
 			args = []
+			
+		# Setup userdata for pull script, if available
+		env = None
+		if allArgs.has_key('user'):
+			env = copy.deepcopy(os.environ)
+			user = allArgs['user']
+			env['user'] = user
+			tmpDB = XMLDB()
+			try:
+				userData = tmpDB.get_key('peopleInfo/%s/scriptData/%s' % (user, command), 'application/json', 'content')
+			except:
+				userData = None
+			if userData:
+				env['userData'] = userData
+				
 		command = "./scripts/" + command
 		try:
 			linked = os.readlink(command)
@@ -35,11 +52,13 @@ class runScript:
 		except OSError:
 			pass
 		try:
-			rv = subprocess.check_output([command] + args, stderr=subprocess.STDOUT)
+			rv = subprocess.check_output([command] + args, stderr=subprocess.STDOUT, env=env)
 		except subprocess.CalledProcessError, arg:
-			raise web.HTTPError("502 Command %s exited with status code=%d" % (command, arg.returncode), {"Content-type": "text/plain"}, arg.output)
+			msg = "502 Command %s exited with status code=%d" % (command, arg.returncode)
+			raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n' + arg.output)
 		except OSError, arg:
-			raise web.HTTPError("502 Error running command: %s: %s" % (command, arg.strerror))
+			msg = "502 Error running command: %s: %s" % (command, arg.strerror)
+			raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 		return rv
 	
 class AbstractDB(object):
@@ -233,7 +252,11 @@ class XMLDB(AbstractDB):
 			if len(value) > 1:
 				raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
 			t, v = self.db.tagAndDictFromElement(value[0])
-			return json.dumps({t:v})+'\n'
+			if variant == "content":
+				rv = json.dumps(v)
+			else:
+				rv = json.dumps({t:v})
+			return rv+'\n'
 		elif mimetype == "text/plain":
 			rv = ""
 			for item in value:

@@ -39,7 +39,7 @@ class runScript:
 			env['user'] = user
 			tmpDB = XMLDB()
 			try:
-				userData = tmpDB.get_key('peopleInfo/%s/scriptData/%s' % (user, command), 'application/json', 'content')
+				userData = tmpDB.get_key('identities/%s/scriptData/%s' % (user, command), 'application/json', 'content')
 			except:
 				userData = None
 			if userData:
@@ -293,26 +293,6 @@ class XMLDB(AbstractDB):
 			raise web.InternalError("Conversion from %s not implemented" % mimetype)
 		
 database = XMLDB
-
-def _getDictForDomNode(item):
-	t = item.tagName
-	v = {}
-	texts = []
-	child = item.firstChild
-	while child:
-		if child.nodeType == ELEMENT_NODE:
-			newv, newt = _getDictForDomNode(child)
-			v[newv] = newt
-		elif child.nodeType == ATTRIBUTE_NODE:
-			v['@' + child.name] = child.value
-		elif child.nodeType == TEXT_NODE:
-			texts.append(child.data)
-		child = child.nextSibling
-	if len(texts) == 1:
-		v['#text'] = texts[0]
-	elif len(texts) > 1:
-		v['#text'] = texts
-	return t, v
 	
 if __name__ == "__main__":
 	app.run()

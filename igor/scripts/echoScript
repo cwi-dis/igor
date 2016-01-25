@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "Content-Type: text/plain"
+echo
+echo ---------------- echoscript --------------------
+echo user is "$user"
+echo ------------------------------------------------
+echo userData is "$userData"
+echo ------------------------------------------------

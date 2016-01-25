@@ -6,6 +6,7 @@ import re
 import uuid
 import json
 import dbimpl
+import triggers
 import mimetypematch
 import copy
 
@@ -142,6 +143,14 @@ class AbstractDB(object):
 
 # NOTE: this is a global variable shared by all instances!
 GLOBAL_DB = dbimpl.DBImpl("./data/database.xml")
+TRIGGERS = None
+triggerTemplate = GLOBAL_DB.getElements('triggers')
+if triggerTemplate:
+	assert len(triggerTemplate) == 1
+	TRIGGERS = triggers.TriggerCollection(GLOBAL_DB)
+	TRIGGERS.updateTriggers(triggerTemplate[0])
+	del triggerTemplate
+	print 'xxxjack installed triggers'
 
 class XMLDB(AbstractDB):
 	MIMETYPES = ["application/xml", "application/json", "text/plain"]

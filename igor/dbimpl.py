@@ -80,7 +80,7 @@ class DBSerializer:
 			for wn in waitnodelist:
 				if wn in nodelist:
 					print 'DBG callback for', wn
-					callback()	
+					callback(wn)	
 		
 class DBImpl(DBSerializer):
 	"""Main implementation of the database API"""
@@ -350,27 +350,35 @@ class DBImpl(DBSerializer):
 				assert node
 			return getXPathForElement(node)
 
-	def hasValues(self, location):
+	def hasValues(self, location, context=None):
 		"""Return a list of xpaths for the given location"""
 		with self:
-			nodelist = xpath.find(location, self._doc.documentElement)
+			if context is None:
+				context = self._doc.documentElement
+			nodelist = xpath.find(location, context)
 			return map(getXPathForElement, nodelist)
 		
-	def getValue(self, location):
+	def getValue(self, location, context=None):
 		"""Return a single value from the document (as string)"""
 		with self:
-			return xpath.findvalue(location, self._doc.documentElement)
+			if context is None:
+				context = self._doc.documentElement
+			return xpath.findvalue(location, context)
 		
-	def getValues(self, location):
+	def getValues(self, location, context=None):
 		"""Return a list of node values from the document (as names and strings)"""
 		with self:
-			nodelist = xpath.find(location, self._doc.documentElement)
+			if context is None:
+				context = self._doc.documentElement
+			nodelist = xpath.find(location, context)
 			return self._getValueList(nodelist)
 		
-	def getElements(self, location):
+	def getElements(self, location, context=None):
 		"""Return a list of DOM nodes (elements only, for now) that match the location"""
 		with self:
-			nodeList = xpath.find(location, self._doc.documentElement)
+			if context is None:
+				context = self._doc.documentElement
+			nodeList = xpath.find(location, context)
 			return nodeList
 		
 	def _getValueList(self, nodelist):

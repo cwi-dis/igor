@@ -186,8 +186,14 @@ class DBImpl(DBSerializer):
 		child = item.firstChild
 		while child:
 			if child.nodeType == child.ELEMENT_NODE:
-				newv, newt = self.tagAndDictFromElement(child)
-				v[newv] = newt
+				newt, newv = self.tagAndDictFromElement(child)
+				# If the element already exists we turn it into a list (if not done before)
+				if newt in v:
+					if type(v[newt]) != type([]):
+						v[newt] = [v[newt]]
+					v[newt].append(newv)
+				else:
+					v[newt] = newv
 			elif child.nodeType == child.ATTRIBUTE_NODE:
 				v['@' + child.name] = child.value
 			elif child.nodeType == child.TEXT_NODE:

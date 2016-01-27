@@ -167,11 +167,14 @@ class AbstractDB(object):
 
 # NOTE: this is a global variable shared by all instances!
 GLOBAL_DB = dbimpl.DBImpl("./data/database.xml")
+def callURL(method, url, data):
+	print 'xxxjack should call %s on %s with %s' % (method, url, data)
+	
 TRIGGERS = None
 triggerTemplate = GLOBAL_DB.getElements('triggers')
 if triggerTemplate:
 	assert len(triggerTemplate) == 1
-	TRIGGERS = triggers.TriggerCollection(GLOBAL_DB)
+	TRIGGERS = triggers.TriggerCollection(GLOBAL_DB, callURL)
 	TRIGGERS.updateTriggers(triggerTemplate[0])
 	del triggerTemplate
 	print 'xxxjack installed triggers'
@@ -226,7 +229,7 @@ class XMLDB(AbstractDB):
 				else:
 					raise web.internalError("Selective replace not implemented yet")
 			path = self.db.getXPathForElement(element)
-			self.db.signalNodelist(element)
+			self.db.signalNodelist([element])
 			return self.convertto(path, mimetype, variant)
 		
 	def delete_key(self, key):

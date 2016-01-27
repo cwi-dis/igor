@@ -5,14 +5,17 @@ import os
 import re
 import uuid
 import json
-import dbimpl
-import triggers
 import mimetypematch
 import copy
+import importlib
+
+import dbimpl
+import triggers
 
 urls = (
 	'/scripts/(.*)', 'runScript',
 	'/data/(.*)', 'database',
+	'/internal/(.*)', 'runCommand',
 	'/(.*)', 'hello',
 )
 app = web.application(urls, globals())
@@ -21,7 +24,9 @@ class hello:
 	def GET(self, *args, **kwargs):
 		return 'Hello, args=' + repr(args) + ', kwargs=' + repr(kwargs) + ', input=' + repr(web.input())
 
-class runScript:		
+class runScript:
+	"""Run a shell script"""
+		
 	def GET(self, command):
 		allArgs = web.input()
 		if '/' in command:
@@ -61,7 +66,26 @@ class runScript:
 			msg = "502 Error running command: %s: %s" % (command, arg.strerror)
 			raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 		return rv
+
+class runCommand:
+	"""Call an internal method"""
 	
+	def GET(self, command):
+		try:
+			mod = importlib.import_module(command)
+		except ImportError:
+			raise web.notfound()
+		try:
+			method = getattr(mod, command)
+		except AttributeError:
+			raise web.notfound()
+		allArgs = dict(web.input())
+		try:
+			rv = method(**allArgs)
+		except TypeError, arg:
+			raise web.HTTPError("401 Error calling method %s: %s" % (command, arg))
+		return rv
+		
 class AbstractDB(object):
 	"""Abstract database that handles the high-level HTTP primitives.
 	"""

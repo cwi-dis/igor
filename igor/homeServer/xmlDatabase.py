@@ -2,7 +2,6 @@ import xml.dom
 import xpath
 import sys
 import traceback
-import SimpleXMLRPCServer
 import threading
 import time
 import os

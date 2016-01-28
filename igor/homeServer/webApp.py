@@ -9,20 +9,14 @@ import mimetypematch
 import copy
 import importlib
 
-import dbimpl
-import triggers
+DATABASE=None	# The database itself. Will be set by main module
 
 urls = (
 	'/scripts/(.*)', 'runScript',
-	'/data/(.*)', 'database',
+	'/data/(.*)', 'xmlDatabaseAccess',
 	'/internal/(.*)', 'runCommand',
-	'/(.*)', 'hello',
 )
 app = web.application(urls, globals())
-
-class hello:		
-	def GET(self, *args, **kwargs):
-		return 'Hello, args=' + repr(args) + ', kwargs=' + repr(kwargs) + ', input=' + repr(web.input())
 
 class runScript:
 	"""Run a shell script"""
@@ -86,7 +80,7 @@ class runCommand:
 			raise web.HTTPError("401 Error calling method %s: %s" % (command, arg))
 		return rv
 		
-class AbstractDB(object):
+class AbstractDatabaseAccess(object):
 	"""Abstract database that handles the high-level HTTP primitives.
 	"""
 	def GET(self, name):
@@ -165,25 +159,12 @@ class AbstractDB(object):
 			return None
 		return mimetypematch.match(acceptable, self.MIMETYPES)
 
-# NOTE: this is a global variable shared by all instances!
-GLOBAL_DB = dbimpl.DBImpl("./data/database.xml")
-def callURL(method, url, data):
-	print 'xxxjack should call %s on %s with %s' % (method, url, data)
-	
-TRIGGERS = None
-triggerTemplate = GLOBAL_DB.getElements('triggers')
-if triggerTemplate:
-	assert len(triggerTemplate) == 1
-	TRIGGERS = triggers.TriggerCollection(GLOBAL_DB, callURL)
-	TRIGGERS.updateTriggers(triggerTemplate[0])
-	del triggerTemplate
-	print 'xxxjack installed triggers'
-
-class XMLDB(AbstractDB):
+class xmlDatabaseAccess(AbstractDatabaseAccess):
 	MIMETYPES = ["application/xml", "application/json", "text/plain"]
 	
 	def __init__(self):
-		self.db = GLOBAL_DB
+		self.db = DATABASE
+		assert DATABASE
 		self.rootTag = self.db.getDocument().tagName
 		
 	def get_key(self, key, mimetype, variant):
@@ -327,9 +308,4 @@ class XMLDB(AbstractDB):
 			return element
 		else:
 			raise web.InternalError("Conversion from %s not implemented" % mimetype)
-		
-database = XMLDB
-	
-if __name__ == "__main__":
-	app.run()
 		

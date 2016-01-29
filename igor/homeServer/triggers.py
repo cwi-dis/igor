@@ -27,7 +27,11 @@ class Trigger:
 	def callback(self, node):
 		url = self._evaluate(self.url, node, True)
 		data = self._evaluate(self.data, node, False)
-		self.hoster.scheduleCallback(self.method, url, data)
+		tocall = dict(method=self.method, url=url)
+		if data:
+			tocall['data'] = data
+		# xxxjack can add things like mimetype, credentials, etc
+		self.hoster.scheduleCallback(tocall)
 		
 	def _evaluate(self, text, node, urlencode):
 		if not text: return text
@@ -58,13 +62,11 @@ class TriggerCollection:
 		
 	def updateTriggers(self, node):
 		tag, content = self.database.tagAndDictFromElement(node)
-		print 'xxxjack content=', repr(content)
 		assert tag == 'triggers'
 		for old in self.triggers:
 			old.delete()
 		self.triggers = []
 		newTriggers = content.get('trigger', [])
-		print 'xxxjack newTriggers=', repr(newTriggers)
 		assert type(newTriggers) == type([])
 		for new in newTriggers:
 			assert type(new) == type({})

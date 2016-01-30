@@ -1,6 +1,7 @@
 import webApp
 import xmlDatabase
 import triggers
+import periodic
 import callUrl
 import os
 
@@ -28,7 +29,16 @@ def main():
 		assert len(startupTriggers) == 1
 		triggerer = triggers.TriggerCollection(database, urlCaller.callURL)
 		triggerer.updateTriggers(startupTriggers[0])
-	
+	del startupTriggers
+	#
+	# Create the manager for the periodic events
+	#
+	startupPeriodics = database.getElements('periodics')
+	if len(startupPeriodics):
+		assert len(startupPeriodics) == 1
+		periodics = periodic.PeriodicCollection(database, urlCaller.callURL)
+		periodics.updatePeriodics(startupPeriodics[0])
+	del startupPeriodics
 	#
 	# Run the http server
 	#

@@ -10,11 +10,13 @@ import copy
 import importlib
 
 DATABASE=None	# The database itself. Will be set by main module
+COMMANDS=None	# The command processor. Will be set by the main module.
 
 urls = (
 	'/scripts/(.*)', 'runScript',
 	'/data/(.*)', 'xmlDatabaseAccess',
 	'/internal/(.*)', 'runCommand',
+	'/plugin/(.*)', 'runPlugin',
 )
 app = web.application(urls, globals())
 
@@ -37,7 +39,7 @@ class runScript:
 			env = copy.deepcopy(os.environ)
 			user = allArgs['user']
 			env['user'] = user
-			tmpDB = XMLDB()
+			tmpDB = DATABASE
 			try:
 				userData = tmpDB.get_key('identities/%s/scriptData/%s' % (user, command), 'application/json', 'content')
 			except:
@@ -65,6 +67,23 @@ class runCommand:
 	"""Call an internal method"""
 	
 	def GET(self, command):
+		if not COMMANDS:
+			raise web.notfound()
+		try:
+			method = getattr(COMMANDS, command)
+		except AttributeError:
+			raise web.notfound()
+		allArgs = dict(web.input())
+		try:
+			rv = method(**allArgs)
+		except TypeError, arg:
+			raise web.HTTPError("401 Error calling command method %s: %s" % (command, arg))
+		return rv
+
+class runPlugin:
+	"""Call a plugin method"""
+	
+	def GET(self, command):
 		try:
 			mod = importlib.import_module(command)
 		except ImportError:
@@ -73,11 +92,16 @@ class runCommand:
 			method = getattr(mod, command)
 		except AttributeError:
 			raise web.notfound()
+			
+		# Communicate database to the plugin module
+		mod.DATABASE=DATABASE
+		mod.COMMANDS=COMMANDS
+		
 		allArgs = dict(web.input())
 		try:
 			rv = method(**allArgs)
 		except TypeError, arg:
-			raise web.HTTPError("401 Error calling method %s: %s" % (command, arg))
+			raise web.HTTPError("401 Error calling plugin method %s: %s" % (command, arg))
 		return rv
 		
 class AbstractDatabaseAccess(object):

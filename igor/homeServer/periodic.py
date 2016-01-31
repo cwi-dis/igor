@@ -66,6 +66,7 @@ class PeriodicCollection(threading.Thread):
 				self.restarting.clear()
 				print 'xxxjack periodics restarting'
 				continue
+			if not nextTask: continue
 			nextTime = nextTask.callback()
 			self.periodicQueue.put((nextTime, nextTask))
 		
@@ -77,6 +78,7 @@ class PeriodicCollection(threading.Thread):
 			self.periodicQueue.get()
 		# Signal the waiter thread
 		self.restarting.set()
+		self.periodicQueue.put((1, None))
 		self.periodics = []
 		newPeriodics = content.get('periodic', [])
 		assert type(newPeriodics) == type([])
@@ -89,5 +91,6 @@ class PeriodicCollection(threading.Thread):
 			method = new.get('method')
 			data = new.get('data')
 			task = Periodic(self, interval, url, method, data)
+			print 'xxxjack new periodic', task, 'for', url, 'interval', interval
 			self.periodicQueue.put((time.time(), task))
 			

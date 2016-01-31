@@ -56,7 +56,7 @@ class HomeServer:
 			print >>sys.stderr, "<<< Headers", reply
 			print >>sys.stderr, "...", repr(content)
 		if not 'status' in reply or reply['status'] != '200':
-			print >>sys.stderr, "Error %s for %s" % (reply['status'], url)
+			print >>sys.stderr, "%s: Error %s for %s" % (sys.argv[0], reply['status'], url)
 			print >>sys.stderr, content
 			sys.exit(1)
 		return content
@@ -76,6 +76,7 @@ def main():
 	parser.add_argument("--put", metavar="MIMETYPE", help="PUT data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--post", metavar="MIMETYPE", help="POST data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--data", metavar="DATA", help="POST or PUT DATA, in stead of reading from stdin")
+	parser.add_argument("-0", "--allow-empty", help="Allow empty data from stdin")
 	parser.add_argument("var", help="Variable to retrieve")
 	args = parser.parse_args()
 	VERBOSE=args.verbose
@@ -89,6 +90,9 @@ def main():
 		data = args.data
 		if not data:
 			data = sys.stdin.read()
+			if not data and not args.allow_empty:
+				print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]
+				sys.exit(1)
 		result = server.put(args.var, data, args.put, variant=args.variant, format=args.mimetype)
 	elif args.post:
 		data = args.data

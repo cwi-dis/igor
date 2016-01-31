@@ -32,8 +32,8 @@ class URLCaller(threading.Thread):
 				h = httplib2.Http()
 				resp, content = h.request(url, method, body=data)
 				result = "%s %s" % (resp.status, resp.reason)
-			datetime = time.ctime()
-			print '- - - %s "- %s %s" - %s' % (datetime, method, url, result)
+			datetime = time.strftime('%d/%b/%Y %H:%M:%S')
+			print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, result)
 				
 		
 	def callURL(self, tocall):

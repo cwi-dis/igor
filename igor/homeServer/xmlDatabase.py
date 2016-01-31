@@ -57,11 +57,10 @@ class DBSerializer:
 			self._waiting[location] = [threading.Condition(self._lock), 0]
 		if not oldValue is None:
 			if oldValue < self._waiting[location][1]:
-				print 'DBG waitLocation returning early for', oldValue
+				#print 'DBG waitLocation returning early for', oldValue
 				return self._waiting[location][1]
-		print 'DBG waitLocation waiting for', location
+		#print 'DBG waitLocation waiting for', location
 		self._waiting[location][0].wait()
-		if dbapi.LOGGING: print 'waitLocation returned for', location, 'on', self._waiting[location]
 		return self._waiting[location][1]
 		
 	def signalNodelist(self, nodelist):
@@ -70,7 +69,7 @@ class DBSerializer:
 			waitnodelist = xpath.find(location, self._doc.documentElement)
 			for wn in waitnodelist:
 				if wn in nodelist:
-					print 'DBG signal for', wn
+					#print 'DBG signal for', wn
 					cv[1] += 1
 					cv[0].notify_all()
 					break
@@ -78,7 +77,7 @@ class DBSerializer:
 			waitnodelist = xpath.find(location, self._doc.documentElement)
 			for wn in waitnodelist:
 				if wn in nodelist:
-					print 'DBG callback for', wn
+					#print 'DBG callback for', wn
 					callback(wn)	
 		
 class DBImpl(DBSerializer):
@@ -330,7 +329,7 @@ class DBImpl(DBSerializer):
 		with self:
 			nodelist = xpath.find(location, self._doc.documentElement)
 			parentList = []
-			print 'xxxjack delValues', repr(nodelist)
+			#print 'xxxjack delValues', repr(nodelist)
 			for node in nodelist:
 				parentNode = node.parentNode
 				parentNode.removeChild(node)

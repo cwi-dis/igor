@@ -64,7 +64,6 @@ class PeriodicCollection(threading.Thread):
 			if self.restarting.wait(timeToWait):
 				# The queue was cleared.
 				self.restarting.clear()
-				print 'xxxjack periodics restarting'
 				continue
 			if not nextTask: continue
 			nextTime = nextTask.callback()
@@ -91,6 +90,5 @@ class PeriodicCollection(threading.Thread):
 			method = new.get('method')
 			data = new.get('data')
 			task = Periodic(self, interval, url, method, data)
-			print 'xxxjack new periodic', task, 'for', url, 'interval', interval
 			self.periodicQueue.put((time.time(), task))
 			

@@ -2,6 +2,7 @@ import re
 import urllib
 import time
 import threading
+import Queue
 
 INTERPOLATION=re.compile(r'\{[^}]\}')
 
@@ -22,7 +23,6 @@ class Periodic:
 		if data:
 			tocall['data'] = data
 		# xxxjack can add things like mimetype, credentials, etc
-		print 'xxxjack periodic callback', repr(tocall)
 		self.hoster.scheduleCallback(tocall)
 		return time.time() + self.interval
 		
@@ -49,7 +49,7 @@ class Periodic:
 				
 class PeriodicCollection(threading.Thread):
 	def __init__(self, database, scheduleCallback):
-		threading.thread.__init__(self)
+		threading.Thread.__init__(self)
 		self.daemon = True
 		self.periodicQueue = Queue.PriorityQueue()
 		self.restarting = threading.Event()
@@ -60,7 +60,8 @@ class PeriodicCollection(threading.Thread):
 	def run(self):
 		while True:
 			nextTime, nextTask = self.periodicQueue.get()
-			if self.restarting.wait(nextTime-time.time()):
+			timeToWait = nextTime-time.time()
+			if self.restarting.wait(timeToWait):
 				# The queue was cleared.
 				self.restarting.clear()
 				print 'xxxjack periodics restarting'

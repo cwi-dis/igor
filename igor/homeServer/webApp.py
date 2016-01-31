@@ -39,7 +39,7 @@ class runScript:
 			env = copy.deepcopy(os.environ)
 			user = allArgs['user']
 			env['user'] = user
-			tmpDB = DATABASE
+			tmpDB = xmlDatabaseAccess()
 			try:
 				userData = tmpDB.get_key('identities/%s/scriptData/%s' % (user, command), 'application/json', 'content')
 			except:

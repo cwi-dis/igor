@@ -3,6 +3,7 @@ import httplib2
 import Queue
 import urlparse
 import time
+import sys
 
 class URLCaller(threading.Thread):
 	def __init__(self, app):
@@ -25,15 +26,22 @@ class URLCaller(threading.Thread):
 				# Local. Call the app directly.
 				# xxxjack have to work out exceptions
 				rep = self.app.request(url, method=method, data=data)
-				result = rep.status
+				resultStatus = rep.status
+				resultData = rep.data
 			else:
 				# Remote.
 				# xxxjack have to work out exceptions
 				h = httplib2.Http()
 				resp, content = h.request(url, method, body=data)
-				result = "%s %s" % (resp.status, resp.reason)
+				resultStatus = "%s %s" % (resp.status, resp.reason)
+				resultData = content
 			datetime = time.strftime('%d/%b/%Y %H:%M:%S')
-			print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, result)
+			print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
+			if resultStatus[:3] != '200':
+				if resultData:
+					resultLines = resultData.splitlines()
+					for line in resultLines:
+						print '\t'+line
 				
 		
 	def callURL(self, tocall):

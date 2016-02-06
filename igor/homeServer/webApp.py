@@ -207,34 +207,72 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 	def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
 		key = '/%s/%s' % (self.rootTag, key)
 		if not variant: variant = 'ref'
+		nodesToSignal = []
 		with self.db:
 			parentPath, tag = self.db.splitXPath(key)
 			element = self.convertfrom(data, tag, datamimetype)
 			oldElements = self.db.getElements(key)
 			if not oldElements:
+				#
 				# Does not exist yet. See if we can create it
+				#
 				if not parentPath or not tag:
 					raise web.notfound()
+				#
 				# Find parent
+				#
 				parentElements = self.db.getElements(parentPath)
 				if not parentElements:
 					raise web.notfound()
 				if len(parentElements) > 1:
 					raise web.BadRequest("Bad request, XPath parent selects multiple items")
 				parent = parentElements[0]
+				#
+				# Add new node to the end of the parent
+				#
 				parent.appendChild(element)
-			elif len(oldElements) > 1:
-				raise web.BadRequest("Bad Request, XPath selects multiple items")
+				#
+				# Signal both parent and new node
+				#
+				nodesToSignal.append(element)
+				nodesToSignal.append(parent)
 			else:
+				#
+				# Already exists, possibly multiple times. First make sure that if there are
+				# multiple matches they all have the same parent (we will replace all of them by
+				# the single new node, or append it).
+				#
+				if len(oldElements) > 1:
+					parent1 = oldElements[0].parentNode
+					for otherNode in oldElements[1:]:
+						if otherNode.parentNode != parent1:
+							raise web.BadRequest("Bad Request, XPath selects multiple items from multiple parents")
+							
 				oldElement = oldElements[0]
-				replace = True # XXXJACK
 				if replace:
+					#
+					# We should really do a selective replace here: change only the subtrees that need replacing.
+					# That will make the signalling much more fine-grained. Will do so, at some point in the future.
+					#
+					# For now we replace the first matching node and delete its siblings.
+					#
 					parent = oldElement.parentNode
 					parent.replaceChild(element, oldElement)
+					for otherNode in oldElements[1:]:
+						# Delete other nodes with the same tag
+						parent.removeChild(otherNode)
 				else:
-					raise web.internalError("Selective replace not implemented yet")
+					#
+					# Simply add the new node to the parent (and signal that parent)
+					parent = oldElement.parentNode
+					parent.appendChild(element)
+					nodesToSignal.append(parent)
+				#
+				# We want to signal the new node
+				nodesToSignal.append(element)
+				
+			self.db.signalNodelist(nodesToSignal)
 			path = self.db.getXPathForElement(element)
-			self.db.signalNodelist([element])
 			return self.convertto(path, mimetype, variant)
 		
 	def delete_key(self, key):
@@ -325,7 +363,13 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 			valueDict = json.loads(value)
 			if not isinstance(valueDict, dict):
 				raise web.BadRequest("Bad request, JSON toplevel object must be object")
-			element = self.db.elementFromTagAndData(tag, valueDict)
+			# xxxjack here comes a special case, and I don't like it.
+			# if the JSON dictionary contains exactly one element and its name is the same as the
+			# tag name we don't encode.
+			if len(valueDict) == 1 and tag in valueDict:
+				element = self.db.elementFromTagAndData(tag, valueDict[tag])
+			else:
+				element = self.db.elementFromTagAndData(tag, valueDict)
 			return element
 		elif mimetype == 'text/plain':
 			element = self.db.elementFromTagAndData(tag, value)

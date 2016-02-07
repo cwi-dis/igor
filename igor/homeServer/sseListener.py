@@ -11,7 +11,6 @@ class SSEListener(threading.Thread):
 	def __init__(self, url, method='GET'):
 		threading.Thread.__init__(self)
 		self.daemon = True
-		self.queue = Queue.Queue()
 		self.conn = None
 		self.url = url
 		self.method = method
@@ -19,20 +18,23 @@ class SSEListener(threading.Thread):
 		self.eventType = ''
 		self.eventData = ''
 		self.eventID = ''
+		self.alive = True
 
 	def openConnection(self):
 		assert not self.conn
 		self.conn = requests.request(self.method, self.url, stream=True)
 		if DEBUG: print 'opened connection to %s, redirected to %s' % (self.url, self.conn.url)
 		
+	def terminate(self):
+		self.alive = False
+		self.conn.close()
+		
 	def run(self):
-		while True:
+		while self.alive:
 			if not self.conn:
 				self.openConnection()
 				if not self.conn:
-					datetime = time.strftime('%d/%b/%Y %H:%M:%S')
-					resultStatus = "999 Failed to upen URL"
-					print '- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, resultStatus)
+					self.log("999 Failed to upen URL, sleeping")
 					time.sleep(60)
 					continue
 			assert self.conn
@@ -84,9 +86,58 @@ class SSEListener(threading.Thread):
 	def dispatch(self, eventType, data, origin, lastEventId):
 		print 'Event %s data %s' % (repr(eventType), repr(data))
 
+	def log(self, message):
+		pass
+		
+class EventSource(SSEListener):
+	def __init__(self, hoster, srcUrl, dstUrl, srcMethod, dstMethod, mimetype, event):
+		SSEListener.__init__(srcUrl, srcMethod)
+		self.dstUrl = dstUrl
+		self.dstMethod = dstMethod
+		self.mimetype = mimetype
+		self.event = event
+		
+	def dispatch(self, eventType, data, origin, lastEventId):
+		if self.event and eventType != self.event:
+			return
+		tocall = dict(method=self.dstMethod, url=self.dstUrl, mimetype=self.mimetype, data=data)
+		self.hoster.scheduleCallback(tocall)
+
+	def log(self, message):
+		datetime = time.strftime('%d/%b/%Y %H:%M:%S')
+		print '- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message)
+	
+class EventSourceCollection:
+	def __init__(self, database, scheduleCallback):
+		self.eventSources = []
+		self.database = database
+		self.scheduleCallback = scheduleCallback
+		
+	def updateEventSources(self, node):
+		tag, content = self.database.tagAndDictFromElement(node)
+		assert tag == 'eventSources'
+		for old in self.eventSources:
+			old.delete()
+		self.eventSources = []
+		newEventSources = content.get('eventSource', [])
+		assert type(newEeventSources) == type([])
+		for new in newEventSources:
+			assert type(new) == type({})
+			assert 'src' in new
+			assert 'dst' in new
+			src = new['src']
+			dst = new['dst']
+			srcMethod = new.get('srcMethod', 'GET')
+			dstMethod = new.get('dstMethod', 'PUT')
+			mimetype = new.get('mimetype', 'application/json')
+			event = new.get('event')
+			t = EventSource(self, src, dst, srcMethod, dstMethod, mimetype, event)
+			t.start()
+			self.triggers.append(t)
+			
+
 if __name__ == '__main__':
 	s = SSEListener(sys.argv[1])
 	s.start()
-	while True:
-		time.sleep(10)
+	time.sleep(99999)
 	

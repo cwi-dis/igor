@@ -80,6 +80,8 @@ class PeriodicCollection(threading.Thread):
 		self.periodicQueue.put((1, None))
 		self.periodics = []
 		newPeriodics = content.get('periodic', [])
+		if type(newPeriodics) == type({}):
+			newPeriodics = [newPeriodics]
 		assert type(newPeriodics) == type([])
 		for new in newPeriodics:
 			assert type(new) == type({})

@@ -91,7 +91,8 @@ class SSEListener(threading.Thread):
 		
 class EventSource(SSEListener):
 	def __init__(self, hoster, srcUrl, dstUrl, srcMethod, dstMethod, mimetype, event):
-		SSEListener.__init__(srcUrl, srcMethod)
+		SSEListener.__init__(self, srcUrl, srcMethod)
+		self.hoster = hoster
 		self.dstUrl = dstUrl
 		self.dstMethod = dstMethod
 		self.mimetype = mimetype
@@ -120,7 +121,9 @@ class EventSourceCollection:
 			old.delete()
 		self.eventSources = []
 		newEventSources = content.get('eventSource', [])
-		assert type(newEeventSources) == type([])
+		if type(newEventSources) == type({}):
+			newEventSources = [newEventSources]
+		assert type(newEventSources) == type([])
 		for new in newEventSources:
 			assert type(new) == type({})
 			assert 'src' in new
@@ -133,7 +136,7 @@ class EventSourceCollection:
 			event = new.get('event')
 			t = EventSource(self, src, dst, srcMethod, dstMethod, mimetype, event)
 			t.start()
-			self.triggers.append(t)
+			self.eventSources.append(t)
 			
 
 if __name__ == '__main__':

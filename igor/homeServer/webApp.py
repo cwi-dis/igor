@@ -180,7 +180,7 @@ class AbstractDatabaseAccess(object):
 			return None
 		acceptable = web.ctx.env.get("HTTP_ACCEPT")
 		if not acceptable:
-			return None
+			return self.MIMETYPES[0]
 		return mimetypematch.match(acceptable, self.MIMETYPES)
 
 class xmlDatabaseAccess(AbstractDatabaseAccess):
@@ -291,7 +291,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 			elif mimetype == "application/xml":
 				return "<ref>%s</ref>\n" % value
 			else:
-				raise web.internalError("Unimplemented mimetype for ref")
+				raise web.InternalError("Unimplemented mimetype %s for ref" % mimetype)
 		# Only nodesets need different treatment for default and multi
 		if not isinstance(value, list):
 			if mimetype == "application/json":
@@ -301,7 +301,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 			elif mimetype == "application/xml":
 				return u"<value>%s</value>\n" % unicode(value)
 			else:
-				raise web.internalError("Unimplemented mimetype for default or multi, simple value")
+				raise web.InternalError("Unimplemented mimetype %s for default or multi, simple value" % mimetype)
 		if variant == 'multi':
 			if mimetype == "application/json":
 				rv = []
@@ -323,7 +323,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 				rv += "</items>\n"
 				return rv
 			else:
-				raise web.internalError("Unimplemented mimetype for multi, nodeset")
+				raise web.InternalError("Unimplemented mimetype %s for multi, nodeset" % mimetype)
 		# Final case: single node return
 		if len(value) == 0:
 			raise web.notfound()
@@ -348,7 +348,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 				raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
 			return value[0].toxml()+'\n'
 		else:
-			raise web.internalError("Unimplemented mimetype for default, single node")			
+			raise web.InternalError("Unimplemented mimetype %s for default, single node" % mimetype)			
 		
 	def convertfrom(self, value, tag, mimetype):
 		if mimetype == 'application/xml':

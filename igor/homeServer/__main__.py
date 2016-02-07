@@ -2,6 +2,7 @@ import webApp
 import xmlDatabase
 import triggers
 import periodic
+import sseListener
 import callUrl
 import os
 
@@ -29,6 +30,8 @@ class HomeServer:
 		self.updateTriggers()
 		self.periodicHandler = None
 		self.updatePeriodics()
+		self.eventSources = None
+		self.updateEventSources()
 	
 	def run(self):
 		self.app.run()
@@ -38,7 +41,7 @@ class HomeServer:
 		startupTriggers = self.database.getElements('triggers')
 		if len(startupTriggers):
 			if len(startupTriggers) > 1:
-				raise web.HTTPError('401 only one <triggerers> element allowed')
+				raise web.HTTPError('401 only one <triggers> element allowed')
 			if not self.triggerHandler:
 				self.triggerHandler = triggers.TriggerCollection(self.database, self.urlCaller.callURL)
 			self.triggerHandler.updateTriggers(startupTriggers[0])
@@ -56,6 +59,19 @@ class HomeServer:
 			self.periodicHandler.updatePeriodics(startupPeriodics[0])
 		elif self.periodicHandler:
 			self.periodicHandler.updatePeriodics([])
+
+	def updateEventSources(self):
+		"""Create any SSE event sources that are defined in the database"""
+		eventSources = self.database.getElements('eventSources')
+		if len(eventSources):
+			if len(eventSources) > 1:
+				raise web.HTTPError('401 only one <eventSources> element allowed')
+			if not self.eventSources:
+				self.eventSources = sseListener.EventSourceCollection(self.database, self.urlCaller.callURL)
+			self.eventSources.updateEventSources(eventSources[0])
+		elif self.eventSources:
+			self.eventSources.updateEventSources([])
+
 	
 def main():
 	homeServer = HomeServer()

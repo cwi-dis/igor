@@ -67,6 +67,8 @@ class TriggerCollection:
 			old.delete()
 		self.triggers = []
 		newTriggers = content.get('trigger', [])
+		if type(newTriggers) == type({}):
+			newTriggers = [newTriggers]
 		assert type(newTriggers) == type([])
 		for new in newTriggers:
 			assert type(new) == type({})

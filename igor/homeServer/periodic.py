@@ -9,12 +9,15 @@ INTERPOLATION=re.compile(r'\{[^}]\}')
 class Periodic:
 	"""Object to implement calling methods on URLs whenever some XPath changes."""
 	
-	def __init__(self, hoster, interval, url, method=None, data=None):
+	def __init__(self, hoster, interval, url, method=None, data=None, mimetype=None):
 		self.hoster = hoster
 		self.interval = interval
 		self.url = url
 		self.method = method
 		self.data = data
+		self.mimetype = mimetype
+		if not self.mimetype:
+			self.mimetype = 'text/plain'
 		
 	def callback(self, node=None):
 		url = self._evaluate(self.url, node, True)
@@ -22,6 +25,7 @@ class Periodic:
 		tocall = dict(method=self.method, url=url)
 		if data:
 			tocall['data'] = data
+			tocall['mimetype'] = self.mimetype
 		# xxxjack can add things like mimetype, credentials, etc
 		self.hoster.scheduleCallback(tocall)
 		return time.time() + self.interval
@@ -91,6 +95,7 @@ class PeriodicCollection(threading.Thread):
 			url = new['url']
 			method = new.get('method')
 			data = new.get('data')
-			task = Periodic(self, interval, url, method, data)
+			mimetype = new.get('mimetype')
+			task = Periodic(self, interval, url, method, data, mimetype)
 			self.periodicQueue.put((time.time(), task))
 			

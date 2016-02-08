@@ -6,12 +6,15 @@ INTERPOLATION=re.compile(r'\{[^}]\}')
 class Trigger:
 	"""Object to implement calling methods on URLs whenever some XPath changes."""
 	
-	def __init__(self, hoster, trigger, url, method=None, data=None):
+	def __init__(self, hoster, trigger, url, method=None, data=None, mimetype=None):
 		self.hoster = hoster
 		self.trigger = trigger
 		self.url = url
 		self.method = method
 		self.data = data
+		self.mimetype = mimetype
+		if not self.mimetype:
+			self.mimetype = 'text/plain'
 		self.install()
 		
 	def delete(self):
@@ -30,7 +33,8 @@ class Trigger:
 		tocall = dict(method=self.method, url=url)
 		if data:
 			tocall['data'] = data
-		# xxxjack can add things like mimetype, credentials, etc
+			tocall['mimetype'] = self.mimetype
+		# xxxjack can add things like credentials, etc
 		self.hoster.scheduleCallback(tocall)
 		
 	def _evaluate(self, text, node, urlencode):
@@ -78,6 +82,7 @@ class TriggerCollection:
 			url = new['url']
 			method = new.get('method')
 			data = new.get('data')
-			t = Trigger(self, trigger, url, method, data)
+			mimetype = new.get('mimetype')
+			t = Trigger(self, trigger, url, method, data, mimetype)
 			self.triggers.append(t)
 			

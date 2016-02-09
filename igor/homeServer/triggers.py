@@ -1,7 +1,7 @@
 import re
 import urllib
 
-INTERPOLATION=re.compile(r'\{[^}]\}')
+INTERPOLATION=re.compile(r'\{[^}]+\}')
 
 class Trigger:
 	"""Object to implement calling methods on URLs whenever some XPath changes."""

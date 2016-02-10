@@ -17,6 +17,25 @@ class DBKeyError(KeyError):
 class DBParamError(ValueError):
 	pass
 	
+# class XPathFunctionExtension(xpath.expr.Function):
+# 	string = xpath.expr.string
+# 	number = xpath.expr.number
+# 	boolean = xpath.expr.boolean
+# 	nodeset = xpath.expr.nodeset
+# 	function = xpath.expr.Function.function
+# 	
+# 	@function(0, 1, implicit=True, convert=string)
+# 	def igor_upper(self, node, pos, size, context, arg):
+# 		return arg.upper()
+# 		
+# def installXPathFunctionExtension(klass):
+# 	if not issubclass(xpath.expr.Function, klass):
+# 		class XPathFunctionWithExtension(klass, xpath.expr.Function):
+# 			pass
+# 		xpath.expr.Function = XPathFunctionWithExtension
+# 		
+# installXPathFunctionExtension(XPathFunctionExtension)
+
 class DBSerializer:
 	"""Baseclass with methods to provide a mutex and a condition variable"""
 	def __init__(self):	  

@@ -8,6 +8,7 @@ import json
 import mimetypematch
 import copy
 import importlib
+import xpath
 
 DATABASE=None	# The database itself. Will be set by main module
 COMMANDS=None	# The command processor. Will be set by the main module.
@@ -15,6 +16,7 @@ COMMANDS=None	# The command processor. Will be set by the main module.
 urls = (
 	'/scripts/(.*)', 'runScript',
 	'/data/(.*)', 'xmlDatabaseAccess',
+	'/evaluate/(.*)', 'xmlDatabaseEvaluate',
 	'/internal/(.*)', 'runCommand',
 	'/plugin/(.*)', 'runPlugin',
 )
@@ -103,6 +105,12 @@ class runPlugin:
 		except TypeError, arg:
 			raise web.HTTPError("401 Error calling plugin method %s: %s" % (command, arg))
 		return rv
+
+class xmlDatabaseEvaluate:
+	"""Evaluate an XPath expression and return the result as plaintext"""
+	def GET(self, command):
+		tmpDB = xmlDatabaseAccess()
+		return tmpDB.get_value(command)
 		
 class AbstractDatabaseAccess(object):
 	"""Abstract database that handles the high-level HTTP primitives.
@@ -195,90 +203,110 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 		"""Get subtree for 'key' as 'mimetype'. Variant can be used
 		to state which data should be returned (single node, multinode,
 		including refs, etc)"""
-		if not key:
-			rv = [self.db.getDocument()]
-			# This always returns XML, so just continue
-		else:
-			key = '/%s/%s' % (self.rootTag, key)
-			rv = self.db.getElements(key)
-		rv = self.convertto(rv, mimetype, variant)
-		return rv
+		try:
+			if not key:
+				rv = [self.db.getDocument()]
+				# This always returns XML, so just continue
+			else:
+				key = '/%s/%s' % (self.rootTag, key)
+				rv = self.db.getElements(key)
+			rv = self.convertto(rv, mimetype, variant)
+			return rv
+		except xpath.XPathError, arg:
+			msg = "401 XPath error: %s" % str(arg)
+			raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+		
+	def get_value(self, expression):
+		"""Evaluate a general expression and return the string value"""
+		try:
+			return self.db.getValue(expression)
+		except xpath.XPathError, arg:
+			msg = "401 XPath error: %s" % str(arg)
+			raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 		
 	def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
-		key = '/%s/%s' % (self.rootTag, key)
-		if not variant: variant = 'ref'
-		nodesToSignal = []
-		with self.db:
-			parentPath, tag = self.db.splitXPath(key)
-			element = self.convertfrom(data, tag, datamimetype)
-			oldElements = self.db.getElements(key)
-			if not oldElements:
-				#
-				# Does not exist yet. See if we can create it
-				#
-				if not parentPath or not tag:
-					raise web.notfound()
-				#
-				# Find parent
-				#
-				parentElements = self.db.getElements(parentPath)
-				if not parentElements:
-					raise web.notfound()
-				if len(parentElements) > 1:
-					raise web.BadRequest("Bad request, XPath parent selects multiple items")
-				parent = parentElements[0]
-				#
-				# Add new node to the end of the parent
-				#
-				parent.appendChild(element)
-				#
-				# Signal both parent and new node
-				#
-				nodesToSignal.append(element)
-				nodesToSignal.append(parent)
-			else:
-				#
-				# Already exists, possibly multiple times. First make sure that if there are
-				# multiple matches they all have the same parent (we will replace all of them by
-				# the single new node, or append it).
-				#
-				if len(oldElements) > 1:
-					parent1 = oldElements[0].parentNode
-					for otherNode in oldElements[1:]:
-						if otherNode.parentNode != parent1:
-							raise web.BadRequest("Bad Request, XPath selects multiple items from multiple parents")
-							
-				oldElement = oldElements[0]
-				if replace:
+		try:
+			key = '/%s/%s' % (self.rootTag, key)
+			if not variant: variant = 'ref'
+			nodesToSignal = []
+			with self.db:
+				parentPath, tag = self.db.splitXPath(key)
+				element = self.convertfrom(data, tag, datamimetype)
+				oldElements = self.db.getElements(key)
+				if not oldElements:
 					#
-					# We should really do a selective replace here: change only the subtrees that need replacing.
-					# That will make the signalling much more fine-grained. Will do so, at some point in the future.
+					# Does not exist yet. See if we can create it
 					#
-					# For now we replace the first matching node and delete its siblings.
+					if not parentPath or not tag:
+						raise web.notfound()
 					#
-					parent = oldElement.parentNode
-					parent.replaceChild(element, oldElement)
-					for otherNode in oldElements[1:]:
-						# Delete other nodes with the same tag
-						parent.removeChild(otherNode)
+					# Find parent
+					#
+					parentElements = self.db.getElements(parentPath)
+					if not parentElements:
+						raise web.notfound()
+					if len(parentElements) > 1:
+						raise web.BadRequest("Bad request, XPath parent selects multiple items")
+					parent = parentElements[0]
+					#
+					# Add new node to the end of the parent
+					#
+					parent.appendChild(element)
+					#
+					# Signal both parent and new node
+					#
+					nodesToSignal.append(element)
+					nodesToSignal.append(parent)
 				else:
 					#
-					# Simply add the new node to the parent (and signal that parent)
-					parent = oldElement.parentNode
-					parent.appendChild(element)
-					nodesToSignal.append(parent)
-				#
-				# We want to signal the new node
-				nodesToSignal.append(element)
+					# Already exists, possibly multiple times. First make sure that if there are
+					# multiple matches they all have the same parent (we will replace all of them by
+					# the single new node, or append it).
+					#
+					if len(oldElements) > 1:
+						parent1 = oldElements[0].parentNode
+						for otherNode in oldElements[1:]:
+							if otherNode.parentNode != parent1:
+								raise web.BadRequest("Bad Request, XPath selects multiple items from multiple parents")
+							
+					oldElement = oldElements[0]
+					if replace:
+						#
+						# We should really do a selective replace here: change only the subtrees that need replacing.
+						# That will make the signalling much more fine-grained. Will do so, at some point in the future.
+						#
+						# For now we replace the first matching node and delete its siblings.
+						#
+						parent = oldElement.parentNode
+						parent.replaceChild(element, oldElement)
+						for otherNode in oldElements[1:]:
+							# Delete other nodes with the same tag
+							parent.removeChild(otherNode)
+					else:
+						#
+						# Simply add the new node to the parent (and signal that parent)
+						parent = oldElement.parentNode
+						parent.appendChild(element)
+						nodesToSignal.append(parent)
+					#
+					# We want to signal the new node
+					nodesToSignal.append(element)
 				
-			self.db.signalNodelist(nodesToSignal)
-			path = self.db.getXPathForElement(element)
-			return self.convertto(path, mimetype, variant)
+				self.db.signalNodelist(nodesToSignal)
+				path = self.db.getXPathForElement(element)
+				return self.convertto(path, mimetype, variant)
+		except xpath.XPathError, arg:
+			msg = "401 XPath error: %s" % str(arg)
+			raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 		
 	def delete_key(self, key):
-		key = '/%s/%s' % (self.rootTag, key)
-		self.db.delValues(key)
-		return ''
+		try:
+			key = '/%s/%s' % (self.rootTag, key)
+			self.db.delValues(key)
+			return ''
+		except xpath.XPathError, arg:
+			msg = "401 XPath error: %s" % str(arg)
+			raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 		
 	def convertto(self, value, mimetype, variant):
 		if variant == 'ref':

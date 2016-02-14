@@ -4,6 +4,8 @@ import urlparse
 import urllib
 import httplib2
 import sys
+import json
+import pprint
 
 DEFAULT_URL="http://framboos.local:8080/data/"
 VERBOSE=False
@@ -70,6 +72,8 @@ def main():
 	parser.add_argument("--text", dest="mimetype", action="store_const", const="text/plain", help="Get result as plain text")
 	parser.add_argument("--json", dest="mimetype", action="store_const", const="application/json", help="Get result as JSON")
 	parser.add_argument("--xml", dest="mimetype", action="store_const", const="application/xml", help="Get result as XML")
+	parser.add_argument("--python", action="store_true", help="Get result as Python (converted from JSON)")
+	parser.add_argument("--pretty", action="store_true", help="Pretty-print result (only for Python, currently)")
 	parser.add_argument("--verbose", action="store_true", help="Print what is happening")
 	parser.add_argument("--delete", action="store_true", help="Delete variable")
 	parser.add_argument("--create", action="store_true", help="Create or clear a variable")
@@ -82,6 +86,8 @@ def main():
 	VERBOSE=args.verbose
 	
 	server = HomeServer(args.url)
+	if args.python:
+		args.mimetype = 'application/json'
 	if args.delete:
 		result = server.delete(args.var)
 	elif args.create:
@@ -101,6 +107,13 @@ def main():
 		result = server.post(args.var, data, args.post, variant=args.variant, format=args.mimetype)
 	else:
 		result = server.get(args.var, variant=args.variant, format=args.mimetype)
+	if args.python:
+		result = json.loads(result)
+		if args.pretty:
+			pp = pprint.PrettyPrinter()
+			result = pp.pformat(result)
+		else:
+			result = repr(result)
 	print result.strip()
 	
 if __name__ == '__main__':

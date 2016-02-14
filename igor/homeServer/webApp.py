@@ -170,7 +170,7 @@ class AbstractDatabaseAccess(object):
 		return self.PUT(name, data, mimetype, replace=False)
 
 	def DELETE(self, name, data=None, mimetype=None):
-		return self.delete_key(str(name))
+		return self.delete_key(name)
 
 	def is_acceptable_mimetype(self, mimetype=None):
 		"""Test whether the mimetype in the request is of an acceptable type"""
@@ -367,7 +367,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
 		elif mimetype == "text/plain":
 			rv = ""
 			for item in value:
-				v = dbimpl.xpath.expr.string_value(item)
+				v = xpath.expr.string_value(item)
 				rv += v
 				rv += '\n'
 			return rv

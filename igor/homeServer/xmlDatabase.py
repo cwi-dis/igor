@@ -7,7 +7,7 @@ import time
 import os
 import re
 
-TAG_PATTERN = re.compile('^[a-zA-Z_:][-_:.a-zA-Z0-9]*$')
+TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
 
 DOCUMENT="""<data><x>1</x><y>2</y></data>"""
 
@@ -148,6 +148,21 @@ class DBImpl(DBSerializer):
 		"""Return the argument (for performance testing)"""
 		return arg
 		
+	def _createElementWithEscaping(self, tag):
+		if TAG_PATTERN.match(tag) and not tag == "_e":
+			return self._doc.createElement(tag)
+		print 'xxxjack create escape for', tag
+		rv = self._doc.createElement("_e")
+		rv.setAttribute("_e", tag)
+		return rv
+		
+	def _getElementTagWithEscaping(self, element):
+		tag = element.tagName
+		if tag == '_e':
+			escaped = element.getAttribute('_e')
+			if escaped: return escaped
+		return tag
+		
 	def getXMLDocument(self):
 		"""Return the whole document (as an XML string)"""
 		with self:
@@ -178,6 +193,8 @@ class DBImpl(DBSerializer):
 	def getXPathForElement(self, node):
 		if node is None or node.nodeType == node.DOCUMENT_NODE:
 			return ""
+		if node.tagName == "_e":
+			print "Warning: getting xpath for escaped json node may not work very well"
 		count = 0
 		sibling = node.previousSibling
 		while sibling:
@@ -196,11 +213,11 @@ class DBImpl(DBSerializer):
 			index = ''
 		return self.getXPathForElement(node.parentNode) + "/" + node.tagName + index
 
-	def tagAndDictFromElement(self, item):
-		t = item.tagName
+	def tagAndDictFromElement(self, element):
+		t = self._getElementTagWithEscaping(element)
 		v = {}
 		texts = []
-		child = item.firstChild
+		child = element.firstChild
 		while child:
 			if child.nodeType == child.ELEMENT_NODE:
 				newt, newv = self.tagAndDictFromElement(child)
@@ -240,7 +257,7 @@ class DBImpl(DBSerializer):
 
 	def elementFromTagAndData(self, tag, data):
 		with self:
-			newnode = self._doc.createElement(tag)
+			newnode = self._createElementWithEscaping(tag)
 			if not isinstance(data, dict):
 				# Not key/value, so a raw value. Convert to something string-like
 				data = unicode(data)
@@ -294,7 +311,9 @@ class DBImpl(DBSerializer):
 				node.appendChild(value)
 			else:
 				# Insert the new text value
-				node.appendChild(self._doc.createTextNode(str(value)))
+				if not isinstance(value, basestring):
+					value = str(value)
+				node.appendChild(self._doc.createTextNode(value))
 		
 			# Signal anyone waiting
 			self.signalNodelist([node])
@@ -306,8 +325,10 @@ class DBImpl(DBSerializer):
 		"""Insert a single new node into the document (value passed as a string)"""
 		with self:
 			# Create the new node to be instered
-			newnode = self._doc.createElement(name)
-			newnode.appendChild(self._doc.createTextNode(str(value)))
+			newnode = self._doc._createElementWithEscaping(name)
+			if not isinstance(value, basestring):
+				value = str(value)
+			newnode.appendChild(self._doc.createTextNode(value))
 		
 			# Find the node that we want to insert it relative to
 			node = xpath.findnode(location, self._doc.documentElement)

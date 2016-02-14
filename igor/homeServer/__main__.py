@@ -5,6 +5,9 @@ import periodic
 import sseListener
 import callUrl
 import os
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 DATADIR=os.path.dirname(__file__)
 

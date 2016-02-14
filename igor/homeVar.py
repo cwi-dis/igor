@@ -11,8 +11,10 @@ DEFAULT_URL="http://framboos.local:8080/data/"
 VERBOSE=False
 
 class HomeServer:
-	def __init__(self, url):
+	def __init__(self, url, bearer_token=None, access_token=None):
 		self.url = url
+		self.bearer_token = bearer_token
+		self.access_token = access_token
 		
 	def get(self, item, variant=None, format=None):
 		if format == None:
@@ -38,15 +40,21 @@ class HomeServer:
 		
 	def _action(self, method, item, variant, format=None, data=None, datatype=None):
 		url = urlparse.urljoin(self.url, item)
+		query = {}
 		if variant:
-			query = urllib.urlencode({'.VARIANT':variant})
+			query['.VARIANT'] = variant
+		if self.access_token:
+			query['access_token'] = self.access_token
+		if query:
 			assert not '?' in url
-			url = url + '?' + query
+			url = url + '?' + urllib.urlencode(query)
 		headers = {}
 		if format:
 			headers['Accept'] = format
 		if datatype:
 			headers['Content-Type'] = datatype
+		if self.bearer_token:
+			headers['Authorization'] = 'Bearer %s' % self.bearer_token
 		h = httplib2.Http()
 		if VERBOSE:
 			print >>sys.stderr, ">>> GET", url
@@ -66,7 +74,7 @@ class HomeServer:
 def main():
 	global VERBOSE
 	parser = argparse.ArgumentParser(description="Access homeServer and other http databases")
-	parser.add_argument("-u", "--url", help="Base URL of the server (default: %s)", default=DEFAULT_URL)
+	parser.add_argument("-u", "--url", help="Base URL of the server (default: %s)" % DEFAULT_URL, default=DEFAULT_URL)
 	parser.add_argument("-v", "--variant", help="Variant of data to get (or put, post)")
 	parser.add_argument("-M", "--mimetype", help="Get result as given mimetype")
 	parser.add_argument("--text", dest="mimetype", action="store_const", const="text/plain", help="Get result as plain text")
@@ -80,12 +88,15 @@ def main():
 	parser.add_argument("--put", metavar="MIMETYPE", help="PUT data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--post", metavar="MIMETYPE", help="POST data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--data", metavar="DATA", help="POST or PUT DATA, in stead of reading from stdin")
-	parser.add_argument("-0", "--allow-empty", help="Allow empty data from stdin")
+	parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
+	parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line")
+	parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument")
+	
 	parser.add_argument("var", help="Variable to retrieve")
 	args = parser.parse_args()
 	VERBOSE=args.verbose
 	
-	server = HomeServer(args.url)
+	server = HomeServer(args.url, bearer_token=args.bearer, access_token=args.access)
 	if args.python:
 		args.mimetype = 'application/json'
 	if args.delete:

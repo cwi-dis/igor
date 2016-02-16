@@ -6,6 +6,8 @@ import threading
 import time
 import os
 import re
+import datetime
+import dateutil.parser
 
 TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
 
@@ -15,24 +17,142 @@ class DBKeyError(KeyError):
 class DBParamError(ValueError):
     pass
     
-# class XPathFunctionExtension(xpath.expr.Function):
-#   string = xpath.expr.string
-#   number = xpath.expr.number
-#   boolean = xpath.expr.boolean
-#   nodeset = xpath.expr.nodeset
-#   function = xpath.expr.Function.function
-#   
-#   @function(0, 1, implicit=True, convert=string)
-#   def igor_upper(self, node, pos, size, context, arg):
-#       return arg.upper()
-#       
-# def installXPathFunctionExtension(klass):
-#   if not issubclass(xpath.expr.Function, klass):
-#       class XPathFunctionWithExtension(klass, xpath.expr.Function):
-#           pass
-#       xpath.expr.Function = XPathFunctionWithExtension
-#       
-# installXPathFunctionExtension(XPathFunctionExtension)
+class XPathFunctionExtension(xpath.expr.Function):
+    string = xpath.expr.string
+    number = xpath.expr.number
+    boolean = xpath.expr.boolean
+    nodeset = xpath.expr.nodeset
+    function = xpath.expr.Function.function.im_func
+
+    @function(0, 1, implicit=True, convert=string)
+    def f_igor_upper(self, node, pos, size, context, arg):
+        return arg.upper()
+
+    @function(0, 2)
+    def f_igor_error(self, node, pos, size, context, a1=None, a2=None):
+        if a1 is None:
+            a1 = "unknown:unknown"
+        if a2 is None:
+            a2 = "XPath error function called"
+        raise xpath.XPathError(a2)
+        
+    def _str2DateTime(self, str):
+        try:
+            return dateutil.parser.parse(str)
+        except ValueError:
+            raise xpath.XPathError("Invalid DateTime")
+        
+    @function(0, 1)
+    def f_igor_timestamp(self, node, pos, size, context, dt=None):
+        if dt is None:
+            dt = datetime.datetime.now()
+        else:
+            dt = self._str2DateTime(dt)
+        return int(time.time())
+        
+    @function(0, 1)
+    def f_igor_dateTime(self, node, pos, size, context, timestamp=None):
+        if timestamp is None:
+            timestamp = time.time()
+        dt = datetime.datetime.fromtimestamp(timestamp)
+        return dt.isoformat()
+        
+    @function(1, 1)
+    def f_igor_year_from_dateTime(self, node, pos, size, context, dt):
+        dt = self._str2DateTime(dt)
+        return dt.year
+        
+    @function(1, 1)
+    def f_igor_month_from_dateTime(self, node, pos, size, context, dt):
+        dt = self._str2DateTime(dt)
+        return dt.month
+        
+    @function(1, 1)
+    def f_igor_day_from_dateTime(self, node, pos, size, context, dt):
+        dt = self._str2DateTime(dt)
+        return dt.day
+        
+    @function(1, 1)
+    def f_igor_hours_from_dateTime(self, node, pos, size, context, dt):
+        dt = self._str2DateTime(dt)
+        return dt.hour
+        
+    @function(1, 1)
+    def f_igor_minutes_from_dateTime(self, node, pos, size, context, dt):
+        dt = self._str2DateTime(dt)
+        return dt.minute
+        
+    @function(1, 1)
+    def f_igor_seconds_from_dateTime(self, node, pos, size, context, dt):
+        dt = self._str2DateTime(dt)
+        return dt.second
+    
+    @function(2, 2)
+    def f_igor_dateTime_equal(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1)
+        dt2 = self._str2DateTime(dt2)
+        return dt1 == dt2
+    
+    @function(2, 2)
+    def f_igor_date_equal(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1).date()
+        dt2 = self._str2DateTime(dt2).date()
+        return dt1 == dt2
+    
+    @function(2, 2)
+    def f_igor_time_equal(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1).time()
+        dt2 = self._str2DateTime(dt2).time()
+        return dt1 == dt2
+    
+    @function(2, 2)
+    def f_igor_dateTime_less_than(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1)
+        dt2 = self._str2DateTime(dt2)
+        return dt1 < dt2
+    
+    @function(2, 2)
+    def f_igor_date_less_than(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1).date()
+        dt2 = self._str2DateTime(dt2).date()
+        return dt1 < dt2
+    
+    @function(2, 2)
+    def f_igor_time_less_than(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1).time()
+        dt2 = self._str2DateTime(dt2).time()
+        return dt1 < dt2
+    
+    @function(2, 2)
+    def f_igor_dateTime_greater_than(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1)
+        dt2 = self._str2DateTime(dt2)
+        return dt1 > dt2
+    
+    @function(2, 2)
+    def f_igor_date_greater_than(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1).date()
+        dt2 = self._str2DateTime(dt2).date()
+        return dt1 > dt2
+    
+    @function(2, 2)
+    def f_igor_time_greater_than(self, node, pos, size, context, dt1, dt2):
+        dt1 = self._str2DateTime(dt1).time()
+        dt2 = self._str2DateTime(dt2).time()
+        return dt1 > dt2
+    
+    
+
+      
+def installXPathFunctionExtension(klass):
+  if not issubclass(xpath.expr.Function, klass):
+      class XPathFunctionWithExtension(klass, xpath.expr.Function):
+          pass
+      xpath.expr.Function = XPathFunctionWithExtension
+
+print 'xxxjack function was', xpath.expr.Function 
+installXPathFunctionExtension(XPathFunctionExtension)
+print 'xxxjack function is now', xpath.expr.Function 
 
 class DBSerializer:
     """Baseclass with methods to provide a mutex and a condition variable"""

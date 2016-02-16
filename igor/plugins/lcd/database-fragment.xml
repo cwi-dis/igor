@@ -2,12 +2,8 @@
 <data>
 	<triggers>
 		<trigger>
-			<xpath>
-				/data/devices/lcd/message
-			</xpath>
-			<url>
-				/scripts/debugShowLcd?args={.}
-			</url>
+			<xpath>/data/environment/messages/*</xpath>
+			<url>/pluginscripts/lcd/message?args={.}</url>
 		</trigger>
 	</triggers>
 </data>

@@ -1,0 +1,3 @@
+#!/bin/sh
+say="ssh boom.local say"
+$say $@

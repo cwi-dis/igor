@@ -140,9 +140,6 @@ class XPathFunctionExtension(xpath.expr.Function):
         dt1 = self._str2DateTime(dt1).time()
         dt2 = self._str2DateTime(dt2).time()
         return dt1 > dt2
-    
-    
-
       
 def installXPathFunctionExtension(klass):
   if not issubclass(xpath.expr.Function, klass):

@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<data>
+	<triggers>
+		<trigger>
+			<xpath>/data/environment/messages/*</xpath>
+			<condition>igor-time-greater-than(igor-dateTime(),"08:00:00") and igor-time-less-than(igor-dateTime(),"23:00:00")</condition>
+			<url>/pluginscripts/say/message?args={.}</url>
+		</trigger>
+	</triggers>
+</data>

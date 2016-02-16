@@ -22,6 +22,7 @@ class HomeServer:
 		self.database = xmlDatabase.DBImpl(os.path.join(datadir, 'database.xml'))
 		webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
 		webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
+		webApp.PLUGINDIR = os.path.join(datadir, 'plugins')
 	
 		#
 		# Create and start the asynchronous URL accessor
@@ -83,7 +84,7 @@ class HomeServer:
 def main():
 	DEFAULTDIR="homeServerDatabase"
 	parser = argparse.ArgumentParser(description="Run the home automation server")
-	parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s)" % DEFAULTDIR, default=DEFAULTDIR)
+	parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s)" % DEFAULTDIR)
 	parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 8080)", default=8080)
 	args = parser.parse_args()
 	datadir = args.database
@@ -94,6 +95,7 @@ def main():
 		if not os.path.exists(datadir):
 			print 'Database not found:', datadir
 			sys.exit(1)
+	print 'xxxjack datadir is', datadir
 	homeServer = HomeServer(datadir, args.port)
 	homeServer.run()
 	

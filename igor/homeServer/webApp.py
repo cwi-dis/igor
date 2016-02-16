@@ -12,10 +12,12 @@ import xpath
 
 DATABASE=None   # The database itself. Will be set by main module
 SCRIPTDIR=None  # The directory for scripts
+PLUGINDIR=None  # The directory for plugins
 COMMANDS=None   # The command processor. Will be set by the main module.
 
 urls = (
-    '/scripts/(.*)', 'runScript',
+    '/scripts/([^/]*)', 'runScript',
+    '/pluginscripts/([^/]*)/([^/]*)', 'runScript',
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
     '/internal/(.*)', 'runCommand',
@@ -31,7 +33,15 @@ app = MyApplication(urls, globals())
 class runScript:
     """Run a shell script"""
         
-    def GET(self, command):
+    def GET(self, arg1, arg2=None):
+        if arg2:
+            # Plugin script command.
+            scriptDir = os.path.join(PLUGINDIR, arg1, 'scripts')
+            command = arg2
+        else:
+            scriptDir = SCRIPTDIR
+            command = arg1
+        print 'xxxjack script command', repr(scriptDir), repr(command)
         allArgs = web.input()
         if '/' in command:
             raise web.HTTPError("401 Cannot use / in command")
@@ -55,7 +65,7 @@ class runScript:
             if userData:
                 env['userData'] = userData
                 
-        command = os.path.join(SCRIPTDIR, command)
+        command = os.path.join(scriptDir, command)
         try:
             linked = os.readlink(command)
             command = os.path.join(os.path.dirname(command), linked)
@@ -92,10 +102,21 @@ class runPlugin:
     """Call a plugin method"""
     
     def GET(self, command):
-        try:
-            mod = importlib.import_module(command)
-        except ImportError:
-            raise web.notfound()
+        if command in sys.modules:
+            # Imported previously.
+            mod = sys.modules[command]
+        else:
+            # New. Try to import.
+            moduleDir = os.path.join(PLUGINDIR, command)
+            try:
+                mfile, mpath, mdescr = imp.find_module(command, [moduleDir])
+                mod = imp.load_module(command, mfile, mpath, mdescr)
+            except ImportError:
+                raise web.notfound()
+            # Tell the new module about the database and the app
+            mod.DATABASE = DATABASE
+            mod.app = app
+            print 'xxxjack imported plugin', command
         try:
             method = getattr(mod, command)
         except AttributeError:

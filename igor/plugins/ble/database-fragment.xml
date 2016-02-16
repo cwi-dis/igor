@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<data>
+	<periodics>
+		<periodic>
+			<interval>
+				60
+			</interval>
+			<url>
+				/pluginscripts/ble/pull
+			</url>
+		</periodic>
+	</periodics>
+</data>

@@ -2,12 +2,13 @@ import web
 import shlex
 import subprocess
 import os
+import sys
 import re
 import uuid
 import json
 import mimetypematch
 import copy
-import importlib
+import imp
 import xpath
 
 DATABASE=None   # The database itself. Will be set by main module
@@ -41,7 +42,6 @@ class runScript:
         else:
             scriptDir = SCRIPTDIR
             command = arg1
-        print 'xxxjack script command', repr(scriptDir), repr(command)
         allArgs = web.input()
         if '/' in command:
             raise web.HTTPError("401 Cannot use / in command")
@@ -108,6 +108,7 @@ class runPlugin:
         else:
             # New. Try to import.
             moduleDir = os.path.join(PLUGINDIR, command)
+            print 'xxxjack import', command, 'from', PLUGINDIR
             try:
                 mfile, mpath, mdescr = imp.find_module(command, [moduleDir])
                 mod = imp.load_module(command, mfile, mpath, mdescr)
@@ -115,6 +116,7 @@ class runPlugin:
                 raise web.notfound()
             # Tell the new module about the database and the app
             mod.DATABASE = DATABASE
+            mod.COMMANDS=COMMANDS
             mod.app = app
             print 'xxxjack imported plugin', command
         try:
@@ -122,10 +124,6 @@ class runPlugin:
         except AttributeError:
             raise web.notfound()
             
-        # Communicate database to the plugin module
-        mod.DATABASE=DATABASE
-        mod.COMMANDS=COMMANDS
-        
         allArgs = dict(web.input())
         try:
             rv = method(**allArgs)

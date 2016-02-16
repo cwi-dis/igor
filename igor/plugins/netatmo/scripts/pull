@@ -1,5 +1,5 @@
 #!/bin/bash
 dir=`dirname $0`
-dirHomeServer=$dir/..
-dirNetAtmo=$dir/../../../netAtmo
+dirHomeServer=$dir/../../..
+dirNetAtmo=$dirHomeServer/../../netAtmo
 python $dirNetAtmo/getCurrentWeather.py --json | python $dirHomeServer/homeVar.py --put application/json sensors/netAtmo

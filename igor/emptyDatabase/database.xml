@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<data>
+	<sensors>
+	</sensors>
+	<devices>
+	</devices>
+	<people>
+	</people>
+	<identities>
+	</identities>
+	<triggers>
+		<trigger>
+			<xpath>
+				/data/triggers//*
+			</xpath>
+			<url>
+				/internal/updateTriggers
+			</url>
+		</trigger>
+		<trigger>
+			<xpath>
+				/data/periodics//*
+			</xpath>
+			<url>
+				/internal/updatePeriodics
+			</url>
+		</trigger>
+	</triggers>
+	<periodics>
+	</periodics>
+	<sandbox>
+	</sandbox>
+	<environment>
+	</environment>
+	<eventsources>
+	</eventsources>
+</data>

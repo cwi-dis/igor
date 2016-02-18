@@ -11,7 +11,7 @@
 	<triggers>
 		<trigger>
 			<xpath>
-				/data/triggers//*
+				/data/triggers/*
 			</xpath>
 			<url>
 				/internal/updateTriggers
@@ -19,15 +19,15 @@
 		</trigger>
 		<trigger>
 			<xpath>
-				/data/periodics//*
+				/data/actions/*
 			</xpath>
 			<url>
-				/internal/updatePeriodics
+				/internal/updateActions
 			</url>
 		</trigger>
 	</triggers>
-	<periodics>
-	</periodics>
+	<actions>
+	</actions>
 	<sandbox>
 	</sandbox>
 	<environment>

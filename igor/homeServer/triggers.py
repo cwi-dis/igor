@@ -6,16 +6,23 @@ INTERPOLATION=re.compile(r'\{[^}]+\}')
 class Trigger:
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
-    def __init__(self, hoster, trigger, url, method=None, data=None, mimetype=None, condition=None):
+    def __init__(self, hoster, element): # , url, method=None, data=None, mimetype=None, condition=None):
         self.hoster = hoster
-        self.trigger = trigger
-        self.url = url
-        self.method = method
-        self.data = data
-        self.mimetype = mimetype
-        if not self.mimetype:
-            self.mimetype = 'text/plain'
-        self.condition = condition
+        self.element = element
+        tag, content = self.hoster.database.tagAndDictFromElement(self.element)
+        assert tag == 'trigger'
+        assert 'xpath' in content
+        assert 'url' in content
+        xpaths = content['xpath']
+        if type(xpaths) != type([]):
+            xpaths = [xpaths]
+        self.xpaths = xpaths
+        self.url = content['url']
+        self.condition = content.get('condition')
+        self.multiple = content.get('multiple')
+        self.method = content.get('method')
+        self.data = content.get('data')
+        self.mimetype = content.get('mimetype', 'text/plain')
         self.install()
         
     def delete(self):
@@ -23,27 +30,31 @@ class Trigger:
         self.hoster = None
         
     def install(self):
-        self.hoster.database.registerCallback(self.callback, self.trigger)
+        for xpath in self.xpaths:
+            self.hoster.database.registerCallback(self.callback, xpath)
         
     def uninstall(self):
         self.hoster.database.unregisterCallback(self.callback)
         
-    def callback(self, node):
+    def callback(self, *nodelist):
         if not self.hoster:
             print 'ERROR: Trigger.callback called without hoster:', self
             return
-        if self.condition:
-            shouldRun = self.hoster.database.getValue(self.condition, node)
-            if not shouldRun:
-                return
-        url = self._evaluate(self.url, node, True)
-        data = self._evaluate(self.data, node, False)
-        tocall = dict(method=self.method, url=url)
-        if data:
-            tocall['data'] = data
-            tocall['mimetype'] = self.mimetype
-        # xxxjack can add things like credentials, etc
-        self.hoster.scheduleCallback(tocall)
+        for node in nodelist:
+            if self.condition:
+                shouldRun = self.hoster.database.getValue(self.condition, node)
+                if not shouldRun:
+                    continue
+            url = self._evaluate(self.url, node, True)
+            data = self._evaluate(self.data, node, False)
+            tocall = dict(method=self.method, url=url)
+            if data:
+                tocall['data'] = data
+                tocall['mimetype'] = self.mimetype
+            # xxxjack can add things like credentials, etc
+            self.hoster.scheduleCallback(tocall)
+            if not self.multiple:
+                break
         
     def _evaluate(self, text, node, urlencode):
         if not text: return text
@@ -73,25 +84,16 @@ class TriggerCollection:
         self.scheduleCallback = scheduleCallback
         
     def updateTriggers(self, node):
-        tag, content = self.database.tagAndDictFromElement(node)
-        assert tag == 'triggers'
+        assert node.tagName == 'triggers'
+        # Remove old triggers first
         for old in self.triggers:
             old.delete()
         self.triggers = []
-        newTriggers = content.get('trigger', [])
-        if type(newTriggers) == type({}):
-            newTriggers = [newTriggers]
-        assert type(newTriggers) == type([])
-        for new in newTriggers:
-            assert type(new) == type({})
-            assert 'xpath' in new
-            assert 'url' in new
-            trigger = new['xpath']
-            url = new['url']
-            condition = new.get('condition')
-            method = new.get('method')
-            data = new.get('data')
-            mimetype = new.get('mimetype')
-            t = Trigger(self, trigger, url, method, data, mimetype, condition)
-            self.triggers.append(t)
+        # Now create new triggers
+        child = node.firstChild
+        while child:
+            if child.nodeType == child.ELEMENT_NODE and child.tagName == 'trigger':
+                t = Trigger(self, child)
+                self.triggers.append(t)
+            child = child.nextSibling
             

@@ -1,7 +1,7 @@
 import webApp
 import xmlDatabase
 import triggers
-import periodic
+import actions
 import sseListener
 import callUrl
 import os
@@ -36,13 +36,12 @@ class HomeServer:
         #
         self.triggerHandler = None
         self.updateTriggers()
-        self.periodicHandler = None
-        self.updatePeriodics()
+        self.actionHandler = None
+        self.updateActions()
         self.eventSources = None
         self.updateEventSources()
     
     def run(self):
-        print 'xxxjack run app'
         self.app.run(port=self.port)
         
     def updateTriggers(self):
@@ -57,17 +56,17 @@ class HomeServer:
         elif self.triggerHandler:
             self.triggerHandler.updateTriggers([])
 
-    def updatePeriodics(self):
-        """Create any periodic event handlers defined in the database"""
-        startupPeriodics = self.database.getElements('periodics')
-        if len(startupPeriodics):
-            if len(startupPeriodics) > 1:
-                raise web.HTTPError('401 only one <periodics> element allowed')
-            if not self.periodicHandler:
-                self.periodicHandler = periodic.PeriodicCollection(self.database, self.urlCaller.callURL)
-            self.periodicHandler.updatePeriodics(startupPeriodics[0])
-        elif self.periodicHandler:
-            self.periodicHandler.updatePeriodics([])
+    def updateActions(self):
+        """Create any (periodic) event handlers defined in the database"""
+        startupActions = self.database.getElements('actions')
+        if len(startupActions):
+            if len(startupActionss) > 1:
+                raise web.HTTPError('401 only one <actions> element allowed')
+            if not self.actionHandler:
+                self.actionHandler = action.ActionCollection(self.database, self.urlCaller.callURL)
+            self.actionHandler.updateActionss(startupActions[0])
+        elif self.actionHandler:
+            self.actionHandler.updateActions([])
 
     def updateEventSources(self):
         """Create any SSE event sources that are defined in the database"""
@@ -96,7 +95,6 @@ def main():
         if not os.path.exists(datadir):
             print 'Database not found:', datadir
             sys.exit(1)
-    print 'xxxjack datadir is', datadir
     homeServer = HomeServer(datadir, args.port)
     homeServer.run()
     

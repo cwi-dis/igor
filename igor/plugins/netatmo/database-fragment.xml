@@ -1,13 +1,9 @@
 <?xml version="1.0" ?>
 <data>
-	<periodics>
-		<periodic>
-			<interval>
-				900
-			</interval>
-			<url>
-				/pluginscripts/netatmo/pull
-			</url>
-		</periodic>
-	</periodics>
+	<actions>
+		<action>
+			<interval>900</interval>
+			<url>/pluginscripts/netatmo/pull</url>
+		</action>
+	</actions>
 </data>

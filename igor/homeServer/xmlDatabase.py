@@ -147,9 +147,7 @@ def installXPathFunctionExtension(klass):
           pass
       xpath.expr.Function = XPathFunctionWithExtension
 
-print 'xxxjack function was', xpath.expr.Function 
 installXPathFunctionExtension(XPathFunctionExtension)
-print 'xxxjack function is now', xpath.expr.Function 
 
 class DBSerializer:
     """Baseclass with methods to provide a mutex and a condition variable"""
@@ -175,7 +173,6 @@ class DBSerializer:
 
     def registerCallback(self, callback, location):
         with self:
-            self.unregisterCallback(callback)
             self._callbacks.append((location, callback))
             
     def unregisterCallback(self, callback):
@@ -207,12 +204,18 @@ class DBSerializer:
                     cv[1] += 1
                     cv[0].notify_all()
                     break
+        tocallback = {}
         for location, callback in self._callbacks:
             waitnodelist = xpath.find(location, self._doc.documentElement)
             for wn in waitnodelist:
                 if wn in nodelist:
-                    #print 'DBG callback for', wn
-                    callback(wn)    
+                    # Add to callbacks needed
+                    if callback in tocallback:
+                        tocallback[callback].append(wn)
+                    else:
+                        tocallback[callback] = [wn]
+        for callback, waitnodes in tocallback.items():
+            callback(*waitnodes)    
         
 class DBImpl(DBSerializer):
     """Main implementation of the database API"""

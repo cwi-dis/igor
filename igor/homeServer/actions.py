@@ -6,7 +6,7 @@ import Queue
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
-class Periodic:
+class Action:
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
     def __init__(self, hoster, interval, url, method=None, data=None, mimetype=None, condition=None):
@@ -67,11 +67,11 @@ class Periodic:
             text = text[match.end():]
         return newtext
                 
-class PeriodicCollection(threading.Thread):
+class ActionCollection(threading.Thread):
     def __init__(self, database, scheduleCallback):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.periodicQueue = Queue.PriorityQueue()
+        self.actionQueue = Queue.PriorityQueue()
         self.restarting = threading.Event()
         self.database = database
         self.scheduleCallback = scheduleCallback
@@ -79,7 +79,7 @@ class PeriodicCollection(threading.Thread):
         
     def run(self):
         while True:
-            nextTime, nextTask = self.periodicQueue.get()
+            nextTime, nextTask = self.actionQueue.get()
             timeToWait = nextTime-time.time()
             if self.restarting.wait(timeToWait):
                 # The queue was cleared.
@@ -87,23 +87,23 @@ class PeriodicCollection(threading.Thread):
                 continue
             if not nextTask: continue
             nextTime = nextTask.callback()
-            self.periodicQueue.put((nextTime, nextTask))
+            self.actionQueue.put((nextTime, nextTask))
         
-    def updatePeriodics(self, node):
+    def updateActions(self, node):
         tag, content = self.database.tagAndDictFromElement(node)
-        assert tag == 'periodics'
+        assert tag == 'actions'
         # Clear out old queue
-        while not self.periodicQueue.empty():
-            self.periodicQueue.get()
+        while not self.actionQueue.empty():
+            self.actionQueue.get()
         # Signal the waiter thread
         self.restarting.set()
-        self.periodicQueue.put((1, None))
-        self.periodics = []
-        newPeriodics = content.get('periodic', [])
-        if type(newPeriodics) == type({}):
-            newPeriodics = [newPeriodics]
-        assert type(newPeriodics) == type([])
-        for new in newPeriodics:
+        self.actionQueue.put((1, None))
+        self.actions = []
+        newActions = content.get('action', [])
+        if type(newActions) == type({}):
+            newActions = [newActions]
+        assert type(newActions) == type([])
+        for new in newActions:
             assert type(new) == type({})
             assert 'interval' in new
             assert 'url' in new
@@ -113,6 +113,6 @@ class PeriodicCollection(threading.Thread):
             method = new.get('method')
             data = new.get('data')
             mimetype = new.get('mimetype')
-            task = Periodic(self, interval, url, method, data, mimetype, condition)
-            self.periodicQueue.put((time.time(), task))
+            task = Action(self, interval, url, method, data, mimetype, condition)
+            self.actionQueue.put((time.time(), task))
             

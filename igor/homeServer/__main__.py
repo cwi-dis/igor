@@ -60,11 +60,11 @@ class HomeServer:
         """Create any (periodic) event handlers defined in the database"""
         startupActions = self.database.getElements('actions')
         if len(startupActions):
-            if len(startupActionss) > 1:
+            if len(startupActions) > 1:
                 raise web.HTTPError('401 only one <actions> element allowed')
             if not self.actionHandler:
-                self.actionHandler = action.ActionCollection(self.database, self.urlCaller.callURL)
-            self.actionHandler.updateActionss(startupActions[0])
+                self.actionHandler = actions.ActionCollection(self.database, self.urlCaller.callURL)
+            self.actionHandler.updateActions(startupActions[0])
         elif self.actionHandler:
             self.actionHandler.updateActions([])
 

@@ -6,6 +6,12 @@ import Queue
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
+class NEVER:
+    """Compares bigger than any number"""
+    pass
+    
+assert NEVER > 1
+
 class Action:
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
@@ -19,6 +25,9 @@ class Action:
         if not self.mimetype:
             self.mimetype = 'text/plain'
         self.condition = condition
+        self.nextTime = NEVER
+        if self.interval:
+            self.nextTime = time.time()
         self.install()
         
     def delete(self):
@@ -44,7 +53,12 @@ class Action:
             tocall['mimetype'] = self.mimetype
         # xxxjack can add things like mimetype, credentials, etc
         self.hoster.scheduleCallback(tocall)
-        return time.time() + self.interval
+        self._setNextActionTime(time.time() + self.interval)
+        
+    def _setNextActionTime(self, nextTime):
+        self.nextTime = nextTime
+        if self.hoster:
+            self.hoster.actionTimeChanged(self)
         
     def _evaluate(self, text, node, urlencode):
         if not text: return text
@@ -66,28 +80,43 @@ class Action:
             newtext = newtext + text[:match.start()] + replacement
             text = text[match.end():]
         return newtext
+        
+    def __cmp__(self, other):
+        return cmp(self.nextTime, other.nextTime)
                 
 class ActionCollection(threading.Thread):
     def __init__(self, database, scheduleCallback):
         threading.Thread.__init__(self)
         self.daemon = True
         self.actionQueue = Queue.PriorityQueue()
-        self.restarting = threading.Event()
+        self.actionQueueEvent = threading.Event()
         self.database = database
         self.scheduleCallback = scheduleCallback
         self.start()
         
     def run(self):
         while True:
-            nextTime, nextTask = self.actionQueue.get()
-            timeToWait = nextTime-time.time()
-            if self.restarting.wait(timeToWait):
-                # The queue was cleared.
-                self.restarting.clear()
-                continue
-            if not nextTask: continue
-            nextTime = nextTask.callback()
-            self.actionQueue.put((nextTime, nextTask))
+            # Get the earliest queue element and run it if its time has come
+            nextAction = self.actionQueue.get()
+            nextActionTime = nextAction.nextTime
+            if nextActionTime != NEVER:
+                if nextActionTime < time.time():
+                    nextAction.callback()
+                    self.actionQueue.put(nextAction)
+                    continue
+            # If it is not runnable we put it back (probably at the front) and wait
+            self.actionQueue.put(nextAction)
+            # And wait
+            if nextActionTime == NEVER:
+                waitTime = None
+            else:
+                waitTime = nextActionTime - time.time()
+            self.actionQueueEvent.wait(waitTime)
+            self.actionQueueEvent.clear()
+        
+    def actionTimeChanged(self, action):
+        self.actionQueue.put(action)
+        self.actionQueueEvent.set()
         
     def updateActions(self, node):
         tag, content = self.database.tagAndDictFromElement(node)
@@ -95,10 +124,7 @@ class ActionCollection(threading.Thread):
         # Clear out old queue
         while not self.actionQueue.empty():
             self.actionQueue.get()
-        # Signal the waiter thread
-        self.restarting.set()
-        self.actionQueue.put((1, None))
-        self.actions = []
+        # Fill the queue with the new actions
         newActions = content.get('action', [])
         if type(newActions) == type({}):
             newActions = [newActions]
@@ -107,12 +133,14 @@ class ActionCollection(threading.Thread):
             assert type(new) == type({})
             assert 'interval' in new
             assert 'url' in new
-            interval = new['interval']
+            interval = new.get('interval')
             url = new['url']
             condition = new.get('condition')
             method = new.get('method')
             data = new.get('data')
             mimetype = new.get('mimetype')
-            task = Action(self, interval, url, method, data, mimetype, condition)
-            self.actionQueue.put((time.time(), task))
+            action = Action(self, interval, url, method, data, mimetype, condition)
+            self.actionQueue.put(action)
+        # Signal the runner thread
+        self.actionQueueEvent.set()
             

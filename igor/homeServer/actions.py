@@ -15,19 +15,21 @@ assert NEVER > 1
 class Action:
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
-    def __init__(self, hoster, interval, url, method=None, data=None, mimetype=None, condition=None):
+    def __init__(self, hoster, element):
         self.hoster = hoster
-        self.interval = interval
-        self.url = url
-        self.method = method
-        self.data = data
-        self.mimetype = mimetype
-        if not self.mimetype:
-            self.mimetype = 'text/plain'
-        self.condition = condition
+        self.element = element
+        tag, content = self.hoster.database.tagAndDictFromElement(self.element)
+        assert tag == 'action'
+        assert 'url' in content
+        self.interval = content.get('interval')
+        self.url = content.get('url')
+        self.method = content.get('method')
+        self.data = content.get('data')
+        self.mimetype = content.get('mimetype','text/plain')
+        self.condition = content.get('condition')
         self.nextTime = NEVER
         if self.interval:
-            self.nextTime = time.time()
+            self._setNextActionTime(time.time())
         self.install()
         
     def delete(self):
@@ -41,6 +43,9 @@ class Action:
         pass
                 
     def callback(self, node=None):
+        if not self.hoster:
+            print 'ERROR: Action.callback called without hoster:', self
+            return
         if self.condition:
             shouldRun = self.hoster.database.getValue(self.condition, node)
             if not shouldRun:
@@ -61,6 +66,7 @@ class Action:
             self.hoster.actionTimeChanged(self)
         
     def _evaluate(self, text, node, urlencode):
+        """Interpolate {xpathexpr} expressions in a string"""
         if not text: return text
         newtext = ''
         while True:
@@ -95,6 +101,7 @@ class ActionCollection(threading.Thread):
         self.start()
         
     def run(self):
+        """Thread that triggers timed actions as they become elegible"""
         while True:
             # Get the earliest queue element and run it if its time has come
             nextAction = self.actionQueue.get()
@@ -115,32 +122,32 @@ class ActionCollection(threading.Thread):
             self.actionQueueEvent.clear()
         
     def actionTimeChanged(self, action):
+        """Called by an Action when its nextActionTime has changed"""
         self.actionQueue.put(action)
         self.actionQueueEvent.set()
         
     def updateActions(self, node):
-        tag, content = self.database.tagAndDictFromElement(node)
-        assert tag == 'actions'
+        """Called by upper layers when something has changed in the actions in the database"""
+        assert node.tagName == 'actions'
         # Clear out old queue
         while not self.actionQueue.empty():
             self.actionQueue.get()
         # Fill the queue with the new actions
-        newActions = content.get('action', [])
-        if type(newActions) == type({}):
-            newActions = [newActions]
-        assert type(newActions) == type([])
-        for new in newActions:
-            assert type(new) == type({})
-            assert 'interval' in new
-            assert 'url' in new
-            interval = new.get('interval')
-            url = new['url']
-            condition = new.get('condition')
-            method = new.get('method')
-            data = new.get('data')
-            mimetype = new.get('mimetype')
-            action = Action(self, interval, url, method, data, mimetype, condition)
-            self.actionQueue.put(action)
+        # Now create new triggers
+        child = node.firstChild
+        while child:
+            if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
+                action = Action(self, child)
+                self.actionQueue.put(action)
+            child = child.nextSibling
         # Signal the runner thread
         self.actionQueueEvent.set()
+        
+    def triggerAction(self, node):
+        """Called by the upper layers when a single action needs to be triggered"""
+        for a in self.actionQueue.queue:
+            if a.element == node:
+                a.callback()
+                return
+        print 'ERROR: triggerAction called for unknown element', repr(node)
             

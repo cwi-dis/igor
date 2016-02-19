@@ -22,6 +22,7 @@ urls = (
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
     '/internal/(.*)', 'runCommand',
+    '/action/(.*)', 'runAction',
     '/plugin/(.*)', 'runPlugin',
 )
 class MyApplication(web.application):
@@ -131,6 +132,9 @@ class runPlugin:
             raise web.HTTPError("401 Error calling plugin method %s: %s" % (command, arg))
         return rv
 
+class runAction:
+    pass
+    
 class xmlDatabaseEvaluate:
     """Evaluate an XPath expression and return the result as plaintext"""
     def GET(self, command):

@@ -80,6 +80,14 @@ class HomeServer:
         elif self.eventSources:
             self.eventSources.updateEventSources([])
 
+    def runAction(self, actionname):
+        if not self.actionHandler:
+            raise web.notfound()
+        nodes = self.database.getElements('actions/action[name="%s"]'%actionname)
+        if not nodes:
+            raise web.notfound()
+        for node in nodes:
+            self.actionHandler.triggerAction(node)
     
 def main():
     DEFAULTDIR="homeServerDatabase"

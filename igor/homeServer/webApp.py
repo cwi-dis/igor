@@ -99,6 +99,13 @@ class runCommand:
             raise web.HTTPError("401 Error calling command method %s: %s" % (command, arg))
         return rv
 
+
+class runAction:
+    def GET(self, actionname):
+        if not COMMANDS:
+            raise web.notfound()
+        return COMMANDS.runAction(actionname)
+        
 class runPlugin:
     """Call a plugin method"""
     
@@ -131,9 +138,6 @@ class runPlugin:
         except TypeError, arg:
             raise web.HTTPError("401 Error calling plugin method %s: %s" % (command, arg))
         return rv
-
-class runAction:
-    pass
     
 class xmlDatabaseEvaluate:
     """Evaluate an XPath expression and return the result as plaintext"""

@@ -58,14 +58,16 @@ class runScript:
         tmpDB = xmlDatabaseAccess()
         try:
             pluginData = tmpDB.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content')
-        except:
+        except web.HTTPError:
+            web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
         if allArgs.has_key('user'):
             user = allArgs['user']
             env['user'] = user
             try:
                 userData = tmpDB.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
-            except:
+            except web.HTTPError:
+                web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
                 userData = {}
             if userData:
                 pluginData.update(userData)
@@ -124,7 +126,6 @@ class runPlugin:
         else:
             # New. Try to import.
             moduleDir = os.path.join(PLUGINDIR, command)
-            print 'xxxjack import', command, 'from', PLUGINDIR
             try:
                 mfile, mpath, mdescr = imp.find_module(command, [moduleDir])
                 mod = imp.load_module(command, mfile, mpath, mdescr)
@@ -134,7 +135,6 @@ class runPlugin:
             mod.DATABASE = DATABASE
             mod.COMMANDS=COMMANDS
             mod.app = app
-            print 'xxxjack imported plugin', command
         try:
             method = getattr(mod, command)
         except AttributeError:

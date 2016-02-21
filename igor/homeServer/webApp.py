@@ -300,15 +300,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     nodesToSignal.append(parent)
                 else:
                     #
-                    # Already exists, possibly multiple times. First make sure that if there are
-                    # multiple matches they all have the same parent (we will replace all of them by
-                    # the single new node, or append it).
+                    # Already exists. Check that it exists only once.
                     #
                     if len(oldElements) > 1:
-                        parent1 = oldElements[0].parentNode
-                        for otherNode in oldElements[1:]:
-                            if otherNode.parentNode != parent1:
-                                raise web.BadRequest("Bad Request, XPath selects multiple items from multiple parents")
+                        raise web.BadRequest("Bad PUT Request, XPath selects multiple items")
                             
                     oldElement = oldElements[0]
                     if replace:
@@ -320,17 +315,16 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                         #
                         parent = oldElement.parentNode
                         parent.replaceChild(element, oldElement)
-                        for otherNode in oldElements[1:]:
-                            # Delete other nodes with the same tag
-                            parent.removeChild(otherNode)
                     else:
                         #
-                        # Simply add the new node to the parent (and signal that parent)
+                        # POST, simply append the new node to the parent (and signal that parent)
+                        #
                         parent = oldElement.parentNode
                         parent.appendChild(element)
                         nodesToSignal.append(parent)
                     #
                     # We want to signal the new node
+                    #
                     nodesToSignal.append(element)
                 
                 self.db.signalNodelist(nodesToSignal)

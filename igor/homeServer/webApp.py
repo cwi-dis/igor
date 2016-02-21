@@ -35,14 +35,15 @@ app = MyApplication(urls, globals())
 class runScript:
     """Run a shell script"""
         
-    def GET(self, arg1, arg2=None):
+    def GET(self, name, arg2=None):
         if arg2:
             # Plugin script command.
-            scriptDir = os.path.join(PLUGINDIR, arg1, 'scripts')
+            scriptDir = os.path.join(PLUGINDIR, name, 'scripts')
             command = arg2
         else:
             scriptDir = SCRIPTDIR
-            command = arg1
+            command = name
+            
         allArgs = web.input()
         if '/' in command:
             raise web.HTTPError("401 Cannot use / in command")
@@ -52,20 +53,27 @@ class runScript:
         else:
             args = []
             
-        # Setup userdata for pull script, if available
-        env = None
+        # Setup per-plugin and per-user data for plugin scripts, if available
+        env = copy.deepcopy(os.environ)
+        tmpDB = xmlDatabaseAccess()
+        try:
+            pluginData = tmpDB.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content')
+        except:
+            pluginData = {}
         if allArgs.has_key('user'):
-            env = copy.deepcopy(os.environ)
             user = allArgs['user']
             env['user'] = user
-            tmpDB = xmlDatabaseAccess()
             try:
-                userData = tmpDB.get_key('identities/%s/scriptData/%s' % (user, command), 'application/json', 'content')
+                userData = tmpDB.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
             except:
-                userData = None
+                userData = {}
             if userData:
-                env['userData'] = userData
+                pluginData.update(userData)
+        # Pass plugin data in environment, as JSON
+        if pluginData:
+            env['pluginData'] = json.dumps(pluginData)
                 
+        # Call the command and get the output
         command = os.path.join(scriptDir, command)
         try:
             linked = os.readlink(command)
@@ -351,6 +359,8 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 return value+'\n'
             elif mimetype == "application/xml":
                 return "<ref>%s</ref>\n" % value
+            elif mimetype == "application/x-python-object":
+                return value
             else:
                 raise web.InternalError("Unimplemented mimetype %s for ref" % mimetype)
         # Only nodesets need different treatment for default and multi
@@ -361,6 +371,8 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 return unicode(value)+'\n'
             elif mimetype == "application/xml":
                 return u"<value>%s</value>\n" % unicode(value)
+            elif mimetype == "application/x-python-object":
+                return value
             else:
                 raise web.InternalError("Unimplemented mimetype %s for default or multi, simple value" % mimetype)
         if variant == 'multi':
@@ -382,6 +394,13 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     rv += v
                     rv += "\n</item>\n"
                 rv += "</items>\n"
+                return rv
+            elif mimetype == "application/x-python-object":
+                rv = []
+                for item in value:
+                    r = self.db.getXPathForElement(item)
+                    t, v = self.db.tagAndDictFromElement(item)
+                    rv.append(v)
                 return rv
             else:
                 raise web.InternalError("Unimplemented mimetype %s for multi, nodeset" % mimetype)
@@ -408,6 +427,12 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             if len(value) > 1:
                 raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
             return value[0].toxml()+'\n'
+        elif mimetype == 'application/x-python-object':
+            if len(value) > 1:
+                raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
+            t, v = self.db.tagAndDictFromElement(value[0])
+            return v
+
         else:
             raise web.InternalError("Unimplemented mimetype %s for default, single node" % mimetype)            
         

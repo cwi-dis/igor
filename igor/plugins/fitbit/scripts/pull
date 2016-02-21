@@ -8,10 +8,10 @@ x)
 	exit 1
 	;;
 esac
-case "x$userData" in
+case "x$pluginData" in
 x)
-	echo $0: no userData for user=$user
+	echo $0: no pluginData for user=$user
 	exit 1
 	;;
 esac
-echo $userData | python $dirFitbit/getFitbit.py --stdin | python $dirHomeServer/homeVar.py --put application/json sensors/fitbit/$user
+echo $pluginData | python $dirFitbit/getFitbit.py --stdin | python $dirHomeServer/homeVar.py --put application/json sensors/fitbit/$user

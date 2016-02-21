@@ -5,8 +5,14 @@
 	<devices>
 	</devices>
 	<people>
+		<unknown>
+		</unknown>
 	</people>
 	<identities>
+		<unknown>
+			<plugindata>
+			</plugindata>
+		</unknown>
 	</identities>
 	<triggers>
 		<trigger>
@@ -34,4 +40,6 @@
 	</environment>
 	<eventsources>
 	</eventsources>
+	<plugindata>
+	</plugindata>
 </data>

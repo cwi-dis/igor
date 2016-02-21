@@ -346,7 +346,10 @@ class DBImpl(DBSerializer):
             elif child.nodeType == child.ATTRIBUTE_NODE:
                 v['@' + child.name] = child.value
             elif child.nodeType == child.TEXT_NODE:
-                texts.append(child.data)
+                # Remove leading and trailing whitespace, and only add text node if it is not empty
+                d = child.data.strip()
+                if d:
+                    texts.append(d)
             child = child.nextSibling
         if len(texts) == 1:
             if v:

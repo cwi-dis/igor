@@ -303,10 +303,15 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     # Already exists. Check that it exists only once.
                     #
                     if len(oldElements) > 1:
-                        raise web.BadRequest("Bad PUT Request, XPath selects multiple items")
+                        parent1 = oldElements[0].parentNode
+                        for otherNode in oldElements[1:]:
+                            if otherNode.parentNode != parent1:
+                                raise web.BadRequest("Bad Request, XPath selects multiple items from multiple parents")
                             
                     oldElement = oldElements[0]
                     if replace:
+                        if len(oldElements) > 1:
+                            raise web.BadRequest("Bad PUT Request, XPath selects multiple items")
                         #
                         # We should really do a selective replace here: change only the subtrees that need replacing.
                         # That will make the signalling much more fine-grained. Will do so, at some point in the future.

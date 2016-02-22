@@ -62,7 +62,7 @@
 	<sandbox>
 	</sandbox>
 	<environment>
-	<messages><message>Hello Jack, how are you?</message><message>Hello Jack, how are you?</message><message>Hello Sergio, nice to meet you!</message><message>Hello Sergio, nice to meet you!</message><message>Hello Jack, how are you?</message><message>Hello Jack, how are you?</message></messages></environment>
+	<messages><message>Hello Jack, how are you?</message><message>Hello Jack, how are you?</message><message>Hello Sergio, nice to meet you!</message><message>Hello Sergio, nice to meet you!</message><message>Hello Jack, how are you?</message><message>Hello Jack, how are you?</message><message><message>Saw card de:94:2d:d2</message></message><message><message>Saw card de:94:2d:d2</message></message><message><message>Saw card de:94:2d:d2</message></message></messages><messages><message>Saw card de:94:2d:d2</message></messages><messages><message>Saw card de:94:2d:d2</message></messages><messages><message>Saw card de:94:2d:d2</message></messages><messages><message>Saw card de:94:2d:d2</message></messages><messages><message>Saw card de:94:2d:d2</message></messages></environment>
 	<eventsources>
 	</eventsources>
 	<plugindata>

@@ -1,3 +1,18 @@
 #!/bin/sh
-say="ssh boom.local say"
-$say $@
+case x$remoteHost in
+x)
+	say=say
+	;;
+*)
+	say="ssh $remoteHost say"
+	;;
+esac
+case x$voice in
+x)
+	sayArg=
+	;;
+x*)
+	sayArg="-v $voice"
+	;;
+esac
+$say $sayArg $@

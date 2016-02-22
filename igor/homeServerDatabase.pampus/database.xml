@@ -2,6 +2,11 @@
 	<sensors>
 	</sensors>
 	<devices>
+	<flauwte><alive>True</alive></flauwte>
+	<audio><alive>True</alive></audio>
+	<video><alive>True</alive></video>
+	<table><alive>False</alive></table>
+	<server><alive>True</alive></server>
 	</devices>
 	<people>
 		<unknown>
@@ -37,6 +42,22 @@
 		</trigger>
 	</triggers>
 	<actions>
+	    <action>
+	        <interval>60</interval>
+	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>
+	    </action>
+	    <action>
+	        <interval>60</interval>
+	        <url>/plugin/lan?name=video&amp;ip=dominion.dis.&amp;port=22</url>
+	    </action>
+	    <action>
+	        <interval>60</interval>
+	        <url>/plugin/lan?name=table&amp;ip=hankasalmi.dis.&amp;port=22</url>
+	    </action>
+	    <action>
+	        <interval>60</interval>
+	        <url>/plugin/lan?name=server&amp;ip=maunakea.dis.&amp;port=22</url>
+	    </action>
 	</actions>
 	<sandbox>
 	</sandbox>

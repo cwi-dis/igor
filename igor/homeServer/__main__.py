@@ -18,7 +18,7 @@ class HomeServer:
         # Create the database, and tell the web application about it
         #
         self.port = port
-        self.app = webApp.app
+        self.app = webApp.WEBAPP
         self.database = xmlDatabase.DBImpl(os.path.join(datadir, 'database.xml'))
         webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
         webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')

@@ -12,10 +12,16 @@ import imp
 import xpath
 
 DATABASE=None   # The database itself. Will be set by main module
+DATABASE_ACCESS=None    # Will be set later by this module
 SCRIPTDIR=None  # The directory for scripts
 PLUGINDIR=None  # The directory for plugins
 COMMANDS=None   # The command processor. Will be set by the main module.
+WEBAPP=None     # Will be set later in this module
 
+def initDatabaseAccess():
+    if not DATABASE_ACCESS:
+        _ = xmlDatabaseAccess()
+        
 urls = (
     '/scripts/([^/]*)', 'runScript',
     '/pluginscripts/([^/]*)/([^/]*)', 'runScript',
@@ -30,7 +36,10 @@ class MyApplication(web.application):
         func = self.wsgifunc(*middleware)
         return web.httpserver.runsimple(func, ('0.0.0.0', port))
 
-app = MyApplication(urls, globals())
+WEBAPP = MyApplication(urls, globals())
+
+def myWebError(msg):
+    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class runScript:
     """Run a shell script"""
@@ -46,7 +55,7 @@ class runScript:
             
         allArgs = web.input()
         if '/' in command:
-            raise web.HTTPError("401 Cannot use / in command")
+            raise myWebError("401 Cannot use / in command")
             
         if allArgs.has_key('args'):
             args = shlex.split(allArgs.args)
@@ -55,9 +64,9 @@ class runScript:
             
         # Setup per-plugin and per-user data for plugin scripts, if available
         env = copy.deepcopy(os.environ)
-        tmpDB = xmlDatabaseAccess()
+        initDatabaseAccess()
         try:
-            pluginData = tmpDB.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content')
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content')
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
@@ -65,7 +74,7 @@ class runScript:
             user = allArgs['user']
             env['user'] = user
             try:
-                userData = tmpDB.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
+                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
             except web.HTTPError:
                 web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
                 userData = {}
@@ -91,8 +100,7 @@ class runScript:
             msg = "502 Command %s exited with status code=%d" % (command, arg.returncode)
             raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n' + arg.output)
         except OSError, arg:
-            msg = "502 Error running command: %s: %s" % (command, arg.strerror)
-            raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+            raise myWebError("502 Error running command: %s: %s" % (command, arg.strerror))
         return rv
 
 class runCommand:
@@ -109,7 +117,7 @@ class runCommand:
         try:
             rv = method(**allArgs)
         except TypeError, arg:
-            raise web.HTTPError("401 Error calling command method %s: %s" % (command, arg))
+            raise myWebError("401 Error calling command method %s: %s" % (command, arg))
         return rv
 
 
@@ -135,9 +143,11 @@ class runPlugin:
             except ImportError:
                 raise web.notfound()
             # Tell the new module about the database and the app
+            initDatabaseAccess()
             mod.DATABASE = DATABASE
-            mod.COMMANDS=COMMANDS
-            mod.app = app
+            mod.DATABASE_ACCESS = DATABASE_ACCESS
+            mod.COMMANDS = COMMANDS
+            mod.WEBAPP = WEBAPP
         try:
             method = getattr(mod, command)
         except AttributeError:
@@ -147,14 +157,14 @@ class runPlugin:
         try:
             rv = method(**allArgs)
         except TypeError, arg:
-            raise web.HTTPError("401 Error calling plugin method %s: %s" % (command, arg))
+            raise myWebError("401 Error calling plugin method %s: %s" % (command, arg))
         return rv
     
 class xmlDatabaseEvaluate:
     """Evaluate an XPath expression and return the result as plaintext"""
     def GET(self, command):
-        tmpDB = xmlDatabaseAccess()
-        return tmpDB.get_value(command)
+        initDatabaseAccess()
+        return DATABASE_ACCESS.get_value(command)
         
 class AbstractDatabaseAccess(object):
     """Abstract database that handles the high-level HTTP primitives.
@@ -239,9 +249,12 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
     MIMETYPES = ["application/xml", "application/json", "text/plain"]
     
     def __init__(self):
+        global DATABASE_ACCESS
         self.db = DATABASE
         assert DATABASE
         self.rootTag = self.db.getDocument().tagName
+        if not DATABASE_ACCESS:
+            DATABASE_ACCESS = self
         
     def get_key(self, key, mimetype, variant):
         """Get subtree for 'key' as 'mimetype'. Variant can be used
@@ -257,20 +270,21 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             rv = self.convertto(rv, mimetype, variant)
             return rv
         except xpath.XPathError, arg:
-            msg = "401 XPath error: %s" % str(arg)
-            raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+            raise myWebError("401 XPath error: %s" % str(arg))
         
     def get_value(self, expression):
         """Evaluate a general expression and return the string value"""
         try:
             return self.db.getValue(expression)
         except xpath.XPathError, arg:
-            msg = "401 XPath error: %s" % str(arg)
-            raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+            raise myWebError("401 XPath error: %s" % str(arg))
         
     def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
         try:
-            key = '/%s/%s' % (self.rootTag, key)
+            if not key:
+                raise myWebError("401 cannot PUT or POST whole document")
+            if key[0] != '/':
+                key = '/%s/%s' % (self.rootTag, key)
             if not variant: variant = 'ref'
             nodesToSignal = []
             with self.db:
@@ -282,13 +296,13 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     # Does not exist yet. See if we can create it
                     #
                     if not parentPath or not tag:
-                        raise web.notfound()
+                        raise web.notfound("404 Not Found, parent or tag missing")
                     #
                     # Find parent
                     #
                     parentElements = self.db.getElements(parentPath)
                     if not parentElements:
-                        raise web.notfound()
+                        raise web.notfound("404 Parent not found: %s" % parentPath)
                     if len(parentElements) > 1:
                         raise web.BadRequest("Bad request, XPath parent selects multiple items")
                     parent = parentElements[0]
@@ -339,8 +353,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 path = self.db.getXPathForElement(element)
                 return self.convertto(path, mimetype, variant)
         except xpath.XPathError, arg:
-            msg = "401 XPath error: %s" % str(arg)
-            raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+            raise myWebError("401 XPath error: %s" % str(arg))
         
     def delete_key(self, key):
         try:
@@ -348,8 +361,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             self.db.delValues(key)
             return ''
         except xpath.XPathError, arg:
-            msg = "401 XPath error: %s" % str(arg)
-            raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+            raise myWebError("401 XPath error: %s" % str(arg))
         
     def convertto(self, value, mimetype, variant):
         if variant == 'ref':

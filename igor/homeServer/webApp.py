@@ -74,6 +74,9 @@ class runScript:
         # Pass plugin data in environment, as JSON
         if pluginData:
             env['pluginData'] = json.dumps(pluginData)
+            if type(pluginData) == type({}):
+                for k, v in pluginData.items():
+                    env[k] = str(v)
                 
         # Call the command and get the output
         command = os.path.join(scriptDir, command)

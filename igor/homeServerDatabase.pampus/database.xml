@@ -41,7 +41,7 @@
 	<sandbox>
 	</sandbox>
 	<environment>
-	<messages><message>Hello Jack, how are you?</message><message>Hello Jack, how are you?</message></messages></environment>
+	<messages><message>Hello Jack, how are you?</message><message>Hello Jack, how are you?</message><message>Hello Sergio, nice to meet you!</message><message>Hello Sergio, nice to meet you!</message><message>Hello Jack, how are you?</message><message>Hello Jack, how are you?</message></messages></environment>
 	<eventsources>
 	</eventsources>
 	<plugindata>

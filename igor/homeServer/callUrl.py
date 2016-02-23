@@ -5,6 +5,8 @@ import urlparse
 import time
 import sys
 
+DEBUG=False
+
 class URLCaller(threading.Thread):
     def __init__(self, app):
         threading.Thread.__init__(self)
@@ -26,6 +28,7 @@ class URLCaller(threading.Thread):
             if not method:
                 method = 'GET'
             parsedUrl = urlparse.urlparse(url)
+            if DEBUG: print 'URLCaller.run calling', url
             if parsedUrl.scheme == '' and parsedUrl.netloc == '':
                 # Local. Call the app directly.
                 # xxxjack have to work out exceptions
@@ -49,4 +52,5 @@ class URLCaller(threading.Thread):
                 
         
     def callURL(self, tocall):
+        if DEBUG: print 'URLCaller.callURL(%s)' % repr(tocall)
         self.queue.put(tocall)

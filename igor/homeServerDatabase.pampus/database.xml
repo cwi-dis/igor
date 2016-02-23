@@ -62,7 +62,7 @@
 	<sandbox>
 	</sandbox>
 	<environment>
-	<messages/></environment>
+	<messages><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag be:c5:c7:aa</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag be:c5:c7:aa</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag 72:28:3d:a0</message></messages></environment>
 	<eventsources>
 	</eventsources>
 	<plugindata>

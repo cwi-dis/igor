@@ -457,6 +457,11 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 raise web.BadRequest("Bad request, toplevel XML tag %s does not match final XPath element %s" % (element.tagName, tag))
             return element
         elif mimetype == 'application/x-www-form-urlencoded':
+            # xxxjack here comes a special case, and I don't like it.
+            # if the url-encoded data contains exactly one element and its name is the same as the
+            # tag name we don't encode.
+            if type(value) == type({}) and len(value) == 1 and tag in value:
+                value = value[tag]
             element = self.db.elementFromTagAndData(tag, value)
             return element
         elif mimetype == 'application/json':

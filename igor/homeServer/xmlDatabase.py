@@ -17,6 +17,8 @@ class DBKeyError(KeyError):
 class DBParamError(ValueError):
     pass
     
+DEBUG=False
+
 class XPathFunctionExtension(xpath.expr.Function):
     string = xpath.expr.string
     number = xpath.expr.number
@@ -196,6 +198,7 @@ class DBSerializer:
         
     def signalNodelist(self, nodelist):
         """Wake up clients waiting for the given nodes"""
+        if DEBUG: print 'signalNodelist(%s)'%repr(nodelist)
         for location, cv in self._waiting.items():
             waitnodelist = xpath.find(location, self._doc.documentElement)
             for wn in waitnodelist:
@@ -215,6 +218,7 @@ class DBSerializer:
                     else:
                         tocallback[callback] = [wn]
         for callback, waitnodes in tocallback.items():
+            if DEBUG: print 'signalNodelist calling %s(%s)' % (callback, waitnodes)
             callback(*waitnodes)    
         
 class DBImpl(DBSerializer):

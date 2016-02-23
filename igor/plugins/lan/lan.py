@@ -7,15 +7,14 @@ DATABASE_ACCESS=None
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-def lan(name=None, service='devices/%s/alive', ip=None, port=80):
+def lan(name=None, service='devices/%s/alive', ip=None, port=80, timeout=5):
     if not name:
         raise myWebError("401 Required argument name missing")
     if not ip:
         ip = name
     alive = True
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((ip, int(port)))
+        s = socket.create_connection((ip, int(port)), timeout)
     except socket.error:
         alive = False
     if service:

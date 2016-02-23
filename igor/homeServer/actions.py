@@ -6,6 +6,8 @@ import Queue
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
+DEBUG=False
+
 class NEVER:
     """Compares bigger than any number"""
     pass
@@ -22,6 +24,7 @@ class Action:
         assert tag == 'action'
         assert 'url' in content
         self.interval = content.get('interval')
+        self.minInterval = content.get('minInterval', 0)
         self.url = content.get('url')
         self.method = content.get('method')
         self.data = content.get('data')
@@ -29,7 +32,7 @@ class Action:
         self.condition = content.get('condition')
         self.nextTime = NEVER
         if self.interval:
-            self._setNextActionTime(time.time())
+            self._scheduleNextRunIn(0)
         self.install()
         
     def delete(self):
@@ -37,31 +40,84 @@ class Action:
         self.hoster = None
         
     def install(self):
+        """Install any xpath triggers needed by this action into the database"""
         pass
         
     def uninstall(self):
+        """Remove any installed triggers from the database"""
         pass
                 
     def callback(self, node=None):
+        """Schedule the action, if it is runnable at this time, and according to the condition"""
         if not self.hoster:
             print 'ERROR: Action.callback called without hoster:', self
             return
+        # Test whether we are allowed to run, depending on minInterval
+        now = time.time()
+        if self._earliestRunTimeAfter(now) > now:
+            return
+        # Test whether we are allowed to run according to our condition
         if self.condition:
             shouldRun = self.hoster.database.getValue(self.condition, node)
             if not shouldRun:
-                return time.time() + self.interval
+                return
+        # Evaluate URL and paramteres
         url = self._evaluate(self.url, node, True)
         data = self._evaluate(self.data, node, False)
+        # Prepare to run
         tocall = dict(method=self.method, url=url)
         if data:
             tocall['data'] = data
         tocall['mimetype'] = self.mimetype
         # xxxjack can add things like mimetype, credentials, etc
+        self._willRunNow()
         self.hoster.scheduleCallback(tocall)
-        self._setNextActionTime(time.time() + self.interval)
+        self._scheduleNextRunIn(self.interval)
         
-    def _setNextActionTime(self, nextTime):
-        self.nextTime = nextTime
+    def _earliestRunTimeAfter(self, t):
+        """Check whether the action is runnable at this time"""
+        nbElements = self.element.getElementsByTagName("notBefore")
+        if not nbElements:
+            return t
+        nbText = nbElements[0].firstChild
+        if not nbText:
+            return t
+        nbString = nbText.nodeValue
+        if not nbString:
+            return t
+        notBefore = int(nbString)
+        if notBefore < t:
+            return t
+        return notBefore
+            
+    def _willRunNow(self):
+        """Action will run. Make sure its notBefore is set"""
+        earliestNextRun = int(time.time())
+        if self.minInterval:
+            earliestNextRun += self.minInterval
+        if DEBUG: print 'Action._willRunNow', earliestNextRun
+        nbElements = self.element.getElementsByTagName("notBefore")
+        if nbElements:
+            nbElement = nbElements[0]
+        else:
+            if DEBUG: print 'Action._willRunNow create notBefore element'
+            doc = self.element.ownerDocument
+            nbElement = doc.createElement("notBefore")
+            self.element.appendChild(nbElement)
+        nbText = nbElement.firstChild
+        if nbText:
+            if DEBUG: print 'Action._willRunNow replace text data'
+            nbText.data = unicode(earliestNextRun)
+        else:
+            if DEBUG: print 'Action._willRunNow create text node'
+            doc = self.element.ownerDocument
+            nbText = doc.createTextNode(unicode(earliestNextRun))
+            nbElement.appendChild(nbText)
+        
+    def _scheduleNextRunIn(self, interval):
+        """Set the preferred (latest) next time this action should run"""
+        nextTime = interval + time.time()
+        self.nextTime = self._earliestRunTimeAfter(nextTime)
         if self.hoster:
             self.hoster.actionTimeChanged(self)
         

@@ -98,17 +98,10 @@ def main():
         DEFAULTDIR = int(os.environ['HOMESERVER_PORT'])
         
     parser = argparse.ArgumentParser(description="Run the home automation server")
-    parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment HOMESERVER_DIR)" % DEFAULTDIR)
+    parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment HOMESERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 8080, environment HOMESERVER_PORT)", default=DEFAULTPORT)
     args = parser.parse_args()
     datadir = args.database
-    if not datadir:
-        datadir = os.path.join(os.getcwd(), "homeServerDatabase")
-        if not os.path.exists(datadir):
-            datadir = os.path.join(os.path.dirname(__file__), "homeServerDatabase")
-        if not os.path.exists(datadir):
-            print 'Database not found:', datadir
-            sys.exit(1)
     homeServer = HomeServer(datadir, args.port)
     homeServer.run()
     

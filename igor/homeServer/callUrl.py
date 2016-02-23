@@ -5,7 +5,7 @@ import urlparse
 import time
 import sys
 
-DEBUG=True
+DEBUG=False
 
 class URLCaller(threading.Thread):
     def __init__(self, app):

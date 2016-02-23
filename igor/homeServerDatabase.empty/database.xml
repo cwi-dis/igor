@@ -33,6 +33,13 @@
 		</trigger>
 	</triggers>
 	<actions>
+		<action>
+			<name>save</name>
+			<interval>3600</interval>
+			<minInterval>60</minInterval>
+			<url>/internal/save</url>
+			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//*</xpath>
+		</action>
 	</actions>
 	<sandbox>
 	</sandbox>

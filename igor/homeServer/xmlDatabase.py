@@ -249,7 +249,7 @@ class DBImpl(DBSerializer):
 
     def signalNodelist(self, nodelist):
         with self:
-            self.saveFile()
+            #self.saveFile()
             DBSerializer.signalNodelist(self, nodelist)
         
     def getMessageCount(self):

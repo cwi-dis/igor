@@ -54,6 +54,13 @@
 	<data>You presented tag {.}</data>
 </trigger></triggers>
 	<actions>
+		<action>
+			<name>save</name>
+			<interval>3600</interval>
+			<minInterval>60</minInterval>
+			<url>/internal/save</url>
+			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//*</xpath>
+		</action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>

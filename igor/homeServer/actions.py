@@ -25,6 +25,11 @@ class Action:
         assert 'url' in content
         self.interval = content.get('interval')
         self.minInterval = content.get('minInterval', 0)
+        xpaths = content.get('xpath',[])
+        if type(xpaths) != type([]):
+            xpaths = [xpaths]
+        self.xpaths = xpaths
+        self.multiple = content.get('multiple')
         self.url = content.get('url')
         self.method = content.get('method')
         self.data = content.get('data')
@@ -41,13 +46,14 @@ class Action:
         
     def install(self):
         """Install any xpath triggers needed by this action into the database"""
-        pass
+        for xpath in self.xpaths:
+            self.hoster.database.registerCallback(self.callback, xpath)
         
     def uninstall(self):
         """Remove any installed triggers from the database"""
-        pass
+        self.hoster.database.unregisterCallback(self.callback)
                 
-    def callback(self, node=None):
+    def callback(self, *nodelist):
         """Schedule the action, if it is runnable at this time, and according to the condition"""
         if not self.hoster:
             print 'ERROR: Action.callback called without hoster:', self
@@ -56,23 +62,32 @@ class Action:
         now = time.time()
         if self._earliestRunTimeAfter(now) > now:
             return
-        # Test whether we are allowed to run according to our condition
-        if self.condition:
-            shouldRun = self.hoster.database.getValue(self.condition, node)
-            if not shouldRun:
-                return
-        # Evaluate URL and paramteres
-        url = self._evaluate(self.url, node, True)
-        data = self._evaluate(self.data, node, False)
-        # Prepare to run
-        tocall = dict(method=self.method, url=url)
-        if data:
-            tocall['data'] = data
-        tocall['mimetype'] = self.mimetype
-        # xxxjack can add things like mimetype, credentials, etc
-        self._willRunNow()
-        self.hoster.scheduleCallback(tocall)
-        self._scheduleNextRunIn(self.interval)
+        # Run for each node (or once, if no node present because we were not triggered by an xpath)        
+        if not nodelist:
+            nodelist = [None]
+        for node in nodelist:
+            # Test whether we are allowed to run according to our condition
+            if self.condition:
+                shouldRun = self.hoster.database.getValue(self.condition, node)
+                if not shouldRun:
+                    continue
+            # Evaluate URL and paramteres
+            url = self._evaluate(self.url, node, True)
+            data = self._evaluate(self.data, node, False)
+            # Prepare to run
+            tocall = dict(method=self.method, url=url)
+            if data:
+                tocall['data'] = data
+            tocall['mimetype'] = self.mimetype
+            # xxxjack can add things like mimetype, credentials, etc
+            self._willRunNow()
+            self.hoster.scheduleCallback(tocall)
+            # If we are running from an xpath we only run once (for the first matching node) unless multiple is given
+            if not self.multiple:
+                break
+        # Update our next run time, if we have an interval
+        if self.interval:
+            self._scheduleNextRunIn(self.interval)
         
     def _earliestRunTimeAfter(self, t):
         """Check whether the action is runnable at this time"""
@@ -145,6 +160,9 @@ class Action:
         
     def __cmp__(self, other):
         return cmp(self.nextTime, other.nextTime)
+        
+    def __hash__(self):
+        return id(self)
                 
 class ActionCollection(threading.Thread):
     def __init__(self, database, scheduleCallback):

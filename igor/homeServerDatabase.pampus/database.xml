@@ -18,48 +18,36 @@
 			</plugindata>
 		</unknown>
 	</identities>
-	<triggers>
-		<trigger>
-			<xpath>
-				/data/triggers/*
-			</xpath>
-			<url>
-				/internal/updateTriggers
-			</url>
-		</trigger>
-		<trigger>
-			<xpath>
-				/data/actions/*
-			</xpath>
-			<url>
-				/internal/updateActions
-			</url>
-		</trigger>
-		<trigger>
-			<xpath>/data/environment/messages/*</xpath>
-			<condition>not(data/environment/night)</condition>
-			<url>/pluginscripts/say/message?args={.}</url>
-		</trigger>
-	<trigger>
-	<xpath>/data/sensors/rfid/rfidtag</xpath>
-	<url>/data/sensors/tags/tag</url>
-	<method>POST</method>
-	<mimetype>text/plain</mimetype>
-	<data>{/data/plugindata/rfid/tag[id=string(/data/sensors/rfid/rfidtag[last()])]/name}</data>
-</trigger><trigger>
-	<xpath>/data/sensors/tags/tag</xpath>
-	<url>/data/environment/messages/message</url>
-	<method>POST</method>
-	<mimetype>text/plain</mimetype>
-	<data>You presented tag {.}</data>
-</trigger></triggers>
 	<actions>
 		<action>
 			<name>save</name>
 			<interval>3600</interval>
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
-			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//*</xpath>
+			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
+		</action>
+		<action>
+			<xpath>/data/actions/*</xpath>
+			<url>/internal/updateActions</url>
+		</action>
+		<action>
+			<xpath>/data/environment/messages/*</xpath>
+			<condition>not(data/environment/night)</condition>
+			<url>/pluginscripts/say/message?args={.}</url>
+		</action>
+		<action>
+			<xpath>/data/sensors/rfid/rfidtag</xpath>
+			<url>/data/sensors/tags/tag</url>
+			<method>POST</method>
+			<mimetype>text/plain</mimetype>
+			<data>{/data/plugindata/rfid/tag[id=string(/data/sensors/rfid/rfidtag[last()])]/name}</data>
+		</action>
+		<action>
+			<xpath>/data/sensors/tags/tag</xpath>
+			<url>/data/environment/messages/message</url>
+			<method>POST</method>
+			<mimetype>text/plain</mimetype>
+			<data>You presented tag {.}</data>
 		</action>
 	    <action>
 	        <interval>60</interval>

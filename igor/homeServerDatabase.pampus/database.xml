@@ -1,6 +1,6 @@
 <?xml version="1.0" ?><data>
 	<sensors>
-	</sensors>
+	<rfid><rfidtag>de:94:2d:d2</rfidtag><rfidtag>de:94:2d:d2</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>de:94:2d:d2</rfidtag><rfidtag>de:94:2d:d2</rfidtag><rfidtag>de:94:2d:d2</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>72:28:3d:a0</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>de:94:2d:d2</rfidtag><rfidtag>72:28:3d:a0</rfidtag></rfid><tags><tag></tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag></tag><tag>tagOne</tag><tag>tagTwo</tag><tag></tag></tags></sensors>
 	<devices>
 	<flauwte><alive>True</alive></flauwte>
 	<audio><alive>True</alive></audio>
@@ -40,7 +40,19 @@
 			<condition>not(data/environment/night)</condition>
 			<url>/pluginscripts/say/message?args={.}</url>
 		</trigger>
-	</triggers>
+	<trigger>
+	<xpath>/data/sensors/rfid/rfidtag</xpath>
+	<url>/data/sensors/tags/tag</url>
+	<method>POST</method>
+	<mimetype>text/plain</mimetype>
+	<data>{/data/plugindata/rfid/tag[id=string(/data/sensors/rfid/rfidtag[last()])]/name}</data>
+</trigger><trigger>
+	<xpath>/data/sensors/tags/tag</xpath>
+	<url>/data/environment/messages/message</url>
+	<method>POST</method>
+	<mimetype>text/plain</mimetype>
+	<data>You presented tag {.}</data>
+</trigger></triggers>
 	<actions>
 	    <action>
 	        <interval>60</interval>
@@ -62,12 +74,25 @@
 	<sandbox>
 	</sandbox>
 	<environment>
-	<messages><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag be:c5:c7:aa</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag be:c5:c7:aa</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag 72:28:3d:a0</message></messages></environment>
+	<messages><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag be:c5:c7:aa</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag be:c5:c7:aa</message><message>You presented R.F.I.D tag de:94:2d:d2</message><message>You presented R.F.I.D tag 72:28:3d:a0</message><message>You presented tag tagOne</message><message>You presented tag </message><message>You presented tag tagOne</message><message>You presented tag tagTwo</message><message>You presented tag </message></messages></environment>
 	<eventsources>
 	</eventsources>
 	<plugindata>
 	    <say>
 	        <voice>Daniel</voice>
 	    </say>
-	</plugindata>
+	<rfid>
+	<tag>
+		<id>be:c5:c7:aa</id>
+		<name>tagOne</name>
+	</tag>
+	<tag>
+		<id>de:94:2d:d2</id>
+		<name>tagTwo</name>
+	</tag>
+	<tag>
+		<id>de:94:2d:d2</id>
+		<name>JacksKey</name>
+	</tag>
+</rfid></plugindata>
 </data>

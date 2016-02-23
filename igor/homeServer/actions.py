@@ -55,7 +55,7 @@ class Action:
         tocall = dict(method=self.method, url=url)
         if data:
             tocall['data'] = data
-            tocall['mimetype'] = self.mimetype
+        tocall['mimetype'] = self.mimetype
         # xxxjack can add things like mimetype, credentials, etc
         self.hoster.scheduleCallback(tocall)
         self._setNextActionTime(time.time() + self.interval)

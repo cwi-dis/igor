@@ -50,7 +50,7 @@ class Trigger:
             tocall = dict(method=self.method, url=url)
             if data:
                 tocall['data'] = data
-                tocall['mimetype'] = self.mimetype
+            tocall['mimetype'] = self.mimetype
             # xxxjack can add things like credentials, etc
             self.hoster.scheduleCallback(tocall)
             if not self.multiple:

@@ -229,15 +229,27 @@ class DBImpl(DBSerializer):
         self._terminating = False
         self._domimpl = xml.dom.getDOMImplementation()
         self.filename = filename
-        self.tmpCounter = 1
         self.initialize(filename=filename)
+
+    def saveFile(self):
+        newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
+        self._doc.writexml(open(newFilename + '~', 'w'))
+        os.link(newFilename + '~', newFilename)
+        os.rename(newFilename + '~', self.filename)
+        # Remove outdated saves
+        dir,file = os.path.split(self.filename)
+        allOldDatabases = []
+        for fn in os.listdir(dir):
+            if fn.startswith(file + '.'):
+                allOldDatabases.append(fn)
+        allOldDatabases.sort()
+        for fn in allOldDatabases[:-10]:
+            os.unlink(os.path.join(dir, fn))
+            
 
     def signalNodelist(self, nodelist):
         with self:
-            newFilename = self.filename + '.NEW' + str(self.tmpCounter)
-            self.tmpCounter += 1
-            self._doc.writexml(open(newFilename, 'w'))
-            os.rename(newFilename, self.filename)
+            self.saveFile()
             DBSerializer.signalNodelist(self, nodelist)
         
     def getMessageCount(self):

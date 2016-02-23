@@ -88,6 +88,9 @@ class HomeServer:
             raise web.notfound()
         for node in nodes:
             self.actionHandler.triggerAction(node)
+            
+    def save(self):
+        self.database.saveFile()
     
 def main():
     DEFAULTDIR="homeServerDatabase"

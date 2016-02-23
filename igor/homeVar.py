@@ -4,10 +4,13 @@ import urlparse
 import urllib
 import httplib2
 import sys
+import os
 import json
 import pprint
 
 DEFAULT_URL="http://framboos.local:8080/data/"
+if 'HOMESERVER_URL' in os.environ:
+    DEFAULT_URL = os.environ['HOMESERVER_URL']
 VERBOSE=False
 
 class HomeServer:
@@ -74,7 +77,7 @@ class HomeServer:
 def main():
 	global VERBOSE
 	parser = argparse.ArgumentParser(description="Access homeServer and other http databases")
-	parser.add_argument("-u", "--url", help="Base URL of the server (default: %s)" % DEFAULT_URL, default=DEFAULT_URL)
+	parser.add_argument("-u", "--url", help="Base URL of the server (default: %s, environment HOMESERVER_URL)" % DEFAULT_URL, default=DEFAULT_URL)
 	parser.add_argument("-v", "--variant", help="Variant of data to get (or put, post)")
 	parser.add_argument("-M", "--mimetype", help="Get result as given mimetype")
 	parser.add_argument("--text", dest="mimetype", action="store_const", const="text/plain", help="Get result as plain text")

@@ -78,6 +78,7 @@ class runScript:
             env[k] = v
         # If there's a user argument see if we need to add per-user data
         if allArgs.has_key('user'):
+            user = allArgs['user']
             try:
                 userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
             except web.HTTPError:

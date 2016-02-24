@@ -2,7 +2,7 @@
 dir=`dirname $0`
 dirHomeServer=$dir/../../..
 diriirfid=$dirHomeServer/../../iirfid
-command="python $diriirfid/rfidread.py --verbose --server"
+command="python $diriirfid/rfidread.py --server"
 echo "START IS CALLED"
 case "x$host" in
 x)
@@ -36,4 +36,4 @@ x*)
 	;;
 esac
 echo 'iirfid start' $command
-$command &
+$command  >iirfid.$$.log 2>&1 &

@@ -26,6 +26,11 @@
 			<xpath>/data/actions/*</xpath>
 			<url>/internal/updateActions</url>
 		</action>
+        <action>
+            <name>cleanup</name>
+            <method>DELETE</method>
+            <url>/data/environment/messages/message[position()&lt;last()]</url>
+        </action>
 	</actions>
 	<sandbox>
 	</sandbox>

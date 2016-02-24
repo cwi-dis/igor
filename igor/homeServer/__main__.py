@@ -6,6 +6,10 @@ import sseListener
 import callUrl
 import os
 import argparse
+import besthostname
+import time
+import json
+
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -24,13 +28,17 @@ class HomeServer:
         webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
         webApp.PLUGINDIR = os.path.join(datadir, 'plugins')
         webApp.COMMANDS = self
-    
+        
         #
         # Create and start the asynchronous URL accessor
         #
         self.urlCaller = callUrl.URLCaller(self.app)
         self.urlCaller.start()
         
+        #
+        # Fill self data
+        #        
+        self.fillSelfData()
         #
         # Startup other components
         #
@@ -41,6 +49,15 @@ class HomeServer:
         self.eventSources = None
         self.updateEventSources()
     
+    
+    def fillSelfData(self):
+        """Put our details in the database"""
+        hostName = besthostname.besthostname()
+        url = 'http://%s:%d/data/' % (hostName, self.port)
+        data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()))
+        tocall = dict(method='PUT', url='/data/devices/homeServer', mimetype='application/json', data=json.dumps(data))
+        self.urlCaller.callURL(tocall)
+        
     def run(self):
         self.app.run(port=self.port)
         

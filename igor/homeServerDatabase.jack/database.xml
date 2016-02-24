@@ -80,6 +80,11 @@
 		<url>/internal/save</url>
 		<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
 	<notBefore>1456269286</notBefore></action>
+    <action>
+        <name>cleanup</name>
+        <method>DELETE</method>
+        <url>/data/environment/messages/message[position()&lt;last()]</url>
+    </action>
 	<action>
 		<xpath>/data/actions/*</xpath>
 		<url>/internal/updateActions</url>

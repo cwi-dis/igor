@@ -70,9 +70,14 @@ class runScript:
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
+        # Put all arguments into the environment.
+        # NOTE: this may be a bit dangerous.....
+        for k, v in allArgs.items():
+            if not v:
+                v = ''
+            env[k] = v
+        # If there's a user argument see if we need to add per-user data
         if allArgs.has_key('user'):
-            user = allArgs['user']
-            env['user'] = user
             try:
                 userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
             except web.HTTPError:

@@ -142,7 +142,11 @@
 	<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
 <notBefore>1456269226</notBefore></action>
 	
-	
+	    <action>
+	        <name>start</name>
+	        <url>/internal/started</url>
+	    </action>
+
 	
 	
 </actions>

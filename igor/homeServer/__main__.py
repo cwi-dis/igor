@@ -9,6 +9,7 @@ import argparse
 import besthostname
 import time
 import json
+import web
 
 import sys
 reload(sys)
@@ -48,12 +49,16 @@ class HomeServer:
         self.updateActions()
         self.eventSources = None
         self.updateEventSources()
+        #
+        # Send start action to start any plugins
+        #
+        self.urlCaller.callURL(dict(method='GET', url='/action/start'))
     
     
     def fillSelfData(self):
         """Put our details in the database"""
         hostName = besthostname.besthostname()
-        url = 'http://%s:%d/data/' % (hostName, self.port)
+        url = 'http://%s:%d/data' % (hostName, self.port)
         data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()))
         tocall = dict(method='PUT', url='/data/devices/homeServer', mimetype='application/json', data=json.dumps(data))
         self.urlCaller.callURL(tocall)
@@ -108,6 +113,9 @@ class HomeServer:
             
     def save(self):
         self.database.saveFile()
+        
+    def started(self):
+        return "homeServer started"
     
 def main():
     DEFAULTDIR="homeServerDatabase"

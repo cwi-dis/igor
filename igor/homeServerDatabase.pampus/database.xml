@@ -7,7 +7,7 @@
 	<video><alive>True</alive></video>
 	<table><alive>False</alive></table>
 	<server><alive>True</alive></server>
-	<homeServer><url>http://flauwte.dis.cwi.nl:8080/data/</url><host>flauwte.dis.cwi.nl</host><port>8080</port><startTime>1456320640</startTime></homeServer></devices>
+	<homeServer><url>http://flauwte.dis.cwi.nl:8080/data</url><host>flauwte.dis.cwi.nl</host><port>8080</port><startTime>1456326585</startTime></homeServer></devices>
 	<people>
 		<unknown>
 		</unknown>
@@ -25,7 +25,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		<notBefore>1456320721</notBefore></action>
+		<notBefore>1456326645</notBefore></action>
 		<action>
 			<xpath>/data/actions/*</xpath>
 			<url>/internal/updateActions</url>
@@ -52,19 +52,27 @@
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>
-	    <notBefore>1456320640</notBefore></action>
+	    <notBefore>1456326585</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=video&amp;ip=dominion.dis.&amp;port=22</url>
-	    <notBefore>1456320640</notBefore></action>
+	    <notBefore>1456326585</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=table&amp;ip=hankasalmi.dis.&amp;port=22</url>
-	    <notBefore>1456320640</notBefore></action>
+	    <notBefore>1456326585</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=server&amp;ip=maunakea.dis.&amp;port=22</url>
-	    <notBefore>1456320640</notBefore></action>
+	    <notBefore>1456326585</notBefore></action>
+        <action>
+            <name>start</name>
+            <url>/pluginscripts/iirfid/start?url={/data/devices/homeServer/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
+        <notBefore>1456326259</notBefore></action>
+	    <action>
+	        <name>start</name>
+	        <url>/internal/started</url>
+	    <notBefore>1456326259</notBefore></action>
 	<action>
 	<name>cleanup</name>
 	<method>DELETE</method>
@@ -88,18 +96,24 @@
 	    <say>
 	        <voice>Daniel</voice>
 	    </say>
-	<rfid>
-	<tag>
-		<id>be:c5:c7:aa</id>
-		<name>tagOne</name>
-	</tag>
-	<tag>
-		<id>de:94:2d:d2</id>
-		<name>tagTwo</name>
-	</tag>
-	
-<tag>
-	<id>72:28:3d:a0</id>
-	<name>jacks_keyring</name>
-</tag></rfid></plugindata>
+        <iirfid>
+            <serial>/dev/tty.usbserial-A700ekiO</serial>
+            <baud>57600</baud>
+            <host/>
+        </iirfid>
+        <rfid>
+            <tag>
+                <id>be:c5:c7:aa</id>
+                <name>tagOne</name>
+            </tag>
+            <tag>
+                <id>de:94:2d:d2</id>
+                <name>tagTwo</name>
+            </tag>
+            <tag>
+                <id>72:28:3d:a0</id>
+                <name>jacks_keyring</name>
+            </tag>
+        </rfid>
+    </plugindata>
 </data>

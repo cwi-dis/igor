@@ -31,6 +31,10 @@
             <method>DELETE</method>
             <url>/data/environment/messages/message[position()&lt;last()]</url>
         </action>
+	    <action>
+	        <name>start</name>
+	        <url>/internal/started</url>
+	    </action>
 	</actions>
 	<sandbox>
 	</sandbox>

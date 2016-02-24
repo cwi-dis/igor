@@ -1,0 +1,39 @@
+#!/bin/bash
+dir=`dirname $0`
+dirHomeServer=$dir/../../..
+diriirfid=$dirHomeServer/../../iirfid
+command="python $diriirfid/rfidread.py --verbose --server"
+echo "START IS CALLED"
+case "x$host" in
+x)
+	;;
+'x{}')
+	# Workaround....
+	;;
+x*)
+	command="ssh $host $command"
+	;;
+esac
+case "x$serial" in
+x)
+	;;
+x*)
+	command="$command --line $serial"
+	;;
+esac
+case "x$baud" in
+x)
+	;;
+x*)
+	command="$command --baud $baud"
+	;;
+esac
+case "x$url" in
+x)
+	;;
+x*)
+	command="$command --url $url"
+	;;
+esac
+echo 'iirfid start' $command
+$command &

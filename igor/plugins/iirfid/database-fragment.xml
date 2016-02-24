@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<data>
+    <actions>
+        <action>
+            <name>cleanup</name>
+            <method>DELETE</method>
+            <url>/data/sensors/rfid/rfidtag[position()<last()]</url>
+        </action>
+        <action>
+            <name>cleanup</name>
+            <method>DELETE</method>
+            <url>/data/sensors/tags/tag[position()<last()]</url>
+        </action>
+        <action>
+            <name>start</name>
+            <url>/pluginscripts/iirfid/start?url={/data/devices/homeServer/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
+        </action>
+        <action>
+            <xpath>/data/sensors/rfid/rfidtag</xpath>
+            <url>/data/sensors/tags/tag</url>
+            <method>POST</method>
+            <mimetype>text/plain</mimetype>
+            <data>{/data/plugindata/rfid/tag[id=string(/data/sensors/rfid/rfidtag[last()])]/name}</data>
+        </action>
+    </actions>
+    <plugindata>
+        <iirfid>
+            <serial>/dev/tty.usbserial-A700ekiO</serial>
+            <baud>57600</baud>
+            <host/>
+        </iirfid>
+        <rfid>
+            <tag>
+                <id>00:11:22:33</id>
+                <name>sampleTag</name>
+            </tag>
+        </rfid>
+    </plugindata>
+</data>

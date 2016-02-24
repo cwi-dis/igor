@@ -44,8 +44,9 @@ class URLCaller(threading.Thread):
                 resultData = content
             datetime = time.strftime('%d/%b/%Y %H:%M:%S')
             print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
-            if resultStatus[:3] != '200':
+            if resultStatus[:3] != '200' or DEBUG:
                 if resultData:
+                    print 'Output:'
                     resultLines = resultData.splitlines()
                     for line in resultLines:
                         print '\t'+line

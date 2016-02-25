@@ -88,10 +88,10 @@ class runScript:
                 pluginData.update(userData)
         # Pass plugin data in environment, as JSON
         if pluginData:
-            env['pluginData'] = json.dumps(pluginData)
+            env['igor_pluginData'] = json.dumps(pluginData)
             if type(pluginData) == type({}):
                 for k, v in pluginData.items():
-                    env[k] = str(v)
+                    env['igor_'+k] = str(v)
                 
         # Call the command and get the output
         command = os.path.join(scriptDir, command)

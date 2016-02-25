@@ -2,16 +2,16 @@
 dir=`dirname $0`
 dirHomeServer=$dir/../../..
 dirFitbit=$dirHomeServer/../../fitbit
-case "x$user" in
+case "x$igor_user" in
 x)
 	echo $0: need user= argument
 	exit 1
 	;;
 esac
-case "x$pluginData" in
+case "x$igor_pluginData" in
 x)
-	echo $0: no pluginData for user=$user
+	echo $0: no pluginData for user=$igor_user
 	exit 1
 	;;
 esac
-echo $pluginData | python $dirFitbit/getFitbit.py --stdin | python $dirHomeServer/homeVar.py --put application/json sensors/fitbit/$user
+echo $igor_pluginData | python $dirFitbit/getFitbit.py --stdin | python $dirHomeServer/homeVar.py --put application/json sensors/fitbit/$igor_user

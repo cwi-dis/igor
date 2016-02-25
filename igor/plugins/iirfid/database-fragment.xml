@@ -20,7 +20,7 @@
             <url>/data/sensors/tags/tag</url>
             <method>POST</method>
             <mimetype>text/plain</mimetype>
-            <data>{/data/plugindata/rfid/tag[id=string(/data/sensors/rfid/rfidtag[last()])]/name}</data>
+            <data>{/data/plugindata/rfid/tag[id=string($originalContext)]/name}</data>
         </action>
     </actions>
     <plugindata>

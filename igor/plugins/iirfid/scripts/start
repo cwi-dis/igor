@@ -4,35 +4,35 @@ dirHomeServer=$dir/../../..
 diriirfid=$dirHomeServer/../../iirfid
 command="python $diriirfid/rfidread.py --server"
 echo "START IS CALLED"
-case "x$host" in
+case "x$igor_host" in
 x)
 	;;
 'x{}')
 	# Workaround....
 	;;
 x*)
-	command="ssh $host $command"
+	command="ssh $igor_host $command"
 	;;
 esac
-case "x$serial" in
+case "x$igor_serial" in
 x)
 	;;
 x*)
-	command="$command --line $serial"
+	command="$command --line $igor_serial"
 	;;
 esac
-case "x$baud" in
+case "x$igor_baud" in
 x)
 	;;
 x*)
-	command="$command --baud $baud"
+	command="$command --baud $igor_baud"
 	;;
 esac
-case "x$url" in
+case "x$igor_url" in
 x)
 	;;
 x*)
-	command="$command --url $url"
+	command="$command --url $igor_url"
 	;;
 esac
 echo 'iirfid start' $command

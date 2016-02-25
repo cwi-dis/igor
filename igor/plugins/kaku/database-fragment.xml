@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<data>
+    <actions>
+        <action>
+            <xpath>/data/environment/lights/*</xpath>
+            <url>/scripts/pluginscript/kaku/switch?state={.}&switch={/data/plugindata/kaku/switch[name=name($originalContext)]/id}</url>
+        </action>
+    </actions>
+    <plugindata>
+        <kaku>
+            <host>malakoff.local</host>
+            <switch>
+                <id>0</id>
+                <name>sampleSwitch</name>
+            </switch>
+        </kaku>
+    </plugindata>
+</data>

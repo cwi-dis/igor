@@ -1,13 +1,13 @@
 <?xml version="1.0" ?><data>
 	<sensors>
-	<rfid><rfidtag>72:28:3d:a0</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag></rfid><tags><tag>jacks_keyring</tag><tag>tagOne</tag><tag>tagOne</tag></tags></sensors>
+	<rfid><rfidtag>72:28:3d:a0</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>de:94:2d:d2</rfidtag></rfid><tags><tag>jacks_keyring</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagTwo</tag><tag>tagTwo</tag></tags></sensors>
 	<devices>
 	<flauwte><alive>True</alive></flauwte>
 	<audio><alive>True</alive></audio>
 	<video><alive>True</alive></video>
 	<table><alive>False</alive></table>
 	<server><alive>True</alive></server>
-	<homeServer><url>http://flauwte.dis.cwi.nl:8080/data</url><host>flauwte.dis.cwi.nl</host><port>8080</port><startTime>1456405585</startTime></homeServer></devices>
+	<homeServer><url>http://flauwte.dis.cwi.nl:8080/data</url><host>flauwte.dis.cwi.nl</host><port>8080</port><startTime>1456409083</startTime></homeServer></devices>
 	<people>
 		<unknown>
 		</unknown>
@@ -25,54 +25,52 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		<notBefore>1456405645</notBefore></action>
+		<notBefore>1456409143</notBefore></action>
 		<action>
 			<xpath>/data/actions/*</xpath>
 			<url>/internal/updateActions</url>
-		<notBefore>1456318358</notBefore></action>
+		<notBefore>1456406333</notBefore></action>
 		<action>
 			<xpath>/data/environment/messages/*</xpath>
 			<condition>not(data/environment/night)</condition>
 			<url>/pluginscripts/say/message?args={.}</url>
-		<notBefore>1456331606</notBefore></action>
-		<action>
-			<xpath>/data/sensors/rfid/rfidtag</xpath>
-			<url>/data/sensors/tags/tag</url>
-			<method>POST</method>
-			<mimetype>text/plain</mimetype>
-			<data>{/data/plugindata/rfid/tag[id=string(/data/sensors/rfid/rfidtag[last()])]/name}</data>
-		<notBefore>1456331606</notBefore></action>
+		<notBefore>1456406387</notBefore></action>
+		
 		<action>
 			<xpath>/data/sensors/tags/tag</xpath>
 			<url>/data/environment/messages/message</url>
 			<method>POST</method>
 			<mimetype>text/plain</mimetype>
 			<data>You presented tag {.}</data>
-		<notBefore>1456331606</notBefore></action>
+		<notBefore>1456406387</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>
-	    <notBefore>1456405585</notBefore></action>
+	    <notBefore>1456409083</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=video&amp;ip=dominion.dis.&amp;port=22</url>
-	    <notBefore>1456405585</notBefore></action>
+	    <notBefore>1456409083</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=table&amp;ip=hankasalmi.dis.&amp;port=22</url>
-	    <notBefore>1456405585</notBefore></action>
+	    <notBefore>1456409083</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=server&amp;ip=maunakea.dis.&amp;port=22</url>
-	    <notBefore>1456405585</notBefore></action>
+	    <notBefore>1456409083</notBefore></action>
         <action>
             <name>start</name>
             <url>/pluginscripts/iirfid/start?url={/data/devices/homeServer/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
-        <notBefore>1456404619</notBefore></action>
+        <notBefore>1456406041</notBefore></action>
+        <action>
+            <xpath>/data/environment/lights/*</xpath>
+            <url>/pluginscripts/kaku/switch?state={.}&amp;id={/data/plugindata/kaku/switch[name=name($originalContext)]/id}</url>
+        </action>
 	    <action>
 	        <name>start</name>
 	        <url>/internal/started</url>
-	    <notBefore>1456404619</notBefore></action>
+	    <notBefore>1456406041</notBefore></action>
 	<action>
 	<name>cleanup</name>
 	<method>DELETE</method>
@@ -85,11 +83,23 @@
 	<name>cleanup</name>
 	<method>DELETE</method>
 	<url>/data/environment/messages/message[position()&lt;last()]</url>
-<notBefore>1456318394</notBefore></action></actions>
+<notBefore>1456318394</notBefore></action><action>
+	<xpath>/data/sensors/rfid/rfidtag</xpath>
+	<url>/data/sensors/tags/tag</url>
+	<method>POST</method>
+	<mimetype>text/plain</mimetype>
+	<data>{/data/plugindata/rfid/tag[id=string($originalContext)]/name}</data>
+<notBefore>1456406387</notBefore></action></actions>
 	<sandbox>
 	</sandbox>
 	<environment>
-	<messages><message>You presented tag jacks_keyring</message><message>You presented tag tagOne</message><message>You presented tag tagOne</message></messages></environment>
+	<messages><message>You presented tag jacks_keyring</message><message>You presented tag tagOne</message><message>You presented tag tagOne</message><message>You presented tag tagOne</message><message>You presented tag tagOne</message><message>You presented tag tagOne</message><message>You presented tag tagOne</message><message>You presented tag tagOne</message><message>You presented tag tagTwo</message><message>You presented tag tagTwo</message><message>You presented tag tagTwo</message><message>You presented tag tagTwo</message></messages>
+	<lights>
+	    <front>0</front>
+	    <back>0</back>
+	    <controlRoom>0</controlRoom>
+	</lights>
+	</environment>
 	<eventsources>
 	</eventsources>
 	<plugindata>
@@ -115,5 +125,21 @@
                 <name>jacks_keyring</name>
             </tag>
         </rfid>
+        <kaku>
+            <host>ta2@malakoff.local</host>
+            <script>src/dis/jack/kaku</script>
+            <switch>
+                <id>0</id>
+                <name>controlRoom</name>
+            </switch>
+            <switch>
+                <id>1</id>
+                <name>front</name>
+            </switch>
+            <switch>
+                <id>2</id>
+                <name>back</name>
+            </switch>
+        </kaku>
     </plugindata>
 </data>

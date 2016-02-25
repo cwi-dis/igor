@@ -533,7 +533,7 @@ class DBImpl(DBSerializer):
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodelist = xpath.find(location, context)
+            nodelist = xpath.find(location, context, originalContext=[context])
             return map(getXPathForElement, nodelist)
         
     def getValue(self, location, context=None):
@@ -541,14 +541,14 @@ class DBImpl(DBSerializer):
         with self:
             if context is None:
                 context = self._doc.documentElement
-            return xpath.findvalue(location, context)
+            return xpath.findvalue(location, context, originalContext=[context])
         
     def getValues(self, location, context=None):
         """Return a list of node values from the document (as names and strings)"""
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodelist = xpath.find(location, context)
+            nodelist = xpath.find(location, context, originalContext=[context])
             return self._getValueList(nodelist)
         
     def getElements(self, location, context=None):
@@ -556,7 +556,7 @@ class DBImpl(DBSerializer):
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodeList = xpath.find(location, context)
+            nodeList = xpath.find(location, context, originalContext=[context])
             return nodeList
         
     def _getValueList(self, nodelist):

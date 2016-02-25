@@ -70,12 +70,12 @@ class runScript:
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
-        # Put all arguments into the environment.
-        # NOTE: this may be a bit dangerous.....
+        # Put all other arguments into the environment with an "igor_" prefix
         for k, v in allArgs.items():
+            if k == 'args': continue
             if not v:
                 v = ''
-            env[k] = v
+            env['igor_'+k] = v
         # If there's a user argument see if we need to add per-user data
         if allArgs.has_key('user'):
             user = allArgs['user']

@@ -28,7 +28,7 @@ case x$igor_state in
 xon|xTrue|xtrue|x1*)
 	igor_state=on
 	;;
-xoff|xFalse|xfalse|x0*)
+x|xoff|xFalse|xfalse|x0*)
 	igor_state=off
 	;;
 x*)

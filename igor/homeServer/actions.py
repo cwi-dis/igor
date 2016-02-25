@@ -139,6 +139,7 @@ class Action:
     def _evaluate(self, text, node, urlencode):
         """Interpolate {xpathexpr} expressions in a string"""
         if not text: return text
+        text = unicode(text)
         newtext = ''
         while True:
             match = INTERPOLATION.search(text)

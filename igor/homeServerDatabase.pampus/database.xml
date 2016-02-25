@@ -7,7 +7,7 @@
 	<video><alive>True</alive></video>
 	<table><alive>False</alive></table>
 	<server><alive>True</alive></server>
-	<homeServer><url>http://flauwte.dis.cwi.nl:8080/data</url><host>flauwte.dis.cwi.nl</host><port>8080</port><startTime>1456409083</startTime></homeServer></devices>
+	<homeServer><url>http://flauwte.dis.cwi.nl:8080/data</url><host>flauwte.dis.cwi.nl</host><port>8080</port><startTime>1456410223</startTime></homeServer></devices>
 	<people>
 		<unknown>
 		</unknown>
@@ -25,7 +25,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		<notBefore>1456409143</notBefore></action>
+		<notBefore>1456410283</notBefore></action>
 		<action>
 			<xpath>/data/actions/*</xpath>
 			<url>/internal/updateActions</url>
@@ -46,19 +46,19 @@
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>
-	    <notBefore>1456409083</notBefore></action>
+	    <notBefore>1456410223</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=video&amp;ip=dominion.dis.&amp;port=22</url>
-	    <notBefore>1456409083</notBefore></action>
+	    <notBefore>1456410223</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=table&amp;ip=hankasalmi.dis.&amp;port=22</url>
-	    <notBefore>1456409083</notBefore></action>
+	    <notBefore>1456410223</notBefore></action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=server&amp;ip=maunakea.dis.&amp;port=22</url>
-	    <notBefore>1456409083</notBefore></action>
+	    <notBefore>1456410223</notBefore></action>
         <action>
             <name>start</name>
             <url>/pluginscripts/iirfid/start?url={/data/devices/homeServer/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
@@ -71,25 +71,49 @@
 	        <name>start</name>
 	        <url>/internal/started</url>
 	    <notBefore>1456406041</notBefore></action>
-	<action>
-	<name>cleanup</name>
-	<method>DELETE</method>
-	<url>/data/sensors/rfid/rfidtag[position()&lt;last()]</url>
-<notBefore>1456318394</notBefore></action><action>
-	<name>cleanup</name>
-	<method>DELETE</method>
-	<url>/data/sensors/tags/tag[position()&lt;last()]</url>
-<notBefore>1456318394</notBefore></action><action>
-	<name>cleanup</name>
-	<method>DELETE</method>
-	<url>/data/environment/messages/message[position()&lt;last()]</url>
-<notBefore>1456318394</notBefore></action><action>
-	<xpath>/data/sensors/rfid/rfidtag</xpath>
-	<url>/data/sensors/tags/tag</url>
-	<method>POST</method>
-	<mimetype>text/plain</mimetype>
-	<data>{/data/plugindata/rfid/tag[id=string($originalContext)]/name}</data>
-<notBefore>1456406387</notBefore></action></actions>
+        <action>
+            <name>cleanup</name>
+            <method>DELETE</method>
+            <url>/data/sensors/rfid/rfidtag[position()&lt;last()]</url>
+            <notBefore>1456318394</notBefore>
+        </action>
+        <action>
+            <name>cleanup</name>
+            <method>DELETE</method>
+            <url>/data/sensors/tags/tag[position()&lt;last()]</url>
+            <notBefore>1456318394</notBefore>
+        </action>
+        <action>
+            <name>cleanup</name>
+            <method>DELETE</method>
+            <url>/data/environment/messages/message[position()&lt;last()]</url>
+            <notBefore>1456318394</notBefore>
+        </action>
+        <action>
+            <xpath>/data/sensors/rfid/rfidtag</xpath>
+            <url>/data/sensors/tags/tag</url>
+            <method>POST</method>
+            <mimetype>text/plain</mimetype>
+            <data>{/data/plugindata/rfid/tag[id=string($originalContext)]/name}</data>
+            <notBefore>1456406387</notBefore>
+        </action>
+        <action>
+            <xpath>/data/sensors/tags/tag</xpath>
+            <condition>.='tagOne'</condition>
+            <url>/data/environment/lights/front</url>
+            <method>PUT</method>
+            <data>1</data>
+            <mimetype>text/plain</mimetype>
+        </action>
+        <action>
+            <xpath>/data/sensors/tags/tag</xpath>
+            <condition>.='tagTwo'</condition>
+            <url>/data/environment/lights/front</url>
+            <method>PUT</method>
+            <data>0</data>
+            <mimetype>text/plain</mimetype>
+        </action>
+    </actions>
 	<sandbox>
 	</sandbox>
 	<environment>

@@ -16,10 +16,6 @@
             <url>/data/sensors/tags/tag[position()<last()]</url>
         </action>
         <action>
-            <name>start</name>
-            <url>/pluginscripts/iirfid/start?url={/data/devices/homeServer/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
-        </action>
-        <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
             <method>POST</method>
@@ -29,11 +25,6 @@
         </action>
     </actions>
     <plugindata>
-        <iirfid>
-            <serial>/dev/tty.usbserial-A700ekiO</serial>
-            <baud>57600</baud>
-            <host/>
-        </iirfid>
         <rfid>
             <tag>
                 <id>00:11:22:33</id>

@@ -142,6 +142,20 @@ class XPathFunctionExtension(xpath.expr.Function):
         dt1 = self._str2DateTime(dt1).time()
         dt2 = self._str2DateTime(dt2).time()
         return dt1 > dt2
+        
+    @function(3,3)
+    def f_igor_ifthenelse(self, node, pos, size, context, condition, thenexpr, elseexpr):
+        boolCond = xpath.expr.boolean(condition)
+        if boolCond:
+            return thenexpr
+        return elseexpr
+      
+    @function(2, 2)
+    def f_igor_ifelse(self, node, pos, size, context, condition, elseexpr):
+        boolCond = xpath.expr.boolean(condition)
+        if boolCond:
+            return condition
+        return elseexpr
       
 def installXPathFunctionExtension(klass):
   if not issubclass(xpath.expr.Function, klass):

@@ -94,8 +94,8 @@
             <url>/data/sensors/tags/tag</url>
             <method>POST</method>
             <mimetype>text/plain</mimetype>
-            <data>{/data/plugindata/rfid/tag[id=string($originalContext)]/name}</data>
-            <notBefore>1456406387</notBefore>
+            <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
+            <notBefore>1457647462</notBefore>
         </action>
         <action>
             <xpath>/data/sensors/tags/tag</xpath>

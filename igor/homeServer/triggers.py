@@ -29,6 +29,11 @@ class Trigger:
         self.uninstall()
         self.hoster = None
         
+    def dump(self):
+        d = dict(url=self.url, xpaths=self.xpaths, interval=self.interval)
+        rv = repr(d)
+        return rv
+        
     def install(self):
         for xpath in self.xpaths:
             self.hoster.database.registerCallback(self.callback, xpath)
@@ -82,6 +87,12 @@ class TriggerCollection:
         self.triggers = []
         self.database = database
         self.scheduleCallback = scheduleCallback
+        
+    def dump(self):
+        rv = 'TriggerCollection %s:\n' % repr(self)
+        for qel in self.actionQueue.queue:
+            rv += '\t' + qel.dump() + '\n'
+        return rv
         
     def updateTriggers(self, node):
         assert node.tagName == 'triggers'

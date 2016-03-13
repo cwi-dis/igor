@@ -44,6 +44,16 @@ class Action:
         self.uninstall()
         self.hoster = None
         
+    def dump(self):
+        t = self.nextTime
+        if t == NEVER:
+            t = 'NEVER'
+        else:
+            t = t - time.time()
+        d = dict(t=t, url=self.url, xpaths=self.xpaths, interval=self.interval)
+        rv = repr(d)
+        return rv
+        
     def install(self):
         """Install any xpath triggers needed by this action into the database"""
         for xpath in self.xpaths:
@@ -174,6 +184,12 @@ class ActionCollection(threading.Thread):
         self.database = database
         self.scheduleCallback = scheduleCallback
         self.start()
+        
+    def dump(self):
+        rv = 'ActionCollection %s:\n' % repr(self)
+        for qel in self.actionQueue.queue:
+            rv += '\t' + qel.dump() + '\n'
+        return rv
         
     def run(self):
         """Thread that triggers timed actions as they become elegible"""

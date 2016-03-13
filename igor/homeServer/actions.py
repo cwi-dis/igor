@@ -187,7 +187,7 @@ class ActionCollection(threading.Thread):
         
     def dump(self):
         rv = 'ActionCollection %s:\n' % repr(self)
-        for qel in self.actionQueue.queue:
+        for _, qel in self.actionQueue.queue:
             rv += '\t' + qel.dump() + '\n'
         return rv
         
@@ -195,15 +195,17 @@ class ActionCollection(threading.Thread):
         """Thread that triggers timed actions as they become elegible"""
         while True:
             # Get the earliest queue element and run it if its time has come
-            nextAction = self.actionQueue.get()
+            _, nextAction = self.actionQueue.get()
             nextActionTime = nextAction.nextTime
             if nextActionTime != NEVER:
                 if nextActionTime < time.time():
                     nextAction.callback()
-                    self.actionQueue.put(nextAction)
+                    self.actionQueue.put((nextAction.nextTime, nextAction))
                     continue
             # If it is not runnable we put it back (probably at the front) and wait
-            self.actionQueue.put(nextAction)
+            for _, a in self.actionQueue.queue:
+                if a == nextAction: break # It is in there already
+            self.actionQueue.put((nextAction.nextTime, nextAction))
             # And wait
             if nextActionTime == NEVER:
                 waitTime = None
@@ -214,7 +216,7 @@ class ActionCollection(threading.Thread):
         
     def actionTimeChanged(self, action):
         """Called by an Action when its nextActionTime has changed"""
-        self.actionQueue.put(action)
+        self.actionQueue.put((action.nextTime, action))
         self.actionQueueEvent.set()
         
     def updateActions(self, node):
@@ -229,7 +231,7 @@ class ActionCollection(threading.Thread):
         while child:
             if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
                 action = Action(self, child)
-                self.actionQueue.put(action)
+                self.actionQueue.put((action.nextTime, action))
             child = child.nextSibling
         # Signal the runner thread
         self.actionQueueEvent.set()

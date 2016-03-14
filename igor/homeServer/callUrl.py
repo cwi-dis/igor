@@ -51,6 +51,11 @@ class URLCaller(threading.Thread):
                     for line in resultLines:
                         print '\t'+line
                 
+    def dump(self):
+        rv = 'URLCaller %s:\n' % repr(self)
+        for qel in self.queue.queue:
+            rv += '\t' + repr(qel) + '\n'
+        return rv
         
     def callURL(self, tocall):
         if DEBUG: print 'URLCaller.callURL(%s)' % repr(tocall)

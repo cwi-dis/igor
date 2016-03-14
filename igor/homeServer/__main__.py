@@ -66,6 +66,14 @@ class HomeServer:
     def run(self):
         self.app.run(port=self.port)
         
+    def dump(self):
+        rv = ''
+        if self.urlCaller: rv += self.urlCaller.dump()
+        if self.triggerHandler: rv += self.triggerHandler.dump()
+        if self.actionHandler: rv += self.actionHandler.dump()
+        if self.eventSources: rv += self.eventSources.dump()
+        return rv
+        
     def updateTriggers(self):
         """Create any triggers that are defined in the database"""
         startupTriggers = self.database.getElements('triggers')

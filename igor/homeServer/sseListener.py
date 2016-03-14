@@ -114,6 +114,9 @@ class EventSourceCollection:
         self.database = database
         self.scheduleCallback = scheduleCallback
         
+    def dump(self):
+        return ''
+        
     def updateEventSources(self, node):
         tag, content = self.database.tagAndDictFromElement(node)
         assert tag == 'eventSources'

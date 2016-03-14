@@ -64,7 +64,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=["homeServer",
+    packages=["homeServer"],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -74,7 +74,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["httplib2", "py-dom-xpath", "requests"],
+    install_requires=["httplib2", "py-dom-xpath", "requests", "web.py", "python-dateutil"],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

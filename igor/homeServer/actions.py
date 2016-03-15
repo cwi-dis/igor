@@ -179,66 +179,65 @@ class ActionCollection(threading.Thread):
     def __init__(self, database, scheduleCallback):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.actionQueue = Queue.PriorityQueue()
-        self.actionQueueEvent = threading.Event()
+        self.actions = []
+        self.actionsChanged = threading.Event()
         self.database = database
         self.scheduleCallback = scheduleCallback
         self.start()
         
     def dump(self):
         rv = 'ActionCollection %s:\n' % repr(self)
-        for _, qel in self.actionQueue.queue:
-            rv += '\t' + qel.dump() + '\n'
+        self.actions.sort()
+        for a in self.actions:
+            rv += '\t' + a.dump() + '\n'
         return rv
         
     def run(self):
         """Thread that triggers timed actions as they become elegible"""
         while True:
-            # Get the earliest queue element and run it if its time has come
-            _, nextAction = self.actionQueue.get()
-            nextActionTime = nextAction.nextTime
-            if nextActionTime != NEVER:
-                if nextActionTime < time.time():
-                    nextAction.callback()
-                    self.actionQueue.put((nextAction.nextTime, nextAction))
-                    continue
-            # If it is not runnable we put it back (probably at the front) and wait
-            for _, a in self.actionQueue.queue:
-                if a == nextAction: break # It is in there already
-            self.actionQueue.put((nextAction.nextTime, nextAction))
-            # And wait
-            if nextActionTime == NEVER:
+            #
+            # Run all actions that have a scheduled time now (or in the past)
+            # and remember the earliest future action time
+            #
+            nothingBefore = NEVER
+            for a in self.actions:
+                if a.nextTime <= time.time():
+                    a.callback()
+                if a.nextTime < nothingBefore:
+                    nothingBefore = a.nextTime
+            # Repeat the loop if the earliest future time is in the past, by now.
+            if nothingBefore < time.time():
+                continue
+            if nothingBefore == NEVER:
                 waitTime = None
             else:
-                waitTime = nextActionTime - time.time()
-            self.actionQueueEvent.wait(waitTime)
-            self.actionQueueEvent.clear()
+                waitTime = nothingBefore - time.time()
+            self.actionsChanged.wait(waitTime)
+            self.actionsChanged.clear()
         
     def actionTimeChanged(self, action):
-        """Called by an Action when its nextActionTime has changed"""
-        self.actionQueue.put((action.nextTime, action))
-        self.actionQueueEvent.set()
+        """Called by an Action when its nextTime has changed"""
+        self.actionsChanged.set()
         
     def updateActions(self, node):
         """Called by upper layers when something has changed in the actions in the database"""
         assert node.tagName == 'actions'
         # Clear out old queue
-        while not self.actionQueue.empty():
-            self.actionQueue.get()
+        self.actions = []
         # Fill the queue with the new actions
         # Now create new triggers
         child = node.firstChild
         while child:
             if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
                 action = Action(self, child)
-                self.actionQueue.put((action.nextTime, action))
+                self.actions.append(action)
             child = child.nextSibling
         # Signal the runner thread
-        self.actionQueueEvent.set()
+        self.actionsChanged.set()
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""
-        for a in self.actionQueue.queue:
+        for a in self.actions:
             if a.element == node:
                 a.callback()
                 return

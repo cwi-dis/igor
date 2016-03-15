@@ -1,6 +1,5 @@
 import webApp
 import xmlDatabase
-import triggers
 import actions
 import sseListener
 import callUrl
@@ -43,8 +42,6 @@ class HomeServer:
         #
         # Startup other components
         #
-        self.triggerHandler = None
-        self.updateTriggers()
         self.actionHandler = None
         self.updateActions()
         self.eventSources = None
@@ -69,23 +66,9 @@ class HomeServer:
     def dump(self):
         rv = ''
         if self.urlCaller: rv += self.urlCaller.dump()
-        if self.triggerHandler: rv += self.triggerHandler.dump()
         if self.actionHandler: rv += self.actionHandler.dump()
         if self.eventSources: rv += self.eventSources.dump()
         return rv
-        
-    def updateTriggers(self):
-        """Create any triggers that are defined in the database"""
-        startupTriggers = self.database.getElements('triggers')
-        if len(startupTriggers):
-            if len(startupTriggers) > 1:
-                raise web.HTTPError('401 only one <triggers> element allowed')
-            if not self.triggerHandler:
-                self.triggerHandler = triggers.TriggerCollection(self.database, self.urlCaller.callURL)
-            self.triggerHandler.updateTriggers(startupTriggers[0])
-        elif self.triggerHandler:
-            self.triggerHandler.updateTriggers([])
-
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""
         startupActions = self.database.getElements('actions')

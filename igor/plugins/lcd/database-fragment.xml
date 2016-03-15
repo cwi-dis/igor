@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <data>
-	<triggers>
-		<trigger>
+	<actions>
+		<action>
 			<xpath>/data/environment/messages/*</xpath>
 			<url>/pluginscripts/lcd/message?args={.}</url>
-		</trigger>
-	</triggers>
+		</action>
+	</actions>
 </data>

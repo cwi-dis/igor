@@ -1,9 +1,29 @@
 <?xml version="1.0" ?>
 <data>
+	<environment>
+		<devices>
+		</devices>
+	</environment>
 	<actions>
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/dhcp/pull</url>
 		</action>
+        <action>
+            <xpath>/data/sensors/dhcp/lease</xpath>
+            <condition>/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name</condition>
+            <url>/data/environment/devices/{/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name}</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{alive}</data>
+        </action>
 	</actions>
+	<plugindata>
+		<wifiDevices>
+			<wifiDevice>
+				<id>00:11:22:33:44:55</id>
+				<name>wifiDeviceName</name>
+			</wifiDevice>
+		</wifiDevices>
+	</plugindata>
 </data>

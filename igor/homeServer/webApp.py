@@ -10,6 +10,7 @@ import mimetypematch
 import copy
 import imp
 import xpath
+import xmlDatabase
 
 DATABASE=None   # The database itself. Will be set by main module
 DATABASE_ACCESS=None    # Will be set later by this module
@@ -319,8 +320,8 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     #
                     # Signal both parent and new node
                     #
-                    nodesToSignal.append(element)
-                    nodesToSignal.append(parent)
+                    nodesToSignal += xmlDatabase.recursiveNodeSet(element)
+                    nodesToSignal += xmlDatabase.nodeSet(parent)
                 else:
                     #
                     # Already exists. Check that it exists only once.
@@ -349,11 +350,11 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                         #
                         parent = oldElement.parentNode
                         parent.appendChild(element)
-                        nodesToSignal.append(parent)
+                        nodesToSignal += xmlDatabase.nodeSet(parent)
                     #
                     # We want to signal the new node
                     #
-                    nodesToSignal.append(element)
+                    nodesToSignal += xmlDatabase.recursiveNodeSet(element)
                 
                 self.db.signalNodelist(nodesToSignal)
                 path = self.db.getXPathForElement(element)

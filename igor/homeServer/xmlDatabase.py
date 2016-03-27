@@ -165,6 +165,20 @@ def installXPathFunctionExtension(klass):
 
 installXPathFunctionExtension(XPathFunctionExtension)
 
+def nodeSet(node):
+    """Return a nodeset containing a single node"""
+    return [node]
+    
+def recursiveNodeSet(node):
+    """Return a nodeset containing a node and all its descendents"""
+    rv = [node]
+    child = node.firstChild
+    while child:
+        if child.nodeType == child.ELEMENT_NODE:
+            rv += recursiveNodeSet(child)
+        child = child.nextSibling
+    return rv
+    
 class DBSerializer:
     """Baseclass with methods to provide a mutex and a condition variable"""
     def __init__(self):   
@@ -464,7 +478,7 @@ class DBImpl(DBSerializer):
                 node.appendChild(self._doc.createTextNode(value))
         
             # Signal anyone waiting
-            self.signalNodelist([node])
+            self.signalNodelist(recursiveNodeSet(node))
         
             # Return the location of the new node
             return getXPathForElement(node)
@@ -495,7 +509,7 @@ class DBImpl(DBSerializer):
                 raise DBParamError('where must be before, after or child')
 
             # Signal anyone waiting
-            self.signalNodelist([newnode, newnode.parentNode])
+            self.signalNodelist(recursiveNodeSet(newnode)+nodeSet(newnode.parentNode))
         
             # Return the location of the new node
             return getXPathForElement(newnode)
@@ -510,7 +524,7 @@ class DBImpl(DBSerializer):
             parentNode.removeChild(node)
         
             # Signal anyone waiting
-            self.signalNodelist([parentNode])
+            self.signalNodelist(nodeSet(parentNode))
         
     def delValues(self, location):
         """Remove a (possibly empty) set of nodes from the document"""
@@ -522,7 +536,7 @@ class DBImpl(DBSerializer):
                 parentNode = node.parentNode
                 parentNode.removeChild(node)
                 if not parentNode in parentList:
-                    parentList.append(parentNode)
+                    parentList += nodeSet(parentNode)
             self.signalNodelist(parentList)
             
     def hasValue(self, location):
@@ -590,7 +604,7 @@ class DBImpl(DBSerializer):
                 assert node
             rv = xpath.expr.string_value(node)
             node.parentNode.removeChild(node)
-            self.signalNodelist([parentnode])
+            self.signalNodelist(nodeSet(parentnode))
             return rv
   
     def pullValues(self, location):
@@ -607,7 +621,7 @@ class DBImpl(DBSerializer):
                 parentNode = node.parentNode
                 parentNode.removeChild(node)
                 if not parentNode in parentList:
-                    parentList.append(parentNode)
+                    parentList += nodeSet(parentNode)
             self.signalNodelist(parentList)
             return rv
         

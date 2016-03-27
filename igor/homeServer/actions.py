@@ -75,14 +75,17 @@ class Action:
         # Run for each node (or once, if no node present because we were not triggered by an xpath)        
         if not nodelist:
             nodelist = [None]
+        if DEBUG: print '%s.callback(%s)' % (repr(self), repr(nodelist))
         for node in nodelist:
             # Test whether we are allowed to run according to our condition
             if self.condition:
                 shouldRun = self.hoster.database.getValue(self.condition, node)
                 if not shouldRun:
+                    if DEBUG: print '\t%s: condition failed' % repr(node)
                     continue
             # Evaluate URL and paramteres
             url = self._evaluate(self.url, node, True)
+            if DEBUG: print '\t%s: calling %s' % (repr(node), url)
             data = self._evaluate(self.data, node, False)
             # Prepare to run
             tocall = dict(method=self.method, url=url)

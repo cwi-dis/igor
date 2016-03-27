@@ -10,12 +10,13 @@
 			<url>/pluginscripts/ble/pull</url>
 		</action>
         <action>
-            <xpath>/data/sensors/ble/bledevice</xpath>
+            <xpath>/data/sensors/ble/bleDevice</xpath>
             <condition>/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name</condition>
-            <url>/data/environment/devices/{/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name}</url>
+            <url>/data/environment/bleDevices/{/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name}</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{available}</data>
+            <multiple>True</multiple>
         </action>
 	</actions>
 	<plugindata>

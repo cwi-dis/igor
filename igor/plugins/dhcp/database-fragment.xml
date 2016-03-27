@@ -12,10 +12,11 @@
         <action>
             <xpath>/data/sensors/dhcp/lease</xpath>
             <condition>/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name</condition>
-            <url>/data/environment/devices/{/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name}</url>
+            <url>/data/environment/wifiDevices/{/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name}</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{alive}</data>
+            <multiple>True</multiple>
         </action>
 	</actions>
 	<plugindata>

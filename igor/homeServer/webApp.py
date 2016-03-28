@@ -340,23 +340,28 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                         # We should really do a selective replace here: change only the subtrees that need replacing.
                         # That will make the signalling much more fine-grained. Will do so, at some point in the future.
                         #
-                        # For now we replace the first matching node and delete its siblings.
+                        # For now we replace the first matching node and delete its siblings, but only if the new content
+                        # is not identical to the old
                         #
-                        parent = oldElement.parentNode
-                        parent.replaceChild(element, oldElement)
+                        if self.db.identicalSubTrees(oldElement, element):
+                            web.ctx.status = "200 Unchanged"
+                        else:
+                            parent = oldElement.parentNode
+                            parent.replaceChild(element, oldElement)
+                            nodesToSignal += xmlDatabase.recursiveNodeSet(element)
                     else:
                         #
                         # POST, simply append the new node to the parent (and signal that parent)
                         #
                         parent = oldElement.parentNode
                         parent.appendChild(element)
+                        nodesToSignal += xmlDatabase.recursiveNodeSet(element)
                         nodesToSignal += xmlDatabase.nodeSet(parent)
                     #
                     # We want to signal the new node
                     #
-                    nodesToSignal += xmlDatabase.recursiveNodeSet(element)
                 
-                self.db.signalNodelist(nodesToSignal)
+                if nodesToSignal: self.db.signalNodelist(nodesToSignal)
                 path = self.db.getXPathForElement(element)
                 return self.convertto(path, mimetype, variant)
         except xpath.XPathError, arg:

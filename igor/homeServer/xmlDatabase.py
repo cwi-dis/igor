@@ -322,6 +322,24 @@ class DBImpl(DBSerializer):
             if escaped: return escaped
         return tag
         
+    def identicalSubTrees(self, element1, element2):
+        """Return true if the two subtrees are identical (for our purposes)"""
+        if not element1 and not element2: return True
+        if not element1 or not element2: return False
+        if element1.nodeType != element2.nodeType: return False
+        if element1.nodeType == element1.TEXT_NODE:
+            return element1.data == element2.data
+        if element1.nodeType != element1.ELEMENT_NODE: return True
+        if element1.tagName != element2.tagName: return False
+        ch1 = element1.firstChild
+        ch2 = element2.firstChild
+        while ch1 or ch2:
+            chEqual = self.identicalSubTrees(ch1, ch2)
+            if not chEqual: return False
+            ch1 = ch1.nextSibling
+            ch2 = ch2.nextSibling
+        return True
+        
     def getXMLDocument(self):
         """Return the whole document (as an XML string)"""
         with self:

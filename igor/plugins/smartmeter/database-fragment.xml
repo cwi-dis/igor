@@ -2,12 +2,15 @@
 <data>
 	<actions>
 		<action>
-			<interval>
-				60
-			</interval>
-			<url>
-				/pluginscripts/smartmeter/pull
-			</url>
+			<xpath>/data/sensors/smartMeter</xpath>
+			<method>PUT</method>
+			<url>/data/environment/energy/electricity</url>
+			<mimetype>text/plain</mimetype>
+			<data>{current_kw}</data>
+		</action>
+		<action>
+			<interval>60</interval>
+			<url>/pluginscripts/smartmeter/pull</url>
 		</action>
 	</actions>
 </data>

@@ -107,7 +107,7 @@
 				hallo lui
 			</message>
 		</lcd>
-	<homeServer><url>http://framboos.local:8080/data</url><host>framboos.local</host><port>8080</port><startTime>1459500700</startTime></homeServer></devices>
+	<homeServer><url>http://framboos.local:8080/data</url><host>framboos.local</host><port>8080</port><startTime>1459500878</startTime></homeServer></devices>
 	<people>
 		<jack><home/></jack><erika><home>True</home></erika><brendan><home>True</home></brendan>
 	</people>
@@ -144,7 +144,7 @@
 		<minInterval>60</minInterval>
 		<url>/internal/save</url>
 		<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-	<notBefore>1459500760</notBefore></action>
+	<notBefore>1459500938</notBefore></action>
         <action>
             <name>cleanup</name>
             <method>DELETE</method>
@@ -187,24 +187,24 @@
 	<action>
 		<interval>60</interval>
 		<url>/pluginscripts/smartmeter/pull</url>
-	<notBefore>1459500700</notBefore></action>
+	<notBefore>1459500879</notBefore></action>
 	<action>
 		<interval>60</interval>
 		<url>/pluginscripts/dhcp/pull</url>
-	<notBefore>1459500700</notBefore></action>
+	<notBefore>1459500879</notBefore></action>
 	<action>
 		<interval>60</interval>
 		<url>/pluginscripts/ble/pull</url>
-	<notBefore>1459500700</notBefore></action>
+	<notBefore>1459500879</notBefore></action>
 	<action>
 		<interval>900</interval>
 		<url>/pluginscripts/netatmo/pull</url>
 		<name>updateNetatmo</name>
-	<notBefore>1459500700</notBefore></action>
+	<notBefore>1459500879</notBefore></action>
 	<action>
 		<interval>36000</interval>
 		<url>/pluginscripts/fitbit/pull?user=jack</url>
-	<notBefore>1459500700</notBefore></action>
+	<notBefore>1459500879</notBefore></action>
 	<action>
 		<name>showTemp</name>
 		<method>POST</method>
@@ -218,7 +218,7 @@
 		<url>/data/environment/night</url>
 		<mimetype>text/plain</mimetype>
 	<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
-<notBefore>1459500701</notBefore></action>
+<notBefore>1459500879</notBefore></action>
 	
 	    <action>
 	        <name>start</name>
@@ -249,14 +249,14 @@
 			<url>/data/devices/plant/pos</url>
 			<method>POST</method>
 			<mimetype>text/plain</mimetype>
-			<data>{(700-number(.))*700 div 5}</data>
+			<data>{700-(number(.)*700 div 5)}</data>
 			<minInterval>60</minInterval>
 			<condition>not(/data/environment/night)</condition>
 		</action>
 		<action>
 			<interval>600</interval>
 			<url>/pluginscripts/plant/pull</url>
-		<notBefore>1459500701</notBefore></action>
+		<notBefore>1459500879</notBefore></action>
         <action>
             <xpath>/data/sensors/ble/bleDevice</xpath>
             <condition>/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name</condition>

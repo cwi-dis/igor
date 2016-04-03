@@ -6,7 +6,7 @@ import Queue
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
-DEBUG=True
+DEBUG=False
 
 class NEVER:
     """Compares bigger than any number"""

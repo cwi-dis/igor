@@ -165,6 +165,8 @@ class Action:
             expression = expression[1:-1]
             replacement = self.hoster.database.getValue(expression, node)
             if replacement is None: replacement = ''
+            if type(replacement) == type(True):
+                replacement = 'true' if replacement else ''
             replacement = str(replacement)
             if urlencode:
                 replacement = urllib.quote_plus(replacement)

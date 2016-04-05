@@ -10,7 +10,7 @@
 			<url>/pluginscripts/philips/push?{name()}={.}</url>
 		</action>
 		<action>
-			<interval>600</interval>
+			<interval>60</interval>
 			<url>/pluginscripts/philips/pull</url>
 		</action>			
 	</actions>

@@ -2,11 +2,11 @@
 <data>
 	<actions>
 		<action>
-			<xpath>/data/devices/philips/power</xpath>
+			<xpath>/data/devices/tv/power</xpath>
 			<url>/pluginscripts/philips/power?power={.}</url>
 		</action>
 		<action>
-			<xpath>/data/devices/philips/*[name()!='power']</xpath>
+			<xpath>/data/devices/tv/*[name()!='power']</xpath>
 			<url>/pluginscripts/philips/push?{name()}={.}</url>
 		</action>
 		<action>

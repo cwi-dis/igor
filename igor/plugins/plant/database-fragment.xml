@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<data>
+	<actions>
+		<action>
+			<xpath>/data/devices/plant/pos</xpath>
+			<url>http://plant.local/stepper/0?pos={.}</url>
+		</action>
+		<action>
+			<xpath>/data/environment/energy/electricity</xpath>
+			<url>/data/devices/plant/pos</url>
+			<method>POST</method>
+			<mimetype>text/plain</mimetype>
+			<data>{700-(number(.)*700 div 5)}</data>
+			<minInterval>60</minInterval>
+			<condition>not(/data/environment/night)</condition>
+		</action>
+		<action>
+			<interval>600</interval>
+			<url>/pluginscripts/plant/pull</url>
+		</action>			
+	</actions>
+</data>

@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<data>
+	<actions>
+		<action>
+			<xpath>/data/devices/philips/power</xpath>
+			<url>/pluginscripts/philips/power?power={.}</url>
+		</action>
+		<action>
+			<xpath>/data/devices/philips/*[name()!='power']</xpath>
+			<url>/pluginscripts/philips/push?{name()}={.}</url>
+		</action>
+		<action>
+			<interval>600</interval>
+			<url>/pluginscripts/philips/pull</url>
+		</action>			
+	</actions>
+</data>

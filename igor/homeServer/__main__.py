@@ -119,7 +119,14 @@ def main():
     parser = argparse.ArgumentParser(description="Run the home automation server")
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment HOMESERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 8080, environment HOMESERVER_PORT)", default=DEFAULTPORT)
+    parser.add_argument("--debug", action="store_true", help="Enable debug output")
     args = parser.parse_args()
+    if args.debug:
+        callUrl.DEBUG = True
+        sseListener.DEBUG = True
+        actions.DEBUG = True
+        xmlDatabase.DEBUG = True
+        webApp.DEBUG = True
     datadir = args.database
     homeServer = HomeServer(datadir, args.port)
     homeServer.run()

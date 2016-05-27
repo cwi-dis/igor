@@ -45,6 +45,12 @@ def myWebError(msg):
 class runScript:
     """Run a shell script"""
         
+    def OPTIONS(self, *args):
+        web.ctx.headers.append(('Allow', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Methods', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
+        return ''
+        
     def GET(self, name, arg2=None):
         if arg2:
             # Plugin script command.
@@ -113,6 +119,12 @@ class runScript:
 class runCommand:
     """Call an internal method"""
     
+    def OPTIONS(self, *args):
+        web.ctx.headers.append(('Allow', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Methods', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
+        return ''
+        
     def GET(self, command):
         if not COMMANDS:
             raise web.notfound()
@@ -129,6 +141,12 @@ class runCommand:
 
 
 class runAction:
+    def OPTIONS(self, *args):
+        web.ctx.headers.append(('Allow', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Methods', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
+        return ''
+        
     def GET(self, actionname):
         if not COMMANDS:
             raise web.notfound()
@@ -137,6 +155,12 @@ class runAction:
 class runPlugin:
     """Call a plugin method"""
     
+    def OPTIONS(self, *args):
+        web.ctx.headers.append(('Allow', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Methods', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
+        return ''
+        
     def GET(self, command):
         if command in sys.modules:
             # Imported previously.
@@ -176,6 +200,12 @@ class xmlDatabaseEvaluate:
 class AbstractDatabaseAccess(object):
     """Abstract database that handles the high-level HTTP primitives.
     """
+    def OPTIONS(self, *args):
+        web.ctx.headers.append(('Allow', 'GET,PUT,POST,DELETE'))
+        web.ctx.headers.append(('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE'))
+        web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
+        return ''
+        
     def GET(self, name):
         """If no query get the content of a section of the database.
         If there is a query can be used as a 1-url shortcut for POST."""

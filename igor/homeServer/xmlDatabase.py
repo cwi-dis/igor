@@ -310,7 +310,6 @@ class DBImpl(DBSerializer):
     def _createElementWithEscaping(self, tag):
         if TAG_PATTERN.match(tag) and not tag == "_e":
             return self._doc.createElement(tag)
-        print 'xxxjack create escape for', tag
         rv = self._doc.createElement("_e")
         rv.setAttribute("_e", tag)
         return rv

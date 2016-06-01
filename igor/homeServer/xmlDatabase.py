@@ -58,6 +58,7 @@ class XPathFunctionExtension(xpath.expr.Function):
         if timestamp is None:
             timestamp = time.time()
         else:
+            timestamp = xpath.expr.number(timestamp)
             try:
                 timestamp = float(timestamp)
             except TypeError:

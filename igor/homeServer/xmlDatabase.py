@@ -6,6 +6,7 @@ import threading
 import time
 import os
 import re
+import math
 import datetime
 import dateutil.parser
 
@@ -56,6 +57,10 @@ class XPathFunctionExtension(xpath.expr.Function):
     def f_igor_dateTime(self, node, pos, size, context, timestamp=None):
         if timestamp is None:
             timestamp = time.time()
+        else:
+            timestamp = float(timestamp)
+            if math.isnan(timestamp):
+                raise xpath.XPathError("dateTime argument must be a number")
         dt = datetime.datetime.fromtimestamp(timestamp)
         return dt.isoformat()
         

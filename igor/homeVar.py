@@ -108,7 +108,7 @@ def main():
 		result = server.put(args.var, '{}', 'application/json', variant=args.variant, format=args.mimetype)
 	elif args.put:
 		data = args.data
-		if not data:
+		if not data is None:
 			data = sys.stdin.read()
 			if not data and not args.allow_empty:
 				print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]

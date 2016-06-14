@@ -27,10 +27,10 @@ def watchdog(timeout=None, device='/dev/watchdog'):
     # Set the timeout, if needed
     if timeout:
         watchdog_timeout = int(timeout)
-        rv += "watchdog timeout set to %d\n" % timeout
+        rv += "watchdog timeout set to %d\n" % watchdog_timeout
     # Feed the dog
     watchdog_device.write('\n')
-    stop_feeding = time.time+watchdog_timeout
+    stop_feeding = time.time()+watchdog_timeout
     rv += "watchdog fed\n"
     return rv
 

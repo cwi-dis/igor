@@ -19,9 +19,9 @@ def watchdog(timeout=None, device='/dev/watchdog'):
         rv += "watchdog opened\n"
     # Set the timeout, if needed
     if timeout:
-        watchdog_device.set_timeout(timeout)
+        watchdog_device.set_timeout(int(timeout))
         rv += "watchdog timeout set to %d\n" % timeout
     # Feed the dog
-    watchdog_device.feed('\n')
+    watchdog_device.write('\n')
     rv += "watchdog fed\n"
     return rv

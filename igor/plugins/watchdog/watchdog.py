@@ -10,13 +10,18 @@ def watchdog(timeout=None, device='/dev/watchdog'):
         if watchdog_device:
             watchdog_device.magic_close()
             watchdog_device = None
-            return
+            return "watchdog closed\n"
     # Open the watchdog, if needed
+    rv = ""
     if not watchdog_device:
         import watchdogdev
         watchdog_device = watchdogdev.watchdog(device)
+        rv += "watchdog opened\n"
     # Set the timeout, if needed
     if timeout:
         watchdog_device.set_timeout(timeout)
+        rv += "watchdog timeout set to %d\n" % timeout
     # Feed the dog
     watchdog_device.feed('\n')
+    rv += "watchdog fed\n"
+    return rv

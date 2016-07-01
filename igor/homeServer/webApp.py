@@ -507,7 +507,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             element = self.db.elementFromTagAndData(tag, value)
             return element
         elif mimetype == 'application/json':
-            valueDict = json.loads(value)
+            try:
+                valueDict = json.loads(value)
+            except ValueError:
+                raise web.BadRequest("No JSON object could be decoded from body")
             if not isinstance(valueDict, dict):
                 raise web.BadRequest("Bad request, JSON toplevel object must be object")
             # xxxjack here comes a special case, and I don't like it.

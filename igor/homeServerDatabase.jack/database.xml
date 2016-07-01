@@ -35,7 +35,7 @@
 				hallo lui
 			</message>
 		</lcd>
-	<homeServer><url>http://framboos.local:8080/data</url><host>framboos.local</host><port>8080</port><startTime>1467408646</startTime></homeServer></devices>
+	<homeServer><url>http://framboos.local:8080/data</url><host>framboos.local</host><port>8080</port><startTime>1467411923</startTime></homeServer></devices>
 	<people>
 		<jack><home>true</home></jack><erika><home/></erika><brendan><home>true</home></brendan>
 	</people>
@@ -72,7 +72,7 @@
 		<minInterval>60</minInterval>
 		<url>/internal/save</url>
 		<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-	<notBefore>1467408706</notBefore></action>
+	<notBefore>1467411984</notBefore></action>
         <action>
             <name>cleanup</name>
             <method>DELETE</method>
@@ -115,24 +115,24 @@
 	<action>
 		<interval>60</interval>
 		<url>/pluginscripts/smartmeter/pull</url>
-	<notBefore>1467408646</notBefore></action>
+	<notBefore>1467411924</notBefore></action>
 	<action>
 		<interval>60</interval>
 		<url>/pluginscripts/dhcp/pull</url>
-	<notBefore>1467408646</notBefore></action>
+	<notBefore>1467411924</notBefore></action>
 	<action>
 		<interval>60</interval>
 		<url>/pluginscripts/ble/pull</url>
-	<notBefore>1467408646</notBefore></action>
+	<notBefore>1467411924</notBefore></action>
 	<action>
 		<interval>900</interval>
 		<url>/pluginscripts/netatmo/pull</url>
 		<name>updateNetatmo</name>
-	<notBefore>1467408646</notBefore></action>
+	<notBefore>1467411924</notBefore></action>
 	<action>
 		<interval>36000</interval>
 		<url>/pluginscripts/fitbit/pull?user=jack</url>
-	<notBefore>1467408646</notBefore></action>
+	<notBefore>1467411924</notBefore></action>
 	<action>
 		<name>showTemp</name>
 		<method>POST</method>
@@ -146,7 +146,7 @@
 		<url>/data/environment/night</url>
 		<mimetype>text/plain</mimetype>
 	<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
-<notBefore>1467408647</notBefore></action>
+<notBefore>1467411925</notBefore></action>
 	
 	    <action>
 	        <name>start</name>
@@ -184,7 +184,7 @@
 		<action>
 			<interval>600</interval>
 			<url>/pluginscripts/plant/pull</url>
-		<notBefore>1467408647</notBefore></action>
+		<notBefore>1467411925</notBefore></action>
         <action>
             <xpath>/data/sensors/ble/bleDevice</xpath>
             <condition>/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name</condition>
@@ -215,7 +215,7 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/philips/pull</url>
-		<notBefore>1467408647</notBefore></action>			
+		<notBefore>1467411925</notBefore></action>			
 </actions>
 <sandbox>
 <test/><test7/><test8/><attrtest attr="hello">goodbye</attrtest><nsattrtest ns:attr="hello" xmlns:ns="http://jackjansen.nl/igor">goodbye</nsattrtest><nsattrtestr ns:attr="hello" xmlns:ns="http://jackjansen.nl/igor"><ns:greeting>goodbye</ns:greeting></nsattrtestr></sandbox>

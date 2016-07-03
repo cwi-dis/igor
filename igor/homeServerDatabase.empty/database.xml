@@ -3,6 +3,7 @@
 	<sensors>
 	</sensors>
 	<devices>
+		<homeServer/>
 	</devices>
 	<people>
 		<unknown>
@@ -35,10 +36,20 @@
 	        <name>start</name>
 	        <url>/internal/started</url>
 	    </action>
+		<action>
+            <xpath>/data/devices/homeServer/startTime</xpath>
+            <url>/data/environment/introspection/lastActivity/reboot</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime(.)}</data>
+		</action>
 	</actions>
 	<sandbox>
 	</sandbox>
 	<environment>
+		<introspection>
+			<lastActivity/>
+		</introspection>
 	</environment>
 	<eventsources>
 	</eventsources>

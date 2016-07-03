@@ -91,62 +91,85 @@
             <url>/data/environment/messages/message[position()&lt;last()]</url>
             <notBefore>1456318394</notBefore>
         </action>
-	<action>
-		<xpath>/data/actions/*</xpath>
-		<url>/internal/updateActions</url>
-	</action>
-	<action>
-		<xpath>/data/sensors/smartMeter</xpath>
-		<method>PUT</method>
-		<url>/data/environment/energy/electricity</url>
-		<mimetype>text/plain</mimetype>
-		<data>{current_kw}</data>
-	<notBefore>1463227706</notBefore></action>
-		
-	<action>
-		<xpath>/data/environment/messages/*</xpath>
-		<condition>not(string(data/environment/night))</condition>
-		<url>/pluginscripts/say/message?args={.}</url>
-	<notBefore>1459550362</notBefore></action>
-	<action>
-		<xpath>/data/environment/messages/*</xpath>
-		<url>/pluginscripts/lcd/message?args={.}</url>
-	<notBefore>1459550362</notBefore></action>
-	<action>
-		<interval>60</interval>
-		<url>/pluginscripts/smartmeter/pull</url>
-	<notBefore>1467411924</notBefore></action>
-	<action>
-		<interval>60</interval>
-		<url>/pluginscripts/dhcp/pull</url>
-	<notBefore>1467411924</notBefore></action>
-	<action>
-		<interval>60</interval>
-		<url>/pluginscripts/ble/pull</url>
-	<notBefore>1467411924</notBefore></action>
-	<action>
-		<interval>900</interval>
-		<url>/pluginscripts/netatmo/pull</url>
-		<name>updateNetatmo</name>
-	<notBefore>1467411924</notBefore></action>
-	<action>
-		<interval>36000</interval>
-		<url>/pluginscripts/fitbit/pull?user=jack</url>
-	<notBefore>1467411924</notBefore></action>
-	<action>
-		<name>showTemp</name>
-		<method>POST</method>
-		<url>/data/environment/messages/message</url>
-		<mimetype>text/plain</mimetype>
-		<data>Binnen {/data/environment/weather/tempInside} Buiten {/data/environment/weather/tempOutside}</data>
-	</action>
-	<action>
-		<interval>900</interval>
-		<method>PUT</method>
-		<url>/data/environment/night</url>
-		<mimetype>text/plain</mimetype>
-	<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
-<notBefore>1467411925</notBefore></action>
+		<action>
+			<xpath>/data/actions/*</xpath>
+			<url>/internal/updateActions</url>
+		</action>
+		<action>
+			<interval>60</interval>
+			<url>/pluginscripts/smartmeter/pull</url>
+		<notBefore>1467411924</notBefore></action>
+		<action>
+			<xpath>/data/sensors/smartMeter</xpath>
+			<method>PUT</method>
+			<url>/data/environment/energy/electricity</url>
+			<mimetype>text/plain</mimetype>
+			<data>{current_kw}</data>
+		<notBefore>1463227706</notBefore></action>
+		<action>
+			<xpath>/data/sensors/smartMeter/timestamp</xpath>
+			<method>PUT</method>
+            <url>/data/environment/introspection/lastActivity/smartMeter</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime(.)}</data>
+		</action>		
+		<action>
+			<xpath>/data/environment/messages/*</xpath>
+			<condition>not(string(data/environment/night))</condition>
+			<url>/pluginscripts/say/message?args={.}</url>
+		<notBefore>1459550362</notBefore></action>
+		<action>
+			<xpath>/data/environment/messages/*</xpath>
+			<url>/pluginscripts/lcd/message?args={.}</url>
+		<notBefore>1459550362</notBefore></action>
+		<action>
+			<interval>60</interval>
+			<url>/pluginscripts/dhcp/pull</url>
+		<notBefore>1467411924</notBefore></action>
+		<action>
+			<interval>60</interval>
+			<url>/pluginscripts/ble/pull</url>
+		<notBefore>1467411924</notBefore></action>
+		<action>
+			<interval>900</interval>
+			<url>/pluginscripts/netatmo/pull</url>
+			<name>updateNetatmo</name>
+		<notBefore>1467411924</notBefore></action>
+		<action>
+			<xpath>/data/sensors/netAtmo/*[1]/When</xpath>
+			<method>PUT</method>
+            <url>/data/environment/introspection/lastActivity/netAtmo</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime(.)}</data>
+		</action>
+		<action>
+			<interval>36000</interval>
+			<url>/pluginscripts/fitbit/pull?user=jack</url>
+		<notBefore>1467411924</notBefore></action>
+		<action>
+			<xpath>/data/sensors/fitbit/*/*/time</xpath>
+			<method>PUT</method>
+			<url>/data/environment/introspection/lastActivity/fitbit</url>
+			<method>PUT</method>
+			<mimetype>text/plain</mimetype>
+			<data>{igor_dateTime(igor_timestamp(concat(../date, ' ', .)))}</data>
+		</action>
+		<action>
+			<name>showTemp</name>
+			<method>POST</method>
+			<url>/data/environment/messages/message</url>
+			<mimetype>text/plain</mimetype>
+			<data>Binnen {/data/environment/weather/tempInside} Buiten {/data/environment/weather/tempOutside}</data>
+		</action>
+		<action>
+			<interval>900</interval>
+			<method>PUT</method>
+			<url>/data/environment/night</url>
+			<mimetype>text/plain</mimetype>
+		<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
+	<notBefore>1467411925</notBefore></action>
 	
 	    <action>
 	        <name>start</name>

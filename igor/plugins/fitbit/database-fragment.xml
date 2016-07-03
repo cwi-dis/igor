@@ -10,7 +10,6 @@
 		<xpath>/data/sensors/fitbit/*/*/time</xpath>
 		<method>PUT</method>
 		<url>/data/environment/introspection/lastActivity/smartMeter</url>
-		<method>PUT</method>
 		<mimetype>text/plain</mimetype>
 		<data>{igor_dateTime(igor_timestamp(concat(../date, ' ', .)))}</data>
 	</action>

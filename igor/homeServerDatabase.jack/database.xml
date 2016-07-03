@@ -110,7 +110,6 @@
 			<xpath>/data/sensors/smartMeter/timestamp</xpath>
 			<method>PUT</method>
             <url>/data/environment/introspection/lastActivity/smartMeter</url>
-            <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_dateTime(.)}</data>
 		</action>		
@@ -151,7 +150,6 @@
 			<xpath>/data/sensors/fitbit/*/*/time</xpath>
 			<method>PUT</method>
 			<url>/data/environment/introspection/lastActivity/fitbit</url>
-			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{igor_dateTime(igor_timestamp(concat(../date, ' ', .)))}</data>
 		</action>
@@ -242,7 +240,9 @@
 <sandbox>
 <test/><test7/><test8/><attrtest attr="hello">goodbye</attrtest><nsattrtest ns:attr="hello" xmlns:ns="http://jackjansen.nl/igor">goodbye</nsattrtest><nsattrtestr ns:attr="hello" xmlns:ns="http://jackjansen.nl/igor"><ns:greeting>goodbye</ns:greeting></nsattrtestr></sandbox>
 <environment>
-	<introspection/>
+	<introspection>
+		<lastActivity/>
+	</introspection>
 	<devices>
 	<wangetjes>true</wangetjes><phoneErika/><phoneBrendan>true</phoneBrendan><keysJack>true</keysJack></devices>
 <messages><message>You presented tag jacks_keyring</message></messages><weather><tempInside>20.4</tempInside><tempOutside>11.1</tempOutside></weather><energy><electricity>0.395</electricity></energy><night>true</night></environment>

@@ -14,7 +14,14 @@ for it in pypi.python.org and install it first.
 Configuration
 -------------
 
-To be provided
+To run at startup:
+- edit initscript-homeServer, modify path, database, etc
+- ``sudo cp initscript-homeServer /etc/init.d/homeServer``
+- ``sudo update-rc.d homeServer defaults``
+- Reboot, or ``sudo homeServer start``
+
+The init script current requires *screen*, install with ``apt-get``.
+You may also want to install dependencies such as *bleServer* (or remove them).
 
 Running
 -------

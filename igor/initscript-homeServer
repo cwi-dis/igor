@@ -1,0 +1,44 @@
+### BEGIN INIT INFO
+# Provides:          homeServer
+# Required-Start:    bleServer networking
+# Required-Stop:     bleServer networking
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Home server to be known as Igor
+### END INIT INFO
+
+# Using the lsb functions to perform the operations.
+. /lib/lsb/init-functions
+# Process name ( For display )
+NAME=homeServer
+# Daemon name, where is the actual executable
+DAEMON="/home/jack/src/dis/jack/home/homeServer/homeServer"
+DAEMON_ARGS="-d /home/jack/src/dis/jack/home/homeServer/homeServerDatabase.jack"
+
+# If the daemon is not there, then exit.
+test -d $DAEMON || exit 5
+
+case $1 in
+ start)
+  # Checked the PID file exists and check the actual status of process
+  # Start the daemon.
+  log_daemon_msg "Starting the process" "$NAME"
+  # Start the daemon with the help of start-stop-daemon
+  # Log the message appropriately
+  screen -dmS $NAME python $DAEMON $DAEMON_ARGS
+  ;;
+ stop)
+  # Stop the daemon.
+  screen -S $NAME -X quit
+  ;;
+ restart)
+  # Restart the daemon.
+  screen -S $NAME -X quit
+  screen -dmS python $NAME $DAEMON $DAEMON_ARGS
+  ;;
+ *)
+  # For invalid arguments, print the usage message.
+  echo "Usage: $0 {start|stop|restart}"
+  exit 2
+  ;;
+esac

@@ -35,7 +35,7 @@
 				hallo lui
 			</message>
 		</lcd>
-	<homeServer><url>http://framboos.local:8080/data</url><host>framboos.local</host><port>8080</port><startTime>1467582657</startTime></homeServer></devices>
+	<homeServer><url>http://framboos.local:8080/data</url><host>framboos.local</host><port>8080</port><startTime>1467583114</startTime></homeServer></devices>
 	<people>
 		<jack><home>true</home></jack><erika><home/></erika><brendan><home>true</home></brendan>
 	</people>
@@ -72,7 +72,7 @@
 		<minInterval>60</minInterval>
 		<url>/internal/save</url>
 		<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-	<notBefore>1467582717</notBefore></action>
+	<notBefore>1467583174</notBefore></action>
         <action>
             <name>cleanup</name>
             <method>DELETE</method>
@@ -98,7 +98,7 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/smartmeter/pull</url>
-		<notBefore>1467582657</notBefore></action>
+		<notBefore>1467583114</notBefore></action>
 		<action>
 			<xpath>/data/sensors/smartMeter</xpath>
 			<method>PUT</method>
@@ -125,16 +125,16 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/dhcp/pull</url>
-		<notBefore>1467582657</notBefore></action>
+		<notBefore>1467583114</notBefore></action>
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/ble/pull</url>
-		<notBefore>1467582657</notBefore></action>
+		<notBefore>1467583114</notBefore></action>
 		<action>
 			<interval>900</interval>
 			<url>/pluginscripts/netatmo/pull</url>
 			<name>updateNetatmo</name>
-		<notBefore>1467582657</notBefore></action>
+		<notBefore>1467583114</notBefore></action>
 		<action>
 			<xpath>/data/sensors/netAtmo/*[1]/When</xpath>
 			<method>PUT</method>
@@ -145,7 +145,7 @@
 		<action>
 			<interval>36000</interval>
 			<url>/pluginscripts/fitbit/pull?user=jack</url>
-		<notBefore>1467582657</notBefore></action>
+		<notBefore>1467583114</notBefore></action>
 		<action>
 			<xpath>/data/sensors/fitbit/*/*/time</xpath>
 			<method>PUT</method>
@@ -166,12 +166,19 @@
 			<url>/data/environment/night</url>
 			<mimetype>text/plain</mimetype>
 		<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
-	<notBefore>1467582657</notBefore></action>
+	<notBefore>1467583114</notBefore></action>
 	
 	    <action>
 	        <name>start</name>
 	        <url>/internal/started</url>
 	    <notBefore>1467408270</notBefore></action>
+		<action>
+            <xpath>/data/devices/homeServer/startTime</xpath>
+            <url>/data/environment/introspection/lastActivity/reboot</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime(.)}</data>
+		</action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
@@ -179,6 +186,13 @@
             <mimetype>text/plain</mimetype>
             <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
             <notBefore>1459550361</notBefore>
+        </action>
+        <action>
+            <xpath>/data/sensors/rfid/rfidtag</xpath>
+            <url>/data/environment/introspection/lastActivity/rfid</url>
+            <method>POST</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime()}</data>
         </action>
 		<action>
 			<xpath>/data/sensors/tags/tag</xpath>
@@ -192,6 +206,13 @@
 			<xpath>/data/devices/plant/pos</xpath>
 			<url>http://plant.local/stepper/0?pos={.}</url>
 		<notBefore>1463227732</notBefore></action>
+        <action>
+            <xpath>/data/devices/plant/pos</xpath>
+            <url>/data/environment/introspection/lastActivity/plant</url>
+            <method>POST</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime()}</data>
+        </action>
 		<action>
 			<xpath>/data/environment/energy/electricity</xpath>
 			<url>/data/devices/plant/pos</url>
@@ -204,7 +225,7 @@
 		<action>
 			<interval>600</interval>
 			<url>/pluginscripts/plant/pull</url>
-		<notBefore>1467582657</notBefore></action>
+		<notBefore>1467583114</notBefore></action>
         <action>
             <xpath>/data/sensors/ble/bleDevice</xpath>
             <condition>/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name</condition>
@@ -215,6 +236,13 @@
             <multiple>true</multiple>
         <notBefore>1461363502</notBefore></action>
         <action>
+            <xpath>/data/sensors/ble/bleDevice</xpath>
+            <url>/data/environment/introspection/lastActivity/ble</url>
+            <method>POST</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime()}</data>
+        </action>
+        <action>
             <xpath>/data/sensors/dhcp/lease</xpath>
             <condition>/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name</condition>
             <url>/data/environment/devices/{/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name}</url>
@@ -223,6 +251,13 @@
             <data>{alive}</data>
             <multiple>true</multiple>
         <notBefore>1463227603</notBefore></action>
+        <action>
+            <xpath>/data/sensors/dhcp/lease</xpath>
+            <url>/data/environment/introspection/lastActivity/dhcp</url>
+            <method>POST</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime()}</data>
+        </action>
         <action>
         	<xpath>/data/environment/devices/*</xpath>
         	<condition>/data/identities/*[device=name($originalContext)]</condition>
@@ -235,7 +270,7 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/philips/pull</url>
-		<notBefore>1467582657</notBefore></action>			
+		<notBefore>1467583114</notBefore></action>			
 </actions>
 <sandbox>
 <test/><test7/><test8/><attrtest attr="hello">goodbye</attrtest><nsattrtest ns:attr="hello" xmlns:ns="http://jackjansen.nl/igor">goodbye</nsattrtest><nsattrtestr ns:attr="hello" xmlns:ns="http://jackjansen.nl/igor"><ns:greeting>goodbye</ns:greeting></nsattrtestr></sandbox>

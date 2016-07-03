@@ -9,7 +9,6 @@
 			<xpath>/data/sensors/netAtmo/*[1]/When</xpath>
 			<method>PUT</method>
             <url>/data/environment/introspection/lastActivity/netAtmo</url>
-            <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_dateTime(.)}</data>
 		</action>

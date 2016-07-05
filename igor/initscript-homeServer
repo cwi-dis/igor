@@ -25,7 +25,7 @@ case $1 in
   log_daemon_msg "Starting the process" "$NAME"
   # Start the daemon with the help of start-stop-daemon
   # Log the message appropriately
-  screen -dmS $NAME python $DAEMON $DAEMON_ARGS
+  screen -dmS $NAME sudo -u jack python $DAEMON $DAEMON_ARGS
   ;;
  stop)
   # Stop the daemon.
@@ -34,7 +34,7 @@ case $1 in
  restart)
   # Restart the daemon.
   screen -S $NAME -X quit
-  screen -dmS python $NAME $DAEMON $DAEMON_ARGS
+  screen -dmS $NAME sudo -u jack python $DAEMON $DAEMON_ARGS
   ;;
  *)
   # For invalid arguments, print the usage message.

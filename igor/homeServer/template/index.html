@@ -1,0 +1,24 @@
+$def with ()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>HomeServer Home Page</title>
+</head>
+<body>
+	<h1>HomeServer Home Page</h1>
+	
+	<p>This is your home server. Welcome!</p>
+	<p>
+		The server is running on ${DATABASE.getValue('/data/devices/homeServer/url')}.
+		It has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot')},
+		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount')} times during its lifetime.
+	</p>
+	
+	<h2>Database access</h2>
+	
+	<p>Your raw database in XML can be found at <a href="/data/">/data/</a>.</p>
+		
+
+</body>
+</html>

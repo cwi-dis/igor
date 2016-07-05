@@ -7,7 +7,10 @@ def besthostname():
     # First find our preferred network interface address
     #
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(('google.com', 9999))
+    try:
+        s.connect(('google.com', 9999))
+    except socket.gaierror:
+        return '127.0.0.1'
     ip, _ = s.getsockname()
     #
     # Now get our hostname, adding '.local' if needed

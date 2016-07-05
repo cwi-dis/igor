@@ -27,6 +27,13 @@
             <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
             <notBefore>1457647462</notBefore>
         </action>
+        <action>
+            <xpath>/data/sensors/rfid/rfidtag</xpath>
+            <url>/data/environment/introspection/lastActivity/rfid</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime()}</data>
+        </action>
     </actions>
     <plugindata>
         <iirfid>

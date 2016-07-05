@@ -8,7 +8,7 @@
 		<action>
 			<xpath>/data/environment/energy/electricity</xpath>
 			<url>/data/devices/plant/pos</url>
-			<method>POST</method>
+			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{700-(number(.)*700 div 5)}</data>
 			<minInterval>60</minInterval>
@@ -19,4 +19,7 @@
 			<url>/pluginscripts/plant/pull</url>
 		</action>			
 	</actions>
+	<environment>
+		<energy/>
+	</environment>
 </data>

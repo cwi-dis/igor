@@ -18,6 +18,13 @@
             <data>{available}</data>
             <multiple>True</multiple>
         </action>
+        <action>
+            <xpath>/data/sensors/ble/bleDevice</xpath>
+            <url>/data/environment/introspection/lastActivity/ble</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime()}</data>
+        </action>
 	</actions>
 	<plugindata>
 		<bleDevices>

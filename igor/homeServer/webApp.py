@@ -11,11 +11,13 @@ import copy
 import imp
 import xpath
 import xmlDatabase
+import mimetypes
 
 DATABASE=None   # The database itself. Will be set by main module
 DATABASE_ACCESS=None    # Will be set later by this module
 SCRIPTDIR=None  # The directory for scripts
 PLUGINDIR=None  # The directory for plugins
+STATICDIR=None  # The directory for static content
 COMMANDS=None   # The command processor. Will be set by the main module.
 WEBAPP=None     # Will be set later in this module
 
@@ -31,6 +33,7 @@ urls = (
     '/internal/(.*)', 'runCommand',
     '/action/(.*)', 'runAction',
     '/plugin/(.*)', 'runPlugin',
+    '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
     def run(self, port=8080, *middleware):
@@ -41,6 +44,40 @@ WEBAPP = MyApplication(urls, globals())
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+
+class static:
+    def GET(self, name):
+        if not name:
+            name = 'index.html'
+        print 'xxxjack get static', name
+        databaseDir = STATICDIR
+        programDir = os.path.dirname(__file__)
+        
+        # First try static files in the databasedir/static
+        filename = os.path.join(databaseDir, name)
+        print 'xxxjack try', filename
+        if os.path.exists(filename):
+            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            web.header('Content-type', mimetype)
+            return open(filename, 'rb').read()
+        # Next try static files in the programdir/static
+        filename = os.path.join(programDir, 'static', name)
+        print 'xxxjack try', filename
+        if os.path.exists(filename):
+            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            web.header('Content-type', mimetype)
+            return open(filename, 'rb').read()
+        # Otherwise try a template
+        filename = os.path.join(programDir, 'template', name)
+        print 'xxxjack try', filename
+        if os.path.exists(filename):
+            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            web.header('Content-type', mimetype)
+            template = web.template.frender(filename)
+            return template(**web.input())
+            return open(filename, 'rb').read()
+        print 'xxxjack all failed'
+        raise web.notfound()
 
 class runScript:
     """Run a shell script"""

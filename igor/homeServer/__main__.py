@@ -27,6 +27,7 @@ class HomeServer:
         webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
         webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
         webApp.PLUGINDIR = os.path.join(datadir, 'plugins')
+        webApp.STATICDIR = os.path.join(datadir, 'static')
         webApp.COMMANDS = self
         
         #

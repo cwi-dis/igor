@@ -179,6 +179,13 @@
             <mimetype>text/plain</mimetype>
             <data>{igor_dateTime(.)}</data>
 		</action>
+		<action>
+            <xpath>/data/devices/homeServer/startTime</xpath>
+            <url>/data/environment/introspection/rebootCount</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{number(/data/environment/introspection/rebootCount)+1}</data>
+		</action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
@@ -277,6 +284,7 @@
 <environment>
 	<introspection>
 		<lastActivity/>
+        <rebootCount>0</rebootCount>
 	</introspection>
 	<devices>
 	<wangetjes>true</wangetjes><phoneErika/><phoneBrendan>true</phoneBrendan><keysJack>true</keysJack></devices>

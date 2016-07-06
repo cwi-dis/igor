@@ -8,7 +8,7 @@ import os
 import json
 import pprint
 
-DEFAULT_URL="http://framboos.local:8080/data/"
+DEFAULT_URL="http://framboos.local:9333/data/"
 if 'HOMESERVER_URL' in os.environ:
     DEFAULT_URL = os.environ['HOMESERVER_URL']
 VERBOSE=False

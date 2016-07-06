@@ -17,7 +17,7 @@ sys.setdefaultencoding('utf8')
 DATADIR=os.path.dirname(__file__)
 
 class HomeServer:
-    def __init__(self, datadir, port=8080):
+    def __init__(self, datadir, port=9333):
         #
         # Create the database, and tell the web application about it
         #
@@ -113,13 +113,13 @@ def main():
     DEFAULTDIR="homeServerDatabase"
     if 'HOMESERVER_DIR' in os.environ:
         DEFAULTDIR = os.environ['HOMESERVER_DIR']
-    DEFAULTPORT=8080
+    DEFAULTPORT=9333
     if 'HOMESERVER_PORT' in os.environ:
         DEFAULTDIR = int(os.environ['HOMESERVER_PORT'])
         
     parser = argparse.ArgumentParser(description="Run the home automation server")
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment HOMESERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
-    parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 8080, environment HOMESERVER_PORT)", default=DEFAULTPORT)
+    parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment HOMESERVER_PORT)", default=DEFAULTPORT)
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
     args = parser.parse_args()
     if args.debug:

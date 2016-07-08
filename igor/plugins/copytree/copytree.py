@@ -13,7 +13,7 @@ DATABASE_ACCESS=None
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-def copy(src=None, dst=None, mimetype="text/plain", method='PUT'):
+def copytree(src=None, dst=None, mimetype="text/plain", method='PUT'):
     if not src:
         raise myWebError("401 Required argument name missing")
     if not dst:

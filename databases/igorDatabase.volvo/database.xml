@@ -2,7 +2,7 @@
 	<sensors>
 	<volvoVisualisation><lastSeen>1467726981.172</lastSeen></volvoVisualisation></sensors>
 	<devices>
-	<igor><url>http://volvo.local:9090/data</url><host>volvo.local</host><port>9090</port><startTime>1467728240</startTime></igor></devices>
+	<igor><url>http://volvo.local:9333/data</url><host>volvo.local</host><port>9333</port><startTime>1467993019</startTime></igor></devices>
 	<people>
 		<unknown>
 		</unknown>
@@ -20,7 +20,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		<notBefore>1467729418</notBefore></action>
+		<notBefore>1467993079</notBefore></action>
 		<action>
 			<xpath>/data/actions/*</xpath>
 			<url>/internal/updateActions</url>
@@ -40,14 +40,14 @@
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_dateTime(.)}</data>
-		</action>
+		<notBefore>1467993019</notBefore></action>
 		<action>
             <xpath>/data/devices/igor/startTime</xpath>
             <url>/data/environment/introspection/rebootCount</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{number(/data/environment/introspection/rebootCount)+1}</data>
-		</action>
+		<notBefore>1467993019</notBefore></action>
 		<action>
            <xpath>/data/sensors/volvoVisualisation/lastSeen</xpath>
             <url>/data/environment/introspection/lastActivity/volvo</url>

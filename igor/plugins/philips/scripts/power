@@ -1,7 +1,7 @@
 #!/bin/bash
 dir=`dirname $0`
-dirHomeServer=$dir/../../..
-dirPhilips=$dirHomeServer/../../bin
+dirIgor=$dir/../../..
+dirPhilips=$dirIgor/../jack/bin
 philipsPowerCmd="ssh jack@mediacentre.local python bin/tvcmd.py "
 case x$igor_power in
 xon|xtrue)

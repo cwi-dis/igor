@@ -17,7 +17,7 @@
         </action>
         <action>
             <name>start</name>
-            <url>/pluginscripts/iirfid/start?url={/data/devices/homeServer/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
+            <url>/pluginscripts/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
         </action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>

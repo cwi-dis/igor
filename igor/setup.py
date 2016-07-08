@@ -18,7 +18,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='homeServer',
+    name='igor',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -64,11 +64,11 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=["homeServer"],
+    packages=["igor"],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
-       py_modules=["homeVar"],
+       py_modules=["igorVar"],
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -103,8 +103,8 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'homeServer=homeServer.__main__',
-            'homeVar=homeVar:main',
+            'igorServer=igorServer.__main__',
+            'igorVar=igorVar:main',
         ],
     },
 )

@@ -1,6 +1,6 @@
 #!/bin/bash
 dir=`dirname $0`
-dirHomeServer=$dir/../../..
-dirDHCP=$dirHomeServer/../
+dirIgor=$dir/../../..
+dirDHCP=$dirIgor/../
 
-python $dirDHCP/dhcpleases.py --json --wrap --ping --arp -i client-hostname -i hardware -i ip-address -i alive -i arp -i ping | python $dirHomeServer/homeVar.py --put application/json sensors/dhcp
+python $dirDHCP/dhcpleases.py --json --wrap --ping --arp -i client-hostname -i hardware -i ip-address -i alive -i arp -i ping | python $dirIgor/igorVar.py --put application/json sensors/dhcp

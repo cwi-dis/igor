@@ -1,4 +1,4 @@
-"""Sample plugin module for homeServer"""
+"""Sample plugin module for Igor"""
 
 # These will be set upon import
 DATABASE=None

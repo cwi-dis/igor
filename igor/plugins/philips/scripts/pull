@@ -1,5 +1,5 @@
 #!/bin/bash
 dir=`dirname $0`
-dirHomeServer=$dir/../../..
-dirPhilips=$dirHomeServer/../../bin
-python $dirPhilips/philips.py json | python $dirHomeServer/homeVar.py --put application/json devices/tv
+dirIgor=$dir/../../..
+dirPhilips=$dirIgor/../jack/bin
+python $dirPhilips/philips.py json | python $dirIgor/igorVar.py --put application/json devices/tv

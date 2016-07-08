@@ -1,5 +1,5 @@
 #!/bin/bash
 dir=`dirname $0`
-dirHomeServer=$dir/../../..
+dirIgor=$dir/../../..
 bleURL=http://localhost:8081/
-python $dirHomeServer/homeVar.py --url $bleURL ble | python $dirHomeServer/homeVar.py --put application/json sensors/ble
+python $dirIgor/igorVar.py --url $bleURL ble | python $dirIgor/igorVar.py --put application/json sensors/ble

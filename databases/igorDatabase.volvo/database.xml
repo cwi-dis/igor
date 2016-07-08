@@ -2,7 +2,7 @@
 	<sensors>
 	<volvoVisualisation><lastSeen>1467726981.172</lastSeen></volvoVisualisation></sensors>
 	<devices>
-	<homeServer><url>http://volvo.local:9090/data</url><host>volvo.local</host><port>9090</port><startTime>1467728240</startTime></homeServer></devices>
+	<igor><url>http://volvo.local:9090/data</url><host>volvo.local</host><port>9090</port><startTime>1467728240</startTime></igor></devices>
 	<people>
 		<unknown>
 		</unknown>
@@ -35,14 +35,14 @@
 	        <url>/internal/started</url>
 	    <notBefore>1465915773</notBefore></action>
  		<action>
-            <xpath>/data/devices/homeServer/startTime</xpath>
+            <xpath>/data/devices/igor/startTime</xpath>
             <url>/data/environment/introspection/lastActivity/reboot</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_dateTime(.)}</data>
 		</action>
 		<action>
-            <xpath>/data/devices/homeServer/startTime</xpath>
+            <xpath>/data/devices/igor/startTime</xpath>
             <url>/data/environment/introspection/rebootCount</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>

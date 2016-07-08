@@ -1,7 +1,7 @@
 #!/bin/bash
 dir=`dirname $0`
 dirIgor=$dir/../../..
-diriirfid=$dirIgor/../jack/iirfid
+diriirfid=$dirIgor/../helpers/iirfid
 command="python $diriirfid/rfidread.py --server"
 echo "START IS CALLED"
 case "x$igor_host" in

@@ -1,7 +1,7 @@
 #!/bin/bash
 dir=`dirname $0`
 dirIgor=$dir/../../..
-dirKAKU=$dirIgor/../jack/kaku
+dirKAKU=$dirIgor/../helpers/kaku
 commandPrefix=""
 case x$igor_host in
 x)

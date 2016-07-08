@@ -7,6 +7,7 @@ of callback mechanism so it can run asynchronously.
 import requests
 import web
 import httplib2
+import urlparse
 
 DATABASE_ACCESS=None
 
@@ -26,13 +27,13 @@ def copytree(src=None, dst=None, mimetype="text/plain", method='PUT'):
     else:
         # Remote source
         h = httplib2.Http()
-        resp, srcValue = h.request(src, headers=dict(Accepts=mimetype)
+        resp, srcValue = h.request(src, headers=dict(Accept=mimetype))
         if resp.status != 200:
             raise myWebError("%d %s (%s)" % (resp.status, resp.reason, src))
     
     dstParsed = urlparse.urlparse(dst)
     if dstParsed.scheme == '' and dstParsed.netloc == '':
-        rv = DATABASE_ACCESS.put_key(dstParsed.path, None, srcValue, mimetype, method=='PUT')
+        rv = DATABASE_ACCESS.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, method=='PUT')
     else:
         headers = {'Content-type' : mimetype}
         h = httplib2.Http()

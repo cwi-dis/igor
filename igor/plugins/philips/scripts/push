@@ -1,6 +1,6 @@
 #!/bin/bash
 dir=`dirname $0`
-dirIgor=$dir/../../..
-dirPhilips=$igor/../jack/bin
+dirIgor=$dir/../../../../igor
+dirPhilips=$dirIgor/../../jack/bin
 python $dirPhilips/philips.py $igor_name $igor_value
 echo Changed Philips $igor_name to $igor_value

@@ -1,7 +1,7 @@
 #!/bin/bash
 dir=`dirname $0`
-dirIgor=$dir/../../..
-dirFitbit=$dirIgor/../jack/fitbit
+dirIgor=$dir/../../../../igor
+dirFitbit=$dirIgor/../../jack/fitbit
 case "x$igor_user" in
 x)
 	echo $0: need user= argument

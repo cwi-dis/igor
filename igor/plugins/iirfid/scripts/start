@@ -32,7 +32,7 @@ case "x$igor_url" in
 x)
 	;;
 x*)
-	command="$command --url $igor_url"
+	command="$command --url '$igor_url'"
 	;;
 esac
 echo 'iirfid start' $command

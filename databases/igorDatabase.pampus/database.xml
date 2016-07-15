@@ -1,11 +1,11 @@
 <?xml version="1.0" ?><data>
 	<environment>
 		<introspection>
-			<lastActivity/>
-			<rebootCount>0</rebootCount>
+			<lastActivity><reboot>2016-07-11T15:49:33</reboot><rfid>2016-07-11T15:50:12.829429</rfid><rfid>2016-07-11T15:57:09.496645</rfid><rfid>2016-07-11T15:59:52.841565</rfid><rfid>2016-07-11T15:59:58.903068</rfid><rfid>2016-07-11T16:03:26.950663</rfid><rfid>2016-07-11T16:03:33.074150</rfid></lastActivity>
+			<rebootCount>3.0</rebootCount>
 		</introspection>
         <messages>
-        </messages>
+        <message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag jacks_keyring</message><message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag demo_tag_one</message><message>You presented tag unknown 4e:d7:42:d2</message></messages>
         <lights>
             <front>0</front>
             <back>0</back>
@@ -15,20 +15,20 @@
 	<sensors>
 	    <rfid>
 	        <rfidtag>72:28:3d:a0</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>de:94:2d:d2</rfidtag>
-	    </rfid>
+	    <rfidtag>8e:d0:00:b8</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>72:28:3d:a0</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>4e:d7:42:d2</rfidtag></rfid>
 	    <tags>
 	        <tag>jacks_keyring</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagTwo</tag><tag>tagTwo</tag>
-	    </tags>
+	    <tag>unknown 8e:d0:00:b8</tag><tag>unknown 8e:d0:00:b8</tag><tag>jacks_keyring</tag><tag>unknown 8e:d0:00:b8</tag><tag>demo_tag_one</tag><tag>unknown 4e:d7:42:d2</tag></tags>
 	</sensors>
 	<devices>
-        <igor><url>http://maunakea.local:9333/data</url><host>maunakea.local</host><port>9333</port><startTime>1467990997</startTime></igor>
+        <igor><url>http://maunakea.local:9333/data</url><host>maunakea.local</host><port>9333</port><startTime>1468244973</startTime></igor>
         <flauwte><alive>True</alive></flauwte>
         <audio><alive>True</alive></audio>
         <video><alive>True</alive></video>
         <table><alive>False</alive></table>
         <server><alive>True</alive></server>
         <volvoSsh><alive/></volvoSsh>
-        <volvoExhibit/>
+        <volvoExhibit><introspection><lastActivity><reboot>2016-07-08T19:17:22</reboot><volvo>2016-07-11T15:48:50.443000</volvo></lastActivity><rebootCount>3.0</rebootCount></introspection></volvoExhibit>
 	</devices>
 	<people>
 		<unknown>
@@ -47,7 +47,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		    <notBefore>1467991057</notBefore>
+		    <notBefore>1468245918</notBefore>
 		</action>
         <action>
             <name>cleanup</name>
@@ -76,7 +76,13 @@
 			<xpath>/data/environment/messages/*</xpath>
 			<condition>not(data/environment/night)</condition>
 			<url>/pluginscripts/say/message?args={.}</url>
-		    <notBefore>1456406387</notBefore>
+		    <notBefore>1468245813</notBefore>
+		</action>
+		<action>
+			<xpath>/data/environment/messages/*</xpath>
+			<condition>not(data/environment/night)</condition>
+			<url>/pluginscripts/sayInRoom/message?args={.}</url>
+		    <notBefore>1468245813</notBefore>
 		</action>
 		<action>
 			<xpath>/data/sensors/tags/tag</xpath>
@@ -84,42 +90,42 @@
 			<method>POST</method>
 			<mimetype>text/plain</mimetype>
 			<data>You presented tag {.}</data>
-		    <notBefore>1456406387</notBefore>
+		    <notBefore>1468245813</notBefore>
 		</action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>
-	        <notBefore>1467990997</notBefore>
+	        <notBefore>1468245814</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=video&amp;ip=dominion.dis.&amp;port=22</url>
-	        <notBefore>1467990997</notBefore>
+	        <notBefore>1468245814</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=table&amp;ip=hankasalmi.dis.&amp;port=22</url>
-	        <notBefore>1467990997</notBefore>
+	        <notBefore>1468245814</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=server&amp;ip=maunakea.dis.&amp;port=22</url>
-	        <notBefore>1467990997</notBefore>
+	        <notBefore>1468245814</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=volvoSsh&amp;ip=volvo.local&amp;port=22</url>
-	        <notBefore>1467990997</notBefore>
+	        <notBefore>1468245814</notBefore>
 	    </action>
 	    <action>
 	        <interval>3600</interval>
 	        <url>/plugin/copytree?src=http://volvo.local:9333/data/environment/introspection&amp;dst=/data/devices/volvoExhibit&amp;mimetype=application/json</url>
-	        <notBefore>1467990997</notBefore>
+	        <notBefore>1468244974</notBefore>
 	    </action>
         <action>
             <name>start</name>
             <url>/pluginscripts/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
-            <notBefore>1456406041</notBefore>
+            <notBefore>1468244979</notBefore>
         </action>
         <action>
             <xpath>/data/environment/lights/*</xpath>
@@ -128,7 +134,7 @@
 	    <action>
 	        <name>start</name>
 	        <url>/internal/started</url>
-	        <notBefore>1456406041</notBefore>
+	        <notBefore>1468244979</notBefore>
 	    </action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
@@ -136,21 +142,21 @@
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime(.)}</data>
-			<notBefore>1467990997</notBefore></action>
+			<notBefore>1468244974</notBefore></action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
 				<url>/data/environment/introspection/rebootCount</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{number(/data/environment/introspection/rebootCount)+1}</data>
-			<notBefore>1467990997</notBefore></action>
+			<notBefore>1468244974</notBefore></action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
             <method>POST</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
-            <notBefore>1457647462</notBefore>
+            <notBefore>1468245813</notBefore>
         </action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
@@ -158,7 +164,7 @@
             <method>POST</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_dateTime()}</data>
-        </action>
+        <notBefore>1468245813</notBefore></action>
         <action>
             <xpath>/data/sensors/tags/tag</xpath>
             <condition>.='tagOne'</condition>
@@ -184,10 +190,13 @@
 	    <say>
 	        <voice>Daniel</voice>
 	    </say>
+	    <sayInRoom>
+	        <host>haleakala.local</host>
+	    </sayInRoom>
         <iirfid>
             <serial>/dev/tty.usbserial-A700ekiO</serial>
             <baud>57600</baud>
-            <host/>
+            <host>haleakala.local</host>
         </iirfid>
         <rfid>
             <tag>
@@ -202,7 +211,7 @@
                 <id>72:28:3d:a0</id>
                 <name>jacks_keyring</name>
             </tag>
-        </rfid>
+        <tag><id>8e:d0:00:b8</id><name>demo_tag_one</name></tag><tag><id>4e:d7:42:d2</id><name>demo_tag_two</name></tag></rfid>
         <kaku>
             <host>ta2@malakoff.local</host>
             <script>src/dis/jack/kaku</script>

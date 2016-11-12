@@ -481,7 +481,10 @@ class DBImpl(DBSerializer):
             return newnode
         
     def elementFromXML(self, xmltext):
-        newdoc = xml.dom.minidom.parseString(xmltext)
+        try:
+            newdoc = xml.dom.minidom.parseString(xmltext)
+        except:
+            raise DBParamError('Not valid xml: %s' % xmltext)
         return newdoc.firstChild
         
     def setValue(self, location, value):

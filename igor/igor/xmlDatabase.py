@@ -55,6 +55,13 @@ class XPathFunctionExtension(xpath.expr.Function):
         
     @function(0, 1)
     def f_igor_dateTime(self, node, pos, size, context, timestamp=None):
+        if type(timestamp) == type(''):
+            try:
+                dt = dateutil.parser.parse(timestamp)
+            except ValueError:
+                pass
+            else:
+                return timestamp
         if timestamp is None:
             timestamp = time.time()
         else:
@@ -62,7 +69,7 @@ class XPathFunctionExtension(xpath.expr.Function):
             try:
                 timestamp = float(timestamp)
             except TypeError:
-                raise xpath.XPathError("dateTime argument must be a number")
+                raise xpath.XPathError("dateTime argument must be a number or")
         if math.isnan(timestamp):
             raise xpath.XPathError("dateTime argument must be a number")
         dt = datetime.datetime.fromtimestamp(timestamp)

@@ -55,17 +55,17 @@ class XPathFunctionExtension(xpath.expr.Function):
         
     @function(0, 1)
     def f_igor_dateTime(self, node, pos, size, context, timestamp=None):
-        if type(timestamp) == type(''):
-            try:
-                dt = dateutil.parser.parse(timestamp)
-            except ValueError:
-                pass
-            else:
-                return timestamp
         if timestamp is None:
             timestamp = time.time()
         else:
-            strtimestamp = str(timestamp)
+            strtimestamp = xpath.expr.string(timestamp)
+            if strtimestamp:
+                try:
+                    dt = dateutil.parser.parse(strtimestamp)
+                except ValueError:
+                    pass
+                else:
+                    return strtimestamp
             timestamp = xpath.expr.number(timestamp)
             try:
                 timestamp = float(timestamp)

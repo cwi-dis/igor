@@ -3,4 +3,4 @@ dir=`dirname $0`
 dirIgor=$dir/../../../../igor
 dirSmartMeter=$dirIgor/../../jack/smartMeter
 
-curl http://$igor_host/p1?format=xml | python $dirIgor/igorVar.py --put application/xml sensors/smartMeter
+curl --silent http://$igor_host/p1?format=xml | python $dirIgor/igorVar.py --put application/xml sensors/smartMeter

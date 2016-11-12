@@ -3,7 +3,7 @@
 	<actions>
 		<action>
 			<interval>60</interval>
-			<url>/pluginscripts/smartmeter/pull</url>
+			<url>/pluginscripts/smartmeter_rfduino/pull</url>
 		</action>
 		<action>
 			<xpath>/data/sensors/smartMeter</xpath>

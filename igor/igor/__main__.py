@@ -48,6 +48,10 @@ class IgorServer:
         self.eventSources = None
         self.updateEventSources()
         #
+        # Disable debug
+        #
+        web.config.debug = False
+        #
         # Send start action to start any plugins
         #
         self.urlCaller.callURL(dict(method='GET', url='/action/start'))

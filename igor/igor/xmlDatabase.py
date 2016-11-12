@@ -65,13 +65,14 @@ class XPathFunctionExtension(xpath.expr.Function):
         if timestamp is None:
             timestamp = time.time()
         else:
+            strtimestamp = str(timestamp)
             timestamp = xpath.expr.number(timestamp)
             try:
                 timestamp = float(timestamp)
             except TypeError:
-                raise xpath.XPathError("dateTime argument must be a number or")
+                raise xpath.XPathError("dateTime argument must be a number or iso datetime: %s" % strtimestamp)
         if math.isnan(timestamp):
-            raise xpath.XPathError("dateTime argument must be a number")
+            raise xpath.XPathError("dateTime argument must be a valid number: %s" % strtimestamp)
         dt = datetime.datetime.fromtimestamp(timestamp)
         return dt.isoformat()
         

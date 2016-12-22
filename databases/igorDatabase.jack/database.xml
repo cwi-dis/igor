@@ -1,13 +1,13 @@
 <?xml version="1.0" ?><data>
 	<environment>
 		<introspection>
-			<lastActivity><reboot>2016-10-17T22:46:44</reboot><dhcp>2016-11-12T18:45:04.099469</dhcp><ble>2016-11-12T18:27:13.138716</ble><netAtmo>2016-11-12T18:33:49</netAtmo><smartMeter>2016-11-12T18:24:09</smartMeter><plant>2016-11-12T18:29:20.918136</plant><fitbit>2016-07-14T18:16:30</fitbit></lastActivity>
-			<rebootCount>5.0</rebootCount>
+			<lastActivity><reboot>2016-12-21T18:37:50</reboot><dhcp>2016-12-22T12:38:33.728665</dhcp><ble>2016-12-22T12:38:39.999593</ble><netAtmo>2016-12-22T12:17:45</netAtmo><smartMeter>2016-12-22T12:39:08</smartMeter><plant>2016-12-22T12:38:49.988643</plant><fitbit>2016-07-14T18:16:30</fitbit></lastActivity>
+			<rebootCount>7.0</rebootCount>
 		</introspection>
 		<devices>
 			<wangetjes>true</wangetjes>
-			<phoneErika>true</phoneErika>
-			<phoneBrendan>true</phoneBrendan>
+			<phoneErika/>
+			<phoneBrendan></phoneBrendan>
 			<keysJack>true</keysJack>
 		</devices>
 		<messages>
@@ -17,13 +17,13 @@
 			<tempOutside>11.1</tempOutside>
 		</weather>
 		<energy>
-			<electricity>3.756</electricity>
+			<electricity>00.556</electricity>
 		</energy>
-		<night/>
+		<night></night>
 	</environment>
 	<sensors>
-		<dhcp><lease><arp>true</arp><ping/><alive>true</alive><hardware>70:3e:ac:b6:2a:46</hardware><ip-address>192.168.1.54</ip-address><client-hostname>Wangetjes</client-hostname></lease><lease><arp>true</arp><ping/><alive>true</alive><hardware>54:e4:3a:23:57:02</hardware><ip-address>192.168.1.56</ip-address><client-hostname>Erikas-5S</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>d8:30:62:66:63:8a</hardware><ip-address>192.168.1.74</ip-address><client-hostname>boom</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>18:fe:34:a1:8b:e8</hardware><ip-address>192.168.1.100</ip-address><client-hostname>ESP_A18BE8</client-hostname></lease><lease><hardware>f8:1e:df:d8:15:fb</hardware><arp/><ping/><client-hostname>bloesem</client-hostname><ip-address>192.168.1.101</ip-address></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>b8:8d:12:5c:ed:28</hardware><ip-address>192.168.1.103</ip-address><client-hostname>goudreinet-timecapsule</client-hostname></lease><lease><arp>true</arp><ping/><alive>true</alive><hardware>f0:cb:a1:74:e5:ef</hardware><ip-address>192.168.1.106</ip-address><client-hostname>iPhonevnBrendan</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>6c:40:08:9a:4e:0e</hardware><ip-address>192.168.1.107</ip-address><client-hostname>flap</client-hostname></lease><lease><arp>true</arp><ping/><alive>true</alive><hardware>34:51:c9:38:90:ff</hardware><ip-address>192.168.1.108</ip-address><client-hostname>AmbulanPad23G64</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:00:85:ec:23:41</hardware><ip-address>192.168.1.111</ip-address><client-hostname/></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>18:fe:34:a1:8c:95</hardware><ip-address>192.168.1.112</ip-address><client-hostname>ESP_A18C95</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>6c:ad:f8:05:10:ab</hardware><ip-address>192.168.1.113</ip-address><client-hostname>Homey</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:1b:63:f1:30:0d</hardware><ip-address>192.168.1.114</ip-address><client-hostname>goudreinet-extreme</client-hostname></lease><lease><hardware>30:5a:3a:e4:f8:85</hardware><arp/><ping/><client-hostname>SpiritusAliquam</client-hostname><ip-address>192.168.1.115</ip-address></lease><lease><arp>true</arp><ping/><alive>true</alive><hardware>84:29:99:59:8b:31</hardware><ip-address>192.168.1.116</ip-address><client-hostname/></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:16:cb:ae:3b:0b</hardware><ip-address>192.168.1.117</ip-address><client-hostname>mediacentre</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:26:4a:cf:5c:2d</hardware><ip-address>192.168.1.118</ip-address><client-hostname>OldWhite</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:26:bb:0b:35:a7</hardware><ip-address>192.168.1.121</ip-address><client-hostname>MacBookBrendan</client-hostname></lease><lease><hardware>18:fe:34:ca:e0:ce</hardware><arp/><ping/><client-hostname>ESP_CAE0CE</client-hostname><ip-address>192.168.1.127</ip-address></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>60:01:94:0f:ce:05</hardware><ip-address>192.168.1.128</ip-address><client-hostname>ESP_0FCE05</client-hostname></lease></dhcp>
-		<ble><bleDevice><available/><rssi>-101</rssi><lastSeen>1478964488.58</lastSeen><address>5e:20:4d:ec:05:93</address></bleDevice><bleDevice><available/><rssi>-100</rssi><lastSeen>1478962586.36</lastSeen><address>69:58:b3:b4:a3:09</address></bleDevice><bleDevice><available/><rssi>-99</rssi><lastSeen>1478970172.14</lastSeen><address>46:1b:e6:56:67:13</address></bleDevice><bleDevice><available/><rssi>-92</rssi><lastSeen>1478971478.1</lastSeen><address>a4:77:33:b4:26:c3</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478960825.95</lastSeen><address>6f:02:e4:bb:d3:c4</address></bleDevice><bleDevice><available/><rssi>-99</rssi><lastSeen>1478970975.67</lastSeen><address>5a:be:6f:29:bb:09</address></bleDevice><bleDevice><available/><rssi>-100</rssi><lastSeen>1478954334.31</lastSeen><address>7a:1a:d5:40:ee:53</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478957929.62</lastSeen><address>47:b9:0c:49:14:b3</address></bleDevice><bleDevice><available/><rssi>-99</rssi><lastSeen>1478951573.08</lastSeen><address>73:74:76:ca:cd:a4</address></bleDevice><bleDevice><available/><rssi>-98</rssi><lastSeen>1478958474.91</lastSeen><address>51:be:96:a0:81:58</address></bleDevice><bleDevice><available/><rssi>-97</rssi><lastSeen>1478970573.34</lastSeen><address>5f:87:a7:56:38:a2</address></bleDevice><bleDevice><available/><rssi>-92</rssi><lastSeen>1478959878.35</lastSeen><address>5d:1e:d5:f2:44:16</address></bleDevice><bleDevice><available/><rssi>-95</rssi><lastSeen>1478965309.98</lastSeen><address>41:f7:4b:87:21:d6</address></bleDevice><bleDevice><available/><rssi>-98</rssi><lastSeen>1478957155.63</lastSeen><address>71:ed:0a:68:74:cd</address></bleDevice><bleDevice><available/><rssi>-100</rssi><lastSeen>1478966664.51</lastSeen><address>4c:9f:45:cc:b0:27</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478962914.01</lastSeen><address>6d:be:3e:53:29:f1</address></bleDevice><bleDevice><available/><rssi>-98</rssi><lastSeen>1478962482.06</lastSeen><address>66:da:d0:4d:66:b9</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478959570.59</lastSeen><address>54:be:98:d9:2f:de</address></bleDevice><bleDevice><available/><rssi>-101</rssi><lastSeen>1478966524.89</lastSeen><address>57:2f:77:20:3c:17</address></bleDevice><bleDevice><available/><rssi>-99</rssi><lastSeen>1478958195.17</lastSeen><address>00:22:d0:68:5d:f5</address></bleDevice><bleDevice><available/><rssi>-91</rssi><lastSeen>1478971034.14</lastSeen><address>68:64:4b:30:45:1d</address></bleDevice><bleDevice><available/><rssi>-99</rssi><lastSeen>1478956218.77</lastSeen><address>6c:e8:fa:2b:33:7a</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478951893.7</lastSeen><address>5d:32:89:77:91:49</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478968486.28</lastSeen><address>79:40:dc:96:62:d3</address></bleDevice><bleDevice><available/><rssi>-102</rssi><lastSeen>1478964252.86</lastSeen><address>6b:6e:45:03:1b:1c</address></bleDevice><bleDevice><available/><rssi>-98</rssi><lastSeen>1478969276.78</lastSeen><address>77:ff:25:90:74:57</address></bleDevice><bleDevice><available/><rssi>-101</rssi><lastSeen>1478956612.51</lastSeen><address>65:6c:8d:97:d9:7d</address></bleDevice><bleDevice><available/><rssi>-95</rssi><lastSeen>1478958447.01</lastSeen><address>51:88:5c:fe:65:bb</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478954992.9</lastSeen><address>52:f4:b2:5d:93:0c</address></bleDevice><bleDevice><available/><rssi>-101</rssi><lastSeen>1478961476.0</lastSeen><address>69:56:26:db:09:ad</address></bleDevice><bleDevice><available/><rssi>-97</rssi><lastSeen>1478964070.05</lastSeen><address>54:e8:86:14:97:9f</address></bleDevice><bleDevice><available/><rssi>-97</rssi><lastSeen>1478960767.94</lastSeen><address>41:6c:d2:22:2a:4b</address></bleDevice><bleDevice><available/><rssi>-93</rssi><lastSeen>1478966660.96</lastSeen><address>78:d7:48:67:8d:52</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478962422.57</lastSeen><address>5f:f9:4d:92:8b:ec</address></bleDevice><bleDevice><available/><rssi>-101</rssi><lastSeen>1478961811.66</lastSeen><address>6e:f3:9e:89:34:a1</address></bleDevice><bleDevice><available/><rssi>-99</rssi><lastSeen>1478971474.95</lastSeen><address>d1:59:4c:3c:5c:2e</address></bleDevice><bleDevice><available/><rssi>-93</rssi><lastSeen>1478956654.94</lastSeen><address>72:32:c2:47:c3:32</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478965978.68</lastSeen><address>53:e5:68:d0:81:01</address></bleDevice><bleDevice><available/><rssi>-98</rssi><lastSeen>1478970694.67</lastSeen><address>64:69:43:6e:30:34</address></bleDevice><bleDevice><available/><rssi>-96</rssi><lastSeen>1478964407.63</lastSeen><address>5e:88:b4:98:7d:6f</address></bleDevice></ble>
+		<dhcp><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>70:3e:ac:b6:2a:46</hardware><ip-address>192.168.1.54</ip-address><client-hostname>Wangetjes</client-hostname></lease><lease><hardware>18:8e:d5:e2:f8:ea</hardware><arp></arp><ping></ping><client-hostname></client-hostname><ip-address>192.168.1.55</ip-address></lease><lease><hardware>4c:57:ca:cd:7b:b1</hardware><arp></arp><ping></ping><client-hostname>Erikas-SE</client-hostname><ip-address>192.168.1.56</ip-address></lease><lease><hardware>00:22:aa:27:42:57</hardware><arp></arp><ping></ping><client-hostname>Wii</client-hostname><ip-address>192.168.1.59</ip-address></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>d8:30:62:66:63:8a</hardware><ip-address>192.168.1.74</ip-address><client-hostname>boom</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>18:fe:34:a1:8b:e8</hardware><ip-address>192.168.1.100</ip-address><client-hostname>ESP_A18BE8</client-hostname></lease><lease><hardware>f8:1e:df:d8:15:fb</hardware><arp></arp><ping></ping><client-hostname>bloesem</client-hostname><ip-address>192.168.1.101</ip-address></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>b8:8d:12:5c:ed:28</hardware><ip-address>192.168.1.103</ip-address><client-hostname>goudreinet-timecapsule</client-hostname></lease><lease><hardware>f0:cb:a1:74:e5:ef</hardware><arp></arp><ping></ping><client-hostname>iPhonevnBrendan</client-hostname><ip-address>192.168.1.106</ip-address></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>6c:40:08:9a:4e:0e</hardware><ip-address>192.168.1.107</ip-address><client-hostname>flap</client-hostname></lease><lease><arp>true</arp><ping></ping><alive>true</alive><hardware>34:51:c9:38:90:ff</hardware><ip-address>192.168.1.108</ip-address><client-hostname>AmbulanPad23G64</client-hostname></lease><lease><hardware>00:1c:42:25:d6:c9</hardware><arp></arp><ping></ping><client-hostname>ERIKAMESTERE4B6</client-hostname><ip-address>192.168.1.109</ip-address></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:00:85:ec:23:41</hardware><ip-address>192.168.1.111</ip-address><client-hostname></client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>6c:ad:f8:05:10:ab</hardware><ip-address>192.168.1.113</ip-address><client-hostname>Homey</client-hostname></lease><lease><arp>true</arp><ping></ping><alive>true</alive><hardware>84:29:99:59:8b:31</hardware><ip-address>192.168.1.116</ip-address><client-hostname></client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:16:cb:ae:3b:0b</hardware><ip-address>192.168.1.117</ip-address><client-hostname>mediacentre</client-hostname></lease><lease><hardware>00:26:4a:cf:5c:2d</hardware><arp></arp><ping></ping><client-hostname>OldWhite</client-hostname><ip-address>192.168.1.118</ip-address></lease><lease><hardware>00:26:bb:0b:35:a7</hardware><arp></arp><ping></ping><client-hostname>MacBookBrendan</client-hostname><ip-address>192.168.1.121</ip-address></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>60:01:94:0f:ce:05</hardware><ip-address>192.168.1.128</ip-address><client-hostname>ESP_0FCE05</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>18:fe:34:ca:e8:78</hardware><ip-address>192.168.1.130</ip-address><client-hostname>ESP_CAE878</client-hostname></lease><lease><arp>true</arp><ping>true</ping><alive>true</alive><hardware>00:1c:b3:b2:79:ef</hardware><ip-address>192.168.1.133</ip-address><client-hostname>mediacentre</client-hostname></lease></dhcp>
+		<ble><bleDevice><available></available><rssi>-97</rssi><lastSeen>1482347175.52</lastSeen><address>44:16:07:bf:19:51</address></bleDevice><bleDevice><available></available><rssi>-96</rssi><lastSeen>1482403933.53</lastSeen><address>f5:16:4d:d6:63:37</address></bleDevice><bleDevice><available>true</available><rssi>-91</rssi><lastSeen>1482406715.35</lastSeen><firstSeen>1482341864.96</firstSeen><address>a4:77:33:b4:26:c3</address></bleDevice><bleDevice><available></available><rssi>-101</rssi><lastSeen>1482388430.12</lastSeen><address>57:62:84:46:69:9d</address></bleDevice><bleDevice><available></available><rssi>-90</rssi><lastSeen>1482368128.44</lastSeen><address>7c:66:2e:68:50:4e</address></bleDevice><bleDevice><available></available><rssi>-97</rssi><lastSeen>1482346504.29</lastSeen><address>53:25:f9:db:3e:d7</address></bleDevice><bleDevice><available></available><rssi>-97</rssi><lastSeen>1482398984.81</lastSeen><address>72:a1:27:86:40:5a</address></bleDevice><bleDevice><available></available><rssi>-62</rssi><lastSeen>1482398917.51</lastSeen><address>6a:88:17:4c:51:6e</address></bleDevice><bleDevice><available></available><rssi>-86</rssi><lastSeen>1482364983.31</lastSeen><address>67:9a:31:ea:3e:51</address></bleDevice><bleDevice><available></available><rssi>-100</rssi><lastSeen>1482356141.98</lastSeen><address>70:27:bc:14:c8:56</address></bleDevice><bleDevice><available></available><rssi>-97</rssi><lastSeen>1482358753.8</lastSeen><address>7e:bd:f8:17:77:11</address></bleDevice><bleDevice><available></available><rssi>-99</rssi><lastSeen>1482406337.4</lastSeen><address>5d:58:6f:2f:73:a8</address></bleDevice><bleDevice><available></available><rssi>-95</rssi><lastSeen>1482354661.91</lastSeen><address>6b:7e:41:d4:b0:1d</address></bleDevice><bleDevice><available></available><rssi>-89</rssi><lastSeen>1482359729.0</lastSeen><address>44:47:e7:e7:e2:34</address></bleDevice><bleDevice><available></available><rssi>-94</rssi><lastSeen>1482389617.81</lastSeen><address>5e:99:43:9c:38:08</address></bleDevice><bleDevice><available></available><rssi>-97</rssi><lastSeen>1482391942.79</lastSeen><address>73:c6:d1:7c:d0:04</address></bleDevice><bleDevice><available>true</available><rssi>-68</rssi><lastSeen>1482406716.1</lastSeen><firstSeen>1482341864.21</firstSeen><address>68:64:4b:30:45:1d</address></bleDevice><bleDevice><available></available><rssi>-96</rssi><lastSeen>1482403654.85</lastSeen><address>6d:3a:17:00:90:31</address></bleDevice><bleDevice><available></available><rssi>-98</rssi><lastSeen>1482403870.41</lastSeen><address>72:a7:94:81:76:2f</address></bleDevice><bleDevice><available></available><rssi>-98</rssi><lastSeen>1482343711.31</lastSeen><address>59:d7:61:27:c7:5d</address></bleDevice><bleDevice><available></available><rssi>-97</rssi><lastSeen>1482390949.95</lastSeen><address>54:5b:6e:04:59:3c</address></bleDevice><bleDevice><available></available><rssi>-99</rssi><lastSeen>1482403703.3</lastSeen><address>4b:75:b0:c0:f5:fb</address></bleDevice><bleDevice><available></available><rssi>-92</rssi><lastSeen>1482397298.98</lastSeen><address>7c:91:22:57:e1:d3</address></bleDevice><bleDevice><available></available><rssi>-99</rssi><lastSeen>1482358853.65</lastSeen><address>42:37:ac:62:1d:bf</address></bleDevice><bleDevice><available></available><rssi>-82</rssi><lastSeen>1482345437.1</lastSeen><address>40:b0:07:56:8e:17</address></bleDevice><bleDevice><available></available><rssi>-96</rssi><lastSeen>1482402893.98</lastSeen><address>76:09:84:b5:7d:44</address></bleDevice></ble>
 		<rfid>
 			<rfidtag>
 				72:28:3d:a0
@@ -48,24 +48,24 @@
 			</tag>
 			<tag>jacks_keyring</tag>
 		</tags>
-		<netAtmo><binnen><Noise>55</Noise><Temperature>20.1</Temperature><When>1478972029</When><Humidity>49</Humidity><Pressure>1014.8</Pressure><CO2>1135</CO2><AbsolutePressure>1014.8</AbsolutePressure><min_temp>18.8</min_temp><date_max_temp>1478908003</date_max_temp><date_min_temp>1478941067</date_min_temp><wifi_status>22</wifi_status><max_temp>21.2</max_temp></binnen></netAtmo>
-		<smartMeter><total_kwh_tariff_1>3309.532</total_kwh_tariff_1><total_power_failures_long>3</total_power_failures_long><current_tariff>1</current_tariff><total_kwh_tariff_2>3630.071</total_kwh_tariff_2><timestamp>1478971449.0</timestamp><meter_id_gas>G0023561225480414</meter_id_gas><meter_id_electricity>E0009000014301414</meter_id_electricity><current_kw>3.756</current_kw><total_kwh_tariff_2_returned>0.0</total_kwh_tariff_2_returned><current_kw_return>0.0</current_kw_return><total_gas_m3>1684.935</total_gas_m3><total_power_failures>6</total_power_failures><total_kwh_tariff_1_returned>0.0</total_kwh_tariff_1_returned></smartMeter>
+		<netAtmo><binnen><Noise>45</Noise><Temperature>19.7</Temperature><When>1482405465</When><Humidity>55</Humidity><Pressure>1022.5</Pressure><CO2>899</CO2><AbsolutePressure>1020.9</AbsolutePressure><min_temp>19.3</min_temp><date_max_temp>1482362677</date_max_temp><date_min_temp>1482390907</date_min_temp><wifi_status>24</wifi_status><max_temp>20.3</max_temp></binnen><buiten><date_min_temp>1482361459</date_min_temp><rf_status>81</rf_status><Temperature>7</Temperature><When>1482405442</When><Humidity>94</Humidity><min_temp>6.3</min_temp><date_max_temp>1482403904</date_max_temp><battery_vp>3041</battery_vp><max_temp>7</max_temp></buiten></netAtmo>
+		<smartMeter><unknown tag="1-3:0.2.8">(42)</unknown><timestamp>2016-12-22T12:39:08</timestamp><meter_id_electricity>4530303039303030303134333031343134</meter_id_electricity><total_kwh_tariff_1>003546.851</total_kwh_tariff_1><total_kwh_tariff_2>003908.428</total_kwh_tariff_2><total_kwh_tariff_1_returned>000000.000</total_kwh_tariff_1_returned><total_kwh_tariff_2_returned>000000.000</total_kwh_tariff_2_returned><current_tariff>0002</current_tariff><current_kw>00.556</current_kw><current_kw_return>00.000</current_kw_return><total_power_failures>00006</total_power_failures><total_power_failures_long>00003</total_power_failures_long><unknown tag="1-0:99.97.0">(2)(0-0:96.7.19)(160305102715W)(0000685705*s)(000101000001W)(2147483647*s)</unknown><unknown tag="1-0:32.32.0">(00000)</unknown><unknown tag="1-0:32.36.0">(00000)</unknown><unknown tag="0-0:96.13.1">()</unknown><unknown tag="0-0:96.13.0">()</unknown><unknown tag="1-0:31.7.0">(002*A)</unknown><unknown tag="1-0:21.7.0">(00.556*kW)</unknown><unknown tag="1-0:22.7.0">(00.000*kW)</unknown><unknown tag="0-1:24.1.0">(003)</unknown><meter_id_gas>4730303233353631323235343830343134</meter_id_gas><total_gas_m3>01852.034</total_gas_m3></smartMeter>
 		<fitbit>
 			<jack/>
 		</fitbit>
 	</sensors>
 	<devices>
-		<tv><power/></tv>
-		<plant><speed>0.0</speed><inrange>1</inrange><target>175</target><id>0</id><pos>175</pos></plant>
+		<tv><power></power></tv>
+		<plant><speed>0.0</speed><inrange>1</inrange><target>629</target><id>0</id><pos>622.16</pos></plant>
 		<lcd>
 			<message>
 				hallo lui
 			</message>
 		</lcd>
-		<igor><url>http://framboos.local:9333/data</url><host>framboos.local</host><port>9333</port><startTime>1478982476</startTime></igor>
+		<igor><url>http://framboos.local:9333/data</url><host>framboos.local</host><port>9333</port><startTime>1482341870</startTime></igor>
 	</devices>
 	<people>
-		<jack><home>true</home></jack><erika><home>true</home></erika><brendan><home>true</home></brendan>
+		<jack><home>true</home></jack><erika><home/></erika><brendan><home></home></brendan>
 	</people>
 	<identities>
 		<brendan>
@@ -100,7 +100,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		<notBefore>1478982536</notBefore></action>
+		<notBefore>1482406805</notBefore></action>
 			<action>
 				<name>cleanup</name>
 				<method>DELETE</method>
@@ -126,21 +126,21 @@
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/smartmeter_iotsa/pull</url>
-			<notBefore>1478982476</notBefore></action>
+			<notBefore>1482406690</notBefore></action>
 			<action>
 				<xpath>/data/sensors/smartMeter</xpath>
 				<method>PUT</method>
 				<url>/data/environment/energy/electricity</url>
 				<mimetype>text/plain</mimetype>
 				<data>{current_kw}</data>
-			<notBefore>1478971421</notBefore></action>
+			<notBefore>1482406696</notBefore></action>
 			<action>
 				<xpath>/data/sensors/smartMeter/timestamp</xpath>
 				<method>PUT</method>
 				<url>/data/environment/introspection/lastActivity/smartMeter</url>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime(.)}</data>
-			<notBefore>1478971421</notBefore></action>		
+			<notBefore>1482406696</notBefore></action>		
 			<action>
 				<xpath>/data/environment/messages/*</xpath>
 				<condition>not(string(data/environment/night))</condition>
@@ -153,27 +153,27 @@
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/dhcp/pull</url>
-			<notBefore>1478982476</notBefore></action>
+			<notBefore>1482406690</notBefore></action>
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/ble/pull</url>
-			<notBefore>1478982476</notBefore></action>
+			<notBefore>1482406690</notBefore></action>
 			<action>
 				<interval>900</interval>
 				<url>/pluginscripts/netatmo/pull</url>
 				<name>updateNetatmo</name>
-			<notBefore>1478982476</notBefore></action>
+			<notBefore>1482405846</notBefore></action>
 			<action>
 				<xpath>/data/sensors/netAtmo/*[1]/When</xpath>
 				<method>PUT</method>
 				<url>/data/environment/introspection/lastActivity/netAtmo</url>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime(.)}</data>
-			<notBefore>1478972060</notBefore></action>
+			<notBefore>1482405850</notBefore></action>
 			<action>
 				<interval>36000</interval>
 				<url>/pluginscripts/fitbit/pull?user=jack</url>
-			<notBefore>1478982476</notBefore></action>
+			<notBefore>1482377946</notBefore></action>
 			<action>
 				<xpath>/data/sensors/fitbit/*/*/time</xpath>
 				<method>PUT</method>
@@ -194,26 +194,26 @@
 				<url>/data/environment/night</url>
 				<mimetype>text/plain</mimetype>
 			<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
-		<notBefore>1478982477</notBefore></action>
+		<notBefore>1482405849</notBefore></action>
 	
 			<action>
 				<name>start</name>
 				<url>/internal/started</url>
-			<notBefore>1476737433</notBefore></action>
+			<notBefore>1482342027</notBefore></action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
 				<url>/data/environment/introspection/lastActivity/reboot</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime(.)}</data>
-			<notBefore>1478982477</notBefore></action>
+			<notBefore>1482341951</notBefore></action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
 				<url>/data/environment/introspection/rebootCount</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{number(/data/environment/introspection/rebootCount)+1}</data>
-			<notBefore>1478982477</notBefore></action>
+			<notBefore>1482341951</notBefore></action>
 			<action>
 				<xpath>/data/sensors/rfid/rfidtag</xpath>
 				<url>/data/sensors/tags/tag</url>
@@ -240,14 +240,14 @@
 			<action>
 				<xpath>/data/devices/plant/pos</xpath>
 				<url>http://plant.local/stepper/0?pos={.}</url>
-			<notBefore>1478971760</notBefore></action>
+			<notBefore>1482406729</notBefore></action>
 			<action>
 				<xpath>/data/devices/plant/pos</xpath>
 				<url>/data/environment/introspection/lastActivity/plant</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime()}</data>
-			<notBefore>1478971760</notBefore></action>
+			<notBefore>1482406729</notBefore></action>
 			<action>
 				<xpath>/data/environment/energy/electricity</xpath>
 				<url>/data/devices/plant/pos</url>
@@ -256,11 +256,11 @@
 				<data>{700-(number(.)*140)}</data>
 				<minInterval>60</minInterval>
 				<condition>not(string(/data/environment/night))</condition>
-			<notBefore>1478971386</notBefore></action>
+			<notBefore>1482406787</notBefore></action>
 			<action>
 				<interval>600</interval>
 				<url>/pluginscripts/plant/pull</url>
-			<notBefore>1478982477</notBefore></action>
+			<notBefore>1482406147</notBefore></action>
 			<action>
 				<xpath>/data/sensors/ble/bleDevice</xpath>
 				<condition>/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name</condition>
@@ -276,7 +276,7 @@
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime()}</data>
-			<notBefore>1478971633</notBefore></action>
+			<notBefore>1482406720</notBefore></action>
 			<action>
 				<xpath>/data/sensors/dhcp/lease</xpath>
 				<condition>/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name</condition>
@@ -285,14 +285,14 @@
 				<mimetype>text/plain</mimetype>
 				<data>{alive}</data>
 				<multiple>true</multiple>
-			<notBefore>1478972704</notBefore></action>
+			<notBefore>1482406713</notBefore></action>
 			<action>
 				<xpath>/data/sensors/dhcp/lease</xpath>
 				<url>/data/environment/introspection/lastActivity/dhcp</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime()}</data>
-			<notBefore>1478972704</notBefore></action>
+			<notBefore>1482406713</notBefore></action>
 			<action>
 				<xpath>/data/environment/devices/*</xpath>
 				<condition>/data/identities/*[device=name($originalContext)]</condition>
@@ -301,11 +301,11 @@
 				<mimetype>text/plain</mimetype>
 				<data>{.}</data>
 				<multiple>true</multiple>
-			<notBefore>1478967795</notBefore></action>
+			<notBefore>1482399770</notBefore></action>
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/philips/pull</url>
-			<notBefore>1478982478</notBefore></action>			
+			<notBefore>1482406691</notBefore></action>			
 	</actions>
 	<sandbox>
 	</sandbox>

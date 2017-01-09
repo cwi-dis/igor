@@ -343,6 +343,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             return rv
         except xpath.XPathError, arg:
             raise myWebError("401 XPath error: %s" % str(arg))
+        except xmlDatabase.DBKeyError, arg:
+            raise ("401 Database Key Error: %s" % str(arg))
+        except xmlDatabase.DBParamError, arg:
+            raise ("401 Database Parameter Error: %s" % str(arg))
         
     def get_value(self, expression):
         """Evaluate a general expression and return the string value"""
@@ -350,6 +354,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             return self.db.getValue(expression)
         except xpath.XPathError, arg:
             raise myWebError("401 XPath error: %s" % str(arg))
+        except xmlDatabase.DBKeyError, arg:
+            raise ("401 Database Key Error: %s" % str(arg))
+        except xmlDatabase.DBParamError, arg:
+            raise ("401 Database Parameter Error: %s" % str(arg))
         
     def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
         try:
@@ -431,6 +439,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 return self.convertto(path, mimetype, variant)
         except xpath.XPathError, arg:
             raise myWebError("401 XPath error: %s" % str(arg))
+        except xmlDatabase.DBKeyError, arg:
+            raise ("401 Database Key Error: %s" % str(arg))
+        except xmlDatabase.DBParamError, arg:
+            raise ("401 Database Parameter Error: %s" % str(arg))
         
     def delete_key(self, key):
         try:
@@ -439,6 +451,8 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             return ''
         except xpath.XPathError, arg:
             raise myWebError("401 XPath error: %s" % str(arg))
+        except xmlDatabase.DBKeyError, arg:
+            raise ("401 Database Key Error: %s" % str(arg))
         
     def convertto(self, value, mimetype, variant):
         if variant == 'ref':

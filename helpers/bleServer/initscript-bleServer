@@ -1,0 +1,44 @@
+### BEGIN INIT INFO
+# Provides:          bleServer
+# Required-Start:    bluetooth networking
+# Required-Stop:     bluetooth networking
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Bluetooth availability monitoring daemon
+### END INIT INFO
+
+# Using the lsb functions to perform the operations.
+. /lib/lsb/init-functions
+# Process name ( For display )
+NAME=bleServer
+# Daemon name, where is the actual executable
+DAEMON=/home/jack/src/dis/jack/home/bleServer/bleServer.py
+DAEMON_ARGS=8081
+
+# If the daemon is not there, then exit.
+test -x $DAEMON || exit 5
+
+case $1 in
+ start)
+  # Checked the PID file exists and check the actual status of process
+  # Start the daemon.
+  log_daemon_msg "Starting the process" "$NAME"
+  # Start the daemon with the help of start-stop-daemon
+  # Log the message appropriately
+  screen -dmS $NAME $DAEMON $DAEMON_ARGS
+  ;;
+ stop)
+  # Stop the daemon.
+  screen -S $NAME -X quit
+  ;;
+ restart)
+  # Restart the daemon.
+  screen -S $NAME -X quit
+  screen -dmS $NAME $DAEMON $DAEMON_ARGS
+  ;;
+ *)
+  # For invalid arguments, print the usage message.
+  echo "Usage: $0 {start|stop|restart}"
+  exit 2
+  ;;
+esac

@@ -21,7 +21,7 @@
 	    <tag>unknown 8e:d0:00:b8</tag><tag>unknown 8e:d0:00:b8</tag><tag>jacks_keyring</tag><tag>unknown 8e:d0:00:b8</tag><tag>demo_tag_one</tag><tag>unknown 4e:d7:42:d2</tag><tag>demo_tag_one</tag><tag>demo_tag_one</tag><tag>jacks_keyring</tag></tags>
 	<buienradar><lastUpdate>2017-01-09T13:38:44.118440</lastUpdate><data><mm>0.0</mm><time>2017-01-09T13:30:00</time><hour>13</hour><minute>30</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T13:35:00</time><hour>13</hour><minute>35</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T13:40:00</time><hour>13</hour><minute>40</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T13:45:00</time><hour>13</hour><minute>45</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T13:50:00</time><hour>13</hour><minute>50</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T13:55:00</time><hour>13</hour><minute>55</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:00:00</time><hour>14</hour><minute>0</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:05:00</time><hour>14</hour><minute>5</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:10:00</time><hour>14</hour><minute>10</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:15:00</time><hour>14</hour><minute>15</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:20:00</time><hour>14</hour><minute>20</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:25:00</time><hour>14</hour><minute>25</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:30:00</time><hour>14</hour><minute>30</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:35:00</time><hour>14</hour><minute>35</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:40:00</time><hour>14</hour><minute>40</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:45:00</time><hour>14</hour><minute>45</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:50:00</time><hour>14</hour><minute>50</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T14:55:00</time><hour>14</hour><minute>55</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T15:00:00</time><hour>15</hour><minute>0</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T15:05:00</time><hour>15</hour><minute>5</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T15:10:00</time><hour>15</hour><minute>10</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T15:15:00</time><hour>15</hour><minute>15</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T15:20:00</time><hour>15</hour><minute>20</minute><level>0</level></data><data><mm>0.0</mm><time>2017-01-09T15:25:00</time><hour>15</hour><minute>25</minute><level>0</level></data></buienradar></sensors>
 	<devices>
-        <igor><url>http://maunakea.local:9333/data</url><host>maunakea.local</host><port>9333</port><startTime>1483968718</startTime></igor>
+        <igor><url>http://maunakea.local:9333/data</url><host>maunakea.local</host><port>9333</port><startTime>1483969119</startTime></igor>
         <flauwte><alive>True</alive></flauwte>
         <audio><alive>True</alive></audio>
         <video><alive>True</alive></video>
@@ -47,7 +47,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		    <notBefore>1483968778</notBefore>
+		    <notBefore>1483969179</notBefore>
 		</action>
         <action>
             <name>cleanup</name>
@@ -95,32 +95,32 @@
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>
-	        <notBefore>1483968718</notBefore>
+	        <notBefore>1483969119</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=video&amp;ip=dominion.dis.&amp;port=22</url>
-	        <notBefore>1483968718</notBefore>
+	        <notBefore>1483969119</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=table&amp;ip=hankasalmi.dis.&amp;port=22</url>
-	        <notBefore>1483968718</notBefore>
+	        <notBefore>1483969119</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=server&amp;ip=maunakea.dis.&amp;port=22</url>
-	        <notBefore>1483968718</notBefore>
+	        <notBefore>1483969119</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=volvoSsh&amp;ip=volvo.local&amp;port=22</url>
-	        <notBefore>1483968718</notBefore>
+	        <notBefore>1483969119</notBefore>
 	    </action>
 	    <action>
 	        <interval>3600</interval>
 	        <url>/plugin/copytree?src=http://volvo.local:9333/data/environment/introspection&amp;dst=/data/devices/volvoExhibit&amp;mimetype=application/json</url>
-	        <notBefore>1483968718</notBefore>
+	        <notBefore>1483969119</notBefore>
 	    </action>
         <action>
             <name>start</name>
@@ -142,14 +142,14 @@
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime(.)}</data>
-			<notBefore>1483968719</notBefore></action>
+			<notBefore>1483969119</notBefore></action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
 				<url>/data/environment/introspection/rebootCount</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{number(/data/environment/introspection/rebootCount)+1}</data>
-			<notBefore>1483968719</notBefore></action>
+			<notBefore>1483969119</notBefore></action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
@@ -181,12 +181,20 @@
             <data>0</data>
             <mimetype>text/plain</mimetype>
         </action>
+		<action>
+			<interval>300</interval>
+			<url>/pluginscripts/buienradar/pull</url>
+		<notBefore>1483969119</notBefore></action>
     </actions>
 	<sandbox>
 	</sandbox>
 	<eventsources>
 	</eventsources>
 	<plugindata>
+	    <buienradar>
+	        <lat>52.3566777</lat>
+	        <lon>4.9496814</lon>
+	    </buienradar>
 	    <say>
 	        <voice>Daniel</voice>
 	    </say>

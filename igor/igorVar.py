@@ -8,13 +8,16 @@ import os
 import json
 import pprint
 
-DEFAULT_URL="http://framboos.local:9333/data/"
+DEFAULT_URL="http://framboos.local:9333/data"
 if 'IGORSERVER_URL' in os.environ:
     DEFAULT_URL = os.environ['IGORSERVER_URL']
 VERBOSE=False
 
 class IgorServer:
 	def __init__(self, url, bearer_token=None, access_token=None):
+		self.baseUrl = url
+		if url[-1] != '/':
+		    url = url + '/'
 		self.url = url
 		self.bearer_token = bearer_token
 		self.access_token = access_token

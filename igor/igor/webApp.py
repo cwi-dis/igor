@@ -104,9 +104,15 @@ class runScript:
         else:
             args = []
             
-        # Setup per-plugin and per-user data for plugin scripts, if available
+        # Setup global, per-plugin and per-user data for plugin scripts, if available
         env = copy.deepcopy(os.environ)
         initDatabaseAccess()
+        try:
+            # Tell plugin about our url, if we know it
+            myUrl = DATABASE_ACCESS.get_key('devices/igor/url', 'text/plain', 'content')
+            env['IGORSERVER_URL'] = myUrl
+        except web.HTTPError:
+            pass
         try:
             pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content')
         except web.HTTPError:

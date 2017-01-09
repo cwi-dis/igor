@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+    <key>Label</key>
+    <string>nl.cwi.dis.igor</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python</string>
+        <string>/Users/sen5/src/dis/igor/igor/igor</string>
+        <string>-d</string>
+        <string>/Users/sen5/src/dis/igor/databases/igorDatabase.pampus</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/sen5/src/dis/igor</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/sen5/src/dis/igor/igor.log</string>
+    <key>StandardOutPath</key>
+    <string>/Users/sen5/src/dis/igor/igor.log</string>
+    <key>UserName</key>
+    <string>sen5</string>
+    <key>KeepAlive</key>
+    <true/>
+    </dict>
+</plist>
+

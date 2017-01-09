@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<data>
+	<actions>
+		<action>
+			<interval>300</interval>
+			<url>/pluginscripts/buienradar/pull</url>
+		</action>
+	</actions>
+	<plugindata>
+	    <buienradar>
+	        <lat>52.3566777</lat>
+	        <lon>4.9496814</lon>
+	    </buienradar>
+	</plugindata>
+</data>

@@ -1,0 +1,7 @@
+#!/bin/bash
+dir=`dirname $0`
+dirIgor=$dir/../../../../igor
+lat=`expr $igor_lat : '\([0-9]*\.[0-9][0-9]\)[0-9]*'`
+lon=`expr $igor_lon : '\([0-9]*\.[0-9][0-9]\)[0-9]*'`
+
+curl --silent "http://gpsgadget.buienradar.nl/data/raintext?lat=$lat&lon=$lon" #  | python $dirIgor/igorVar.py --put application/xml sensors/buienradar

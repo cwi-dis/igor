@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<data>
+	<actions>
+		<action>
+			<xpath>/data/sensors/buienradar</xpath>
+			<url>http://{/data/plugindata/neoclock/host}/alert?temporalStatus={data[1]/level}/{data[2]/level}/{data[3]/level}/{data[4]/level}/{data[5]/level}/{data[6]/level}/{data[7]/level}/{data[8]/level}/{data[9]/level}/{data[10]/level}/{data[11]/level}/{data[12]/level}</url>
+		</action>
+	</actions>
+	<plugindata>
+		<neoclock>
+			<host>neoclock.local</host>
+		</neoclock>
+	</plugindata>
+</data>

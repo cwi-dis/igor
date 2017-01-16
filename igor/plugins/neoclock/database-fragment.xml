@@ -3,7 +3,7 @@
 	<actions>
 		<action>
 			<xpath>/data/sensors/buienradar</xpath>
-			<url>http://{/data/plugindata/neoclock/host}/alert?temporalStatus={data[1]/level}/{data[2]/level}/{data[3]/level}/{data[4]/level}/{data[5]/level}/{data[6]/level}/{data[7]/level}/{data[8]/level}/{data[9]/level}/{data[10]/level}/{data[11]/level}/{data[12]/level}</url>
+			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=600&amp;temporalStatus=0x206060/{data[1]/mm}/{data[2]/mm}/{data[3]/mm}/{data[4]/mm}/{data[5]/mm}/{data[6]/mm}/{data[7]/mm}/{data[8]/mm}/{data[9]/mm}/{data[10]/mm}/{data[11]/mm}/{data[12]/mm}</url>
 		</action>
 	</actions>
 	<plugindata>

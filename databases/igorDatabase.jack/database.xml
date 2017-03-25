@@ -314,7 +314,28 @@
 	<action>
 			<xpath>/data/sensors/buienradar</xpath>
 			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=600&amp;temporalStatus=0x206060/{data[1]/level * 0.01 - 0.4}/{data[2]/level * 0.01 - 0.4}/{data[3]/level * 0.01 - 0.4}/{data[4]/level * 0.01 - 0.4}/{data[5]/level * 0.01 - 0.4}/{data[6]/level * 0.01 - 0.4}/{data[7]/level * 0.01 - 0.4}/{data[8]/level * 0.01 - 0.4}/{data[9]/level * 0.01 - 0.4}/{data[10]/level * 0.01 - 0.4}/{data[11]/level * 0.01 - 0.4}/{data[12]/level * 0.01 - 0.4}</url>
-		<notBefore>1488801108</notBefore></action></actions>
+		<notBefore>1488801108</notBefore>
+		</action>
+		<action>
+			<interval>60</interval>
+			<url>/plugin/lan?name=router&amp;ip=192.168.1.1</url>
+		</action>
+		<action>
+			<interval>60</interval>
+			<url>/plugin/lan?name=internet&amp;ip=google.com.</url>
+		</action>
+		<action>
+			<interval>60</interval>
+			<url>/plugin/lan?name=igor&amp;ip={/data/devices/igor/host}&amp;port={/data/devices/igor/port}</url>
+		</action>
+		<action>
+			<interval>60</interval>
+			<url>/data/environment/introspection/lastActivity/igor</url>
+			<method>PUT</method>
+			<mimetype>text/plain</mimetype>
+			<data>{igor_dateTime()}</data>
+		</action>
+	</actions>
 	<sandbox>
 	<test1>jack&amp;jill&lt;JILL&amp;JACK</test1></sandbox>
 	<eventSources>

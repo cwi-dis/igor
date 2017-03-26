@@ -66,7 +66,7 @@
 				hallo lui
 			</message>
 		</lcd>
-		<igor><url>http://framboos.local:9333/data</url><host>framboos.local</host><port>9333</port><startTime>1490563411</startTime></igor>
+		<igor><url>http://framboos.local:9333/data</url><host>framboos.local</host><port>9333</port><startTime>1490563919</startTime></igor>
 		<internet><alive>True</alive></internet>
 		<router><alive>True</alive></router>
 	</devices>
@@ -106,7 +106,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		<notBefore>1490563471</notBefore></action>
+		<notBefore>1490563979</notBefore></action>
 			<action>
 				<name>cleanup</name>
 				<method>DELETE</method>
@@ -132,7 +132,7 @@
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/smartmeter_iotsa/pull</url>
-			<notBefore>1490563411</notBefore></action>
+			<notBefore>1490563919</notBefore></action>
 			<action>
 				<xpath>/data/sensors/smartMeter</xpath>
 				<method>PUT</method>
@@ -159,16 +159,16 @@
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/dhcp/pull</url>
-			<notBefore>1490563411</notBefore></action>
+			<notBefore>1490563919</notBefore></action>
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/ble/pull</url>
-			<notBefore>1490563411</notBefore></action>
+			<notBefore>1490563919</notBefore></action>
 			<action>
 				<interval>900</interval>
 				<url>/pluginscripts/netatmo/pull</url>
 				<name>updateNetatmo</name>
-			<notBefore>1490563411</notBefore></action>
+			<notBefore>1490563919</notBefore></action>
 			<action>
 				<xpath>/data/sensors/netAtmo/*[1]/When</xpath>
 				<method>PUT</method>
@@ -179,7 +179,7 @@
 			<action>
 				<interval>36000</interval>
 				<url>/pluginscripts/fitbit/pull?user=jack</url>
-			<notBefore>1490563412</notBefore></action>
+			<notBefore>1490563920</notBefore></action>
 			<action>
 				<xpath>/data/sensors/fitbit/*/*/time</xpath>
 				<method>PUT</method>
@@ -200,7 +200,7 @@
 				<url>/data/environment/night</url>
 				<mimetype>text/plain</mimetype>
 			<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
-		<notBefore>1490563412</notBefore></action>
+		<notBefore>1490563920</notBefore></action>
 	
 			<action>
 				<name>start</name>
@@ -212,14 +212,14 @@
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime(.)}</data>
-			<notBefore>1490563413</notBefore></action>
+			<notBefore>1490563921</notBefore></action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
 				<url>/data/environment/introspection/rebootCount</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{number(/data/environment/introspection/rebootCount)+1}</data>
-			<notBefore>1490563413</notBefore></action>
+			<notBefore>1490563921</notBefore></action>
 			<action>
 				<xpath>/data/sensors/rfid/rfidtag</xpath>
 				<url>/data/sensors/tags/tag</url>
@@ -266,7 +266,7 @@
 			<action>
 				<interval>600</interval>
 				<url>/pluginscripts/plant/pull</url>
-			<notBefore>1490563412</notBefore></action>
+			<notBefore>1490563920</notBefore></action>
 			<action>
 				<xpath>/data/sensors/ble/bleDevice</xpath>
 				<condition>/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name</condition>
@@ -311,11 +311,11 @@
 			<action>
 				<interval>60</interval>
 				<url>/pluginscripts/philips/pull</url>
-			<notBefore>1490563412</notBefore></action>			
+			<notBefore>1490563920</notBefore></action>			
 			<action>
 				<interval>300</interval>
 				<url>/pluginscripts/buienradar/pull</url>
-			<notBefore>1490563412</notBefore></action>
+			<notBefore>1490563920</notBefore></action>
 	<action>
 			<xpath>/data/sensors/buienradar</xpath>
 			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=600&amp;temporalStatus=0x206060/{data[1]/level * 0.01 - 0.4}/{data[2]/level * 0.01 - 0.4}/{data[3]/level * 0.01 - 0.4}/{data[4]/level * 0.01 - 0.4}/{data[5]/level * 0.01 - 0.4}/{data[6]/level * 0.01 - 0.4}/{data[7]/level * 0.01 - 0.4}/{data[8]/level * 0.01 - 0.4}/{data[9]/level * 0.01 - 0.4}/{data[10]/level * 0.01 - 0.4}/{data[11]/level * 0.01 - 0.4}/{data[12]/level * 0.01 - 0.4}</url>
@@ -323,27 +323,27 @@
 		</action>
 		<action>
 			<interval>60</interval>
-			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=120&amp;status={igor_ifthenelse(/data/environment/systemHealth/messages,&quot;0x603000&quot;,&quot;&quot;)}/0x600000</url>
-		<notBefore>1490563413</notBefore></action>
+			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=120&amp;status={igor_ifthenelse(string(/data/environment/systemHealth/messages),&quot;0x603000&quot;,&quot;&quot;)}/0x600000</url>
+		<notBefore>1490563920</notBefore></action>
 		<action>
 			<interval>60</interval>
 			<url>/plugin/lan?name=router&amp;ip=192.168.1.1</url>
-		<notBefore>1490563413</notBefore></action>
+		<notBefore>1490563920</notBefore></action>
 		<action>
 			<interval>60</interval>
 			<url>/plugin/lan?name=internet&amp;ip=google.com.</url>
-		<notBefore>1490563413</notBefore></action>
+		<notBefore>1490563920</notBefore></action>
 		<action>
 			<interval>60</interval>
 			<url>/plugin/lan?name=igor&amp;ip={/data/devices/igor/host}&amp;port={/data/devices/igor/port}</url>
-		<notBefore>1490563413</notBefore></action>
+		<notBefore>1490563921</notBefore></action>
 		<action>
 			<interval>60</interval>
 			<url>/data/environment/introspection/lastActivity/igor</url>
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{igor_dateTime()}</data>
-		<notBefore>1490563413</notBefore></action>
+		<notBefore>1490563921</notBefore></action>
 	</actions>
 	<sandbox>
 	<test1>jack&amp;jill&lt;JILL&amp;JACK</test1></sandbox>

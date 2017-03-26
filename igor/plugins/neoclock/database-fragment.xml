@@ -13,7 +13,7 @@
 		<action>
 			<xpath>/data/environment/systemHealth/messages</xpath>
 			<minInterval>60</minInterval>
-			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=120&amp;status={igor_ifthenelse(/data/environment/systemHealth/messages,"0x603000",""}/0x600000</url>
+			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=120&amp;status={igor_ifthenelse(/data/environment/systemHealth/messages,"0x603000","")}/0x600000</url>
 		</action>
 	</actions>
 	<plugindata>

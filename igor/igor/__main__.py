@@ -23,7 +23,8 @@ class IgorServer:
         #
         self.port = port
         self.app = webApp.WEBAPP
-        self.database = xmlDatabase.DBImpl(os.path.join(datadir, 'database.xml'))
+        self.datadir = datadir
+        self.database = xmlDatabase.DBImpl(os.path.join(self.datadir, 'database.xml'))
         webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
         webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
         webApp.PLUGINDIR = os.path.join(datadir, 'plugins')
@@ -74,6 +75,13 @@ class IgorServer:
         if self.actionHandler: rv += self.actionHandler.dump()
         if self.eventSources: rv += self.eventSources.dump()
         return rv
+        
+    def log(self):
+        logfn = os.path.join(self.datadir, 'igor.log')
+        if os.path.exists(logfn):
+            return open(logfn).read()
+        raise Web.HTTPError('404 Log file not available')
+        
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""
         startupActions = self.database.getElements('actions')

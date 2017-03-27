@@ -58,13 +58,21 @@ class XPathFunctionExtension(xpath.expr.Function):
         if timestamp is None:
             timestamp = time.time()
         else:
+            strtimestamp = xpath.expr.string(timestamp)
+            if strtimestamp:
+                try:
+                    dt = dateutil.parser.parse(strtimestamp)
+                except ValueError:
+                    pass
+                else:
+                    return strtimestamp
             timestamp = xpath.expr.number(timestamp)
             try:
                 timestamp = float(timestamp)
             except TypeError:
-                raise xpath.XPathError("dateTime argument must be a number")
+                raise xpath.XPathError("dateTime argument must be a number or iso datetime: %s" % strtimestamp)
         if math.isnan(timestamp):
-            raise xpath.XPathError("dateTime argument must be a number")
+            raise xpath.XPathError("dateTime argument must be a valid number: %s" % strtimestamp)
         dt = datetime.datetime.fromtimestamp(timestamp)
         return dt.isoformat()
         
@@ -474,7 +482,10 @@ class DBImpl(DBSerializer):
             return newnode
         
     def elementFromXML(self, xmltext):
-        newdoc = xml.dom.minidom.parseString(xmltext)
+        try:
+            newdoc = xml.dom.minidom.parseString(xmltext)
+        except:
+            raise DBParamError('Not valid xml: %s' % xmltext)
         return newdoc.firstChild
         
     def setValue(self, location, value):

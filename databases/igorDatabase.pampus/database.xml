@@ -1,11 +1,11 @@
 <?xml version="1.0" ?><data>
 	<environment>
 		<introspection>
-			<lastActivity><reboot>2016-07-11T15:49:33</reboot><rfid>2016-07-11T15:50:12.829429</rfid><rfid>2016-07-11T15:57:09.496645</rfid><rfid>2016-07-11T15:59:52.841565</rfid><rfid>2016-07-11T15:59:58.903068</rfid><rfid>2016-07-11T16:03:26.950663</rfid><rfid>2016-07-11T16:03:33.074150</rfid></lastActivity>
-			<rebootCount>3.0</rebootCount>
+			<lastActivity><reboot>2017-01-17T11:17:17</reboot><rfid>2016-07-11T15:50:12.829429</rfid><rfid>2016-07-11T15:57:09.496645</rfid><rfid>2016-07-11T15:59:52.841565</rfid><rfid>2016-07-11T15:59:58.903068</rfid><rfid>2016-07-11T16:03:26.950663</rfid><rfid>2016-07-11T16:03:33.074150</rfid><rfid>2016-07-11T16:21:48.227564</rfid><rfid>2016-07-11T16:22:36.406146</rfid><rfid>2016-07-11T16:23:07.425778</rfid></lastActivity>
+			<rebootCount>17.0</rebootCount>
 		</introspection>
         <messages>
-        <message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag jacks_keyring</message><message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag demo_tag_one</message><message>You presented tag unknown 4e:d7:42:d2</message></messages>
+        <message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag jacks_keyring</message><message>You presented tag unknown 8e:d0:00:b8</message><message>You presented tag demo_tag_one</message><message>You presented tag unknown 4e:d7:42:d2</message><message>You presented tag demo_tag_one</message><message>You presented tag demo_tag_one</message><message>You presented tag jacks_keyring</message></messages>
         <lights>
             <front>0</front>
             <back>0</back>
@@ -15,20 +15,20 @@
 	<sensors>
 	    <rfid>
 	        <rfidtag>72:28:3d:a0</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>be:c5:c7:aa</rfidtag><rfidtag>de:94:2d:d2</rfidtag>
-	    <rfidtag>8e:d0:00:b8</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>72:28:3d:a0</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>4e:d7:42:d2</rfidtag></rfid>
+	    <rfidtag>8e:d0:00:b8</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>72:28:3d:a0</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>4e:d7:42:d2</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>8e:d0:00:b8</rfidtag><rfidtag>72:28:3d:a0</rfidtag></rfid>
 	    <tags>
 	        <tag>jacks_keyring</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagOne</tag><tag>tagTwo</tag><tag>tagTwo</tag>
-	    <tag>unknown 8e:d0:00:b8</tag><tag>unknown 8e:d0:00:b8</tag><tag>jacks_keyring</tag><tag>unknown 8e:d0:00:b8</tag><tag>demo_tag_one</tag><tag>unknown 4e:d7:42:d2</tag></tags>
-	</sensors>
+	    <tag>unknown 8e:d0:00:b8</tag><tag>unknown 8e:d0:00:b8</tag><tag>jacks_keyring</tag><tag>unknown 8e:d0:00:b8</tag><tag>demo_tag_one</tag><tag>unknown 4e:d7:42:d2</tag><tag>demo_tag_one</tag><tag>demo_tag_one</tag><tag>jacks_keyring</tag></tags>
+	<buienradar><lastUpdate>2017-02-14T11:17:00.566012</lastUpdate><data><mm>0.0</mm><time>2017-02-14T11:10:00</time><hour>11</hour><minute>10</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:15:00</time><hour>11</hour><minute>15</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:20:00</time><hour>11</hour><minute>20</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:25:00</time><hour>11</hour><minute>25</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:30:00</time><hour>11</hour><minute>30</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:35:00</time><hour>11</hour><minute>35</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:40:00</time><hour>11</hour><minute>40</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:45:00</time><hour>11</hour><minute>45</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:50:00</time><hour>11</hour><minute>50</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T11:55:00</time><hour>11</hour><minute>55</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:00:00</time><hour>12</hour><minute>0</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:05:00</time><hour>12</hour><minute>5</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:10:00</time><hour>12</hour><minute>10</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:15:00</time><hour>12</hour><minute>15</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:20:00</time><hour>12</hour><minute>20</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:25:00</time><hour>12</hour><minute>25</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:30:00</time><hour>12</hour><minute>30</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:35:00</time><hour>12</hour><minute>35</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:40:00</time><hour>12</hour><minute>40</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:45:00</time><hour>12</hour><minute>45</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:50:00</time><hour>12</hour><minute>50</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T12:55:00</time><hour>12</hour><minute>55</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T13:00:00</time><hour>13</hour><minute>0</minute><level>0</level></data><data><mm>0.0</mm><time>2017-02-14T13:05:00</time><hour>13</hour><minute>5</minute><level>0</level></data></buienradar></sensors>
 	<devices>
-        <igor><url>http://maunakea.local:9333/data</url><host>maunakea.local</host><port>9333</port><startTime>1468244973</startTime></igor>
+        <igor><url>http://maunakea.local:9333/data</url><host>maunakea.local</host><port>9333</port><startTime>1487068747</startTime></igor>
         <flauwte><alive>True</alive></flauwte>
         <audio><alive>True</alive></audio>
         <video><alive>True</alive></video>
         <table><alive>False</alive></table>
         <server><alive>True</alive></server>
         <volvoSsh><alive/></volvoSsh>
-        <volvoExhibit><introspection><lastActivity><reboot>2016-07-08T19:17:22</reboot><volvo>2016-07-11T15:48:50.443000</volvo></lastActivity><rebootCount>3.0</rebootCount></introspection></volvoExhibit>
+        <volvoExhibit><introspection><lastActivity><reboot>2017-02-13T20:17:15</reboot><volvo>2017-02-14T10:17:22.643000</volvo></lastActivity><rebootCount>369.0</rebootCount></introspection></volvoExhibit>
 	</devices>
 	<people>
 		<unknown>
@@ -47,7 +47,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		    <notBefore>1468245918</notBefore>
+		    <notBefore>1487068807</notBefore>
 		</action>
         <action>
             <name>cleanup</name>
@@ -70,19 +70,19 @@
 		<action>
 			<xpath>/data/actions/*</xpath>
 			<url>/internal/updateActions</url>
-		    <notBefore>1456406333</notBefore>
+		    <notBefore>1484578915</notBefore>
 		</action>
 		<action>
 			<xpath>/data/environment/messages/*</xpath>
 			<condition>not(data/environment/night)</condition>
 			<url>/pluginscripts/say/message?args={.}</url>
-		    <notBefore>1468245813</notBefore>
+		    <notBefore>1468246987</notBefore>
 		</action>
 		<action>
 			<xpath>/data/environment/messages/*</xpath>
 			<condition>not(data/environment/night)</condition>
 			<url>/pluginscripts/sayInRoom/message?args={.}</url>
-		    <notBefore>1468245813</notBefore>
+		    <notBefore>1468246987</notBefore>
 		</action>
 		<action>
 			<xpath>/data/sensors/tags/tag</xpath>
@@ -90,42 +90,42 @@
 			<method>POST</method>
 			<mimetype>text/plain</mimetype>
 			<data>You presented tag {.}</data>
-		    <notBefore>1468245813</notBefore>
+		    <notBefore>1468246987</notBefore>
 		</action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=audio&amp;ip=haleakale.dis.&amp;port=22</url>
-	        <notBefore>1468245814</notBefore>
+	        <notBefore>1487068747</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=video&amp;ip=dominion.dis.&amp;port=22</url>
-	        <notBefore>1468245814</notBefore>
+	        <notBefore>1487068747</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=table&amp;ip=hankasalmi.dis.&amp;port=22</url>
-	        <notBefore>1468245814</notBefore>
+	        <notBefore>1487068747</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=server&amp;ip=maunakea.dis.&amp;port=22</url>
-	        <notBefore>1468245814</notBefore>
+	        <notBefore>1487068747</notBefore>
 	    </action>
 	    <action>
 	        <interval>60</interval>
 	        <url>/plugin/lan?name=volvoSsh&amp;ip=volvo.local&amp;port=22</url>
-	        <notBefore>1468245814</notBefore>
+	        <notBefore>1487068747</notBefore>
 	    </action>
 	    <action>
 	        <interval>3600</interval>
 	        <url>/plugin/copytree?src=http://volvo.local:9333/data/environment/introspection&amp;dst=/data/devices/volvoExhibit&amp;mimetype=application/json</url>
-	        <notBefore>1468244974</notBefore>
+	        <notBefore>1487068747</notBefore>
 	    </action>
         <action>
             <name>start</name>
             <url>/pluginscripts/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
-            <notBefore>1468244979</notBefore>
+            <notBefore>1484648260</notBefore>
         </action>
         <action>
             <xpath>/data/environment/lights/*</xpath>
@@ -134,7 +134,7 @@
 	    <action>
 	        <name>start</name>
 	        <url>/internal/started</url>
-	        <notBefore>1468244979</notBefore>
+	        <notBefore>1484648260</notBefore>
 	    </action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
@@ -142,21 +142,21 @@
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_dateTime(.)}</data>
-			<notBefore>1468244974</notBefore></action>
+			<notBefore>1487068747</notBefore></action>
 			<action>
 				<xpath>/data/devices/igor/startTime</xpath>
 				<url>/data/environment/introspection/rebootCount</url>
 				<method>PUT</method>
 				<mimetype>text/plain</mimetype>
 				<data>{number(/data/environment/introspection/rebootCount)+1}</data>
-			<notBefore>1468244974</notBefore></action>
+			<notBefore>1487068747</notBefore></action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
             <method>POST</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
-            <notBefore>1468245813</notBefore>
+            <notBefore>1468246987</notBefore>
         </action>
         <action>
             <xpath>/data/sensors/rfid/rfidtag</xpath>
@@ -164,7 +164,7 @@
             <method>POST</method>
             <mimetype>text/plain</mimetype>
             <data>{igor_dateTime()}</data>
-        <notBefore>1468245813</notBefore></action>
+        <notBefore>1468246987</notBefore></action>
         <action>
             <xpath>/data/sensors/tags/tag</xpath>
             <condition>.='tagOne'</condition>
@@ -181,17 +181,32 @@
             <data>0</data>
             <mimetype>text/plain</mimetype>
         </action>
-    </actions>
+		<action>
+			<interval>300</interval>
+			<url>/pluginscripts/buienradar/pull</url>
+		<notBefore>1487068747</notBefore></action>
+		
+    <action>
+			<xpath>/data/sensors/buienradar</xpath>
+			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=600&amp;temporalStatus=0x206060/{data[1]/level * 0.01 - 0.4}/{data[2]/level * 0.01 - 0.4}/{data[3]/level * 0.01 - 0.4}/{data[4]/level * 0.01 - 0.4}/{data[5]/level * 0.01 - 0.4}/{data[6]/level * 0.01 - 0.4}/{data[7]/level * 0.01 - 0.4}/{data[8]/level * 0.01 - 0.4}/{data[9]/level * 0.01 - 0.4}/{data[10]/level * 0.01 - 0.4}/{data[11]/level * 0.01 - 0.4}/{data[12]/level * 0.01 - 0.4}</url>
+		<notBefore>1487067420</notBefore></action></actions>
 	<sandbox>
 	</sandbox>
 	<eventsources>
 	</eventsources>
 	<plugindata>
+		<neoclock>
+			<host>m369clock.local</host>
+		</neoclock>
+	    <buienradar>
+	        <lat>52.3566777</lat>
+	        <lon>4.9496814</lon>
+	    </buienradar>
 	    <say>
 	        <voice>Daniel</voice>
 	    </say>
 	    <sayInRoom>
-	        <host>haleakala.local</host>
+	        <remoteHost>haleakala.local</remoteHost>
 	    </sayInRoom>
         <iirfid>
             <serial>/dev/tty.usbserial-A700ekiO</serial>

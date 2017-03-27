@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<data>
+	<actions>
+		<action>
+			<interval>60</interval>
+			<url>/pluginscripts/smartmeter_iotsa/pull</url>
+		</action>
+		<action>
+			<xpath>/data/sensors/smartMeter</xpath>
+			<method>PUT</method>
+			<url>/data/environment/energy/electricity</url>
+			<mimetype>text/plain</mimetype>
+			<data>{current_kw}</data>
+		</action>
+		<action>
+			<xpath>/data/sensors/smartMeter/timestamp</xpath>
+			<method>PUT</method>
+            <url>/data/environment/introspection/lastActivity/smartMeter</url>
+            <method>PUT</method>
+            <mimetype>text/plain</mimetype>
+            <data>{igor_dateTime(.)}</data>
+		</action>
+	</actions>
+	<plugindata>
+		<smartmeter_iotsa>
+			<host>smartmeter.local</host>
+		</smartmeter_iotsa>
+	</plugindata>
+	<environment>
+		<energy>
+		</energy>
+	</environment>
+</data>

@@ -8,13 +8,16 @@ import os
 import json
 import pprint
 
-DEFAULT_URL="http://framboos.local:9333/data/"
+DEFAULT_URL="http://framboos.local:9333/data"
 if 'IGORSERVER_URL' in os.environ:
     DEFAULT_URL = os.environ['IGORSERVER_URL']
 VERBOSE=False
 
 class IgorServer:
 	def __init__(self, url, bearer_token=None, access_token=None):
+		self.baseUrl = url
+		if url[-1] != '/':
+		    url = url + '/'
 		self.url = url
 		self.bearer_token = bearer_token
 		self.access_token = access_token
@@ -78,6 +81,7 @@ def main():
 	global VERBOSE
 	parser = argparse.ArgumentParser(description="Access Igor home automation service and other http databases")
 	parser.add_argument("-u", "--url", help="Base URL of the server (default: %s, environment IGORSERVER_URL)" % DEFAULT_URL, default=DEFAULT_URL)
+	parser.add_argument("-e", "--eval", action="store_true", help="Evaluate XPath expression in stead of retrieving variable (by changing /data to /evaluate in URL)")
 	parser.add_argument("-v", "--variant", help="Variant of data to get (or put, post)")
 	parser.add_argument("-M", "--mimetype", help="Get result as given mimetype")
 	parser.add_argument("--text", dest="mimetype", action="store_const", const="text/plain", help="Get result as plain text")
@@ -99,7 +103,10 @@ def main():
 	args = parser.parse_args()
 	VERBOSE=args.verbose
 	
-	server = IgorServer(args.url, bearer_token=args.bearer, access_token=args.access)
+	url = args.url
+	if args.eval:
+	    url.replace("/data", "/evaluate")
+	server = IgorServer(url, bearer_token=args.bearer, access_token=args.access)
 	if args.python:
 		args.mimetype = 'application/json'
 	if args.delete:

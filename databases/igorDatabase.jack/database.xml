@@ -323,7 +323,7 @@
 		</action>
 		<action>
 			<interval>60</interval>
-			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=120&amp;status={igor_ifthenelse(string(/data/environment/systemHealth/messages),&quot;0x603000&quot;,&quot;&quot;)}/0x600000</url>
+			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=300&amp;status={igor_ifthenelse(string(/data/environment/systemHealth/messages),&quot;0x603000&quot;,&quot;&quot;)}/0x600000</url>
 		<notBefore>1490642738</notBefore></action>
 		<action>
 			<interval>60</interval>

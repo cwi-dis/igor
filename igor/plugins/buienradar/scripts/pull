@@ -1,6 +1,6 @@
 #!/bin/bash
 dir=`dirname $0`
-dirIgor=$dir/../../../../igor
+dirIgor=$dir/../../..
 lat=`expr $igor_lat : '\([0-9]*\.[0-9][0-9]\)[0-9]*'`
 lon=`expr $igor_lon : '\([0-9]*\.[0-9][0-9]\)[0-9]*'`
 

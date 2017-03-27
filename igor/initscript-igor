@@ -12,8 +12,8 @@
 # Process name ( For display )
 NAME=igor
 # Daemon name, where is the actual executable
-DAEMON="/home/jack/src/dis/igor/igor/igor"
-IGOR_DIR="/home/jack/src/dis/igor/databases/igorDatabase.jack"
+DAEMON="/home/jack/src/dis-git/igor/igor/igor"
+IGOR_DIR="/home/jack/src/dis-git/igor/databases/igorDatabase.jack"
 DAEMON_ARGS="-d $IGOR_DIR"
 
 LOGFILE="$IGOR_DIR/igor.log"

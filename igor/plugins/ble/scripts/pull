@@ -1,5 +1,5 @@
 #!/bin/bash
 dir=`dirname $0`
-dirIgor=$dir/../../../../igor
+dirIgor=$dir/../../..
 bleURL=http://localhost:8081/
 python $dirIgor/igorVar.py --url $bleURL ble | python $dirIgor/igorVar.py --put application/json sensors/ble

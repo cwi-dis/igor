@@ -1,6 +1,6 @@
 #!/bin/bash
 dir=`dirname $0`
-dirIgor=$dir/../../../../igor
-dirSmartMeter=$dirIgor/../../jack/smartMeter
+dirIgor=$dir/../../..
+dirSmartMeter=~jack/src/dis/jack/smartMeter
 
 curl --silent http://$igor_host/p1?format=xml | python $dirIgor/igorVar.py --put application/xml sensors/smartMeter

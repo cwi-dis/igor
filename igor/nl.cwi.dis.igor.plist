@@ -7,16 +7,16 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python</string>
-        <string>/Users/sen5/src/dis/igor/igor/igor</string>
+        <string>/Users/sen5/src/dis-git/igor/igor/igor</string>
         <string>-d</string>
-        <string>/Users/sen5/src/dis/igor/databases/igorDatabase.pampus</string>
+        <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/sen5/src/dis/igor</string>
+    <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus</string>
     <key>StandardErrorPath</key>
-    <string>/Users/sen5/src/dis/igor/igor.log</string>
+    <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus/igor.log</string>
     <key>StandardOutPath</key>
-    <string>/Users/sen5/src/dis/igor/igor.log</string>
+    <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus/igor.log</string>
     <key>UserName</key>
     <string>sen5</string>
     <key>KeepAlive</key>

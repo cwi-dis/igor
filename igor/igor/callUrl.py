@@ -47,7 +47,10 @@ class URLCaller(threading.Thread):
                     resultStatus = "%s %s" % (resp.status, resp.reason)
                     resultData = content
                 datetime = time.strftime('%d/%b/%Y %H:%M:%S')
+            except httplib2.HttpLib2Error as e:
+                resultStatus = '502 URLCaller: %s' % traceback.format_exception_only(type(e), e.message)[0].strip()
             except:
+                resultStatus = '502 URLCaller: exception while calling URL'
                 print 'URLCaller: exception while calling URL'
                 traceback.print_exc(file=sys.stdout)
             print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)

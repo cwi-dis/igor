@@ -14,6 +14,8 @@ add pathname - add plugin (copy) from given pathname
 addstd name - add standard plugin (linked) with given name
 remove name - remove plugin
 liststd - list all available standard plugins
+runatboot - make igorServer run at system boot (Linux or OSX, requires sudo permission)
+runatlogin - make igorServer run at user login (OSX only)
 """
 def main():
     if len(sys.argv) < 2 or sys.argv[1] in ('help', '--help'):
@@ -30,6 +32,10 @@ def main():
     elif sys.argv[1] == 'remove':
         assert 0
     elif sys.argv[1] == 'liststd':
+        assert 0
+    elif sys.argv[1] == 'runatboot':
+        assert 0
+    elif sys.argv[1] == 'runatlogin':
         assert 0
     else:
         print >>sys.stderr, '%s: unknown command: %s. Use --help for help.' % sys.argv[0]

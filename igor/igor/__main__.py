@@ -14,8 +14,6 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-DATADIR=os.path.dirname(__file__)
-
 class IgorServer:
     def __init__(self, datadir, port=9333):
         #
@@ -153,7 +151,7 @@ class IgorServer:
         rv += 'log - Show httpd-style log file of this Igor instance\n'
     
 def main():
-    DEFAULTDIR="igorDatabase"
+    DEFAULTDIR=os.path.join(os.path.expanduser('~'), '.igor')
     if 'IGORSERVER_DIR' in os.environ:
         DEFAULTDIR = os.environ['IGORSERVER_DIR']
     DEFAULTPORT=9333

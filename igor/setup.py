@@ -23,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.2',
+    version='0.3',
 
     description='REST-like IoT server',
     long_description=long_description,
@@ -44,7 +44,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
 
         # Indicate who your project is intended for
         'Intended Audience :: End Users/Desktop',
@@ -68,7 +68,7 @@ setup(
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
-       py_modules=["igorVar"],
+       py_modules=["igorVar", "igorControl"],
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -103,8 +103,9 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'igorServer=igorServer.__main__',
+            'igorServer=igor.__main__',
             'igorVar=igorVar:main',
+            'igorControl=igorControl:main',
         ],
     },
 )

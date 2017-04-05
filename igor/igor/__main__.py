@@ -120,6 +120,37 @@ class IgorServer:
         
     def started(self):
         return "IgorServer started"
+        
+    def stop(self):
+        self.save()
+        sys.exit(0)
+        
+    def restart(self):
+        self.save()
+        os.closerange(3, MAXFD)
+        os.execl(sys.executable, sys.executable, *sys.argv)
+        
+    def command(self):
+        rv = ''
+        if 'IGORSERVER_DIR' in os.environ:
+            rv = rv + 'export IGORSERVER_DIR=' + repr(os.environ['IGORSERVER_DIR']) + '\n'
+        if 'IGORSERVER_PORT' in os.environ:
+            rv = rv + 'export IGORSERVER_PORT=%d\n' % int(os.environ['IGORSERVER_PORT'])
+        rv = rv + 'exec %s' % repr(sys.executable)
+        for a in sys.argv:
+            rv += ' ' + repr(a)
+        rv += '\n'
+        return rv
+        
+    def help(self):
+        rv = 'Internal igor commands:\n'
+        rv += 'help - this help\n'
+        rv += 'save - Make sure database is saved to disk\n'
+        rv += 'restart - Save and restart this Igor (may appear to fail even when executed correctly)\n'
+        rv += 'stop - Save and stop this Igor (may appear to fail even when executed correctly)\n'
+        rv += 'command - Show command line that started this Igor instance\n'
+        rv += 'dump - Show internal run queue of this Igor instance\n'
+        rv += 'log - Show httpd-style log file of this Igor instance\n'
     
 def main():
     DEFAULTDIR="igorDatabase"
@@ -141,7 +172,12 @@ def main():
         xmlDatabase.DEBUG = True
         webApp.DEBUG = True
     datadir = args.database
-    igorServer = IgorServer(datadir, args.port)
+    try:
+        igorServer = IgorServer(datadir, args.port)
+    except IOError, arg:
+        print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
+        print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]
+        sys.exit(1)
     igorServer.run()
     
 main()

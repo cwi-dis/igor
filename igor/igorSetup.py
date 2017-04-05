@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import sys
+import igor
+import os
+import os.path
+import shutil
 
 USAGE="""
 Usage: %s command [args]
@@ -22,7 +26,13 @@ def main():
         print >>sys.stderr, USAGE % sys.argv[0]
         sys.exit(1)
     if sys.argv[1] == 'initialize':
-        assert 0
+        igorDir = os.path.dirname(igor.__file__)
+        src = os.path.join(igorDir, 'igorDatabase.empty')
+        dst = os.path.join(os.path.expanduser('~'), '.igor')
+        if os.path.exists(dst):
+            print >>sys.stderr, '%s: %s already exists!' % (sys.argv[0], dst)
+            sys.exit(1)
+        shutil.copytree(src, dst)
     elif sys.argv[1] == 'list':
         assert 0
     elif sys.argv[1] == 'add':

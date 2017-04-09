@@ -1,42 +1,32 @@
 Igor
 ====
 
-Home Automation server. More details to be provided.
+Home Automation server. See <README.md> or <https://github.com/cwi-dis/igor> for details.
 
 Installation
 ------------
 
 Most of the work is done by running::
 	sudo python setup.py install
-but possibly ``py-dom-xpath`` will not install automatically, in that case search
-for it in pypi.python.org and install it first.
+	
+This installs the igor package, and command line utilities ``igor`` (the server),
+``igorSetup`` (database administration), ``igorControl`` (server administration)
+and ``igorVar`` (database access for shell scripts).
 
-This should also install scripts igorServer (to start the server) and igorVar
-(command line interface to access the database).
+Database configuration
+----------------------
 
-Configuration (Linux)
----------------------
+Create a database with::
+	igorSetup initialize
+	
+Then populate it with plugins (with ``igorSetup addstd`` or ``igorSetup add``).
+You will have to do a lot of manual editing of the ``~/.igor/database.xml``
+file, for the time being.
 
-To run at startup:
-- edit initscript-igor, modify path, database, etc
-- ``sudo cp initscript-igor /etc/init.d/igor``
-- ``sudo update-rc.d igor defaults``
-- Reboot, or ``sudo service igor start``
-
-You may also want to install dependencies such as *bleServer* (or remove them).
-
-Configuration (OSX)
--------------------
-
-To run at login:
-- edit nl.cwi.dis.igor.plist, modify paths, database, etc.
-- ``cp nl.cwi.dis.igor.plist ~/Library/LaunchAgents/``
-- ``launchctl load ~/Library/LaunchAgents/nl.cwi.dis.igor.plist``
-
-(running at startup may work by copying into /Library/LaunchDaemons but has not been
-tested yet).
+Finally make it run at system boot with ``sudo igorSetup runatboot`` or
+``igorSetup runatlogin`` (OSX only).
 
 Running
 -------
 
-To be provided
+Point your browser at <http://localhost:9333> or use ``igorControl``.

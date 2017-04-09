@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+Template for MacOSX launchd LaunchDaemons/LaunchAgents configuration file.
+Replace percent-name-s by corresponding values:
+igorDir - pathname of the igor Python package (where __main__.py lives)
+user - username
+database - directory where the database lives (usually ~user/.igor)
+-->
 <plist version="1.0">
     <dict>
     <key>Label</key>
@@ -7,18 +14,18 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python</string>
-        <string>/Users/sen5/src/dis-git/igor/igor/igor</string>
+        <string>%(igorDir)s</string>
         <string>-d</string>
-        <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus</string>
+        <string>%(database)s</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus</string>
+    <string>%(database)s</string>
     <key>StandardErrorPath</key>
-    <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus/igor.log</string>
+    <string>%(database)s/igor.log</string>
     <key>StandardOutPath</key>
-    <string>/Users/sen5/src/dis-git/igor/databases/igorDatabase.pampus/igor.log</string>
+    <string>%(database)s/igor.log</string>
     <key>UserName</key>
-    <string>sen5</string>
+    <string>%(user)s</string>
     <key>KeepAlive</key>
     <true/>
     </dict>

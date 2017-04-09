@@ -1,24 +1,32 @@
 ### BEGIN INIT INFO
 # Provides:          igor
-# Required-Start:    bleServer networking
-# Required-Stop:     bleServer networking
+# Required-Start:    networking
+# Required-Stop:     networking
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Igor home automation service
 ### END INIT INFO
+
+#
+# Template for init.d configuration file.
+# Replace percent-name-s by corresponding values:
+# igorDir - pathname of the igor Python package (where __main__.py lives)
+# user - username
+# database - directory where the database lives (usually ~user/.igor)
+#
+RUNAS=%(user)s
+DAEMON="%(igorDir)s"
+IGOR_DIR="%(database)s"
 
 # Using the lsb functions to perform the operations.
 . /lib/lsb/init-functions
 # Process name ( For display )
 NAME=igor
 # Daemon name, where is the actual executable
-DAEMON="/home/jack/src/dis-git/igor/igor/igor"
-IGOR_DIR="/home/jack/src/dis-git/igor/databases/igorDatabase.jack"
 DAEMON_ARGS="-d $IGOR_DIR"
 
 LOGFILE="$IGOR_DIR/igor.log"
 SCRIPT="python $DAEMON $DAEMON_ARGS"
-RUNAS=jack
 PIDFILE=/var/run/igor.pid
 
 # If the daemon is not there, then exit.

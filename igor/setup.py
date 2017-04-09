@@ -10,12 +10,31 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+import os
+import sys
 
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
+
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
+
+package_data={
+    'igor': 
+        package_files('igor/static')+
+        package_files('igor/template')+ 
+        package_files('igor/bootScripts') +
+        package_files('igor/plugins') +
+        package_files('igor/igorDatabase.empty')
+}
 
 setup(
     name='igor',
@@ -88,9 +107,7 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
-    package_data={
-        'igor': ['static/*', 'template/*', 'igorDatabase.empty/*'],
-    },
+    package_data=package_data,
     include_package_data=True,
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:

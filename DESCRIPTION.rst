@@ -1,7 +1,7 @@
 Igor
 ====
 
-Home Automation server. See <README.md> or <https://github.com/cwi-dis/igor> for details.
+Home Automation server. See <README.md>__ or <https://github.com/cwi-dis/igor> for details.
 
 Installation
 ------------

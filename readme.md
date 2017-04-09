@@ -90,12 +90,12 @@ a more user-friendly method of editing the database is not implemented yet.
 
 ## Building and installing
 
-to be provided
+See [DESCRIPTION.rst]() for now.
 
 ## Configuring the database
 
-to be provided
+See [DESCRIPTION.rst]() for now.
 
 ## Configuring for automatic execution
 
-to be provided
+See [DESCRIPTION.rst]() for now.

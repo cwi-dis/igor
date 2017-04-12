@@ -1,3 +1,5 @@
 *.pyc
 *.log
-databases/*/database.xml.*
+build
+dist
+igor.egg-info

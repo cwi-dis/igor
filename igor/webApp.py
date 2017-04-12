@@ -152,7 +152,13 @@ class runScript:
             rv = subprocess.check_output([command] + args, stderr=subprocess.STDOUT, env=env)
         except subprocess.CalledProcessError, arg:
             msg = "502 Command %s exited with status code=%d" % (command, arg.returncode)
-            raise web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n' + arg.output)
+            output = msg + '\n\n' + arg.output
+            # Convenience for internal logging: if there is 1 line of output only we append it to the error message.
+            argOutputLines = arg.output.split('\n')
+            if len(argOutputLines) == 2 and argOutputLines[1] == '':
+                msg += ': ' + argOutputLines[0]
+                output = ''
+            raise web.HTTPError(msg, {"Content-type": "text/plain"}, output)
         except OSError, arg:
             raise myWebError("502 Error running command: %s: %s" % (command, arg.strerror))
         return rv

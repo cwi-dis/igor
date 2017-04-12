@@ -130,6 +130,8 @@ def main():
         templateData = open(template).read()
         bootData = templateData % args
         open(dest, 'w').write(bootData)
+        if sys.platform == 'linux2':
+            os.chmod(dest, 0755)
         print 'Run the following commands:'
         for cmd in runcmds: print cmd
     else:

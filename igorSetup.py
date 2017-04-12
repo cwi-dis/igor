@@ -23,10 +23,12 @@ runatboot - make igorServer run at system boot (Linux or OSX, requires sudo perm
 runatlogin - make igorServer run at user login (OSX only)
 """
 def main():
+    # Find username even when sudoed
+    username = os.environ.get("SUDO_USER", getpass.getuser())
     # Igor package source directory
     igorDir = os.path.dirname(igor.__file__)
     # Default database directory
-    database = os.path.join(os.path.expanduser('~'), '.igor')
+    database = os.path.join(os.path.expanduser('~'+username), '.igor')
     
     if len(sys.argv) < 2 or sys.argv[1] in ('help', '--help'):
         print >>sys.stderr, USAGE % sys.argv[0]
@@ -96,7 +98,7 @@ def main():
             print name
     elif sys.argv[1] in ('runatboot', 'runatlogin'):
         args = dict(
-            user=getpass.getuser(),
+            user=username,
             igorDir=igorDir,
             database=database
             )

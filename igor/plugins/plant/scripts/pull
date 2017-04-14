@@ -1,5 +1,3 @@
 #!/bin/bash
-dir=`dirname $0`
-dirIgor=$dir/../../..
 plantURL=http://plant.local/stepper/
-python $dirIgor/igorVar.py --url $plantURL 0 | python $dirIgor/igorVar.py --put application/json devices/plant
+igorVar --url $plantURL 0 | igorVar --put application/json devices/plant

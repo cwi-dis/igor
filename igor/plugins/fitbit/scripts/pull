@@ -1,6 +1,5 @@
 #!/bin/bash
 dir=`dirname $0`
-dirIgor=$dir/../../..
 dirFitbit=~jack/src/dis/jack/fitbit
 case "x$igor_user" in
 x)
@@ -14,4 +13,4 @@ x)
 	exit 1
 	;;
 esac
-echo $igor_pluginData | python $dirFitbit/getFitbit.py --stdin | python $dirIgor/igorVar.py --put application/json sensors/fitbit/$igor_user
+echo $igor_pluginData | python $dirFitbit/getFitbit.py --stdin | igorVar --put application/json sensors/fitbit/$igor_user

@@ -144,12 +144,16 @@ class IgorServer:
     def help(self):
         rv = 'Internal igor commands:\n'
         rv += 'help - this help\n'
+        rv += 'version - return version number\n'
         rv += 'save - Make sure database is saved to disk\n'
         rv += 'restart - Save and restart this Igor (may appear to fail even when executed correctly)\n'
         rv += 'stop - Save and stop this Igor (may appear to fail even when executed correctly)\n'
         rv += 'command - Show command line that started this Igor instance\n'
         rv += 'dump - Show internal run queue of this Igor instance\n'
         rv += 'log - Show httpd-style log file of this Igor instance\n'
+        
+    def version(self):
+        return VERSION + '\n'
     
 def main():
     DEFAULTDIR=os.path.join(os.path.expanduser('~'), '.igor')
@@ -163,7 +167,12 @@ def main():
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
+    parser.add_argument("--version", action="store_true", help="Print version and exit")
     args = parser.parse_args()
+    
+    if args.version:
+        print VERSION
+        sys.exit(0)
     if args.debug:
         callUrl.DEBUG = True
         sseListener.DEBUG = True

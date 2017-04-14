@@ -9,6 +9,7 @@ import besthostname
 import time
 import json
 import web
+from _version import VERSION
 
 import sys
 reload(sys)
@@ -60,7 +61,7 @@ class IgorServer:
         """Put our details in the database"""
         hostName = besthostname.besthostname()
         url = 'http://%s:%d/data' % (hostName, self.port)
-        data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()))
+        data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION)
         tocall = dict(method='PUT', url='/data/devices/igor', mimetype='application/json', data=json.dumps(data))
         self.urlCaller.callURL(tocall)
         

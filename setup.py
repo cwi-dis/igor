@@ -7,7 +7,6 @@ https://github.com/pypa/sampleproject
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
-import distutils
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -20,6 +19,10 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Get the version number from the igor module
+with open(path.join(here, 'igor', '_version.py')) as f:
+    exec f.read()
+    
 #
 # We need some helpers to determine the package_data, because we want to
 # recursively include the plugins
@@ -41,29 +44,13 @@ package_data={
         package_files('igor/igorDatabase.empty')
 }
 
-#
-# We also need a helper to ensure our executable bits remain, normally distutils
-# tramples them...
-#
-class my_install_lib(distutils.command.install_lib.install_lib):
-  def run(self):
-    distutils.command.install_lib.install_lib.run(self)
-    for ifn, ofn in zip(self.get_inputs(), self.get_outputs()):
-      print 'xyzzy', ifn, ofn
-      if os.stat(ifn).st_mode & 0111: # Test whether any execute bit is set on the input file
-        mode = ((os.stat(ofn).st_mode) | 0555) & 07777
-        distutils.log.info("changing mode of %s to %o", ofn, mode)
-        os.chmod(ofn, mode)
-
 setup(
-    cmdclass=dict(install_lib=my_install_lib),
-    
     name='igor',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.3',
+    version=VERSION,
 
     description='REST-like IoT server',
     long_description=long_description,

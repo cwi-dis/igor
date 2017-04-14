@@ -9,6 +9,7 @@ import besthostname
 import time
 import json
 import web
+import subprocess
 from _version import VERSION
 
 import sys
@@ -16,7 +17,7 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 class IgorServer:
-    def __init__(self, datadir, port=9333):
+    def __init__(self, datadir, port=9333, advertise=False):
         #
         # Create the database, and tell the web application about it
         #
@@ -55,6 +56,18 @@ class IgorServer:
         # Send start action to start any plugins
         #
         self.urlCaller.callURL(dict(method='GET', url='/action/start'))
+        if advertise:
+            self.advertise(port)
+            
+    def advertise(self, port):
+        if sys.platform == 'darwin':
+            cmd = ['dns-sd', '-R', 'igor', '_http._tcp', 'local', str(port)]
+        elif sys.platform == 'linux2':
+            cmd = ['avahi-publish', '-s', 'igor', '_http._tcp', str(port)]
+        else:
+            print >> sys.stderr, "Cannot do mdns-advertise on platform", sys.platform
+            return
+        self.advertiser = subprocess.Popen(cmd)
     
     
     def fillSelfData(self):
@@ -167,6 +180,7 @@ def main():
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
+    parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
     args = parser.parse_args()
     
@@ -181,7 +195,7 @@ def main():
         webApp.DEBUG = True
     datadir = args.database
     try:
-        igorServer = IgorServer(datadir, args.port)
+        igorServer = IgorServer(datadir, args.port, args.advertise)
     except IOError, arg:
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]

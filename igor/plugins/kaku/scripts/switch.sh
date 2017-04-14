@@ -1,7 +1,5 @@
 #!/bin/bash
 dir=`dirname $0`
-dirIgor=$dir/../../..
-dirKAKU=$dirIgor/../helpers/kaku
 commandPrefix=""
 case x$igor_host in
 x)
@@ -12,7 +10,7 @@ x*)
 esac
 case x$igor_script in
 x)
-	command="$commandPrefix python $dirKAKU/kaku"
+	command="$commandPrefix kaku"
 	;;
 x*)
 	command="$commandPrefix python $igor_script"

@@ -1,5 +1,4 @@
 #!/bin/bash
-dirPhilips=~jack/src/dis/jack/bin
 philipsPowerCmd="ssh jack@mediacentre.local python bin/tvcmd.py "
 case x$igor_power in
 xon|xtrue)

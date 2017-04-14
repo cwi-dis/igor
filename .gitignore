@@ -2,4 +2,4 @@
 *.log
 build
 dist
-igor.egg-info
+*.egg-info

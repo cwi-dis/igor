@@ -1,3 +1,3 @@
 #!/bin/bash
-dirPhilips=~jack/src/dis/jack/bin
-python $dirPhilips/philips.py json | igorVar --put application/json devices/tv
+dir=`dirname $0`
+python $dir/philips.py json | igorVar --put application/json devices/tv

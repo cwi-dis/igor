@@ -23,7 +23,7 @@ IGOR_DIR="%(database)s"
 # Process name ( For display )
 NAME=igor
 # Daemon name, where is the actual executable
-DAEMON_ARGS="-d $IGOR_DIR"
+DAEMON_ARGS="-d $IGOR_DIR --advertise"
 
 LOGFILE="$IGOR_DIR/igor.log"
 SCRIPT="python $DAEMON $DAEMON_ARGS"

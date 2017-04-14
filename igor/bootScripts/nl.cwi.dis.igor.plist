@@ -17,6 +17,7 @@ database - directory where the database lives (usually ~user/.igor)
         <string>%(igorDir)s</string>
         <string>-d</string>
         <string>%(database)s</string>
+        <string>--advertise</string>
     </array>
     <key>WorkingDirectory</key>
     <string>%(database)s</string>

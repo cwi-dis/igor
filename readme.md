@@ -76,6 +76,16 @@ from the database, and _events_ are one or a combination of:
 There is a command-line utility ``igorVar.py`` to allow access to the database REST
 interface from shell scripts.
 
+## Plugins
+
+A number of plugins is included. Some of these are generally useful, some should be considered
+example code to help you develop your own plugins.
+
+## Helpers
+
+Some of the plugins come with helper utilities or servers. See [helpers/readme.md](helpers/readme.md) for
+details.
+
 ## Missing functionality
 
 A security and access control module is planned but not implemented yet.

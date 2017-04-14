@@ -72,8 +72,13 @@ class IgorServer:
 			print >>sys.stderr, "<<< Headers", reply
 			print >>sys.stderr, "...", repr(content)
 		if not 'status' in reply or reply['status'] != '200':
-			print >>sys.stderr, "%s: Error %s for %s" % (sys.argv[0], reply['status'], url)
-			print >>sys.stderr, content
+			msg = "%s: Error %s for %s" % (sys.argv[0], reply['status'], url)
+			contentLines = content.splitlines()
+			if len(contentLines) == 1:
+			    print >>sys.stderr, msg + ':' + contentLines[0]
+			else:
+			    print >>sys.stderr, msg
+    			print >>sys.stderr, content
 			sys.exit(1)
 		return content
 		

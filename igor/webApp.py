@@ -96,8 +96,8 @@ class runScript:
             command = name
             
         allArgs = web.input()
-        if '/' in command:
-            raise myWebError("401 Cannot use / in command")
+        if '/' in command or '.' in command:
+            raise myWebError("401 Cannot use / or . in command")
             
         if allArgs.has_key('args'):
             args = shlex.split(allArgs.args)
@@ -140,16 +140,25 @@ class runScript:
             if type(pluginData) == type({}):
                 for k, v in pluginData.items():
                     env['igor_'+k] = str(v)
-                
-        # Call the command and get the output
+        # Check whether we need to use an interpreter on the command
         command = os.path.join(scriptDir, command)
+        if os.path.exists(command):
+            interpreter = None
+        elif os.path.exists(command + '.py'):
+            command = command + '.py'
+            interpreter = "python"
+        elif os.name == 'posix' and os.path.exists(command + '.sh'):
+            command = command + '.sh'
+            interpreter = 'sh'
+        else:
+            raise myWebError("401 command not found: %s" % command)
+        if interpreter:
+            args = [interpreter, command] + args
+        else: # Could add windows and .bat here too, if needed
+            args = [command] + args
+        # Call the command and get the output
         try:
-            linked = os.readlink(command)
-            command = os.path.join(os.path.dirname(command), linked)
-        except OSError:
-            pass
-        try:
-            rv = subprocess.check_output([command] + args, stderr=subprocess.STDOUT, env=env)
+            rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env)
         except subprocess.CalledProcessError, arg:
             msg = "502 Command %s exited with status code=%d" % (command, arg.returncode)
             output = msg + '\n\n' + arg.output

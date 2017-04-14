@@ -86,6 +86,10 @@ example code to help you develop your own plugins. See [igor/plugins/readme.md](
 Some of the plugins come with helper utilities or servers. See [helpers/readme.md](helpers/readme.md) for
 details.
 
+## Schema
+
+A description of the database can be found in [schema.md](schema.md).
+
 ## Missing functionality
 
 A security and access control module is planned but not implemented yet.

@@ -79,7 +79,7 @@ interface from shell scripts.
 ## Plugins
 
 A number of plugins is included. Some of these are generally useful, some should be considered
-example code to help you develop your own plugins.
+example code to help you develop your own plugins. See [igor/plugins/readme.md](igor/plugins/readme.md) for a description of the plugins.
 
 ## Helpers
 

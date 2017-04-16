@@ -1,20 +1,26 @@
 <?xml version="1.0" ?>
 <data>
-	<sensors>
-	</sensors>
+	<environment>
+		<night/>
+		<location/>
+		<energy/>
+		<weather/>
+		<messages/>
+		<devices/>
+		<systemHealth>
+			<messages/>
+		</systemHealth>
+		<introspection>
+			<lastActivity/>
+			<rebootCount/>
+		</introspection>
+	</environment>
+	<sensors/>
 	<devices>
 		<igor/>
 	</devices>
-	<people>
-		<unknown>
-		</unknown>
-	</people>
-	<identities>
-		<unknown>
-			<plugindata>
-			</plugindata>
-		</unknown>
-	</identities>
+	<people/>
+	<identities/>
 	<actions>
 		<action>
 			<name>save</name>
@@ -24,6 +30,7 @@
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
 		</action>
 		<action>
+			<name>update</name>
 			<xpath>/data/actions/*</xpath>
 			<url>/internal/updateActions</url>
 		</action>
@@ -37,6 +44,7 @@
 	        <url>/internal/started</url>
 	    </action>
 		<action>
+			<name>reboot</name>
             <xpath>/data/devices/igor/startTime</xpath>
             <url>/data/environment/introspection/lastActivity/reboot</url>
             <method>PUT</method>
@@ -44,23 +52,30 @@
             <data>{igor_dateTime(.)}</data>
 		</action>
 		<action>
+			<name>reboot</name>
             <xpath>/data/devices/igor/startTime</xpath>
             <url>/data/environment/introspection/rebootCount</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{number(/data/environment/introspection/rebootCount)+1}</data>
 		</action>
+		<action>
+			<name>checkNight</name>
+			<interval>900</interval>
+			<method>PUT</method>
+			<url>/data/environment/night</url>
+			<mimetype>text/plain</mimetype>
+			<data>{igor_hours_from_dateTime(igor_dateTime()) < 8 or igor_hours_from_dateTime(igor_dateTime()) >= 23}</data>
+			<notBefore>1492177210</notBefore>
+		</action>
 	</actions>
-	<sandbox>
-	</sandbox>
+	<sandbox/>
 	<environment>
 		<introspection>
 			<lastActivity/>
 			<rebootCount>0</rebootCount>
 		</introspection>
 	</environment>
-	<eventsources>
-	</eventsources>
-	<plugindata>
-	</plugindata>
+	<eventsources/>
+	<plugindata/>
 </data>

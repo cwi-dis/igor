@@ -23,6 +23,10 @@ There is an escape mechanism to use when a variable name would be illegal as an 
 ```
 but in the latter `abcd` can be any string. Round-tripping to JSON of this construct is transparent.
 
+In various elements XPath expressions can be used. These follow XPath 1.0, with a number of extensions:
+
+* _to be provided_
+
 ## environment
 
 Stores high level information about the environment (household) in which Igor is operating such as GPS location.
@@ -84,23 +88,91 @@ An _integer_ telling how many times Igor was succesfully restarted on this datab
 
 ## sensors
 
-Stores low level information from devices that are generally considered read-only such as temperature sensors.
+Stores low level information from devices that are generally considered read-only such as temperature sensors. See the descriptions of the individual plugins for details:
+
+* `sensors/dhcp`: DHCP leases. See [dhcp plugin readme](igor/plugins/dhcp/readme.md).
+* `sensors/ble`: Visible Bluetooth LE devices. See [ble plugin readme](igor/plugins/ble/readme.md).
+* `sensors/rfid`: RFID tags recently presented. See [iirfid plugin readme](igor/plugins/iirfid/readme.md) and [homey plugin readme](igor/plugins/homey/readme.md).
+* `sensors/tags`: Named RFID tags recently presented. See [iirfid plugin readme](igor/plugins/iirfid/readme.md) and [homey plugin readme](igor/plugins/homey/readme.md).
+* `sensors/netAtmo`: Weather data. See [netatmo plugin readme](igor/plugins/netatmo/readme.md).
+* `sensors/smartMeter`: Energy consumption. See [smartMeter plugin readme](igor/plugins/smartMeter/readme.md).
+* `sensors/fitbit`: Health data. See [fitbit plugin readme](igor/plugins/fitbit/readme.md).
+* `sensors/buienradar`: Expected rainfall data. See [buienradar plugin readme](igor/plugins/buienradar/readme.md) and [neoclock plugin readme](igor/plugins/neoclock/readme.md).
+
 
 ## devices
 
-Stores low level information for devices that are write-only (actuators, such as motors to lower blinds) or read-write (applicances such as television sets).
+Stores low level information for devices that are write-only (actuators, such as motors to lower blinds) or read-write (applicances such as television sets), and information about Igor itself, and services monitored. For writable devices such as actuators there are usually rules in _actions_ that take care of changing the state of the actuator when values in this section are changed.
+
+Services tend to be monitored by _actions_ items that use the [lan plugin](igor/plugins/lan/readme.md) to try to contact them and then set an `alive` boolean. For example:
+
+* `devices/internet/alive`: Set by `internet` action if google.com can be contacted.
+
+The Igor "device" data is filled in by Igor itself, and consists of the following fields:
+
+* `devices/igor/url`: Base URL to use with `igorVar --url` (string).
+* `devices/igor/host`: Host name on which this Igor instance runs (string).
+* `devices/igor/port`: Port on which this Igor listens (integer).
+* `devices/igor/version`: Igor version (string).
+* `devices/igor/startTime`: Time this instance was started (timestamp).
+* `devices/igor/alive`: True when Igor is running (boolean).
+
+See the descriptions of the individual plugins for details:
+
+* `devices/tv`: Television set, information like power status, current channel, etc. See [philips plugin readme](igor/plugins/philips/readme.md).
+* `devices/plant`: Current position of the movable plant, see [plant plugin readme](igor/plugins/plant/readme.md).
+* `devices/lcd`: Adding a new `devices/lcd/message` will result in this message being displayed. See [lcd plugin readme](igor/plugins/lcd/readme.md).
 
 ## people
 
-Stores high level information about actual people, such as whether they are home or not.
+Stores high level information about actual people, such as whether they are home or not. Names in the _people_ section match names in the _identities_ section.
+
+As an example:
+
+* `people/jack/home`: Boolean that indicates whether a use "jack" is considered to be in the house (as determined by rules that trigger on his devices).
+
 
 ## identities
 
 Stores identifying information about people, such as the identity of their cellphone or login information for could-based healt data storage.
 
+As an example:
+
+* `identities/jack/device`: Name of a device that user "Jack" tends to carry with him (string).
+* `identities/jack/plugindata`: Per-user data for plugins. For example:
+	* `identities/jack/plugindata/fitbit`: Information that allows the [fitbit plugin](igor/plugins/fitbit/readme.md) to obtain health information for user "Jack".
+
 ## actions
 
 Stores all the triggers and actions that operate on the database. *(this name is hardcoded in the Igor implementation)*
+
+Actions can be triggered by external access, timers, conditions in the database or a combination of those:
+
+* Actions that are named, for example `save`, can be triggered by external means (by accessing `http://igorhost:igorport/action/save`). Multiple actions can have the same name, and external access will trigger all of them.
+* Actions can have an interval and will then be triggered periodically.
+* Actions can have an XPath expression and will the be triggered whenever any database element matching this expression is modified. As an example, the `save` action above has an expression of `/data/identities//*` resulting the in the database being saved whenever anything in the _identities_ section is changed.
+
+When an action is triggered a number of conditions is tested to see whether the action actually needs to be run or not:
+
+* It is possible to specify that an action should not be run before a certain time.
+* It is possible to specify that an action should not be run more often than a given minimum time interval.
+* It is possible to specify a database condition (as an XPath expression) to determine whether the action should be run or not.
+
+If the condition is met then the action is run. This takes the form of an HTTP operation on a URL, possible with data to provide to the operation. The url and data fields support the use of XPath expressions inside curly braces `{` and `}` (Attribute Value Templates, such as used in XForms and SMIL, for example).
+
+Here is a description of the available elements:
+
+* `actions/action/name`:
+* `actions/action/xpath`:
+* `actions/action/interval`:
+* `actions/action/minInterval`:
+* `actions/action/notBefore`:
+* `actions/action/condition`:
+* `actions/action/method`:
+* `actions/action/url`:
+* `actions/action/data`:
+* `actions/action/mimetype`:
+
 
 ## sandbox
 
@@ -110,6 +182,8 @@ Does nothing special, specifically meant to play with `igorVar` and REST access 
 
 Contains references to Server-Sent event (SSE) sources, and where in the database the resulting values should be stored.
 
+_Documentation to be provided._
+
 ## plugindata
 
-Contains per-plugin configuration data, such as the mapping of hardware network addresses (MAC addresses) to device names.
+Contains per-plugin configuration data, such as the mapping of hardware network addresses (MAC addresses) to device names. See the descriptions of the individual plugins for details.

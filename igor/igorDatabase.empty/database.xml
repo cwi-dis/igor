@@ -12,7 +12,7 @@
 		</systemHealth>
 		<introspection>
 			<lastActivity/>
-			<rebootCount/>
+			<rebootCount>0</rebootCount>
 		</introspection>
 	</environment>
 	<sensors/>
@@ -22,29 +22,12 @@
 	<people/>
 	<identities/>
 	<actions>
-		<action>
-			<name>save</name>
-			<interval>3600</interval>
-			<minInterval>60</minInterval>
-			<url>/internal/save</url>
-			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
-		</action>
-		<action>
-			<name>update</name>
-			<xpath>/data/actions/*</xpath>
-			<url>/internal/updateActions</url>
-		</action>
-        <action>
-            <name>cleanup</name>
-            <method>DELETE</method>
-            <url>/data/environment/messages/message[position()&lt;last()]</url>
-        </action>
 	    <action>
 	        <name>start</name>
 	        <url>/internal/started</url>
 	    </action>
 		<action>
-			<name>reboot</name>
+			<name>rebooted</name>
             <xpath>/data/devices/igor/startTime</xpath>
             <url>/data/environment/introspection/lastActivity/reboot</url>
             <method>PUT</method>
@@ -52,12 +35,29 @@
             <data>{igor_dateTime(.)}</data>
 		</action>
 		<action>
-			<name>reboot</name>
+			<name>rebooted</name>
             <xpath>/data/devices/igor/startTime</xpath>
             <url>/data/environment/introspection/rebootCount</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{number(/data/environment/introspection/rebootCount)+1}</data>
+		</action>
+		<action>
+			<name>save</name>
+			<interval>3600</interval>
+			<minInterval>60</minInterval>
+			<url>/internal/save</url>
+			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
+		</action>
+        <action>
+            <name>cleanup</name>
+            <method>DELETE</method>
+            <url>/data/environment/messages/message[position()&lt;last()]</url>
+        </action>
+		<action>
+			<name>updateActions</name>
+			<xpath>/data/actions/*</xpath>
+			<url>/internal/updateActions</url>
 		</action>
 		<action>
 			<name>checkNight</name>
@@ -66,16 +66,29 @@
 			<url>/data/environment/night</url>
 			<mimetype>text/plain</mimetype>
 			<data>{igor_hours_from_dateTime(igor_dateTime()) < 8 or igor_hours_from_dateTime(igor_dateTime()) >= 23}</data>
-			<notBefore>1492177210</notBefore>
+		</action>
+		<action>
+			<name>updatePeople</name>
+			<xpath>/data/environment/devices/*</xpath>
+			<condition>/data/identities/*[device=name($originalContext)]</condition>
+			<url>
+			/data/people/{name(/data/identities/*[device=name($originalContext)])}/home
+			</url>
+			<method>PUT</method>
+			<mimetype>text/plain</mimetype>
+			<data>{.}</data>
+			<multiple>true</multiple>
+		</action>
+		<action>
+			<name>updateIgor</name>
+			<interval>60</interval>
+			<url>/data/environment/introspection/lastActivity/igor</url>
+			<method>PUT</method>
+			<mimetype>text/plain</mimetype>
+			<data>{igor_dateTime()}</data>
 		</action>
 	</actions>
 	<sandbox/>
-	<environment>
-		<introspection>
-			<lastActivity/>
-			<rebootCount>0</rebootCount>
-		</introspection>
-	</environment>
 	<eventsources/>
 	<plugindata/>
 </data>

@@ -25,7 +25,13 @@ but in the latter `abcd` can be any string. Round-tripping to JSON of this const
 
 In various elements XPath expressions can be used. These follow XPath 1.0, with a number of extensions:
 
-* _to be provided_
+* `$originalContext` is available in _action_ XPaths and refers to the element that triggered the action.
+* `igor_dateTime(number)` converts a _timestamp_ to an _isotime_. When called without argument it returns the current date and time.
+* `igor_timestamp(isotime)` converts an _isotime_ to a _timestamp_. When called without argument it returns the current time.
+* `igor_year_from_dateTime(isotime)` and similar functions from XPath 2.0 are available with the `igor_` prefix.
+* `igor_date_equal(isotime, isotime)`, `igor_time_equal(isotime, isotime)`, `igor_dateTime_equal(isotime, isotime)` and the usual variations are available for comparing dates, times and date-time combinations.
+* `igor_ifelse(expr1, expr2)` returns _expr1_ if it is true, otherwise _expr2_.
+* `igor_ifthenelse(expr1, expr2, expr3)` If _expr1_ is true returns _expr2_, otherwise _expr3_.
 
 ## environment
 
@@ -158,21 +164,34 @@ When an action is triggered a number of conditions is tested to see whether the 
 * It is possible to specify that an action should not be run more often than a given minimum time interval.
 * It is possible to specify a database condition (as an XPath expression) to determine whether the action should be run or not.
 
-If the condition is met then the action is run. This takes the form of an HTTP operation on a URL, possible with data to provide to the operation. The url and data fields support the use of XPath expressions inside curly braces `{` and `}` (Attribute Value Templates, such as used in XForms and SMIL, for example).
+If the condition is met then the action is run. This takes the form of an HTTP operation on a URL, possible with data to provide to the operation. The url and data fields support the use of XPath expressions inside curly braces `{` and `}` (Attribute Value Templates, AVTs, such as used in XForms and SMIL, for example).
 
+If the action is triggered by an XPath expression then the XPath expressions within the action (such as in an AVT or condition) are run in a context with the triggering element as the current node. The triggering element is also available as the `$originalContext` variable, so if the expression changes the context you can still refer to the triggering node.
+ 
 Here is a description of the available elements:
 
-* `actions/action/name`:
-* `actions/action/xpath`:
-* `actions/action/interval`:
-* `actions/action/minInterval`:
-* `actions/action/notBefore`:
-* `actions/action/condition`:
-* `actions/action/method`:
-* `actions/action/url`:
-* `actions/action/data`:
-* `actions/action/mimetype`:
+* `actions/action/name`: Name of the action (string). Action will trigger when `/actions/name` is accessed.
+* `actions/action/xpath`: XPath expression that must deliver a _node_ or _nodeset_ (string). Action will trigger if any of these nodes is modified.
+* `actions/action/multiple`: A boolean that signals what should happen if multiple elements are changed (and match the xpath expression) by the same operation. When false (the default) the action triggers once, with a random element as the context. When true the action will trigger for each element in the nodeset.
+* `actions/action/interval`: Interval in seconds (integer). Action will trigger at least once every _interval_ seconds.
+* `actions/action/minInterval`: Minimum interval in seconds (integer). Action will trigger at most once every _minInterval_ seconds.
+* `actions/action/notBefore`: Earliest time this action will trigger again (timestamp). This field is set by Igor whenever the action is triggered, using data from _minInterval_, and it is actually the way the _minInterval_ functionality is implemented.
+* `actions/action/condition`: XPath expression that is evaluated whenever a trigger has happened and that must return _true_ for the action to be executed. 
+* `actions/action/url`: The URL to which a request should be made (string). AVTs can be used in this field. This is the only required field.
+* `actions/action/method`: The method used to access the url, default GET (string).
+* `actions/action/data`: For POST and PUT methods, the data to supply to the operation (string). Can use AVTs.
+* `actions/action/mimetype`: The MIME type of _data_ (string), default `text/plain`.
 
+### Standard actions
+There are a number of standard actions, which are used by Igor itself or used to fill some of the standard elements in the database. Multiple actions with the same name can exist, and all of them will fire (so you can add actions to do additional things if these events happen). These actions (by _name_) are:
+
+* _start_: fired when Igor is started (automatically by Igor). There are additional events (with name _rebooted_) triggered by the automatic update of `devices/igor/startTime` that update some of the introspection values.
+* _save_: saves the in-memory copy of the database to the external file. Called periodically, and whenever a part of the database that is somehow considered important is changed.
+* _cleanup_: deletes old elements in `environment/messages` and such.
+* _updateActions_: updates the internal action datastructure whenever elements are added (not changed) in `actions`.
+* _checkNight_: maintains the value of `environment/night`.
+* _updatePeople_: updates people availability in `people` when device availability in `environment/devices` changes.
+* _updateIgor_: fires every minute to update `environment/introspection/lastActivity/igor` to show Igor itself is still alive.
 
 ## sandbox
 
@@ -180,9 +199,13 @@ Does nothing special, specifically meant to play with `igorVar` and REST access 
 
 ## eventSources
 
-Contains references to Server-Sent event (SSE) sources, and where in the database the resulting values should be stored.
+Contains references to Server-Sent event (SSE) sources, and where in the database the resulting values should be stored. Each event source will create a listener thread that opens a connection to the source and updates the database as events come in. Event types and event IDs are currently ignored, only the SSE _data_ field is used.
 
-_Documentation to be provided._
+* `eventSources/eventSource/src`: URL of the SSE endpoint to connect to (string).
+* `eventSources/eventSource/srcMethod`: Method used to access the _src_ url (string), default GET.
+* `eventSources/eventSource/dst`: URL where the SSE _data_ should be sent to (string).
+* `eventSources/eventSource/dstMethod`: Method used to access the _dst_ url (string), default PUT.
+* `eventSources/eventSource/mimetype`: How the _data_ field should be interpreted (and how it is forwarded to _dst_). Default `application/json`.
 
 ## plugindata
 

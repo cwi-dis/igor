@@ -8,8 +8,6 @@ Listens to Bluetooth Low Energy advertisements to determine which devices are in
 
 Stores rain forecast for the coming hour. See [buienradar/readme.md](buienradar/readme.md) for details.
 
- in ```sensors/buienradar```, based on GPS location from ```plugindata/buienradar```. Uses buienradar.nl so will only work in the Netherlands.
-
 ## copytree
 
 Copies subtree ```src``` to ```dst```. Both src and dst can be local or remote, allowing mirroring from one Igor to another (or actually between any two REST servers). Optional arguments ```mimetype``` and ```method``` are available.
@@ -17,8 +15,6 @@ Copies subtree ```src``` to ```dst```. Both src and dst can be local or remote, 
 ## dhcp
 
 Queries database of DHCP server on local machine and stores all active dhcp leases. See [dhcp/readme.md](dhcp/readme.md) for details.
-
- (by mac-address and ip-address) in ```sensors/dhcp```and current availability by name for specific "known" devices (programmable via ```plugindata/wifiDevices```) into ```environment/devices```.
 
 ## fitbit
 

@@ -8,6 +8,22 @@
 			<interval>300</interval>
 			<url>/pluginscripts/buienradar/pull</url>
 		</action>
+		<action>
+			<name>start</name>
+			<xpath>/data/environment/location/lon</xpath>
+			<url>/data/plugindata/buienradar/lon</url>
+			<method>PUT</method>
+			<mimetype>text/plain</mimetype>
+			<data>{/data/environment/location/lon}</data>
+		</action>
+		<action>
+			<name>start</name>
+			<xpath>/data/environment/location/lat</xpath>
+			<url>/data/plugindata/buienradar/lat</url>
+			<method>PUT</method>
+			<mimetype>text/plain</mimetype>
+			<data>{/data/environment/location/lat}</data>
+		</action>
 	</actions>
 	<plugindata>
 	    <buienradar>

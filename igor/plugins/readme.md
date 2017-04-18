@@ -30,7 +30,6 @@ Needs work.
 ## iirfid
 
 Example RFID reader integration. See [iirfid/readme.md](iirfid/readme.md) for details.
-Requires special hardware (probably only available at CWI). Stores all presented tags in ```sensors/rfid```, sequentially. Tags that are known (by hardware address, stored in ```plugindata/rfid```) are also stored in ```sensors/tags```. RFID reader device and other parameters are settable in ```plugindata/iirfid```.
 
 ## kaku
 

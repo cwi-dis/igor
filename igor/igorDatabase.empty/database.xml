@@ -65,7 +65,7 @@
 			<method>PUT</method>
 			<url>/data/environment/night</url>
 			<mimetype>text/plain</mimetype>
-			<data>{igor_hours_from_dateTime(igor_dateTime()) < 8 or igor_hours_from_dateTime(igor_dateTime()) >= 23}</data>
+			<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
 		</action>
 		<action>
 			<name>updatePeople</name>

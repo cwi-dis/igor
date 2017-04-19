@@ -42,13 +42,9 @@ Turns lights (or other devices) on and off using a KlikAanKlikUit device. See [k
 Determines whether a local (or remote) internet service is up and running.
 See [lan/readme.md](lan/readme.md) for details.
 
-, and stores this information in ```devices/_service_/alive```. Parameters are ```name``` (no default), ```ip``` (defaults to _name_), ```port``` (default 80) and ```timeout``` (default 5).
+## lcd
 
-## message
-
-Displays messages on an LCD display. See [message/readme.md](message/readme.md) for details.
-
-Displays any messages stored in ```environment/messages``` on an external LCD display. Requires command line tool ```lcdecho```. Also see _say_.
+Displays messages on an LCD display. See [lcd/readme.md](lcd/readme.md) for details.
 
 ## neoclock
 

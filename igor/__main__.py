@@ -10,6 +10,7 @@ import time
 import json
 import web
 import subprocess
+import imp
 from _version import VERSION
 
 import sys
@@ -201,7 +202,18 @@ def main():
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]
         sys.exit(1)
     igorServer.run()
-    
+
+#
+# We need to hack the import lock. In case we get here via the easy_install igorServer script
+# we are inside an __import__(), and we hold the lock. This means other threads cannot import
+# and we hang once a web request comes in. We "work around" this by releasing the lock.
+#    
+hasImportLock = imp.lock_held()
+if hasImportLock:
+    imp.release_lock()
 main()
+if hasImportLock:
+    imp.acquire_lock()
+    
 
     

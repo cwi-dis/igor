@@ -62,11 +62,18 @@ Informational messages produced by various plugins (or by external agents with a
 * `message`: a text string to be shown or spoken to the user (string).
 
 ### environment/devices
-A set of boolean values indicating that devices of which the end user is aware (such as mobile phones) are in the house and active. Names should be user-friendly. These values are set by plugins like _dhcp_, after converting MAC-addresses to user-friendly names based on information in _plugindata_. Values here are used by rules from _actions_ to populate _people_.
+A set of boolean values indicating that devices of which the end user is aware (such as mobile phones or keyring transponders) are in the house and active. Names should be user-friendly. The intention is that this category is used specifically for devices that are portable, and that are carried around by people (or dogs, or cars, or bicycles). These values are set by plugins like _dhcp_, after converting MAC-addresses to user-friendly names based on information in _plugindata_. Values here are used by rules from _actions_ to populate _people_.
 
 Example value:
 
 * `laptopJack`: true if Jack's laptop is in the house (boolean).
+
+### environments/lights
+A set of booleans indicating the state of lights (or actually any electric device controllable through a smart outlet or something similar). These should be considered write-only, as reading the state of light switches is often impossible. The names should be human-readable, and changes in the values are picked up by plugins like _kaku_ to turn on or off those lights (after converting the names to switch IDs through information in _plugindata_).
+
+Example value:
+
+* `diningRoomTable`: boolean, set to true or false to turn this light on or off.
 
 ### environment/systemHealth
 
@@ -87,7 +94,7 @@ The intention is that there will be a mechanism whereby the user can silence ano
 Information about activity of various plugins and Igor itself.
 
 #### environment/introspection/lastActivity
-For most plugins, an _isotime_ telling when the plugin was last active. `igor` should reflect the last activity of igor itself (but does not seem to work at the moment).
+For most plugins, an _isotime_ telling when the plugin was last active. `igor` reflects the last activity of igor itself. These fields are here mainly to check that the individual devices or services are still alive, so an _action_ can be triggered when an important device has not been active for too long.
 
 #### environment/introspection/rebootCount
 An _integer_ telling how many times Igor was succesfully restarted on this database.

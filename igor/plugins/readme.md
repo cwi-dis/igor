@@ -35,8 +35,6 @@ Example RFID reader integration. See [iirfid/readme.md](iirfid/readme.md) for de
 
 Turns lights (or other devices) on and off using a KlikAanKlikUit device. See [kaku/readme.md](kaku/readme.md) for details.
 
-, based on values in ```environment/lights/*```. Mapping of light names to switch numbers and other parameters are programmable in ```plugindata/kaku```.
-
 ## lan
 
 Determines whether a local (or remote) internet service is up and running.
@@ -70,9 +68,6 @@ Speaks messages to the user. See [say/readme.md](say/readme.md) for details.
 
 Reads current energy use in the household using a iotsa SmartMeter reader. See [smartmeter_iotsa/readme.md](smartmeter_iotsa/readme.md) for details.
 
-(requires dutch P1 energy meter and specialised hardware, link to-be-provided) and stores the raw data in ```sensors/smartMeter```. Electricity use is obtained from this and stored in ```environment/energy/electricity```.
-
-
 ## smartmeter_rfduino
 
 Older Bluetooth-based version of _smartmeter___iotsa_, reads current energy use in the household using a RFDuino-based SmartMeter reader.
@@ -84,6 +79,4 @@ A Python-based plugin that simply shows all the arguments it has been passed. Th
 ## watchdog
 
 Reboots the host system in case of problems. See [watchdog/readme.md](watchdog/readme.md) for details.
-
-A plugin that opens the Linux watchdog device ```/dev/watchdog```. The parameter ```timeout``` specifies after how many seconds the watchdog will fire and reboot the system, unless the watchdog plugin is accessed again before that timeout. Can be used to make the Igor machine reboot when Igor hangs, or when anomalous conditions are detected (and there is reason to believe a reboot will resolve these issues:-).
 

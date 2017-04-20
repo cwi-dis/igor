@@ -66,21 +66,20 @@ Move an internet-connected plant up and down. See [plant/readme.md](plant/readme
 
 Speaks messages to the user. See [say/readme.md](say/readme.md) for details.
 
-Speaks any messages stored in ```environment/messages``` on an OSX computer using the ```say``` command line tool. OSX machine to use can be ssh-accessible. Also see _lcd_.
-
 ## smartmeter_iotsa
 
-Reads current energy use in the household using a iotsa SmartMeter reader. See [smartmeter_iotsa/readme.md](smartmeter_iots/readme.md) for details.
+Reads current energy use in the household using a iotsa SmartMeter reader. See [smartmeter_iotsa/readme.md](smartmeter_iotsa/readme.md) for details.
+
 (requires dutch P1 energy meter and specialised hardware, link to-be-provided) and stores the raw data in ```sensors/smartMeter```. Electricity use is obtained from this and stored in ```environment/energy/electricity```.
 
 
 ## smartmeter_rfduino
 
-Older Bluetooth-based version of _smartmeter_iotsa_, reads current energy use in the household using a RFDuino-based SmartMeter reader (requires dutch P1 energy meter and specialised hardware, link to-be-provided) and stores the raw data in ```sensors/smartMeter```. Electricity use is obtained from this and stored in ```environment/energy/electricity```.
+Older Bluetooth-based version of _smartmeter___iotsa_, reads current energy use in the household using a RFDuino-based SmartMeter reader.
 
 ## testPlugin
 
-A Python-based plugin that simply shows all the arguments it has been passed.
+A Python-based plugin that simply shows all the arguments it has been passed. This can be used as the starting point for a python-based plugin.
 
 ## watchdog
 

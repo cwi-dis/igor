@@ -50,25 +50,17 @@ Displays messages on an LCD display. See [lcd/readme.md](lcd/readme.md) for deta
 
 Driver for NeoClock internet-connected clock. See [neoclock/readme.md](neoclock/readme.md) for details.
 
-Shows 1-hour rain forecast on a NeoClock (see to-be-provided for more details on this device). Also shows warning on NeoClock when any messages appear in ```environment/systemHealth/messages``` and sets a watchdog in the NeoClock so it shows a warning when Igor is not running.
-
 ## netatmo
 
 Driver for NetAtmo weather stations. See [netatmo/readme.md](netatmo/readme.md) for details.
-Gets local (indoor and outdoor) temperature and other environmental data through the NetAtmo cloud API. Stores the raw data in ```sensors/netAtmo``` and parsed temperatures in ```environment/weather```.
 
 ## philips
 
 Example of controlling a Philips television. See [philips/readme.md](philips/readme.md) for details.
- Power on/off is controlled using a IR transmitter (when ```devices/tv/power``` is modified). Other settings are controlled using the Philips Jointspace REST interface, for example by modifying ```devices/tv/channel```.
 
 ## plant
 
 Move an internet-connected plant up and down. See [plant/readme.md](plant/readme.md) for details.
-
-Moves a plant up and down, so the height of the plant reflects the current electricity consumption in the house as read from ```environment/energy/electricity``` (see _smartmeter_ for details).
-
-Requires a device for moving the plant (obviously:-), details to-be-provided.
 
 ## say
 

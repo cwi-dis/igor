@@ -1,5 +1,15 @@
 # Igor sample plugins
 
+Igor comes with a set of standard plugins. Some of these can be used as-is, and installed using (for example):
+
+```
+igorSetup addstd copytree
+```
+
+Some are more examples that you should copy and adapt to your own need, or use as inspiration. 
+
+Plugins take their name (for use in `plugindata`, for example) from the name they are installed under. So you can install multiple independent copies (for example as _say_ and _sayInBedroom_) and use different plugindata to control each copy of the plugin.
+
 ## ble
 
 Listens to Bluetooth Low Energy advertisements to determine which devices are in range. See [ble/readme.md](ble/readme.md) for details.

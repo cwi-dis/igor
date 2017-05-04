@@ -6,7 +6,7 @@ I am not quite sure of the difference) that knows everything
 that goes on in your household, and makes sure everything runs smoothly. 
 It performs its tasks without passing judgements and maintains complete 
 discretion, even within the household. It can work together with other Igors 
-(lending a hand) and with lesser servants such as Iotsa-based devices.
+(lending a hand) and with lesser servants such as [Iotsa-based devices](https://github.com/cwi-dis/iotsa).
 
 Home page is <https://github.com/cwi-dis/igor>. 
 This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS group, <http://www.dis.cwi.nl>.

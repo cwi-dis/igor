@@ -281,13 +281,16 @@ class AbstractDatabaseAccess(object):
             if '.METHOD' in optArgs:
                 method = getattr(self, optArgs['.METHOD'])
                 del optArgs['.METHOD']
-            return method(name, optArgs, mimetype="application/x-www-form-urlencoded")
+            rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded")
+            web.header("Content-Length", str(len(rv)))
+            return rv
             
         returnType = self.best_return_mimetype()
         if not returnType:
             raise web.NotAcceptable()
         web.header("Content-Type", returnType)
         rv = self.get_key(name, self.best_return_mimetype(), variant)
+        web.header("Content-Length", str(len(rv)))
         return rv
 
     def PUT(self, name, data=None, mimetype=None, replace=True):
@@ -311,13 +314,16 @@ class AbstractDatabaseAccess(object):
                 data = web.data()
                 mimetype = web.ctx.env.get('CONTENT_TYPE', 'application/unknown')
         rv = self.put_key(name, self.best_return_mimetype(), variant, data, mimetype, replace=replace)
+        web.header("Content-Length", str(len(rv)))
         return rv
 
     def POST(self, name, data=None, mimetype=None):
         return self.PUT(name, data, mimetype, replace=False)
 
     def DELETE(self, name, data=None, mimetype=None):
-        return self.delete_key(name)
+        rv = self.delete_key(name)
+        web.header("Content-Length", str(len(rv)))
+        return rv
 
     def is_acceptable_mimetype(self, mimetype=None):
         """Test whether the mimetype in the request is of an acceptable type"""

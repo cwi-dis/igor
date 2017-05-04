@@ -1,4 +1,7 @@
 #!/bin/sh
+if [ -x /usr/libexec/path_helper ]; then
+	eval `/usr/libexec/path_helper -s`
+fi
 case x$igor_remoteHost in
 x)
 	say=say

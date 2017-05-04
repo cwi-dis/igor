@@ -1,4 +1,7 @@
 #!/bin/bash
+if [ -x /usr/libexec/path_helper ]; then
+	eval `/usr/libexec/path_helper -s`
+fi
 philipsPowerCmd="ssh jack@mediacentre.local python bin/tvcmd.py "
 case x$igor_power in
 xon|xtrue)

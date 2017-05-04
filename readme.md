@@ -8,6 +8,9 @@ It performs its tasks without passing judgements and maintains complete
 discretion, even within the household. It can work together with other Igors 
 (lending a hand) and with lesser servants such as Iotsa-based devices.
 
+Home page is <https://github.com/cwi-dis/igor>. 
+This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS group, <http://www.dis.cwi.nl>.
+
 ## Technical description
 
 Igor is basically a hierarchical data store, think of an XML file or a JSON 

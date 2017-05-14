@@ -528,11 +528,11 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 rv += "</items>\n"
                 return rv
             elif mimetype == "application/x-python-object":
-                rv = []
+                rv = {}
                 for item in value:
                     r = self.db.getXPathForElement(item)
                     t, v = self.db.tagAndDictFromElement(item)
-                    rv.append(v)
+                    rv[r] = v
                 return rv
             else:
                 raise web.InternalError("Unimplemented mimetype %s for multi, nodeset" % mimetype)

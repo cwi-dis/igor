@@ -18,8 +18,10 @@
 	</environment>
 	<sensors/>
 	<devices>
-		<igor/>
 	</devices>
+	<services>
+		<igor/>
+	</services>
 	<people/>
 	<identities/>
 	<actions>
@@ -29,7 +31,7 @@
 	    </action>
 		<action>
 			<name>rebooted</name>
-            <xpath>/data/devices/igor/startTime</xpath>
+            <xpath>/data/services/igor/startTime</xpath>
             <url>/data/environment/introspection/lastActivity/reboot</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
@@ -37,7 +39,7 @@
 		</action>
 		<action>
 			<name>rebooted</name>
-            <xpath>/data/devices/igor/startTime</xpath>
+            <xpath>/data/services/igor/startTime</xpath>
             <url>/data/environment/introspection/rebootCount</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>

@@ -6,7 +6,7 @@ When the plugin runs, usually from a timed action in `actions`, it accepts a num
 
 The following parameters are accepted:
 
-* `name`: name of the service (string). This is used as the name of the element in `devices` inside which the `alive` boolean is updated.
+* `name`: name of the service (string). This is used as the name of the element in `services` inside which the `alive` boolean is updated and `errorMessage` is set (if needed).
 * `ip`: hostname or ip-address to contact (string). Default is to use the value of _name_.
 * `port`: port to contact (integer), default 80.
 * `timeout`: how many seconds to wait for the connection to be established before giving up (integer), default 5.

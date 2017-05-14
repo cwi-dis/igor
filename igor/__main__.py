@@ -76,7 +76,7 @@ class IgorServer:
         hostName = besthostname.besthostname()
         url = 'http://%s:%d/data' % (hostName, self.port)
         data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION)
-        tocall = dict(method='PUT', url='/data/devices/igor', mimetype='application/json', data=json.dumps(data))
+        tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data))
         self.urlCaller.callURL(tocall)
         
     def run(self):

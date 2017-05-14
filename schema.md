@@ -115,26 +115,32 @@ Stores low level information from devices that are generally considered read-onl
 
 ## devices
 
-Stores low level information for devices that are write-only (actuators, such as motors to lower blinds) or read-write (applicances such as television sets), and information about Igor itself, and services monitored. For writable devices such as actuators there are usually rules in _actions_ that take care of changing the state of the actuator when values in this section are changed.
-
-Services tend to be monitored by _actions_ items that use the [lan plugin](igor/plugins/lan/readme.md) to try to contact them and then set an `alive` boolean. For example:
-
-* `devices/internet/alive`: Set by `internet` action if google.com can be contacted.
-
-The Igor "device" data is filled in by Igor itself, and consists of the following fields:
-
-* `devices/igor/url`: Base URL to use with `igorVar --url` (string).
-* `devices/igor/host`: Host name on which this Igor instance runs (string).
-* `devices/igor/port`: Port on which this Igor listens (integer).
-* `devices/igor/version`: Igor version (string).
-* `devices/igor/startTime`: Time this instance was started (timestamp).
-* `devices/igor/alive`: True when Igor is running (boolean).
+Stores low level information for devices that are write-only (actuators, such as motors to lower blinds) or read-write (applicances such as television sets). For writable devices such as actuators there are usually rules in _actions_ that take care of changing the state of the actuator when values in this section are changed.
 
 See the descriptions of the individual plugins for details:
 
 * `devices/tv`: Television set, information like power status, current channel, etc. See [philips plugin readme](igor/plugins/philips/readme.md).
 * `devices/plant`: Current position of the movable plant, see [plant plugin readme](igor/plugins/plant/readme.md).
 * `devices/lcd`: Adding a new `devices/lcd/message` will result in this message being displayed. See [lcd plugin readme](igor/plugins/lcd/readme.md).
+
+## services
+
+Store mainly availability information about services (such as backups, internet connection and igor itself).
+
+Services tend to be monitored by _actions_ items that use the [lan plugin](igor/plugins/lan/readme.md) to try to contact them and then set an `alive` boolean. For example:
+
+* `services/internet/alive`: Set by `internet` action if google.com can be contacted (boolean).
+* `services/internet/errorMessage`: If the service is not alive this contains a (human understandable) error message (string).
+* `services/internet/ignoreErrorUntil`: May be set by the user to ignore errors for a period of time (timestamp). `alive` and `errorMessage` will still be updated during that time, but any subsequent actions depending on the error condition (such as lighting a global "something is wrong" indicator) will not happen.
+
+The Igor "device" data is filled in by Igor itself, and consists of the following fields:
+
+* `services/igor/url`: Base URL to use with `igorVar --url` (string).
+* `services/igor/host`: Host name on which this Igor instance runs (string).
+* `services/igor/port`: Port on which this Igor listens (integer).
+* `services/igor/version`: Igor version (string).
+* `services/igor/startTime`: Time this instance was started (timestamp).
+* `services/igor/alive`: True when Igor is running (boolean).
 
 ## people
 

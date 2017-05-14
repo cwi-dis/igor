@@ -7,7 +7,7 @@ DATABASE_ACCESS=None
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-def lan(name=None, service='devices/%s/alive', ip=None, port=80, timeout=5):
+def lan(name=None, service='services/%s', ip=None, port=80, timeout=5):
     if not name:
         raise myWebError("401 Required argument name missing")
     if not ip:
@@ -30,7 +30,20 @@ def lan(name=None, service='devices/%s/alive', ip=None, port=80, timeout=5):
         	oldValue = 'rabarber'
 		if oldValue != repr(alive):
 			try:
-				rv = DATABASE_ACCESS.put_key(service, 'text/plain', None, repr(alive), 'text/plain', replace=True)
+				rv = DATABASE_ACCESS.put_key(service + '/alive', 'text/plain', None, repr(alive), 'text/plain', replace=True)
 			except web.HTTPError:
 				raise myWebError("501 Failed to store into %s" % service)
+			if alive:
+			    # If the service is alive we delete any error message and we also reset the "ignore errors" indicator
+			    try:
+    			    DATABASE_ACCESS.delete_key(service + '/errorMessage')
+    			except web.HTTPError:
+    			    pass
+			    try:
+    			    DATABASE_ACCESS.delete_key(service + '/ignoreErrorUntil')
+    			except web.HTTPError:
+    			    pass
+			else:
+			    # If the service is not alive we set an error message
+			    DATABASE_ACCESS.put_key(service + '/errorMessage', 'text/plain', None, "%s is not available" % name, replace=True)
     return repr(alive)

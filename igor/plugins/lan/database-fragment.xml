@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <data>
-	<devices>
+	<services>
 		<router/>
 		<internet/>
-	</devices>
+	</services>
 	<actions>
 		<action>
 			<interval>60</interval>

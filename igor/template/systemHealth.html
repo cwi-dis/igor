@@ -1,0 +1,39 @@
+$def with ()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor System Health</title>
+</head>
+<body>
+	<h1>Igor System Health</h1>
+	
+	<p>
+		Igor has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot')},
+		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount')} times during its lifetime.
+	</p>
+	
+	<h2>Exceptional conditions</h2>
+	
+	$ messages = DATABASE.getValueList('/data/environment/systemHealth/messages')
+	$if messages:
+		<p>The following exceptional conditions (for services, sensors and actuators) are currently noted:</p>
+		<ul>
+			$for m in messages.values():
+				<li>$m</li>
+		</ul>
+	$else:
+		<p>Igor is currently not aware of any exceptional conditions (for services, sensors and actuators). </p>
+		
+	<h2>Service status</h2>
+	
+	$ services = DATABASE.getElements('/data/services')
+	<ul>
+		$for s in services:
+			<li>${s.tagName}: unknown (not yet implemented by template)</li>
+	</ul>
+		
+		
+
+</body>
+</html>

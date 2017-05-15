@@ -6,6 +6,7 @@
 	</services>
 	<actions>
 		<action>
+			<name>systemHealth</name>
 			<interval>60</interval>
 			<xpath>/data/services/*/errorMessage | /data/devices/*/errorMessage | /data/sensors/*/errorMessage </xpath>
 			<url>/plugin/systemHealth</url>

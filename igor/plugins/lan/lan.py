@@ -29,8 +29,9 @@ def lan(name=None, service='services/%s', ip=None, port=80, timeout=5):
             web.ctx.status = "200 OK"
             oldValue = 'rabarber'
         if oldValue != repr(alive):
+            xpAlive = 'true' if alive else ''
             try:
-                rv = DATABASE_ACCESS.put_key(service + '/alive', 'text/plain', None, repr(alive), 'text/plain', replace=True)
+                rv = DATABASE_ACCESS.put_key(service + '/alive', 'text/plain', None, xpAlive, 'text/plain', replace=True)
             except web.HTTPError:
                 raise myWebError("501 Failed to store into %s" % service)
             if alive:

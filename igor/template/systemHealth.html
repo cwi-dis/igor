@@ -4,6 +4,12 @@ $def with ()
 <head>
 	<meta charset="utf-8" />
 	<title>Igor System Health</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
 </head>
 <body>
 	<h1>Igor System Health</h1>
@@ -15,23 +21,41 @@ $def with ()
 	
 	<h2>Exceptional conditions</h2>
 	
-	$ messages = DATABASE.getValueList('/data/environment/systemHealth/messages')
+	$ messages = DATABASE.getValues('/data/environment/systemHealth/messages/*')
 	$if messages:
 		<p>The following exceptional conditions (for services, sensors and actuators) are currently noted:</p>
 		<ul>
-			$for m in messages.values():
-				<li>$m</li>
+			$for xp, msg in messages:
+				<li>$msg</li>
 		</ul>
 	$else:
 		<p>Igor is currently not aware of any exceptional conditions (for services, sensors and actuators). </p>
 		
 	<h2>Service status</h2>
 	
-	$ services = DATABASE.getElements('/data/services')
-	<ul>
+	$ services = DATABASE.getElements('/data/services/*')
+	<table style="width:100%">
+		<tr>
+			<th>Service</th>
+			<th>Alive?</th>
+			<th>Error condition</th>
+			<th>Ignored? (seconds)</th>
+			<th>Ignore (not yet)</th>
+		</tr>
 		$for s in services:
-			<li>${s.tagName}: unknown (not yet implemented by template)</li>
-	</ul>
+			<tr>
+				<td>$s.tagName</td>
+				<td>${DATABASE.getValue('/data/services/' + s.tagName + '/alive')}</td>
+				$ msg = DATABASE.getValue('/data/services/' + s.tagName + '/errorMessage')
+				<td>$msg</td>
+				$ muted = DATABASE.getValue('/data/services/' + s.tagName + '/ignoreErrorUntil')
+				<td>$muted</td>
+				$if msg:
+					<td>1h 1d 1w 1m</td>
+				$else:
+					<td></td>
+			</tr>
+	</table>
 		
 		
 

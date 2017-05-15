@@ -520,7 +520,7 @@ class DBImpl(DBSerializer):
             self.signalNodelist(recursiveNodeSet(node))
         
             # Return the location of the new node
-            return getXPathForElement(node)
+            return self.getXPathForElement(node)
         
     def newValue(self, location, where, name, value):
         """Insert a single new node into the document (value passed as a string)"""
@@ -551,7 +551,7 @@ class DBImpl(DBSerializer):
             self.signalNodelist(recursiveNodeSet(newnode)+nodeSet(newnode.parentNode))
         
             # Return the location of the new node
-            return getXPathForElement(newnode)
+            return self.getXPathForElement(newnode)
         
     def delValue(self, location):
         """Remove a single node from the document"""
@@ -583,7 +583,7 @@ class DBImpl(DBSerializer):
         with self:
             node = xpath.findnode(location, self._doc.documentElement)
             if node:
-                return getXPathForElement(node)
+                return self.getXPathForElement(node)
             return None
         
     def waitValue(self, location):
@@ -593,7 +593,7 @@ class DBImpl(DBSerializer):
                 self.waitLocation(location)
                 node = xpath.findnode(location, self._doc.documentElement)
                 assert node
-            return getXPathForElement(node)
+            return self.getXPathForElement(node)
 
     def hasValues(self, location, context=None):
         """Return a list of xpaths for the given location"""
@@ -601,7 +601,7 @@ class DBImpl(DBSerializer):
             if context is None:
                 context = self._doc.documentElement
             nodelist = xpath.find(location, context, originalContext=[context])
-            return map(getXPathForElement, nodelist)
+            return map(self.getXPathForElement, nodelist)
         
     def getValue(self, location, context=None):
         """Return a single value from the document (as string)"""
@@ -630,7 +630,7 @@ class DBImpl(DBSerializer):
         with self:
             rv = []
             for node in nodelist:
-                rv.append((getXPathForElement(node), xpath.expr.string_value(node)))
+                rv.append((self.getXPathForElement(node), xpath.expr.string_value(node)))
             return rv
         
     def pullValue(self, location):
@@ -670,4 +670,4 @@ class DBImpl(DBSerializer):
             generation = self.waitLocation(location, generation)
             node = xpath.findnode(location, self._doc.documentElement)
             assert node
-            return getXPathForElement(node), generation
+            return self.getXPathForElement(node), generation

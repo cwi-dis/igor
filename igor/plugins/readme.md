@@ -82,6 +82,10 @@ Reads current energy use in the household using a iotsa SmartMeter reader. See [
 
 Older Bluetooth-based version of _smartmeter___iotsa_, reads current energy use in the household using a RFDuino-based SmartMeter reader.
 
+## systemHealth
+
+Collects error messages from `services/*`, `devices/*` and `sensors/*` and stores these in `environment/systemHealth`, 
+
 ## testPlugin
 
 A Python-based plugin that simply shows all the arguments it has been passed. This can be used as the starting point for a python-based plugin.

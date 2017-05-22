@@ -109,7 +109,7 @@ class runScript:
         initDatabaseAccess()
         try:
             # Tell plugin about our url, if we know it
-            myUrl = DATABASE_ACCESS.get_key('devices/igor/url', 'application/x-python-object', 'content')
+            myUrl = DATABASE_ACCESS.get_key('services/igor/url', 'application/x-python-object', 'content')
             env['IGORSERVER_URL'] = myUrl
         except web.HTTPError:
             pass

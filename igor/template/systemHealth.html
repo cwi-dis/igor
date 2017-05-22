@@ -52,10 +52,10 @@ $def with ()
 				<td>$muted</td>
 				$if msg:
 					<td>
-						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=3600">1h</a> 
+						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=86400">1d</a> 
+						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=604800">1w</a> 
+						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=2592000">1m</a>
 					</td>
 				$else:
 					<td></td>

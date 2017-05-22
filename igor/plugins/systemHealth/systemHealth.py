@@ -13,7 +13,7 @@ def systemHealth(ignore=None, duration=0):
         # Request to ignore a specific service for some time.
         targetPath = "services/%s/ignoreErrorUntil" % ignore
         if duration:
-            ignoreUntil = time.time() + duration
+            ignoreUntil = time.time() + float(duration)
             DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, str(int(ignoreUntil)), 'text/plain', replace=True)
         else:
             try:

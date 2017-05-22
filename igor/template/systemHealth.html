@@ -51,7 +51,12 @@ $def with ()
 				$ muted = DATABASE.getValue('/data/services/' + s.tagName + '/ignoreErrorUntil')
 				<td>$muted</td>
 				$if msg:
-					<td>1h 1d 1w 1m</td>
+					<td>
+						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=3600">1h</a> 
+						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=86400">1d</a> 
+						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=604800">1w</a> 
+						<a href="/plugins/systemHealth?ignore=${s.tagName}&duration=2592000">1m</a>
+					</td>
 				$else:
 					<td></td>
 			</tr>

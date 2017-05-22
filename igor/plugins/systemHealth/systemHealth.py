@@ -8,7 +8,19 @@ DATABASE_ACCESS=None
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-def systemHealth():
+def systemHealth(ignore=None, duration=0):
+    if ignore:
+        # Request to ignore a specific service for some time.
+        targetPath = "services/%s/ignoreErrorUntil" % ignore
+        if duration:
+            ignoreUntil = time.time() + duration
+            DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, str(int(ignoreUntil)), 'text/plain', replace=True)
+        else:
+            try:
+                DATABASE_ACCESS.delete_key(targetPath)
+            except web.HTTPError:
+                pass
+            
     services = DATABASE_ACCESS.get_key("services/*", "application/x-python-object", "multi")
     # That call should return a dict of {xpath:{content}} for all matching elements
     for xp, content in services.items():

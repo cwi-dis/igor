@@ -68,7 +68,10 @@ class IgorServer:
         else:
             print >> sys.stderr, "Cannot do mdns-advertise on platform", sys.platform
             return
-        self.advertiser = subprocess.Popen(cmd)
+        try:
+            self.advertiser = subprocess.Popen(cmd)
+        except OSError:
+            print >> sys.stderr, "advertisement command failed: %s" % (' '.join(cmd))
     
     
     def fillSelfData(self):

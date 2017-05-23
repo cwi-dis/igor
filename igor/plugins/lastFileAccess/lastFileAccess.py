@@ -3,6 +3,7 @@ import socket
 import web
 import glob
 import os
+import time
 
 DATABASE_ACCESS=None
 
@@ -44,8 +45,9 @@ def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", m
         if timestamp > latest:
             latest = timestamp
     if latest < 0:
-        message = "%s timestamp file not found" % name
+        message = "%s timestamp file (%s) not found" % (name, path)
     else:
+        max = int(max)
         if max > 0:
             if latest + max > time.time():
                 alive = True
@@ -90,7 +92,7 @@ def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", m
         try:
             rv = DATABASE_ACCESS.put_key(service + '/lastActivity', 'text/plain', None, str(int(latest)), 'text/plain', replace=True)
         except web.HTTPError:
-            raise myWebError("501 Failed to store into %s" % (service + '/lastActivity')
+            raise myWebError("501 Failed to store into %s" % (service + '/lastActivity'))
 
     if not message:
         try:
@@ -101,4 +103,4 @@ def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", m
         try:
             rv = DATABASE_ACCESS.put_key(service + '/errorMessage', 'text/plain', None, message, 'text/plain', replace=True)
         except web.HTTPError:
-            raise myWebError("501 Failed to store into %s" % (service + '/errorMessage')
+            raise myWebError("501 Failed to store into %s" % (service + '/errorMessage'))

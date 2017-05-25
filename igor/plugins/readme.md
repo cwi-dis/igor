@@ -84,7 +84,7 @@ Older Bluetooth-based version of _smartmeter___iotsa_, reads current energy use 
 
 ## systemHealth
 
-Collects error messages from `services/*`, `devices/*` and `sensors/*` and stores these in `environment/systemHealth`, 
+Collects error messages from `services/*`, `devices/*` and `sensors/*` and stores these in `environment/systemHealth`. See [systemHealth/readme.md](systemHealth/readme.md) for details.
 
 ## testPlugin
 

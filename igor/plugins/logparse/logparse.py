@@ -1,6 +1,7 @@
 import sys
 import fileinput
-import dateutil
+import dateutil.parser
+import datetime
 import re
 
 def dologparse(logfiles, goodREs, badREs, timeparser, timeformat):
@@ -38,7 +39,7 @@ def dologparse(logfiles, goodREs, badREs, timeparser, timeformat):
         if 'time' in subgroups:
             srcTime = subgroups['time']
             if timeparser:
-                dt = datetime.datetime.strptime(timeparser, srcTime)
+                dt = datetime.datetime.strptime(srcTime, timeparser)
             else:
                 dt = dateutil.parser.parse(srcTime)
             if timeformat:
@@ -57,7 +58,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         description="Search log file(s) for most recent good and/or bad conditions",
-        epilog="Use (?Ptime) and (?Pmessage) to extract messages from regular expressions"
+        epilog="Use (?P<time>...) and (?P<message>) to extract messages from regular expressions"
         )
     parser.add_argument("-g", "--good", metavar="REGEX", action='append', help="Regular expression for lines corresponding to good events")
     parser.add_argument("-b", "--bad", metavar="REGEX", action='append', help="Regular expression for lines corresponding to bad events")

@@ -68,14 +68,14 @@ def main():
             basedir, pluginname = os.path.split(pluginpath)
             if not pluginname:
                 basedir, pluginname = os.path.split(pluginpath)
-            installplugin(pluginpath, plugindir, pluginname, os.symlink, igorDir) 
+            installplugin(pluginpath, plugindir, pluginname, os.symlink, database) 
     elif sys.argv[1] == 'addstd':
         if len(sys.argv) < 3:
             print >>sys.stderr, "%s: addstd requires a plugin name" % sys.argv[0]
             sys.exit(1)
         for pluginname in sys.argv[2:]:
             pluginpath = os.path.join(igorDir, 'plugins', pluginname)
-            installplugin(pluginpath, plugindir, pluginname, os.symlink, igorDir) 
+            installplugin(pluginpath, plugindir, pluginname, os.symlink, database) 
     elif sys.argv[1] == 'remove':
         if len(sys.argv) < 3:
             print >>sys.stderr, "%s: remove requires a plugin name" % sys.argv[0]

@@ -5,7 +5,7 @@
 	</services>
 	<actions>
 		<action>
-			<interval>60</interval>
+			<interval>36000</interval>
 			<url>/pluginscripts/timemachine/get?name=backup.desktop&amp;remoteHost=localhost</url>
 		</action>
 	</actions>

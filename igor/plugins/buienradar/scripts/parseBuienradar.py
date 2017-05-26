@@ -51,7 +51,7 @@ def process(input):
         intensity = int(intensity*100)/100.0
         measurementList.append(dict(time=timestamp, hour=hh, minute=mm, level=level, mm=intensity))
     if not measurementList: return False
-    rv = dict(lastUpdate=datetime.datetime.now().isoformat(), data=measurementList)
+    rv = dict(lastActivity=datetime.datetime.now().isoformat(), data=measurementList)
     json.dump(rv, sys.stdout)
     print
     return True

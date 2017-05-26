@@ -129,7 +129,7 @@ class getBLEdata:
         			item[k] = values[k]
         	devList.append(item)
         web.header('Content-Type', 'application/json')
-        rv = json.dumps({'bleDevice':devList})
+        rv = json.dumps({'bleDevice':devList, 'lastActivity' : time.time()})
         return rv
         
 if __name__ == '__main__':

@@ -328,7 +328,7 @@ def main():
         
     if args.json:
         if args.wrap:
-            report_dataset = {"lease" : report_dataset }
+            report_dataset = {"lease" : report_dataset, "lastActivity" : time.time() }
         print json.dumps(report_dataset, cls=DatetimeEncoder)
     else:
 

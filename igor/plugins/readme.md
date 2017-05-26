@@ -90,6 +90,10 @@ Collects error messages from `services/*`, `devices/*` and `sensors/*` and store
 
 A Python-based plugin that simply shows all the arguments it has been passed. This can be used as the starting point for a python-based plugin.
 
+## timemachine
+
+Checks last time that Apple Time Machine backed up specific machines. See [timemachine/readme.md](timemachine/readme.md) for details.
+
 ## watchdog
 
 Reboots the host system in case of problems. See [watchdog/readme.md](watchdog/readme.md) for details.

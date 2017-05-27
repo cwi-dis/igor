@@ -87,9 +87,9 @@ class IgorServer:
         
     def dump(self):
         rv = ''
-        if self.urlCaller: rv += self.urlCaller.dump()
-        if self.actionHandler: rv += self.actionHandler.dump()
-        if self.eventSources: rv += self.eventSources.dump()
+        if self.urlCaller: rv += self.urlCaller.dump() + '\n'
+        if self.actionHandler: rv += self.actionHandler.dump() + '\n'
+        if self.eventSources: rv += self.eventSources.dump() + '\n'
         return rv
         
     def log(self):
@@ -109,6 +109,7 @@ class IgorServer:
             self.actionHandler.updateActions(startupActions[0])
         elif self.actionHandler:
             self.actionHandler.updateActions([])
+        return 'OK'
 
     def updateEventSources(self):
         """Create any SSE event sources that are defined in the database"""
@@ -121,6 +122,7 @@ class IgorServer:
             self.eventSources.updateEventSources(eventSources[0])
         elif self.eventSources:
             self.eventSources.updateEventSources([])
+        return 'OK'
 
     def runAction(self, actionname):
         if not self.actionHandler:
@@ -130,9 +132,11 @@ class IgorServer:
             raise web.notfound()
         for node in nodes:
             self.actionHandler.triggerAction(node)
+        return 'OK'
             
     def save(self):
         self.database.saveFile()
+        return 'OK'
         
     def started(self):
         return "IgorServer started"

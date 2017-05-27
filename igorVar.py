@@ -10,14 +10,14 @@ import pprint
 
 DEFAULT_URL="http://framboos.local:9333/data"
 if 'IGORSERVER_URL' in os.environ:
-    DEFAULT_URL = os.environ['IGORSERVER_URL']
+	DEFAULT_URL = os.environ['IGORSERVER_URL']
 VERBOSE=False
 
 class IgorServer:
 	def __init__(self, url, bearer_token=None, access_token=None):
 		self.baseUrl = url
 		if url[-1] != '/':
-		    url = url + '/'
+			url = url + '/'
 		self.url = url
 		self.bearer_token = bearer_token
 		self.access_token = access_token
@@ -75,10 +75,10 @@ class IgorServer:
 			msg = "%s: Error %s for %s" % (sys.argv[0], reply['status'], url)
 			contentLines = content.splitlines()
 			if len(contentLines) == 1:
-			    print >>sys.stderr, msg + ':' + contentLines[0]
+				print >>sys.stderr, msg + ':' + contentLines[0]
 			else:
-			    print >>sys.stderr, msg
-    			print >>sys.stderr, content
+				print >>sys.stderr, msg
+				print >>sys.stderr, content
 			sys.exit(1)
 		return content
 		
@@ -100,6 +100,8 @@ def main():
 	parser.add_argument("--put", metavar="MIMETYPE", help="PUT data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--post", metavar="MIMETYPE", help="POST data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--data", metavar="DATA", help="POST or PUT DATA, in stead of reading from stdin")
+	parser.add_argument("--checkdata", action="store_true", help="Check that data is valid XML or JSON")
+	parser.add_argument("--timestamp", action="store_true", help="Add lastActivity timestamp to XML or JSON data")
 	parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
 	parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line")
 	parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument")
@@ -110,7 +112,7 @@ def main():
 	
 	url = args.url
 	if args.eval:
-	    url.replace("/data", "/evaluate")
+		url.replace("/data", "/evaluate")
 	server = IgorServer(url, bearer_token=args.bearer, access_token=args.access)
 	if args.python:
 		args.mimetype = 'application/json'
@@ -122,9 +124,37 @@ def main():
 		data = args.data
 		if data is None:
 			data = sys.stdin.read()
-			if not data and not args.allow_empty:
-				print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]
+		if args.checkdata or args.timestamp:
+			# Check that data is valid JSON or XML.
+			# If no data is read at all only exit with nonzero status, assume the previous
+			# part of the pipeline has already issues an error.
+			if not data:
 				sys.exit(1)
+			if args.put == 'application/json':
+				try:
+					decodedData = json.loads(data)
+					if args.timestamp:
+						decodedData['lastActivity'] = str(int(time.time()))
+					data = json.dumps(decodedData)
+				except ValueError:
+					print >>sys.stderr, "%s: no valid JSON data read from stdin" % sys.argv[0]
+					sys.exit(1)
+			elif args.put == 'application/xml':
+				try:
+					decodedData = xml.etree.ElementTree.fromstring(data)
+					if args.timestamp:
+						n = xml.etree.SubElement(decodedData, 'lastActivity')
+						n.text = str(int(time.time()))
+						data = xml.etree.tostring(decodedData)
+				except xml.etree.ElementTree.ParseError:
+					print >> sys.stderr, "%s: no valid XML data read from stdin" % sys.argv[0]
+					sys.exit(1)
+			else:
+				print >>sys.stderr, "%s: --checkdata and --timestamp only allowed for JSON and XML data"
+				sys.exit(1)
+		elif not data and not args.allow_empty:
+			print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]
+			sys.exit(1)
 		result = server.put(args.var, data, args.put, variant=args.variant, format=args.mimetype)
 	elif args.post:
 		data = args.data

@@ -4,7 +4,7 @@ x)
 	tmutil=tmutil
 	;;
 *)
-	tmutil = "ssh $igor_remoteHost tmutil"
+	tmutil="ssh $igor_remoteHost tmutil"
 	;;
 esac
 case x$igor_name in

@@ -12,4 +12,10 @@
 			<url>/plugin/systemHealth</url>
 		</action>
 	</actions>
+	<plugindata>
+		<systemHealth>
+			<sensorMaxInterval>
+			</sensorMaxInterval>
+		</systemHealth>
+	</plugindata>
 </data>

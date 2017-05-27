@@ -40,7 +40,7 @@ $def with ()
 			<th>Alive?</th>
 			<th>Error condition</th>
 			<th>Ignored? (seconds)</th>
-			<th>Ignore (not yet)</th>
+			<th>Ignore</th>
 		</tr>
 		$for s in services:
 			<tr>
@@ -52,10 +52,42 @@ $def with ()
 				<td>$muted</td>
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=3600">1h</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=86400">1d</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=604800">1w</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=2592000">1m</a>
+					</td>
+				$else:
+					<td></td>
+			</tr>
+	</table>
+		
+		
+	<h2>Device status</h2>
+	
+	$ sensors = DATABASE.getElements('/data/sensors/*')
+	<table style="width:100%">
+		<tr>
+			<th>Sensor Class</th>
+			<th>Last Activity</th>
+			<th>Error condition</th>
+			<th>Ignored? (seconds)</th>
+			<th>Ignore</th>
+		</tr>
+		$for s in sensors:
+			<tr>
+				<td>$s.tagName</td>
+				<td>${DATABASE.getValue('/data/sensors/' + s.tagName + '/lastActivity')}</td>
+				$ msg = DATABASE.getValue('/data/sensors/' + s.tagName + '/errorMessage')
+				<td>$msg</td>
+				$ muted = DATABASE.getValue('/data/sensors/' + s.tagName + '/ignoreErrorUntil')
+				<td>$muted</td>
+				$if msg:
+					<td>
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=3600">1h</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=86400">1d</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=604800">1w</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=2592000">1m</a>
 					</td>
 				$else:
 					<td></td>

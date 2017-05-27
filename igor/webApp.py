@@ -235,12 +235,28 @@ class runPlugin:
             mod.DATABASE_ACCESS = DATABASE_ACCESS
             mod.COMMANDS = COMMANDS
             mod.WEBAPP = WEBAPP
+        allArgs = dict(web.input())
+        # Find plugindata and per-user plugindata
+        try:
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (command), 'application/x-python-object', 'content')
+        except web.HTTPError:
+            web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+            pluginData = {}
+        if allArgs.has_key('user'):
+            user = allArgs['user']
+            try:
+                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, command), 'application/x-python-object', 'content')
+            except web.HTTPError:
+                web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+                userData = {}
+            if userData:
+                pluginData.update(userData)
+            mod.PLUGINDATA = userdata
         try:
             method = getattr(mod, command)
         except AttributeError:
             raise web.notfound()
             
-        allArgs = dict(web.input())
         try:
             rv = method(**allArgs)
         except TypeError, arg:

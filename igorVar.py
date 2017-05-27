@@ -5,8 +5,10 @@ import urllib
 import httplib2
 import sys
 import os
+import time
 import json
 import pprint
+import xml.etree.ElementTree
 
 DEFAULT_URL="http://framboos.local:9333/data"
 if 'IGORSERVER_URL' in os.environ:
@@ -143,9 +145,9 @@ def main():
 				try:
 					decodedData = xml.etree.ElementTree.fromstring(data)
 					if args.timestamp:
-						n = xml.etree.SubElement(decodedData, 'lastActivity')
+						n = xml.etree.ElementTree.SubElement(decodedData, 'lastActivity')
 						n.text = str(int(time.time()))
-						data = xml.etree.tostring(decodedData)
+						data = xml.etree.ElementTree.tostring(decodedData)
 				except xml.etree.ElementTree.ParseError:
 					print >> sys.stderr, "%s: no valid XML data read from stdin" % sys.argv[0]
 					sys.exit(1)

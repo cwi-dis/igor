@@ -34,12 +34,22 @@ $def with ()
 	</p>
 	
 	<p>
-		For testing purposes you can run internal commands by prefixing them with <a href="/internal/">/internal/</a> 
-		(for example <a href="/internal/log">/internal/log</a>),
-		individual actions by prefixing with <a href="/action/">/action/</a> (for example <a href="/action/save">/action/save</a>) and
-		plugins by prefixing with <a href="/plugin/">/plugin/</a>.
+		You can run
+		individual actions by prefixing with <a href="/action/">/action/</a> (for example <a href="/action/save">/action/save</a>),
+		plugins by prefixing with <a href="/plugin/">/plugin/</a> and a specific script for a specific plugin by constructing the url 
+		<tt>/pluginscript/<i>pluginname</i>/<i>scriptname</i></tt>.
 	</p>
 		
+	<h2>Debugging</h2>
+
+	<p>
+		For testing purposes you can run internal commands by prefixing them with <a href="/internal/">/internal/</a>, for example:
+	</p>
+
+	<ul>
+		<li><a href="/internal/log">/internal/log</a> shows the httpd-style log file</li>
+		<li><a href="/internal/dump">/internal/dump</a> dumps all runnable actions and the action storage datastructure with next runtimes</li>
+	</ul>
 
 </body>
 </html>

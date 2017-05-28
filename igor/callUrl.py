@@ -8,12 +8,13 @@ import traceback
 
 DEBUG=False
 
-class URLCaller(threading.Thread):
-    def __init__(self, app):
+class URLCallRunner(threading.Thread):
+    def __init__(self, app, what):
         threading.Thread.__init__(self)
         self.daemon = True
         self.app = app
         self.queue = Queue.Queue()
+        self.what = what
 
     def run(self):
         while True:
@@ -62,7 +63,7 @@ class URLCaller(threading.Thread):
                         print '\t'+line
                 
     def dump(self):
-        rv = 'URLCaller %s:\n' % repr(self)
+        rv = 'URLCaller %s (%s):\n' % (repr(self), self.what)
         for qel in self.queue.queue:
             rv += '\t' + repr(qel) + '\n'
         return rv
@@ -70,3 +71,29 @@ class URLCaller(threading.Thread):
     def callURL(self, tocall):
         if DEBUG: print 'URLCaller.callURL(%s)' % repr(tocall)
         self.queue.put(tocall)
+
+class URLCaller:
+    def __init__(self, app):
+        self.dataRunner = URLCallRunner(app, 'internal actions')
+        self.extRunner = URLCallRunner(app, 'network actions')
+        self.otherRunner = URLCallRunner(app, 'scripting and plugin actions')
+        
+    def dump(self):
+        rv = self.dataRunner.dump() + '\n' + 
+            self.extRunner.dump() + '\n' +
+            self.otherRunner.dump()
+        return rv
+        
+    def callURL(self, tocall):
+        url = tocall['url']
+        parsedUrl = urlparse.urlparse(url)
+        if parsedUrl.scheme:
+            self.extRunner.callURL(tocall)
+        elif parsedUrl.path.startswith('/data/'):
+            self.dataRunner.callURL(tocall)
+        else:
+            self.otherRunner.callURL(tocall)
+        
+        
+    def callURL(self, tocall):
+        pass

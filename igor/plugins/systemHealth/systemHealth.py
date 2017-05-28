@@ -66,10 +66,11 @@ def systemHealth(ignore=None, duration=0):
                         web.ctx.status = "200 OK"
 
     services = DATABASE_ACCESS.get_key("services/*", "application/x-python-object", "multi")
+    devices = DATABASE_ACCESS.get_key("devices/*", "application/x-python-object", "multi")
     #
     # For all sensors and services see whether we have an error condition.
     #
-    for xp, content in services.items() + badSensors.items():
+    for xp, content in services.items() + devices.items() + badSensors.items():
         serviceName = xp[xp.rindex('/')+1:]
         hasError = 'errorMessage' in content
         hasIgnore = 'ignoreErrorUntil' in content

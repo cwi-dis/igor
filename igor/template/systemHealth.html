@@ -63,7 +63,7 @@ $def with ()
 	</table>
 		
 		
-	<h2>Device status</h2>
+	<h2>Sensor status</h2>
 	
 	$ sensors = DATABASE.getElements('/data/sensors/*')
 	<table style="width:100%">
@@ -94,6 +94,36 @@ $def with ()
 			</tr>
 	</table>
 		
+	<h2>Device status</h2>
+	
+	$ devices = DATABASE.getElements('/data/devices/*')
+	<table style="width:100%">
+		<tr>
+			<th>Device</th>
+			<th>Last Activity</th>
+			<th>Error condition</th>
+			<th>Ignored? (seconds)</th>
+			<th>Ignore</th>
+		</tr>
+		$for s in devices:
+			<tr>
+				<td>$s.tagName</td>
+				<td>${DATABASE.getValue('/data/devices/' + s.tagName + '/lastActivity')}</td>
+				$ msg = DATABASE.getValue('/data/devices/' + s.tagName + '/errorMessage')
+				<td>$msg</td>
+				$ muted = DATABASE.getValue('/data/devices/' + s.tagName + '/ignoreErrorUntil')
+				<td>$muted</td>
+				$if msg:
+					<td>
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=3600">1h</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=86400">1d</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=604800">1w</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=2592000">1m</a>
+					</td>
+				$else:
+					<td></td>
+			</tr>
+	</table>
 		
 
 </body>

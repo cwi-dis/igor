@@ -78,10 +78,15 @@ class URLCaller:
         self.extRunner = URLCallRunner(app, 'network actions')
         self.otherRunner = URLCallRunner(app, 'scripting and plugin actions')
         
+    def start(self):
+        self.dataRunner.start()
+        self.extRunner.start()
+        self.otherRunner.start()
+        
     def dump(self):
-        rv = self.dataRunner.dump() + '\n' + 
+        rv = (self.dataRunner.dump() + '\n' + 
             self.extRunner.dump() + '\n' +
-            self.otherRunner.dump()
+            self.otherRunner.dump())
         return rv
         
     def callURL(self, tocall):
@@ -94,6 +99,3 @@ class URLCaller:
         else:
             self.otherRunner.callURL(tocall)
         
-        
-    def callURL(self, tocall):
-        pass

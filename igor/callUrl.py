@@ -8,12 +8,20 @@ import traceback
 
 DEBUG=False
 
+class CheckableQueue(Queue.Queue):
+    """We only check to forestall doing double work. So we don't
+    really care about the race condition..."""
+    
+    def __contains__(self, item):
+        with self.mutex:
+            return item in self.queue
+
 class URLCallRunner(threading.Thread):
     def __init__(self, app, what):
         threading.Thread.__init__(self)
         self.daemon = True
         self.app = app
-        self.queue = Queue.Queue()
+        self.queue = CheckableQueue()
         self.what = what
 
     def run(self):
@@ -70,6 +78,11 @@ class URLCallRunner(threading.Thread):
         
     def callURL(self, tocall):
         if DEBUG: print 'URLCaller.callURL(%s)' % repr(tocall)
+        if tocall.get('aggregate'):
+            # We should aggregate this action, so don't insert if already in the queue
+            if tocall in self.queue:
+                if DEBUG: print '(skipped because aggregate is true)'
+                return
         self.queue.put(tocall)
 
 class URLCaller:

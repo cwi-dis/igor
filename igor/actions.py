@@ -30,6 +30,7 @@ class Action:
             xpaths = [xpaths]
         self.xpaths = xpaths
         self.multiple = content.get('multiple')
+        self.aggregate = content.get('aggregate')
         self.url = content.get('url')
         self.method = content.get('method')
         self.data = content.get('data')
@@ -92,6 +93,7 @@ class Action:
             if data:
                 tocall['data'] = data
             tocall['mimetype'] = self.mimetype
+            tocall['aggregate'] = self.aggregate
             # xxxjack can add things like mimetype, credentials, etc
             self._willRunNow()
             self.hoster.scheduleCallback(tocall)

@@ -186,6 +186,7 @@ Here is a description of the available elements:
 * `actions/action/name`: Name of the action (string). Action will trigger when `/actions/name` is accessed.
 * `actions/action/xpath`: XPath expression that must deliver a _node_ or _nodeset_ (string). Action will trigger if any of these nodes is modified.
 * `actions/action/multiple`: A boolean that signals what should happen if multiple elements are changed (and match the xpath expression) by the same operation. When false (the default) the action triggers once, with a random element as the context. When true the action will trigger for each element in the nodeset.
+* `actions/action/aggregate`: A boolean to indicate that multiple triggers of this action can be aggregated into a single call. Note that this is completely different from `multiple`, it can be used to forestall scheduling an action if the identical action is already waiting to be executed.
 * `actions/action/interval`: Interval in seconds (integer). Action will trigger at least once every _interval_ seconds.
 * `actions/action/minInterval`: Minimum interval in seconds (integer). Action will trigger at most once every _minInterval_ seconds.
 * `actions/action/notBefore`: Earliest time this action will trigger again (timestamp). This field is set by Igor whenever the action is triggered, using data from _minInterval_, and it is actually the way the _minInterval_ functionality is implemented.

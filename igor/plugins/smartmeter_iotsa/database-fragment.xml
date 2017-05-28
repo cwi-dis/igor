@@ -4,6 +4,7 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/smartmeter_iotsa/pull</url>
+			<aggregate>true</aggregate>
 		</action>
 		<action>
 			<xpath>/data/sensors/smartMeter</xpath>

@@ -7,6 +7,7 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/dhcp/pull</url>
+			<aggregate>true</aggregate>
 		</action>
         <action>
             <xpath>/data/sensors/dhcp/lease</xpath>

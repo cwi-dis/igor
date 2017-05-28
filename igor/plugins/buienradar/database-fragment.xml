@@ -7,6 +7,7 @@
 		<action>
 			<interval>300</interval>
 			<url>/pluginscripts/buienradar/pull</url>
+			<aggregate>true</aggregate>
 		</action>
 		<action>
 			<name>start</name>

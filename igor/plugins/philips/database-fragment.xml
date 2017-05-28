@@ -12,6 +12,7 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/philips/pull</url>
+			<aggregate>true</aggregate>
 		</action>			
 		<action>
 			<xpath>/data/devices/tv</xpath>

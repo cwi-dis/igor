@@ -4,6 +4,7 @@
 		<action>
 			<interval>60/interval>
 			<url>/pluginscripts/ble/pull</url>
+			<aggregate>true</aggregate>
 		</action>
         <action>
             <xpath>/data/sensors/ble/bleDevice</xpath>

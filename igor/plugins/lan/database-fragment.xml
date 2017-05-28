@@ -8,10 +8,12 @@
 		<action>
 			<interval>60</interval>
 			<url>/plugin/lan?name=router&amp;ip=192.168.1.1</url>
+			<aggregate>true</aggregate>
 		</action>
 		<action>
 			<interval>60</interval>
 			<url>/plugin/lan?name=internet&amp;ip=google.com.</url>
+			<aggregate>true</aggregate>
 		</action>
 	</actions>
 </data>

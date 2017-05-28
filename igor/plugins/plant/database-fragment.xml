@@ -17,6 +17,7 @@
 		<action>
 			<interval>600</interval>
 			<url>/pluginscripts/plant/pull</url>
+			<aggregate>true</aggregate>
 		</action>			
 	</actions>
 	<environment>

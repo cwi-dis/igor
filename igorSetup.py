@@ -19,6 +19,7 @@ add pathname [...] - add plugin (copy) from given pathname
 addstd name - add standard plugin (linked) with given name
 remove name - remove plugin
 liststd - list all available standard plugins
+updatestd - update all standard plugins to newest version
 runatboot - make igorServer run at system boot (Linux or OSX, requires sudo permission)
 runatlogin - make igorServer run at user login (OSX only)
 """
@@ -48,6 +49,8 @@ def main():
         sys.exit(1)
     plugindir = os.path.join(database, 'plugins')
     
+    runcmds = []
+    
     if sys.argv[1] == 'list':
         names = os.listdir(plugindir)
         names.sort()
@@ -68,14 +71,25 @@ def main():
             basedir, pluginname = os.path.split(pluginpath)
             if not pluginname:
                 basedir, pluginname = os.path.split(pluginpath)
-            installplugin(pluginpath, plugindir, pluginname, os.symlink, database) 
+            runcmds += installplugin(database, pluginpath, pluginname, shutil.cptree) 
     elif sys.argv[1] == 'addstd':
         if len(sys.argv) < 3:
             print >>sys.stderr, "%s: addstd requires a plugin name" % sys.argv[0]
             sys.exit(1)
         for pluginname in sys.argv[2:]:
-            pluginpath = os.path.join(igorDir, 'plugins', pluginname)
-            installplugin(pluginpath, plugindir, pluginname, os.symlink, database) 
+            pluginsrcpath = os.path.join(igorDir, 'plugins', pluginname)
+            runcmds += installplugin(database, pluginsrcpath, pluginname, os.symlink)
+    elif sys.argv[1] == 'updatestd':
+        names = os.listdir(plugindir)
+        names.sort()
+        for name in names:
+            if name[0] == '.' or name == 'readme.txt': continue
+            pluginpath = os.path.join(plugindir, name)
+            if  os.path.islink(pluginpath):
+                print 'Updating', pluginpath
+                os.unlink(pluginpath)
+                pluginsrcpath = os.path.join(igorDir, 'plugins', pluginname)
+                runcmds += installplugin(database, pluginsrcpath, name, os.symlink)
     elif sys.argv[1] == 'remove':
         if len(sys.argv) < 3:
             print >>sys.stderr, "%s: remove requires a plugin name" % sys.argv[0]
@@ -105,19 +119,19 @@ def main():
         if sys.platform == 'darwin' and sys.argv[1] == 'runatboot':
             template = os.path.join(igorDir, 'bootScripts', 'nl.cwi.dis.igor.plist')
             dest = '/Library/LaunchDaemons/nl.cwi.dis.igor.plist'
-            runcmds = [
+            runcmds += [
                 "sudo launchctl load %s" % dest,
                 ]
         elif sys.platform == 'darwin' and sys.argv[1] == 'runatlogin':
             template = os.path.join(igorDir, 'bootScripts', 'nl.cwi.dis.igor.plist')
             dest = os.path.join(os.path.expanduser('~'), 'Library/LaunchAgents/nl.cwi.dis.igor.plist')
-            runcmds = [
+            runcmds += [
                 "launchctl load %s" % dest,
                 ]
         elif sys.platform == 'linux2' and sys.argv[1] == 'runatboot':
             template = os.path.join(igorDir, 'bootScripts', 'initscript-igor')
             dest = '/etc/init.d/igor'
-            runcmds = [
+            runcmds += [
                 "sudo update-rc.d igor defaults",
                 "sudo service igor start"
                 ]
@@ -132,6 +146,7 @@ def main():
         open(dest, 'w').write(bootData)
         if sys.platform == 'linux2':
             os.chmod(dest, 0755)
+    if runcmds:
         print 'Run the following commands:'
         for cmd in runcmds: print cmd
     else:
@@ -139,8 +154,8 @@ def main():
         sys.exit(1)
     sys.exit(0)
     
-def installplugin(src, plugindir, pluginname, cpfunc, database):
-    dst = os.path.join(plugindir, pluginname)
+def installplugin(database, src, pluginname, cpfunc):
+    dst = os.path.join(database, 'plugins', pluginname)
     if os.path.exists(dst):
         print >>sys.stderr, "%s: already exists: %s" % (sys.argv[0], dst)
         return
@@ -150,8 +165,9 @@ def installplugin(src, plugindir, pluginname, cpfunc, database):
     cpfunc(src, dst)
     xmlfrag = os.path.join(dst, 'database-fragment.xml')
     if os.path.exists(xmlfrag):
-        print 'Merge database fragment by hand, please:'
-        print '\t', os.environ.get("EDITOR", "edit"), xmlfrag, os.path.join(database, 'database.xml')
+        runcmd = '"%s" "%s" "%s"' % (os.environ.get("EDITOR", "edit"), xmlfrag, os.path.join(database, 'database.xml'))
+        return [runcmd]
+    return []
     
 if __name__ == '__main__':
     main()

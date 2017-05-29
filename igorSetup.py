@@ -22,6 +22,9 @@ liststd - list all available standard plugins
 updatestd - update all standard plugins to newest version
 runatboot - make igorServer run at system boot (Linux or OSX, requires sudo permission)
 runatlogin - make igorServer run at user login (OSX only)
+start - start service (using normal OSX or Linux commands)
+stop - stop service (using normal OSX or Linux commands)
+rebuild - stop, rebuild and start the service (must be run in source directory)
 """
 def main():
     # Find username even when sudoed
@@ -146,9 +149,39 @@ def main():
         open(dest, 'w').write(bootData)
         if sys.platform == 'linux2':
             os.chmod(dest, 0755)
+    elif sys.argv[1] in ('start', 'stop', 'rebuild'):
+        if sys.platform == 'darwin':
+            daemonFile = '/Library/LaunchDaemons/nl.cwi.dis.igor.plist'
+            if not os.path.exists(daemonFile):
+                daemonFile = os.path.join(os.path.expanduser('~'), 'Library/LaunchAgents/nl.cwi.dis.igor.plist')
+        elif sys.platform == 'linux2':
+            daemonFile = '/etc/init.d/igor'
+        else:
+            print >>sys.stderr, "%s: don't know about daemon mode on platform %s" % (sys.argv[0], sys.platform)
+            sys.exit(1)
+        if not os.path.exists(daemonFile):
+            print >>sys.stderr, "%s: it seems igor is not configured for runatboot or runatlogin" % sys.argv[0]
+            sys.exit(1)
+        if sys.argv[1] in ('stop', 'rebuild'):
+            if sys.platform == 'darwin':
+                runcmds += "sudo launchctl unload %s" % daemonFile
+            else:
+                runcmds += "sudo service igor stop"
+        if sys.argv == 'rebuild':
+            if not os.path.exists("setup.py"):
+                print >> sys.stderr, "%s: use 'rebuild' option only in an Igor source directory" % sys.argv[0]
+            runcmds += "python setup.py build"
+            runcmds += "sudo python setup.py install"
+        if sys.argv[1] in ('rebuild', 'start'):
+            if sys.platform == 'darwin':
+                runcmds += "sudo launchctl load %s" % daemonFile
+            else:
+                runcmds += "sudo service igor start"
     if runcmds:
         print 'Run the following commands:'
-        for cmd in runcmds: print cmd
+        print '('
+        for cmd in runcmds: print '\t', cmd
+        print ')'
     else:
         print >>sys.stderr, '%s: unknown command: %s. Use --help for help.' % (sys.argv[0], sys.argv[1])
         sys.exit(1)

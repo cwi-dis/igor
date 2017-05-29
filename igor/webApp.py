@@ -32,6 +32,7 @@ urls = (
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
     '/internal/(.*)', 'runCommand',
     '/action/(.*)', 'runAction',
+    '/trigger/(.*)', 'runTrigger',
     '/plugin/(.*)', 'runPlugin',
     '/([^/]*)', 'static',
 )
@@ -207,6 +208,18 @@ class runAction:
         if not COMMANDS:
             raise web.notfound()
         return COMMANDS.runAction(actionname)
+        
+class runTrigger:
+    def OPTIONS(self, *args):
+        web.ctx.headers.append(('Allow', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Methods', 'GET'))
+        web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
+        return ''
+        
+    def GET(self, triggername):
+        if not COMMANDS:
+            raise web.notfound()
+        return COMMANDS.runTrigger(triggername)
         
 class runPlugin:
     """Call a plugin method"""

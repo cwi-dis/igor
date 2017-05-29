@@ -49,6 +49,8 @@ class IgorServer:
         self.updateActions()
         self.eventSources = None
         self.updateEventSources()
+        self.triggerHandler = None
+        self.updateTriggers()
         #
         # Disable debug
         #
@@ -124,6 +126,9 @@ class IgorServer:
             self.eventSources.updateEventSources([])
         return 'OK'
 
+    def updateTriggers(self):
+        pass
+        
     def runAction(self, actionname):
         if not self.actionHandler:
             raise web.notfound()
@@ -133,7 +138,19 @@ class IgorServer:
         for node in nodes:
             self.actionHandler.triggerAction(node)
         return 'OK'
-            
+    
+    def runTrigger(self, triggername):
+        raise web.HTTPError("502 triggers not yet implemented")
+        if not self.triggerHandler:
+            raise web.notfound()
+        triggerNodes = self.database.getElements('triggers/%s' % triggername)
+        if not triggerNodes:
+            raise web.notfound()
+        if len(triggerNodes) > 1:
+            raise web.HTTPError("502 multiple triggers %s in database" % triggername)
+        triggerNode = triggerNodes[0]
+        self.triggerHandler.triggerTrigger(triggerNode)
+        
     def save(self):
         self.database.saveFile()
         return 'OK'
@@ -172,6 +189,7 @@ class IgorServer:
         rv += 'command - Show command line that started this Igor instance\n'
         rv += 'dump - Show internal run queue of this Igor instance\n'
         rv += 'log - Show httpd-style log file of this Igor instance\n'
+        return rv
         
     def version(self):
         return VERSION + '\n'

@@ -91,7 +91,7 @@ def main():
             if  os.path.islink(pluginpath):
                 print 'Updating', pluginpath
                 os.unlink(pluginpath)
-                pluginsrcpath = os.path.join(igorDir, 'plugins', pluginname)
+                pluginsrcpath = os.path.join(igorDir, 'plugins', name)
                 runcmds += installplugin(database, pluginsrcpath, name, os.symlink)
     elif sys.argv[1] == 'remove':
         if len(sys.argv) < 3:
@@ -163,20 +163,23 @@ def main():
             print >>sys.stderr, "%s: it seems igor is not configured for runatboot or runatlogin" % sys.argv[0]
             sys.exit(1)
         if sys.argv[1] in ('stop', 'rebuild'):
+            runcmds += ["igorControl save"]
             if sys.platform == 'darwin':
-                runcmds += "sudo launchctl unload %s" % daemonFile
+                runcmds += ["sudo launchctl unload %s" % daemonFile]
             else:
-                runcmds += "sudo service igor stop"
-        if sys.argv == 'rebuild':
+                runcmds += ["sudo service igor stop"]
+        if sys.argv[1] == 'rebuild':
             if not os.path.exists("setup.py"):
                 print >> sys.stderr, "%s: use 'rebuild' option only in an Igor source directory" % sys.argv[0]
-            runcmds += "python setup.py build"
-            runcmds += "sudo python setup.py install"
+            runcmds += [
+                "python setup.py build",
+                "sudo python setup.py install"
+                ]
         if sys.argv[1] in ('rebuild', 'start'):
             if sys.platform == 'darwin':
-                runcmds += "sudo launchctl load %s" % daemonFile
+                runcmds += ["sudo launchctl load %s" % daemonFile]
             else:
-                runcmds += "sudo service igor start"
+                runcmds += ["sudo service igor start"]
     if runcmds:
         print 'Run the following commands:'
         print '('

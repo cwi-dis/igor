@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          igor
 # Required-Start:    networking
@@ -16,7 +16,7 @@
 # database - directory where the database lives (usually ~user/.igor)
 #
 RUNAS=%(user)s
-DAEMON="%(igorDir)s"
+DAEMON="igorServer"
 IGOR_DIR="%(database)s"
 
 # Using the lsb functions to perform the operations.
@@ -27,11 +27,8 @@ NAME=igor
 DAEMON_ARGS="-d $IGOR_DIR --advertise"
 
 LOGFILE="$IGOR_DIR/igor.log"
-SCRIPT="python $DAEMON $DAEMON_ARGS"
+SCRIPT="$DAEMON $DAEMON_ARGS"
 PIDFILE=/var/run/igor.pid
-
-# If the daemon is not there, then exit.
-test -d $DAEMON || exit 5
 
 start() {
   if [ -f /var/run/$PIDNAME ] && kill -0 $(cat /var/run/$PIDNAME); then
@@ -39,7 +36,7 @@ start() {
     return 1
   fi
   echo 'Starting service…' >&2
-  local CMD="$SCRIPT &> \"$LOGFILE\" & echo \$!"
+  local CMD="$SCRIPT >\"$LOGFILE\" 2>&1 & echo \$!"
   su -c "$CMD" $RUNAS > "$PIDFILE"
   echo 'Service started' >&2
 }

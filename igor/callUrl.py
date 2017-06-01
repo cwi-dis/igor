@@ -23,10 +23,12 @@ class URLCallRunner(threading.Thread):
         self.app = app
         self.queue = CheckableQueue()
         self.what = what
+        self.stopping = False
 
     def run(self):
-        while True:
+        while not self.stopping:
             tocall = self.queue.get()
+            if tocall == None: continue # To implement stop
             method = tocall['method']
             url = tocall['url']
             data = tocall.get('data')
@@ -85,6 +87,11 @@ class URLCallRunner(threading.Thread):
                 return
         self.queue.put(tocall)
 
+    def stop(self):
+        self.stopping = True
+        self.queue.put(None)
+        self.join()
+        
 class URLCaller:
     def __init__(self, app):
         self.dataRunner = URLCallRunner(app, 'internal actions')
@@ -96,6 +103,11 @@ class URLCaller:
         self.extRunner.start()
         self.otherRunner.start()
         
+    def stop(self):
+        self.dataRunner.stop()
+        self.extRunner.stop()
+        self.otherRunner.stop()
+
     def dump(self):
         rv = (self.dataRunner.dump() + '\n' + 
             self.extRunner.dump() + '\n' +

@@ -168,6 +168,9 @@ class IgorServer:
         if self.triggerHandler:
             self.triggerHandler.stop()
             self.triggerHandler = None
+        if self.urlCaller:
+            self.urlCaller.stop()
+            self.urlCaller = None
         self.save()
         sys.exit(0)
         

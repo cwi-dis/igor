@@ -11,6 +11,8 @@ discretion, even within the household. It can work together with other Igors
 Home page is <https://github.com/cwi-dis/igor>. 
 This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS group, <http://www.dis.cwi.nl>.
 
+**Please note:** Igor is not a finished product yet, important functionality may be missing and/or faulty. Specifically, there is no security and privacy mechanism in place yet, so any data stored in Igor is readable by anyone who can access port 9333.
+
 ## Technical description
 
 Igor is basically a hierarchical data store, think of an XML file or a JSON 
@@ -59,7 +61,7 @@ could be replaced for efficiency reasons) to allow
 searching, selecting and combining (using expressions) of database elements.
 
 On top of that is a webserver (based on ``web.py``) that allows REST-like 
-access to the database (GET, PUT, POST and DELETE methods). The server handles 
+access to the database (GET, PUT, POST and DELETE methods), by default on port 9333. The server handles 
 conversion between the internal (XML) format and external XML, JSON or plain text format.
 In addition to database access, the web server exposes internal
 functionality (for example to save the database), more general XPath

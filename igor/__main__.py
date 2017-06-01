@@ -11,17 +11,55 @@ import json
 import web
 import subprocess
 import imp
+import threading
+import cProfile
+import pstats
 from _version import VERSION
 
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+#
+# Helper for profileing multiple threads
+# 
+PROFILER_STATS = None
+def enable_thread_profiling():
+    '''Monkey-patch Thread.run to enable global profiling.
+
+    Each thread creates a local profiler; statistics are pooled
+    to the global stats object on run completion.'''
+    global PROFILER_STATS
+    import pstats
+    PROFILER_STATS = None
+    thread_run = threading.Thread.run
+
+    def profile_run(self):
+        print 'xxxjack profile_run'
+        self._prof = cProfile.Profile()
+        self._prof.enable()
+        thread_run(self)
+        self._prof.disable()
+
+        if PROFILER_STATS is None:
+            PROFILER_STATS = pstats.Stats(self._prof)
+        else:
+            PROFILER_STATS.add(self._prof)
+
+    threading.Thread.run = profile_run
+    print 'xxxjack inserted profiler'
+    
+
 class IgorServer:
-    def __init__(self, datadir, port=9333, advertise=False):
+    def __init__(self, datadir, port=9333, advertise=False, profile=False):
         #
         # Create the database, and tell the web application about it
         #
+        self.profile = None
+        if profile:
+            enable_thread_profiling()
+            self.profile = cProfile.Profile()
+            self.profile.enable()
         self.port = port
         self.app = webApp.WEBAPP
         self.datadir = datadir
@@ -159,6 +197,7 @@ class IgorServer:
         return "IgorServer started"
         
     def stop(self):
+        global PROFILER_STATS
         if self.actionHandler:
             self.actionHandler.stop()
             self.actionHandler = None
@@ -172,6 +211,13 @@ class IgorServer:
             self.urlCaller.stop()
             self.urlCaller = None
         self.save()
+        if self.profile:
+            self.profile.disable()
+            if PROFILER_STATS is None:
+                PROFILER_STATS = pstats.Stats(self.profile)
+            else:
+                PROFILER_STATS.add(self.profile)
+            PROFILER_STATS.dump_stats("igor.profile")
         sys.exit(0)
         
     def restart(self):
@@ -220,6 +266,7 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
+    parser.add_argument("--profile", action="store_true", help="Enable Python profiler (debugging Igor only)")
     args = parser.parse_args()
     
     if args.version:
@@ -233,7 +280,7 @@ def main():
         webApp.DEBUG = True
     datadir = args.database
     try:
-        igorServer = IgorServer(datadir, args.port, args.advertise)
+        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile)
     except IOError, arg:
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]

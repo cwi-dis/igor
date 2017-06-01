@@ -29,6 +29,10 @@ class SSEListener(threading.Thread):
         self.alive = False
         self.conn.close()
         
+    def stop(self):
+        self.terminate()
+        self.join()
+        
     def run(self):
         while self.alive:
             if not self.conn:
@@ -141,6 +145,9 @@ class EventSourceCollection:
             t.start()
             self.eventSources.append(t)
             
+    def stop(self):
+        for es in self.eventSources:
+            es.stop()
 
 if __name__ == '__main__':
     s = SSEListener(sys.argv[1])

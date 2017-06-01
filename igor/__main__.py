@@ -159,6 +159,15 @@ class IgorServer:
         return "IgorServer started"
         
     def stop(self):
+        if self.actionHandler:
+            self.actionHandler.stop()
+            self.actionHandler = None
+        if self.eventSources:
+            self.eventSources.stop()
+            self.eventSources = None
+        if self.triggerHandler:
+            self.triggerHandler.stop()
+            self.triggerHandler = None
         self.save()
         sys.exit(0)
         

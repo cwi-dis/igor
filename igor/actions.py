@@ -190,6 +190,7 @@ class ActionCollection(threading.Thread):
         self.actionsChanged = threading.Event()
         self.database = database
         self.scheduleCallback = scheduleCallback
+        self.stopping = False
         self.start()
         
     def dump(self):
@@ -201,7 +202,7 @@ class ActionCollection(threading.Thread):
         
     def run(self):
         """Thread that triggers timed actions as they become elegible"""
-        while True:
+        while not self.stopping:
             #
             # Run all actions that have a scheduled time now (or in the past)
             # and remember the earliest future action time
@@ -250,3 +251,8 @@ class ActionCollection(threading.Thread):
                 return
         print 'ERROR: triggerAction called for unknown element', repr(node)
             
+    def stop(self):
+        self.stopping = True
+        self.actionsChanged.set()
+        self.join()
+        

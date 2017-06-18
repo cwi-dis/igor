@@ -1,5 +1,11 @@
 <?xml version="1.0" ?>
 <data>
+	<environment>
+		<devices/>
+	</environment>
+	<sensors>
+		<ble/>
+	</sensors>
 	<actions>
 		<action>
 			<interval>60/interval>
@@ -25,6 +31,7 @@
 	</actions>
 	<plugindata>
 		<bleDevices>
+			<!-- example: -->
 			<bleDevice>
 				<id>00:11:22:33:44:55</id>
 				<name>bleDeviceName</name>

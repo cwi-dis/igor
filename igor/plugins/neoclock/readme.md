@@ -7,8 +7,14 @@ _The URL to help you build one for yourself will be provided here shortly_.
 This plugin uses the NeoClock to show three types of status information:
 
 * _Igor status_: if Igor does not update the NeoClock status for 5 minutes (for example because Igor has crashed) the inner LED circle will light up orange.
-* _System status_: if any messages have been deposited in `envorinment/systemHealth` the inner LED circle will light up red.
+* _System status_: if any messages have been deposited in `environment/systemHealth` the inner LED circle will light up red.
 * _Rain forecast_: the outer circle of LEDs will show rain intensity for the coming hour (if the [buienradar](../buienradar/readme) plugin is also installed).
+
+## schema
+
+* `environment/systemHealth/messages`: if non-empty the neoClock will show a warning status
+* `sensors/buienradar`: if this exists it will be used to fill the rain forecast status
+* `plugindata/neoclock/host`: host name for the neoclock
 
 ## requirements
 

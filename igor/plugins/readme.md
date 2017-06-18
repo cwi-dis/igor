@@ -10,6 +10,20 @@ Some are more examples that you should copy and adapt to your own need, or use a
 
 Plugins take their name (for use in `plugindata`, for example) from the name they are installed under. So you can install multiple independent copies (for example as _say_ and _sayInBedroom_) and use different plugindata to control each copy of the plugin.
 
+### database-fragment.xml
+
+Many plugins require plugin-specific data in the database. Often there are one or more of the following items:
+
+- plugin-specific actions that are needed to actually fire the plugin,
+- plugin settings, for example to tell which host a specific device is connected to,
+- boilerplate entries for where the plugin will store its data.
+
+Usually these entries are explained in the plugin readme file, in the _schema_ section.
+
+Usually there is a file `database-fragment.xml` that show the entries needed. Basically this file is the minimal set of elements that should be in the database for the plugin to function. 
+
+Installation of these entries into the database is not automatic, when you install the plugin you should manually insert them into the database. This requires a bit of knowledge, because you may have to modify some elements (such as hostname fields) and you may need to duplicate some (with modifications) for example if you want the _lan_ plugin to test different services.
+
 ## ble
 
 Listens to Bluetooth Low Energy advertisements to determine which devices are in range. See [ble/readme.md](ble/readme.md) for details.

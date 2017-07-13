@@ -12,7 +12,7 @@ x)
 	igor_name=backup
 	;;
 esac
-backupFilename=`$tmutil latestbackup`
+backupFilename=`$tmutil latestbackup 2>&1`
 if [ $? -ne 0 ]; then
 	igorVar --put text/plain --data "" services/$igor_name/alive
 	igorVar --put text/plain --data "$igor_name status cannot be determined: $backupFilename" services/$igor_name/errorMessage

@@ -42,6 +42,7 @@ class URLCallRunner(threading.Thread):
             try:
                 resultStatus = ""
                 resultData = ""
+                datetime = time.strftime('%d/%b/%Y %H:%M:%S')
                 parsedUrl = urlparse.urlparse(url)
                 if DEBUG: print 'URLCaller.run calling', url, 'method', method, 'headers', headers, 'data', data
                 if parsedUrl.scheme == '' and parsedUrl.netloc == '':
@@ -57,7 +58,6 @@ class URLCallRunner(threading.Thread):
                     resp, content = h.request(url, method, body=data, headers=headers)
                     resultStatus = "%s %s" % (resp.status, resp.reason)
                     resultData = content
-                datetime = time.strftime('%d/%b/%Y %H:%M:%S')
             except httplib2.HttpLib2Error as e:
                 resultStatus = '502 URLCaller: %s' % traceback.format_exception_only(type(e), e.message)[0].strip()
             except:

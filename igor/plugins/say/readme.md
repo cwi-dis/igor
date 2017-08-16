@@ -3,12 +3,12 @@ This plugin uses a text-to-speech program to speak out any messages appearing in
 
 ## requirements
 
-The plugin as distributed requires a command line utility `say`, as available on OSX, but it is trivial to modify it to use `espeak` or some other TTS package. 
+The plugin uses a command line utility `say`, as available on OSX. If `say` is not available it will try (in order) `espeak`, `flite` and `festival`, which are available on most Linux distributions. 
 
 ## schema
 
-* `plugindata/say/voice`: string, the voice to use (default is to use the default voice).
-* `plugindata/say/remoteHost`: string, host on which to run the script (using _ssh_), default is the host Igor runs on.
+* `plugindata/say/voice`: string, the voice to use (default is to use the default voice). Not supported on Linux.
+* `plugindata/say/remoteHost`: string, host on which to run the script (using _ssh_), default is the host Igor runs on. Only supported for OSX remote hosts.
 
 ## actions
 

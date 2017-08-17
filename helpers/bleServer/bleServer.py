@@ -8,6 +8,7 @@ import sys
 import time
 
 AVAILABLE_TIMEOUT=120   # A device is marked unavailable if it hasn't been seen for 2 minutes
+DELETE_TIMEOUT=3600     # A device is removed if it hasn't been seen for an hour
 
 KEYS=['available', 'lastSeen', 'firstSeen', 'rssi']
 
@@ -43,30 +44,31 @@ class BleScanServer(threading.Thread):
         self.scanner.hci_disable_le_scan()
         
     def uninitScanner(self):
-    	self.stopScanning()
+        self.stopScanning()
         self.scanner = None
 
     def run(self):
-    	#print 'run in', repr(self)
+        #print 'run in', repr(self)
         try:
             while True:
                 evt = self.scanner.parse_advertisement()
                 if not evt:
-                	#print 'Restarting scan'
-                	self.stopScanning()
-                	self.startScanning()
+                    #print 'Restarting scan'
+                    self.stopScanning()
+                    self.startScanning()
                 else:
-					#print 'event', evt
-					self.processEvent(**evt)
+                    #print 'event', evt
+                    self.processEvent(**evt)
         finally:
             #print 'run loop exiting'
             self.uninitScanner()
             #sys.exit(1)
             
-    def processEvent(self, address=None, **args):
+    def processEvent(self, bdaddr=None, **args):
+        address = bdaddr
         if not address:
-        	print 'event without address'
-        	return
+            print 'event without address'
+            return
         with self.lock:
             args['lastSeen'] = time.time()
             args['available'] = True
@@ -95,11 +97,11 @@ class BleScanServer(threading.Thread):
                 if not available:
                     if 'firstSeen' in data:
                         del data['firstSeen']
-                    # Delete devices not seen for 24 hours
-                    if time.time() - data['lastSeen'] > 24*60*60:
-                    	toDelete.append(address)
+                    # Delete devices not seen for some hours
+                    if time.time() - data['lastSeen'] > DELETE_TIMEOUT:
+                        toDelete.append(address)
             for address in toDelete:
-            	del self.devices[address]
+                del self.devices[address]
             #print 'devices is now', self.devices
                         
     def getDevices(self):
@@ -112,22 +114,25 @@ class BleScanServer(threading.Thread):
 # Module may get imported twice (see http://webpy.org/cookbook/session_with_reloader)
 # so use a trick to make sure we have only one ble scanner
 if web.config.get('_bleScanner') is None:
-	bleScanner = BleScanServer()
-	bleScanner.start()
-	web.config._bleScanner = bleScanner
+    bleScanner = BleScanServer()
+    bleScanner.start()
+    web.config._bleScanner = bleScanner
 else:
-	bleScanner = web.config.get('_bleScanner')
+    bleScanner = web.config.get('_bleScanner')
             
 class getBLEdata:
-    def GET(self, name=None):
+    def GET(self, all=True):
         devices = bleScanner.getDevices()
         devList = []
         for address, values in devices.items():
-        	item = {'address':address}
-        	for k in KEYS:
-        		if k in values:
-        			item[k] = values[k]
-        	devList.append(item)
+            item = {'address':address}
+            if all:
+                item.update(values)
+            else:
+                for k in KEYS:
+                    if k in values:
+                        item[k] = values[k]
+            devList.append(item)
         web.header('Content-Type', 'application/json')
         rv = json.dumps({'bleDevice':devList, 'lastActivity' : time.time()})
         return rv

@@ -7,32 +7,10 @@ Created on Tue Feb  7 15:50:37 2017
 @email: s.cabrero@cwi.nl
 """
 from struct import unpack
+import uuid
+import binascii
 # from base64 import b64encode
 
-# """
-#     Load BLE standard identifiers
-# """
-def load_BLEstandard_codes(f1='data/BLE_adv_types.csv', f2='data/ManufacturerIds.csv'):
-    with open(f1, 'r') as midsf:
-        ADVS = {}
-        for line in midsf.readlines():
-            try:
-                adv, name = line.strip().split('\t')
-                ADVS['%0.2X' % int(adv,0)] = name
-            except:
-                print 'Could not process:', line
-
-    with open(f2, 'r') as midsf:
-        MID = {}
-        for line in midsf.readlines():
-            try:
-                ln, h, company = line.strip().split('\t')
-                MID['%0.4X' % int(h,0)] = company
-            except:
-                print 'Could not process:', line
-
-    MID['000D'] = 'CWI Sensortag'
-    return ADVS, MID
 
 
 
@@ -45,91 +23,100 @@ def parse_packet(packet):
 def parse_payload(payload):
     """This function parses only the payload of the advertisment """
     # Get all advs in packet
-    advs = []
-    org_payload = payload
+    allCorrect = True
+    advs = {}
     while payload:
-        lenByte = int(unpack('<B', payload[0])[0])
-        if(lenByte > 0):
-            adv, payload = payload[:lenByte+1], payload[lenByte+1:]
-            advs.append(adv)
+        lenByte,  = unpack('<B', payload[0])
+        payload = payload[1:]
+        # Cater for zero-lengthadvertisements
+        if lenByte == 0:
+            allCorrect = False
+            continue
+        # Get data for one single item
+        singleAdvertisementItem = payload[:lenByte]
+        payload = payload[lenByte:]
+        # See if we can parse the item
+        typeByte, = unpack("<B", singleAdvertisementItem[0])
+        singleAdvertisementItem = singleAdvertisementItem[1:]
+        if typeByte in adv_parsers:
+            advKey, advParser = adv_parsers[typeByte]
+            advUpdates, thisCorrect = advParser(advKey, singleAdvertisementItem)
+            if not thisCorrect:
+                allCorrect = False
         else:
-            payload = payload[1:]
-            if org_payload:
-                print 'Produced 0 length: ', print_bytes(org_payload)
-                org_payload = False
-
-    return map(parse_adv, advs)
-
+            #allCorrect = False
+            advKey = 'unknown_0x%02x' % typeByte 
+            advUpdates = {advKey: binascii.hexlify(singleAdvertisementItem)}
+        for advKey in advUpdates:
+            if advKey in advs:
+                # Duplicate key!
+                allCorrect = False
+        advs.update(advUpdates)
+    return advs, allCorrect
 
 """
     Advertisement parsers
 """
 
 
-def parse_flags(payload, adv):
-    bits = format(int(unpack('<B', payload[0])[0]), '#010b')
-    #   bit 0 (OFF) LE Limited Discoverable Mode
-    adv['LE Limited Discoverable Mode'] = (bits[-1] == '1')
-
-    #   bit 1 (ON) LE General Discoverable Mode
-    adv['LE General Discoverable Mode'] = (bits[-2]== '1')
-
-    #   bit 2 (OFF) BR/EDR Not Supported
-    adv['BR/EDR Not Supported'] = (bits[-3]== '1')
-
-    #   bit 3 (ON) Simultaneous LE and BR/EDR to Same Device Capable (controller)
-    adv['Simultaneous LE and BR/EDR to Same Device Capable (controller)'] = (bits[-4]== '1')
-
-    #   bit 4 (ON) Simultaneous LE and BR/EDR to Same Device Capable (Host)
-    adv['Simultaneous LE and BR/EDR to Same Device Capable (Host)'] = (bits[-5]== '1')
-    return adv
-
-def parse_mf_data(payload, adv={}):
-    b = print_bytes(payload).split(' ')
-    adv['mf_id'] = b[1] + b[0]
-    if adv['mf_id'] in mf_parsers:
-        adv = mf_parsers[adv['mf_id']](payload[2:], adv)
-
-    return adv
-
-def parse_str(payload, adv={}):
-    adv['name'] = str(payload)
-    return adv
-
-adv_parsers = {0xff: parse_mf_data,
-               0x08: parse_str,
-               0x09: parse_str,
-               0x01: parse_flags
-               }
-
-def parse_adv(payload):
+def parse_flags(name, payload):
     adv = {}
-    adv['length'] = int(unpack('<B', payload[0])[0])
-    adv['type'] = unpack('<B', payload[1])[0]
+    correct = True
+    if len(payload) != 1:
+        correct = False
+    bits, = unpack('<B', payload[0])
+    if bits & 0x01: adv['le_limited_discoverable'] = True
+    if bits & 0x02: adv['le_general_discoverable'] = True
+    if bits & 0x04: adv['bredr_not_supported'] = True
+    if bits & 0x08: adv['simultaneous_le_bredr_c'] = True
+    if bits & 0x10: adv['simultaneous_le_bredr_h'] = True
+    if bits & 0xe0:
+        adv['raw'] = bits
+        correct = False
+    return {name: adv}, correct
 
-    if adv['type'] in adv_parsers:
-        adv = adv_parsers[adv['type']](payload[2:], adv)
-    return adv
+def parse_mf_data(name, payload):
+    if len(payload) < 2:
+        return adv, False
+    manufacturerID, = unpack('<H', payload[:2])
+    if manufacturerID in mf_parsers:
+        dataType, parserFunc = mf_parsers[manufacturerID]
+        adv, correct = parserFunc(payload[2:])
+        if correct:
+            return {dataType : adv}, True
+    return {name: dict(raw=binascii.hexlify(payload[2:]), manufacturerID=manufacturerID)}, True
+
+def parse_str(name, payload):
+    return {name : str(payload)}, True
+
+adv_parsers = {0xff: ('manufacturer_specific_data', parse_mf_data),
+               0x08: ('shortened_local_name', parse_str),
+               0x09: ('complete_local_name', parse_str),
+               0x01: ('flags', parse_flags),
+               }
 
 """
     Manufacturer data parsers
 """
 
 
-def parse_mf_ibeacon(payload, adv={}):
-    adv['byte_0'] =  unpack("<B", payload[0])[0]
-    adv['byte_1'] = unpack("<B", payload[1])[0]
-    if adv['byte_0'] == 0x02 and adv['byte_1'] == 0x15:
-        adv['uuid'] = ''.join(print_bytes(payload[2:18]).split(' ')).lower()
-        adv['major'] =  unpack(">H", payload[18:20])[0]
-        adv['minor'] = unpack(">H", payload[20:22])[0]
+def parse_mf_ibeacon(payload):
+    adv = {}
+    if len(payload) != 23:
+        return adv, False
+    # Next two bytes seem to be apple-specific type, we only understand iBeacon.
+    byte_0, byte_1 =  unpack("<BB", payload[0:2])
+    if byte_0 != 0x02 or byte_1 != 0x15:
+        return adv, False
+    # It is an iBoeacon data item. Parse.
+    adv['uuid'] = str(uuid.UUID(bytes=payload[2:18]))
+    adv['major'], adv['minor'], power =  unpack(">HHb", payload[18:])
+    adv['power'] = power
+    return adv, True
 
-        power = bin(unpack("<B",payload[22])[0])[2:]
-        adv['power'] = twos_comp(int(power, 2), len(power))
-
-    return adv
-
-def parse_mf_sensortag(payload, adv={}):
+def parse_mf_sensortag(payload):
+    adv = {}
+    correct = True
     adv['version'] = unpack("B", payload[0])[0]
 
     x_axis = unpack("h", payload[3:5])[0] / float(32768 / 2)
@@ -148,10 +135,12 @@ def parse_mf_sensortag(payload, adv={}):
 
     raw_target_temp = unpack("h", payload[11:])[0]
     adv['target_temp'] = __compute_temp(raw_target_temp)
-    return adv
+    return adv, correct
 
 
-def parse_mf_estimote(payload, adv={}):
+def parse_mf_estimote(payload):
+    adv = {}
+    correct = True
     adv['version'] = unpack("B", payload[0])[0]
 
     adv['uuid'] = "d0d3fa86ca7645ec9bd96af4" + ''.join(x.encode("hex") for x in payload[1:5])
@@ -209,13 +198,13 @@ def parse_mf_estimote(payload, adv={}):
     adv['power'] = int(unpack("B", payload[19])[0] & 0x0f)
     adv['channel'] = int(unpack("B", payload[19])[0] >> 4)
 #    adv['rssi_1m'] = twos_comp((unpack("B", payload[19])[0] & 0x0f), 2), len
-    return adv
+    return adv, correct
 
 
 mf_parsers = {
-           '000D': parse_mf_sensortag,
-           '004C': parse_mf_ibeacon,
-           '015D': parse_mf_estimote
+           0x000D: ('cwi_sensortag', parse_mf_sensortag),
+           0x004C: ('ibeacon', parse_mf_ibeacon),
+           0x015D: ('nearable', parse_mf_estimote),
            }
 
 
@@ -224,7 +213,7 @@ mf_parsers = {
 """
 
 def twos_comp(val, bits):
-    """compute the 2's compliment of int value val"""
+    """compute the 2's complement of int value val"""
     if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
         val = val - (1 << bits)        # compute negative value
     return val                         # return positive value as is

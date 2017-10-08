@@ -36,6 +36,7 @@ class Action:
         self.data = content.get('data')
         self.mimetype = content.get('mimetype','text/plain')
         self.condition = content.get('condition')
+        self.representing = content.get('representing')
         self.nextTime = NEVER
         if self.interval:
             self._scheduleNextRunIn(0)
@@ -94,6 +95,7 @@ class Action:
                 tocall['data'] = data
             tocall['mimetype'] = self.mimetype
             tocall['aggregate'] = self.aggregate
+            tocall['representing'] = self.representing
             # xxxjack can add things like mimetype, credentials, etc
             self._willRunNow()
             self.hoster.scheduleCallback(tocall)

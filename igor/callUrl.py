@@ -65,12 +65,16 @@ class URLCallRunner(threading.Thread):
                 print 'URLCaller: exception while calling URL'
                 traceback.print_exc(file=sys.stdout)
             print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
-            if resultStatus[:3] != '200' or DEBUG:
+            success = resultStatus[:3] == '200'
+            if not success or DEBUG:
                 if resultData:
                     print 'Output:'
                     resultLines = resultData.splitlines()
                     for line in resultLines:
                         print '\t'+line
+            representing = tocall.get('representing')
+            if representing:
+                self.app.updateStatus(representing, success, resultData)
                 
     def dump(self):
         rv = 'URLCaller %s (%s):\n' % (repr(self), self.what)

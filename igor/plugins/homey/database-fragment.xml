@@ -4,6 +4,9 @@
 		<rfid/>
 		<tags/>
 	</sensors>
+	<devices>
+		<homey/>
+	</devices>
     <actions>
         <action>
             <name>cleanup</name>

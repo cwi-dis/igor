@@ -138,9 +138,9 @@ class IgorServer:
             return open(logfn).read()
         raise Web.HTTPError('404 Log file not available')
         
-    def updateStatus(self, representing, success, resultData):
+    def updateStatus(self, representing=None, success=None, resultData=None):
         """Update status field of some service/sensor/actuator after an action"""
-        pass
+        print 'xxxjack updateStatus(%s, %s, %s) not yet implemented' % (representing, success, resultData)
         
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""

@@ -59,6 +59,7 @@ High-level information about temperature and such. Indirectly set by plugins lik
 
 ### environment/messages
 Informational messages produced by various plugins (or by external agents with a `POST` through the REST inferface). New messages will be picked up by plugins like _lcd_ or _say_ to present them to the user. Standard action _cleanup_ will remove them after a while.
+
 * `message`: a text string to be shown or spoken to the user (string).
 
 ### environment/devices

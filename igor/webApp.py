@@ -196,6 +196,27 @@ class runCommand:
             raise myWebError("401 Error calling command method %s: %s" % (command, arg))
         return rv
 
+    def POST(self, command):
+        if not COMMANDS:
+            raise web.notfound()
+        try:
+            method = getattr(COMMANDS, command)
+        except AttributeError:
+            raise web.notfound()
+        argData = web.data()
+        if not argData:
+            allArgs = {}
+        else:
+            try:
+                allArgs = json.loads(argData)
+            except ValueError:
+                raise myWebError("POST to /internal/... expects JSON data")
+        try:
+            rv = method(**allArgs)
+        except TypeError, arg:
+            raise myWebError("401 Error calling command method %s: %s" % (command, arg))
+        return rv
+
 
 class runAction:
     def OPTIONS(self, *args):

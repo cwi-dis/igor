@@ -446,6 +446,8 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             nodesToSignal = []
             with self.db:
                 parentPath, tag = self.db.splitXPath(key)
+                if not tag:
+                    raise web.BadRequest("PUT path must and with an element tag")
                 element = self.convertfrom(data, tag, datamimetype)
                 oldElements = self.db.getElements(key)
                 if not oldElements:

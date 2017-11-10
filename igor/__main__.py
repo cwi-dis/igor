@@ -1,5 +1,6 @@
 import webApp
 import xmlDatabase
+import access
 import actions
 import sseListener
 import callUrl
@@ -70,6 +71,11 @@ class IgorServer:
         webApp.STATICDIR = os.path.join(datadir, 'static')
         webApp.COMMANDS = self
         
+        #
+        # Create the access control handler
+        #
+        self.access = None
+        self.updateAccess()
         #
         # Create and start the asynchronous URL accessor
         #
@@ -142,6 +148,9 @@ class IgorServer:
         """Update status field of some service/sensor/actuator after an action"""
         print 'xxxjack updateStatus(%s, %s, %s) not yet implemented' % (representing, success, resultData)
         
+    def updateAccess(self):
+        self.access = access.Access()
+        
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""
         startupActions = self.database.getElements('actions')
@@ -149,7 +158,7 @@ class IgorServer:
             if len(startupActions) > 1:
                 raise web.HTTPError('401 only one <actions> element allowed')
             if not self.actionHandler:
-                self.actionHandler = actions.ActionCollection(self.database, self.urlCaller.callURL)
+                self.actionHandler = actions.ActionCollection(self.database, self.urlCaller.callURL, self.access)
             self.actionHandler.updateActions(startupActions[0])
         elif self.actionHandler:
             self.actionHandler.updateActions([])

@@ -37,6 +37,8 @@ class Action:
         self.mimetype = content.get('mimetype','text/plain')
         self.condition = content.get('condition')
         self.representing = content.get('representing')
+        self.accessChecker = self.hoster.access.checkerForElement(self.element)
+        self.token = self.hoster.access.tokenForAction(self.element)
         self.nextTime = NEVER
         if self.interval:
             self._scheduleNextRunIn(0)
@@ -185,13 +187,14 @@ class Action:
         return id(self)
                 
 class ActionCollection(threading.Thread):
-    def __init__(self, database, scheduleCallback):
+    def __init__(self, database, scheduleCallback, access):
         threading.Thread.__init__(self)
         self.daemon = True
         self.actions = []
         self.actionsChanged = threading.Event()
         self.database = database
         self.scheduleCallback = scheduleCallback
+        self.access = access
         self.stopping = False
         self.start()
         

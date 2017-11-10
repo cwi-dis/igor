@@ -66,6 +66,7 @@ def main():
                 print filename, '(symlinked)'
             else:
                 print filename
+        return
     elif sys.argv[1] == 'add':
         if len(sys.argv) < 3:
             print >>sys.stderr, "%s: add requires a pathname" % sys.argv[0]
@@ -113,6 +114,7 @@ def main():
         for name in names:
             if name[0] == '.' or name == 'readme.txt': continue
             print name
+        return
     elif sys.argv[1] in ('runatboot', 'runatlogin'):
         args = dict(
             user=username,

@@ -12,6 +12,8 @@ import dateutil.parser
 
 TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
 
+NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
+
 class DBKeyError(KeyError):
     pass
     
@@ -492,7 +494,7 @@ class DBImpl(DBSerializer):
         """Set (or insert) a single node by a given value (passed as a string)"""
         with self:
             # Find the node, if it exists.
-            node = xpath.findnode(location, self._doc.documentElement)
+            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
             if node is None:
                 # Does not exist yet. Try to add it.
                 parent, child = self.splitXPath(location)
@@ -532,7 +534,7 @@ class DBImpl(DBSerializer):
             newnode.appendChild(self._doc.createTextNode(value))
         
             # Find the node that we want to insert it relative to
-            node = xpath.findnode(location, self._doc.documentElement)
+            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
             if node is None:
                 raise DBKeyError(location)
             
@@ -556,7 +558,7 @@ class DBImpl(DBSerializer):
     def delValue(self, location):
         """Remove a single node from the document"""
         with self:
-            node = xpath.findnode(location, self._doc.documentElement)
+            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
             if node is None:
                 raise DBKeyError(location)
             parentNode = node.parentNode
@@ -568,7 +570,7 @@ class DBImpl(DBSerializer):
     def delValues(self, location):
         """Remove a (possibly empty) set of nodes from the document"""
         with self:
-            nodelist = xpath.find(location, self._doc.documentElement)
+            nodelist = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
             parentList = []
             #print 'xxxjack delValues', repr(nodelist)
             for node in nodelist:
@@ -581,17 +583,17 @@ class DBImpl(DBSerializer):
     def hasValue(self, location):
         """Return xpath if the location exists, None otherwise"""
         with self:
-            node = xpath.findnode(location, self._doc.documentElement)
+            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
             if node:
                 return self.getXPathForElement(node)
             return None
         
     def waitValue(self, location):
         with self:
-            node = xpath.findnode(location, self._doc.documentElement)
+            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
             if not node:
                 self.waitLocation(location)
-                node = xpath.findnode(location, self._doc.documentElement)
+                node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
                 assert node
             return self.getXPathForElement(node)
 
@@ -600,7 +602,7 @@ class DBImpl(DBSerializer):
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodelist = xpath.find(location, context, originalContext=[context])
+            nodelist = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
             return map(self.getXPathForElement, nodelist)
         
     def getValue(self, location, context=None):
@@ -608,14 +610,14 @@ class DBImpl(DBSerializer):
         with self:
             if context is None:
                 context = self._doc.documentElement
-            return xpath.findvalue(location, context, originalContext=[context])
+            return xpath.findvalue(location, context, originalContext=[context], namespaces=NAMESPACES)
         
     def getValues(self, location, context=None):
         """Return a list of node values from the document (as names and strings)"""
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodelist = xpath.find(location, context, originalContext=[context])
+            nodelist = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
             return self._getValueList(nodelist)
         
     def getElements(self, location, context=None):
@@ -623,7 +625,7 @@ class DBImpl(DBSerializer):
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodeList = xpath.find(location, context, originalContext=[context])
+            nodeList = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
             return nodeList
         
     def _getValueList(self, nodelist):
@@ -636,10 +638,10 @@ class DBImpl(DBSerializer):
     def pullValue(self, location):
         """Wait for a value, remove it from the document, return it (as string)"""
         with self:
-            node = xpath.findnode(location, self._doc.documentElement)
+            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
             if not node:
                 self.waitLocation(location)
-                node = xpath.findnode(location, self._doc.documentElement)
+                node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
                 assert node
             rv = xpath.expr.string_value(node)
             node.parentNode.removeChild(node)
@@ -649,10 +651,10 @@ class DBImpl(DBSerializer):
     def pullValues(self, location):
         """Wait for values, remove them from the document, return it (as list of strings)"""
         with self:
-            nodelist = xpath.find(location, self._doc.documentElement)
+            nodelist = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
             if not nodelist:
                 self.waitLocation(location)
-                nodelist = xpath.find(location, self._doc.documentElement)
+                nodelist = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
             assert nodelist
             rv = self._getValueList(nodelist)
             parentList = []
@@ -668,6 +670,6 @@ class DBImpl(DBSerializer):
         """Generator. Like waitValue, but keeps on returning changed paths"""
         with self:
             generation = self.waitLocation(location, generation)
-            node = xpath.findnode(location, self._doc.documentElement)
+            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
             assert node
             return self.getXPathForElement(node), generation

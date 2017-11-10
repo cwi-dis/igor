@@ -92,7 +92,7 @@ class Action:
             if DEBUG: print '\t%s: calling %s' % (repr(node), url)
             data = self._evaluate(self.data, node, False)
             # Prepare to run
-            tocall = dict(method=self.method, url=url)
+            tocall = dict(method=self.method, url=url, token=self.token)
             if data:
                 tocall['data'] = data
             tocall['mimetype'] = self.mimetype

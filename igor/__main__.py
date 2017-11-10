@@ -102,7 +102,7 @@ class IgorServer:
         #
         # Send start action to start any plugins
         #
-        self.urlCaller.callURL(dict(method='GET', url='/action/start'))
+        self.urlCaller.callURL(dict(method='GET', url='/action/start', token=self.access.tokenForIgor()))
         if advertise:
             self.advertise(port)
             
@@ -125,7 +125,7 @@ class IgorServer:
         hostName = besthostname.besthostname()
         url = 'http://%s:%d/data' % (hostName, self.port)
         data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION)
-        tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data))
+        tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data), token=self.access.tokenForIgor())
         self.urlCaller.callURL(tocall)
         
     def run(self):

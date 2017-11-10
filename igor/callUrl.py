@@ -32,8 +32,10 @@ class URLCallRunner(threading.Thread):
             if tocall == None: continue # To implement stop
             method = tocall['method']
             url = tocall['url']
+            token = tocall['token']
             data = tocall.get('data')
             headers = {}
+            token.addToHeaders(headers)
             if 'mimetype' in tocall:
                 headers['Content-type'] = tocall['mimetype']
             # xxxjack should also have credentials, etc
@@ -86,6 +88,7 @@ class URLCallRunner(threading.Thread):
         
     def callURL(self, tocall):
         if DEBUG: print 'URLCaller.callURL(%s)' % repr(tocall)
+        assert 'token' in tocall
         if tocall.get('aggregate'):
             # We should aggregate this action, so don't insert if already in the queue
             if tocall in self.queue:

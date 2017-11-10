@@ -9,17 +9,32 @@ class DummyAccessToken:
     def __init__(self):
         pass
 
-    def addToRequest(self, *args):
+    def addToHeaders(self, headers):
         pass
         
+    def getContent(self):
+        return None
+        
+class IgorAccessToken(DummyAccessToken):
+    def addToHeaders(self, headers):
+        print 'xxxjack insert nothing into headers for IgorAccessToken'
+        pass
+
+IGOR_SELF_TOKEN = DummyAccessToken()
+
 class AccessToken(DummyAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
 
     def __init__(self, content):
+        print 'xxxjack create AccessToken(%s)' % content
         self.content = content
         
-    def addToRequest(self, *args):
-        pass
+    def addToHeaders(self, headers):
+        print 'xxxjack insert AccessToken(%s) into header' % self.content
+        headers['Authorization'] = 'Bearer ' + self.content
+        
+    def getContent(self):
+        return self.content
         
 class DummyAccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
@@ -36,8 +51,10 @@ class AccessChecker(DummyAccessChecker):
     def __init__(self, content):
         self.content = content
         
-    def allowed(self):
-        return True
+    def allowed(self, operation, token):
+        if token is IGOR_SELF_TOKEN:
+            return True
+        return token.getContent() == self.content
 
 class Access:
     def __init__(self):
@@ -61,3 +78,6 @@ class Access:
             raise myWebError("500 action has multiple au:carries")
         carriesValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
         return AccessToken(carriesValue)
+
+    def tokenForIgor(self):
+        return IGOR_SELF_TOKEN

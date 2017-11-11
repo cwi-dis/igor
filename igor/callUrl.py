@@ -1,5 +1,5 @@
 import threading
-import httplib2
+import requests
 import Queue
 import urlparse
 import time
@@ -56,12 +56,10 @@ class URLCallRunner(threading.Thread):
                     resultData = rep.data
                 else:
                     # Remote.
-                    # xxxjack have to work out exceptions
-                    h = httplib2.Http()
-                    resp, content = h.request(url, method, body=data, headers=headers)
-                    resultStatus = "%s %s" % (resp.status, resp.reason)
-                    resultData = content
-            except httplib2.HttpLib2Error as e:
+                    r = requests.request(method, url, data=data, headers=headers)
+                    resultStatus = str(r.status_code)
+                    resultData = r.text
+            except requests.exceptions.RequestException as e:
                 resultStatus = '502 URLCaller: %s' % traceback.format_exception_only(type(e), e.message)[0].strip()
             except:
                 resultStatus = '502 URLCaller: exception while calling URL'

@@ -279,7 +279,8 @@ class DBImpl(DBSerializer):
         self._domimpl = xml.dom.getDOMImplementation()
         self.filename = filename
         self.initialize(filename=filename)
-        self.access = None
+        import access
+        self.access = access.singleton
         
     def _checkAccess(self, operation, element, token):
         assert token
@@ -487,7 +488,6 @@ class DBImpl(DBSerializer):
             for n in nodeList:
                 self._checkAccess('delete', n, token)
             parentList = []
-            #print 'xxxjack delValues', repr(nodelist)
             for node in nodelist:
                 parentNode = node.parentNode
                 parentNode.removeChild(node)

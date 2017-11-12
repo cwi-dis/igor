@@ -49,7 +49,7 @@ def myWebError(msg):
 
 class static:
     def GET(self, name):
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         if not name:
             name = 'index.html'
         databaseDir = STATICDIR
@@ -91,7 +91,7 @@ class runScript:
         return ''
         
     def GET(self, name, arg2=None):
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         if arg2:
             # Plugin script command.
             scriptDir = os.path.join(PLUGINDIR, name, 'scripts')
@@ -189,7 +189,7 @@ class runCommand:
         return ''
         
     def GET(self, command):
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -204,7 +204,7 @@ class runCommand:
         return rv
 
     def POST(self, command):
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -236,8 +236,11 @@ class runAction:
     def GET(self, actionname):
         if not COMMANDS:
             raise web.notfound()
-        token = access.singleton.tokenForRequest(web.ctx.headers)
-        return COMMANDS.runAction(actionname, token)
+        token = access.singleton.tokenForRequest(web.ctx.env)
+        try:
+            return COMMANDS.runAction(actionname, token)
+        except xmlDatabase.DBAccessError:
+            raise myWebError("401 Unauthorized")
         
 class runTrigger:
     def OPTIONS(self, *args):
@@ -249,8 +252,11 @@ class runTrigger:
     def GET(self, triggername):
         if not COMMANDS:
             raise web.notfound()
-        token = access.singleton.tokenForRequest(web.ctx.headers)
-        return COMMANDS.runTrigger(triggername, token)
+        token = access.singleton.tokenForRequest(web.ctx.env)
+        try:
+            return COMMANDS.runTrigger(triggername, token)
+        except xmlDatabase.DBAccessError:
+            raise myWebError("401 Unauthorized")
         
 class runPlugin:
     """Call a plugin method"""
@@ -281,7 +287,7 @@ class runPlugin:
             mod.WEBAPP = WEBAPP
         allArgs = dict(web.input())
 
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
         pluginToken = access.singleton.tokenForPlugin(name)
@@ -316,7 +322,7 @@ class xmlDatabaseEvaluate:
     """Evaluate an XPath expression and return the result as plaintext"""
     def GET(self, command):
         initDatabaseAccess()
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         return DATABASE_ACCESS.get_value(command, token)
         
 class AbstractDatabaseAccess(object):
@@ -351,7 +357,7 @@ class AbstractDatabaseAccess(object):
             web.header("Content-Length", str(len(rv)))
             return rv
             
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
 
         returnType = self.best_return_mimetype()
         if not returnType:
@@ -366,7 +372,7 @@ class AbstractDatabaseAccess(object):
         in a specific location.
         """
         optArgs = web.input()
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
 
         # See whether we have a variant request
         variant = None
@@ -390,7 +396,7 @@ class AbstractDatabaseAccess(object):
         return self.PUT(name, data, mimetype, replace=False)
 
     def DELETE(self, name, data=None, mimetype=None):
-        token = access.singleton.tokenForRequest(web.ctx.headers)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         rv = self.delete_key(name, token)
         web.header("Content-Length", str(len(rv)))
         return rv
@@ -441,7 +447,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
         except xmlDatabase.DBAccessError:
             raise myWebError("401 Unauthorized")
         except xpath.XPathError, arg:
-            raise myWebError("40 XPath error: %s" % str(arg))
+            raise myWebError("400 XPath error: %s" % str(arg))
         except xmlDatabase.DBKeyError, arg:
             raise myWebError("400 Database Key Error: %s" % str(arg))
         except xmlDatabase.DBParamError, arg:

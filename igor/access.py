@@ -2,11 +2,8 @@
 import web
 import xpath
 
-# xxxjack this isn't the right exception...
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
-
-NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
+class AccessControlError(ValueError):
+    pass
 
 class DummyAccessToken:
     """An access token (or set of tokens) that can be carried by a request"""
@@ -22,7 +19,6 @@ class DummyAccessToken:
         
 class IgorAccessToken(DummyAccessToken):
     def addToHeaders(self, headers):
-        print 'xxxjack insert nothing into headers for IgorAccessToken'
         pass
 
 _igorSelfToken = DummyAccessToken()
@@ -31,11 +27,9 @@ class AccessToken(DummyAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
 
     def __init__(self, content):
-        print 'xxxjack create AccessToken(%s)' % content
         self.content = content
         
     def addToHeaders(self, headers):
-        print 'xxxjack insert AccessToken(%s) into header' % self.content
         headers['Authorization'] = 'Bearer ' + self.content
         
     def getContent(self):
@@ -48,7 +42,6 @@ class DummyAccessChecker:
         pass
         
     def allowed(self, operation, token):
-        print 'xxxjack access: dummy allows everything'
         return True
            
 class AccessChecker(DummyAccessChecker):
@@ -58,11 +51,9 @@ class AccessChecker(DummyAccessChecker):
         self.content = content
         
     def allowed(self, operation, token):
-        if token is IGOR_SELF_TOKEN:
-            print 'xxxjack access: allow for igorToken'
+        if token is _igorSelfToken:
             return True
         rv = token.getContent() == self.content
-        print 'xxxjack access: tokens match?', rv
         return rv
 
 class Access:
@@ -74,7 +65,7 @@ class Access:
         if not nodelist:
             return DummyAccessChecker()
         if len(nodelist) > 1:
-            raise myWebError("500 action has multiple au:requires")
+            raise AccessControlError("Action has multiple au:requires")
         requiresValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
         return AccessChecker(requiresValue)
             
@@ -84,7 +75,7 @@ class Access:
         if not nodelist:
             return DummyAccessToken()
         if len(nodelist) > 1:
-            raise myWebError("500 action has multiple au:carries")
+            raise AccessControlError("Action has multiple au:carries")
         carriesValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
         return AccessToken(carriesValue)
         

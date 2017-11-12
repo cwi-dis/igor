@@ -48,6 +48,7 @@ class DummyAccessChecker:
         pass
         
     def allowed(self, operation, token):
+        print 'xxxjack access: dummy allows everything'
         return True
            
 class AccessChecker(DummyAccessChecker):
@@ -58,8 +59,11 @@ class AccessChecker(DummyAccessChecker):
         
     def allowed(self, operation, token):
         if token is IGOR_SELF_TOKEN:
+            print 'xxxjack access: allow for igorToken'
             return True
-        return token.getContent() == self.content
+        rv = token.getContent() == self.content
+        print 'xxxjack access: tokens match?', rv
+        return rv
 
 class Access:
     def __init__(self):

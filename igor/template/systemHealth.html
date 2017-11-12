@@ -15,13 +15,13 @@ $def with ()
 	<h1>Igor System Health</h1>
 	
 	<p>
-		Igor has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot')},
-		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount')} times during its lifetime.
+		Igor has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot', token)},
+		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount', token)} times during its lifetime.
 	</p>
 	
 	<h2>Exceptional conditions</h2>
 	
-	$ messages = DATABASE.getValues('/data/environment/systemHealth/messages/*')
+	$ messages = DATABASE.getValues('/data/environment/systemHealth/messages/*', 'get', token)
 	$if messages:
 		<p>The following exceptional conditions (for services, sensors and actuators) are currently noted:</p>
 		<ul>
@@ -33,7 +33,7 @@ $def with ()
 		
 	<h2>Service status</h2>
 	
-	$ services = DATABASE.getElements('/data/services/*')
+	$ services = DATABASE.getElements('/data/services/*', 'get', token)
 	<table style="width:100%">
 		<tr>
 			<th>Service</th>
@@ -45,12 +45,12 @@ $def with ()
 		$for s in services:
 			<tr>
 				<td>$s.tagName</td>
-				<td>${DATABASE.getValue('/data/services/' + s.tagName + '/alive')}</td>
-				$ msg = DATABASE.getValue('/data/services/' + s.tagName + '/errorMessage')
+				<td>${DATABASE.getValue('/data/services/' + s.tagName + '/alive', token)}</td>
+				$ msg = DATABASE.getValue('/data/services/' + s.tagName + '/errorMessage', token)
 				<td>$msg</td>
 				$code:
-					muted = DATABASE.getValue('/data/services/' + s.tagName + '/ignoreErrorUntil')
-					if muted: muted = DATABASE.getValue('igor_dateTime(/data/services/' + s.tagName + '/ignoreErrorUntil)')
+					muted = DATABASE.getValue('/data/services/' + s.tagName + '/ignoreErrorUntil', token)
+					if muted: muted = DATABASE.getValue('igor_dateTime(/data/services/' + s.tagName + '/ignoreErrorUntil)', token)
 					
 				<td>$muted</td>
 				$if msg:
@@ -68,7 +68,7 @@ $def with ()
 		
 	<h2>Sensor status</h2>
 	
-	$ sensors = DATABASE.getElements('/data/sensors/*')
+	$ sensors = DATABASE.getElements('/data/sensors/*', 'get', token)
 	<table style="width:100%">
 		<tr>
 			<th>Sensor Class</th>
@@ -81,15 +81,15 @@ $def with ()
 			<tr>
 				<td>$s.tagName</td>
 				$code:
-					lastActivity = DATABASE.getValue('/data/sensors/' + s.tagName + '/lastActivity')
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/sensors/' + s.tagName + '/lastActivity)')
+					lastActivity = DATABASE.getValue('/data/sensors/' + s.tagName + '/lastActivity', token)
+					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/sensors/' + s.tagName + '/lastActivity)', token)
 					
 				<td>$lastActivity</td>
-				$ msg = DATABASE.getValue('/data/sensors/' + s.tagName + '/errorMessage')
+				$ msg = DATABASE.getValue('/data/sensors/' + s.tagName + '/errorMessage', token)
 				<td>$msg</td>
 				$code:
-					muted = DATABASE.getValue('/data/sensors/' + s.tagName + '/ignoreErrorUntil')
-					if muted: muted = DATABASE.getValue('igor_dateTime(/data/sensors/' + s.tagName + '/ignoreErrorUntil)')
+					muted = DATABASE.getValue('/data/sensors/' + s.tagName + '/ignoreErrorUntil', token)
+					if muted: muted = DATABASE.getValue('igor_dateTime(/data/sensors/' + s.tagName + '/ignoreErrorUntil)', token)
 					
 				<td>$muted</td>
 				$if msg:
@@ -106,7 +106,7 @@ $def with ()
 		
 	<h2>Device status</h2>
 	
-	$ devices = DATABASE.getElements('/data/devices/*')
+	$ devices = DATABASE.getElements('/data/devices/*', 'get', token)
 	<table style="width:100%">
 		<tr>
 			<th>Device</th>
@@ -119,14 +119,14 @@ $def with ()
 			<tr>
 				<td>$s.tagName</td>
 				$code:
-					lastActivity = DATABASE.getValue('/data/devices/' + s.tagName + '/lastActivity')
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/devices/' + s.tagName + '/lastActivity)')
+					lastActivity = DATABASE.getValue('/data/devices/' + s.tagName + '/lastActivity', token)
+					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/devices/' + s.tagName + '/lastActivity)'), token
 				<td>$lastActivity</td>
-				$ msg = DATABASE.getValue('/data/devices/' + s.tagName + '/errorMessage')
+				$ msg = DATABASE.getValue('/data/devices/' + s.tagName + '/errorMessage', token)
 				<td>$msg</td>
 				$code:
-					muted = DATABASE.getValue('/data/devices/' + s.tagName + '/ignoreErrorUntil')
-					if muted: muted = DATABASE.getValue('igor_dateTime(/data/devices/' + s.tagName + '/ignoreErrorUntil)')
+					muted = DATABASE.getValue('/data/devices/' + s.tagName + '/ignoreErrorUntil', token)
+					if muted: muted = DATABASE.getValue('igor_dateTime(/data/devices/' + s.tagName + '/ignoreErrorUntil)', token)
 				<td>$muted</td>
 				$if msg:
 					<td>

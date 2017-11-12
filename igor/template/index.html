@@ -9,13 +9,13 @@ $def with ()
 	<h1>Igor Home Page</h1>
 	
 	<p>
-		This is your Igor home automation server, version ${DATABASE.getValue('/data/services/igor/version')}, 
-		running on host ${DATABASE.getValue('/data/services/igor/host')}, 
-		port ${DATABASE.getValue('/data/services/igor/port')}. Welcome!
+		This is your Igor home automation server, version ${DATABASE.getValue('/data/services/igor/version', token)}, 
+		running on host ${DATABASE.getValue('/data/services/igor/host', token)}, 
+		port ${DATABASE.getValue('/data/services/igor/port', token)}. Welcome!
 	</p>
 	<p>
-		It has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot')},
-		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount')} times during its lifetime.
+		It has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot', token)},
+		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount', token)} times during its lifetime.
 	</p>
 	
 	<p>

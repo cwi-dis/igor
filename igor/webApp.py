@@ -49,6 +49,7 @@ def myWebError(msg):
 
 class static:
     def GET(self, name):
+        token = access.singleton.tokenForRequest(web.ctx.headers)
         if not name:
             name = 'index.html'
         databaseDir = STATICDIR
@@ -73,7 +74,8 @@ class static:
             web.header('Content-type', mimetype)
             globals = dict(
                 DATABASE=DATABASE,
-                COMMANDS=COMMANDS
+                COMMANDS=COMMANDS,
+                token=token
                 )                
             template = web.template.frender(filename, globals=globals)
             return template(**web.input())

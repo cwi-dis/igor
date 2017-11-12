@@ -12,6 +12,7 @@ import imp
 import xpath
 import xmlDatabase
 import mimetypes
+import access
 
 DATABASE=None   # The database itself. Will be set by main module
 DATABASE_ACCESS=None    # Will be set later by this module
@@ -88,6 +89,7 @@ class runScript:
         return ''
         
     def GET(self, name, arg2=None):
+        token = access.singleton.tokenForRequest(web.ctx.headers)
         if arg2:
             # Plugin script command.
             scriptDir = os.path.join(PLUGINDIR, name, 'scripts')
@@ -104,18 +106,20 @@ class runScript:
             args = shlex.split(allArgs.args)
         else:
             args = []
-            
+        # xxxjack need to check that the incoming action is allowed on this plugin
+        # Get the token for the plugin itself
+        pluginToken = access.singleton.tokenForPlugin(name)
         # Setup global, per-plugin and per-user data for plugin scripts, if available
         env = copy.deepcopy(os.environ)
         initDatabaseAccess()
         try:
             # Tell plugin about our url, if we know it
-            myUrl = DATABASE_ACCESS.get_key('services/igor/url', 'application/x-python-object', 'content')
+            myUrl = DATABASE_ACCESS.get_key('services/igor/url', 'application/x-python-object', 'content', pluginToken)
             env['IGORSERVER_URL'] = myUrl
         except web.HTTPError:
             pass
         try:
-            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content')
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content', pluginToken)
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
@@ -129,7 +133,7 @@ class runScript:
         if allArgs.has_key('user'):
             user = allArgs['user']
             try:
-                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
+                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content', token)
             except web.HTTPError:
                 web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
                 userData = {}
@@ -183,6 +187,7 @@ class runCommand:
         return ''
         
     def GET(self, command):
+        token = access.singleton.tokenForRequest(web.ctx.headers)
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -191,12 +196,13 @@ class runCommand:
             raise web.notfound()
         allArgs = dict(web.input())
         try:
-            rv = method(**allArgs)
+            rv = method(token=token, **allArgs)
         except TypeError, arg:
             raise myWebError("401 Error calling command method %s: %s" % (command, arg))
         return rv
 
     def POST(self, command):
+        token = access.singleton.tokenForRequest(web.ctx.headers)
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -212,7 +218,7 @@ class runCommand:
             except ValueError:
                 raise myWebError("POST to /internal/... expects JSON data")
         try:
-            rv = method(**allArgs)
+            rv = method(token=token, **allArgs)
         except TypeError, arg:
             raise myWebError("401 Error calling command method %s: %s" % (command, arg))
         return rv
@@ -228,7 +234,8 @@ class runAction:
     def GET(self, actionname):
         if not COMMANDS:
             raise web.notfound()
-        return COMMANDS.runAction(actionname)
+        token = access.singleton.tokenForRequest(web.ctx.headers)
+        return COMMANDS.runAction(actionname, token)
         
 class runTrigger:
     def OPTIONS(self, *args):
@@ -240,7 +247,8 @@ class runTrigger:
     def GET(self, triggername):
         if not COMMANDS:
             raise web.notfound()
-        return COMMANDS.runTrigger(triggername)
+        token = access.singleton.tokenForRequest(web.ctx.headers)
+        return COMMANDS.runTrigger(triggername, token)
         
 class runPlugin:
     """Call a plugin method"""
@@ -270,16 +278,21 @@ class runPlugin:
             mod.COMMANDS = COMMANDS
             mod.WEBAPP = WEBAPP
         allArgs = dict(web.input())
+
+        token = access.singleton.tokenForRequest(web.ctx.headers)
+        # xxxjack need to check that the incoming action is allowed on this plugin
+        # Get the token for the plugin itself
+        pluginToken = access.singleton.tokenForPlugin(name)
         # Find plugindata and per-user plugindata
         try:
-            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (command), 'application/x-python-object', 'content')
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (command), 'application/x-python-object', 'content', pluginToken)
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
         if allArgs.has_key('user'):
             user = allArgs['user']
             try:
-                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, command), 'application/x-python-object', 'content')
+                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, command), 'application/x-python-object', 'content', pluginToken)
             except web.HTTPError:
                 web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
                 userData = {}
@@ -301,7 +314,8 @@ class xmlDatabaseEvaluate:
     """Evaluate an XPath expression and return the result as plaintext"""
     def GET(self, command):
         initDatabaseAccess()
-        return DATABASE_ACCESS.get_value(command)
+        token = access.singleton.tokenForRequest(web.ctx.headers)
+        return DATABASE_ACCESS.get_value(command, token)
         
 class AbstractDatabaseAccess(object):
     """Abstract database that handles the high-level HTTP primitives.
@@ -335,11 +349,13 @@ class AbstractDatabaseAccess(object):
             web.header("Content-Length", str(len(rv)))
             return rv
             
+        token = access.singleton.tokenForRequest(web.ctx.headers)
+
         returnType = self.best_return_mimetype()
         if not returnType:
             raise web.NotAcceptable()
         web.header("Content-Type", returnType)
-        rv = self.get_key(name, self.best_return_mimetype(), variant)
+        rv = self.get_key(name, self.best_return_mimetype(), variant, token)
         web.header("Content-Length", str(len(rv)))
         return rv
 
@@ -348,6 +364,7 @@ class AbstractDatabaseAccess(object):
         in a specific location.
         """
         optArgs = web.input()
+        token = access.singleton.tokenForRequest(web.ctx.headers)
 
         # See whether we have a variant request
         variant = None
@@ -363,7 +380,7 @@ class AbstractDatabaseAccess(object):
             else:
                 data = web.data()
                 mimetype = web.ctx.env.get('CONTENT_TYPE', 'application/unknown')
-        rv = self.put_key(name, self.best_return_mimetype(), variant, data, mimetype, replace=replace)
+        rv = self.put_key(name, self.best_return_mimetype(), variant, data, mimetype, token, replace=replace)
         web.header("Content-Length", str(len(rv)))
         return rv
 
@@ -371,7 +388,8 @@ class AbstractDatabaseAccess(object):
         return self.PUT(name, data, mimetype, replace=False)
 
     def DELETE(self, name, data=None, mimetype=None):
-        rv = self.delete_key(name)
+        token = access.singleton.tokenForRequest(web.ctx.headers)
+        rv = self.delete_key(name, token)
         web.header("Content-Length", str(len(rv)))
         return rv
 
@@ -401,42 +419,46 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
         global DATABASE_ACCESS
         self.db = DATABASE
         assert DATABASE
-        self.rootTag = self.db.getDocument().tagName
+        self.rootTag = self.db.getDocument(access.singleton.tokenForIgor()).tagName
         if not DATABASE_ACCESS:
             DATABASE_ACCESS = self
         
-    def get_key(self, key, mimetype, variant):
+    def get_key(self, key, mimetype, variant, token):
         """Get subtree for 'key' as 'mimetype'. Variant can be used
         to state which data should be returned (single node, multinode,
         including refs, etc)"""
         try:
             if not key:
-                rv = [self.db.getDocument()]
+                rv = [self.db.getDocument(token)]
                 # This always returns XML, so just continue
             else:
                 key = '/%s/%s' % (self.rootTag, key)
-                rv = self.db.getElements(key)
+                rv = self.db.getElements(key, 'get', token)
             rv = self.convertto(rv, mimetype, variant)
             return rv
+        except xmlDatabase.DBAccessError:
+            raise myWebError("401 Unauthorized")
         except xpath.XPathError, arg:
-            raise myWebError("401 XPath error: %s" % str(arg))
+            raise myWebError("40 XPath error: %s" % str(arg))
         except xmlDatabase.DBKeyError, arg:
-            raise myWebError("401 Database Key Error: %s" % str(arg))
+            raise myWebError("400 Database Key Error: %s" % str(arg))
         except xmlDatabase.DBParamError, arg:
-            raise myWebError("401 Database Parameter Error: %s" % str(arg))
+            raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
-    def get_value(self, expression):
+    def get_value(self, expression, token):
         """Evaluate a general expression and return the string value"""
         try:
-            return self.db.getValue(expression)
+            return self.db.getValue(expression, token=token)
+        except xmlDatabase.DBAccessError:
+            raise myWebError("401 Unauthorized")
         except xpath.XPathError, arg:
-            raise myWebError("401 XPath error: %s" % str(arg))
+            raise myWebError("400 XPath error: %s" % str(arg))
         except xmlDatabase.DBKeyError, arg:
-            raise myWebError("401 Database Key Error: %s" % str(arg))
+            raise myWebError("400 Database Key Error: %s" % str(arg))
         except xmlDatabase.DBParamError, arg:
-            raise myWebError("401 Database Parameter Error: %s" % str(arg))
+            raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
-    def put_key(self, key, mimetype, variant, data, datamimetype, replace=True):
+    def put_key(self, key, mimetype, variant, data, datamimetype, token, replace=True):
         try:
             if not key:
                 raise myWebError("401 cannot PUT or POST whole document")
@@ -449,7 +471,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 if not tag:
                     raise web.BadRequest("PUT path must and with an element tag")
                 element = self.convertfrom(data, tag, datamimetype)
-                oldElements = self.db.getElements(key)
+                oldElements = self.db.getElements(key, 'put', token)
                 if not oldElements:
                     #
                     # Does not exist yet. See if we can create it
@@ -459,7 +481,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     #
                     # Find parent
                     #
-                    parentElements = self.db.getElements(parentPath)
+                    parentElements = self.db.getElements(parentPath, 'post', token)
                     if not parentElements:
                         raise web.notfound("404 Parent not found: %s" % parentPath)
                     if len(parentElements) > 1:
@@ -516,22 +538,26 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 if nodesToSignal: self.db.signalNodelist(nodesToSignal)
                 path = self.db.getXPathForElement(element)
                 return self.convertto(path, mimetype, variant)
+        except xmlDatabase.DBAccessError:
+            raise myWebError("401 Unauthorized")
         except xpath.XPathError, arg:
-            raise myWebError("401 XPath error: %s" % str(arg))
+            raise myWebError("400 XPath error: %s" % str(arg))
         except xmlDatabase.DBKeyError, arg:
-            raise myWebError("401 Database Key Error: %s" % str(arg))
+            raise myWebError("400 Database Key Error: %s" % str(arg))
         except xmlDatabase.DBParamError, arg:
-            raise myWebError("401 Database Parameter Error: %s" % str(arg))
+            raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
-    def delete_key(self, key):
+    def delete_key(self, key, token):
         try:
             key = '/%s/%s' % (self.rootTag, key)
-            self.db.delValues(key)
+            self.db.delValues(key, token)
             return ''
+        except xmlDatabase.DBAccessError:
+            raise myWebError("401 Unauthorized")
         except xpath.XPathError, arg:
-            raise myWebError("401 XPath error: %s" % str(arg))
+            raise myWebError("400 XPath error: %s" % str(arg))
         except xmlDatabase.DBKeyError, arg:
-            raise myWebError("401 Database Key Error: %s" % str(arg))
+            raise myWebError("400 Database Key Error: %s" % str(arg))
         
     def convertto(self, value, mimetype, variant):
         if variant == 'ref':

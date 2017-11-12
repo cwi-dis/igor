@@ -83,7 +83,7 @@ class Action:
         for node in nodelist:
             # Test whether we are allowed to run according to our condition
             if self.condition:
-                shouldRun = self.hoster.database.getValue(self.condition, node)
+                shouldRun = self.hoster.database.getValue(self.condition, token=self.token, context=node)
                 if not shouldRun:
                     if DEBUG: print '\t%s: condition failed' % repr(node)
                     continue
@@ -169,7 +169,7 @@ class Action:
             assert expression[0] == '{'
             assert expression[-1] == '}'
             expression = expression[1:-1]
-            replacement = self.hoster.database.getValue(expression, node)
+            replacement = self.hoster.database.getValue(expression, token=self.token, context=node)
             if replacement is None: replacement = ''
             if type(replacement) == type(True):
                 replacement = 'true' if replacement else ''

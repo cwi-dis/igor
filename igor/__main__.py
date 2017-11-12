@@ -74,8 +74,7 @@ class IgorServer:
         #
         # Create the access control handler
         #
-        self.access = None
-        self.updateAccess()
+        self.access = access.singleton
         #
         # Create and start the asynchronous URL accessor
         #
@@ -131,14 +130,16 @@ class IgorServer:
     def run(self):
         self.app.run(port=self.port)
         
-    def dump(self):
+    def dump(self, token=None):
+        # xxxjack ignoring token for now
         rv = ''
         if self.urlCaller: rv += self.urlCaller.dump() + '\n'
         if self.actionHandler: rv += self.actionHandler.dump() + '\n'
         if self.eventSources: rv += self.eventSources.dump() + '\n'
         return rv
         
-    def log(self):
+    def log(self, token=None):
+        # xxxjack ignoring token for now
         logfn = os.path.join(self.datadir, 'igor.log')
         if os.path.exists(logfn):
             return open(logfn).read()
@@ -148,12 +149,9 @@ class IgorServer:
         """Update status field of some service/sensor/actuator after an action"""
         print 'xxxjack updateStatus(%s, %s, %s) not yet implemented' % (representing, success, resultData)
         
-    def updateAccess(self):
-        self.access = access.Access()
-        
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""
-        startupActions = self.database.getElements('actions')
+        startupActions = self.database.getElements('actions', 'get', self.access.tokenForIgor())
         if len(startupActions):
             if len(startupActions) > 1:
                 raise web.HTTPError('401 only one <actions> element allowed')
@@ -166,7 +164,7 @@ class IgorServer:
 
     def updateEventSources(self):
         """Create any SSE event sources that are defined in the database"""
-        eventSources = self.database.getElements('eventSources')
+        eventSources = self.database.getElements('eventSources', 'get', self.access.tokenForIgor())
         if len(eventSources):
             if len(eventSources) > 1:
                 raise web.HTTPError('401 only one <eventSources> element allowed')
@@ -180,21 +178,21 @@ class IgorServer:
     def updateTriggers(self):
         pass
         
-    def runAction(self, actionname):
+    def runAction(self, actionname, token):
         if not self.actionHandler:
             raise web.notfound()
-        nodes = self.database.getElements('actions/action[name="%s"]'%actionname)
+        nodes = self.database.getElements('actions/action[name="%s"]'%actionname, 'run', token)
         if not nodes:
             raise web.notfound()
         for node in nodes:
             self.actionHandler.triggerAction(node)
         return 'OK'
     
-    def runTrigger(self, triggername):
+    def runTrigger(self, triggername, token):
         raise web.HTTPError("502 triggers not yet implemented")
         if not self.triggerHandler:
             raise web.notfound()
-        triggerNodes = self.database.getElements('triggers/%s' % triggername)
+        triggerNodes = self.database.getElements('triggers/%s' % triggername, 'run', token)
         if not triggerNodes:
             raise web.notfound()
         if len(triggerNodes) > 1:
@@ -202,14 +200,14 @@ class IgorServer:
         triggerNode = triggerNodes[0]
         self.triggerHandler.triggerTrigger(triggerNode)
         
-    def save(self):
+    def save(self, token):
         self.database.saveFile()
         return 'OK'
         
-    def started(self):
+    def started(self, token):
         return "IgorServer started"
         
-    def stop(self):
+    def stop(self, token):
         global PROFILER_STATS
         if self.actionHandler:
             self.actionHandler.stop()
@@ -233,12 +231,12 @@ class IgorServer:
             PROFILER_STATS.dump_stats("igor.profile")
         sys.exit(0)
         
-    def restart(self):
+    def restart(self, token):
         self.save()
         os.closerange(3, MAXFD)
         os.execl(sys.executable, sys.executable, *sys.argv)
         
-    def command(self):
+    def command(self, token):
         rv = ''
         if 'IGORSERVER_DIR' in os.environ:
             rv = rv + 'export IGORSERVER_DIR=' + repr(os.environ['IGORSERVER_DIR']) + '\n'
@@ -250,7 +248,7 @@ class IgorServer:
         rv += '\n'
         return rv
         
-    def help(self):
+    def help(self, token):
         rv = 'Internal igor commands:\n'
         rv += 'help - this help\n'
         rv += 'version - return version number\n'
@@ -262,7 +260,7 @@ class IgorServer:
         rv += 'log - Show httpd-style log file of this Igor instance\n'
         return rv
         
-    def version(self):
+    def version(self, token):
         return VERSION + '\n'
     
 def main():

@@ -12,12 +12,16 @@ import dateutil.parser
 
 TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
 
-NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
+#NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
+NAMESPACES = { }
 
 class DBKeyError(KeyError):
     pass
     
 class DBParamError(ValueError):
+    pass
+    
+class DBAccessError(ValueError):
     pass
     
 DEBUG=False
@@ -201,7 +205,6 @@ def recursiveNodeSet(node):
 class DBSerializer:
     """Baseclass with methods to provide a mutex and a condition variable"""
     def __init__(self):   
-        self.lockCount = 0
         self._waiting = {}
         self._callbacks = []
         self._lock = threading.RLock()
@@ -209,7 +212,6 @@ class DBSerializer:
     def enter(self):
         """Enter the critical section for this database"""
         self._lock.acquire()
-        self.lockCount += 1
         
     def leave(self):
         self._lock.release()
@@ -277,6 +279,16 @@ class DBImpl(DBSerializer):
         self._domimpl = xml.dom.getDOMImplementation()
         self.filename = filename
         self.initialize(filename=filename)
+        self.access = None
+        
+    def _checkAccess(self, operation, element, token):
+        assert token
+        if not self.access:
+            return
+        ac = self.access.checkerForElement(element)
+        if ac.allowed(operation, token):
+            return
+        raise DBAccessError
 
     def saveFile(self):
         newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
@@ -299,19 +311,6 @@ class DBImpl(DBSerializer):
             #self.saveFile()
             DBSerializer.signalNodelist(self, nodelist)
         
-    def getMessageCount(self):
-        with self:
-            return self.lockCount
-        
-    def terminate(self):
-        with self:
-            self._terminating = True
-            sys.exit(1)
-        
-    def is_terminating(self):
-        with self:
-            return self._terminating
-        
     def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""
         with self:
@@ -322,10 +321,6 @@ class DBImpl(DBSerializer):
             else:
                 self._doc = self._domimpl.createDocument('', 'root', None)
     
-    def echo(self, arg):
-        """Return the argument (for performance testing)"""
-        return arg
-        
     def _createElementWithEscaping(self, tag):
         if TAG_PATTERN.match(tag) and not tag == "_e":
             return self._doc.createElement(tag)
@@ -358,15 +353,10 @@ class DBImpl(DBSerializer):
             ch2 = ch2.nextSibling
         return True
         
-    def getXMLDocument(self):
-        """Return the whole document (as an XML string)"""
-        with self:
-            rv = self._doc.toprettyxml()
-            return rv
-        
-    def getDocument(self):
+    def getDocument(self, token):
         """Return the whole document (as a DOM element)"""
         with self:
+            self._checkAccess('get', self._doc.documentElement, token)
             return self._doc.documentElement
         
     def splitXPath(self, location):
@@ -489,88 +479,13 @@ class DBImpl(DBSerializer):
         except:
             raise DBParamError('Not valid xml: %s' % xmltext)
         return newdoc.firstChild
-        
-    def setValue(self, location, value):
-        """Set (or insert) a single node by a given value (passed as a string)"""
-        with self:
-            # Find the node, if it exists.
-            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-            if node is None:
-                # Does not exist yet. Try to add it.
-                parent, child = self.splitXPath(location)
-                if not parent or not child:
-                    raise DBKeyError("XPath %s does not refer to unique new or existing location" % location)
-                return self.newValue(parent, 'child', child, value)
-
-            # Sanity check
-            if node.nodeType == node.DOCUMENT_NODE:
-                raise DBParamError('Cannot replace value of /')
-            
-            # Clear out old contents of the node
-            while node.firstChild: node.removeChild(node.firstChild)
-        
-            if hasattr(value, 'nodeType'):
-                # It seems to be a DOM node. Insert it.
-                node.appendChild(value)
-            else:
-                # Insert the new text value
-                if not isinstance(value, basestring):
-                    value = str(value)
-                node.appendChild(self._doc.createTextNode(value))
-        
-            # Signal anyone waiting
-            self.signalNodelist(recursiveNodeSet(node))
-        
-            # Return the location of the new node
-            return self.getXPathForElement(node)
-        
-    def newValue(self, location, where, name, value):
-        """Insert a single new node into the document (value passed as a string)"""
-        with self:
-            # Create the new node to be instered
-            newnode = self._doc._createElementWithEscaping(name)
-            if not isinstance(value, basestring):
-                value = str(value)
-            newnode.appendChild(self._doc.createTextNode(value))
-        
-            # Find the node that we want to insert it relative to
-            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-            if node is None:
-                raise DBKeyError(location)
-            
-            # Insert it in the right place
-            if where == 'before':
-                node.parentNode.insertBefore(node, newnode)
-            elif where == 'after':
-                newnode.nextSibling = node.nextSibling
-                node.nextSibling = newnode
-            elif where == 'child':
-                node.appendChild(newnode)
-            else:
-                raise DBParamError('where must be before, after or child')
-
-            # Signal anyone waiting
-            self.signalNodelist(recursiveNodeSet(newnode)+nodeSet(newnode.parentNode))
-        
-            # Return the location of the new node
-            return self.getXPathForElement(newnode)
-        
-    def delValue(self, location):
-        """Remove a single node from the document"""
-        with self:
-            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-            if node is None:
-                raise DBKeyError(location)
-            parentNode = node.parentNode
-            parentNode.removeChild(node)
-        
-            # Signal anyone waiting
-            self.signalNodelist(nodeSet(parentNode))
-        
-    def delValues(self, location):
+                
+    def delValues(self, location, token):
         """Remove a (possibly empty) set of nodes from the document"""
         with self:
             nodelist = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
+            for n in nodeList:
+                self._checkAccess('delete', n, token)
             parentList = []
             #print 'xxxjack delValues', repr(nodelist)
             for node in nodelist:
@@ -580,52 +495,42 @@ class DBImpl(DBSerializer):
                     parentList += nodeSet(parentNode)
             self.signalNodelist(parentList)
             
-    def hasValue(self, location):
-        """Return xpath if the location exists, None otherwise"""
-        with self:
-            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-            if node:
-                return self.getXPathForElement(node)
-            return None
-        
-    def waitValue(self, location):
-        with self:
-            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-            if not node:
-                self.waitLocation(location)
-                node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-                assert node
-            return self.getXPathForElement(node)
-
-    def hasValues(self, location, context=None):
-        """Return a list of xpaths for the given location"""
-        with self:
-            if context is None:
-                context = self._doc.documentElement
-            nodelist = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
-            return map(self.getXPathForElement, nodelist)
-        
-    def getValue(self, location, context=None):
+    def getValue(self, location, token, context=None):
         """Return a single value from the document (as string)"""
         with self:
             if context is None:
                 context = self._doc.documentElement
-            return xpath.findvalue(location, context, originalContext=[context], namespaces=NAMESPACES)
-        
-    def getValues(self, location, context=None):
+            #
+            # xxxjack note that there is a security issue here. We only check access
+            # if  complete nodeset is returned. If the expression is carefully crafted to
+            # return a string it gives access to anything.
+            #
+            result = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
+            if xpath.expr.nodesetp(result):
+                for n in result:
+                    self._checkAccess('get', n, token)
+                return xpath.expr.string(result)
+            return result
+                    
+    def getValues(self, location, token, context=None):
         """Return a list of node values from the document (as names and strings)"""
         with self:
             if context is None:
                 context = self._doc.documentElement
             nodelist = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
+            for n in nodeList:
+                self._checkAccess('get', n, token)
             return self._getValueList(nodelist)
         
-    def getElements(self, location, context=None):
+    def getElements(self, location, operation, token, context=None):
         """Return a list of DOM nodes (elements only, for now) that match the location"""
         with self:
             if context is None:
                 context = self._doc.documentElement
             nodeList = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
+            # Check we have access to all those nodes
+            for n in nodeList:
+                self._checkAccess(operation, n, token)
             return nodeList
         
     def _getValueList(self, nodelist):
@@ -634,42 +539,3 @@ class DBImpl(DBSerializer):
             for node in nodelist:
                 rv.append((self.getXPathForElement(node), xpath.expr.string_value(node)))
             return rv
-        
-    def pullValue(self, location):
-        """Wait for a value, remove it from the document, return it (as string)"""
-        with self:
-            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-            if not node:
-                self.waitLocation(location)
-                node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-                assert node
-            rv = xpath.expr.string_value(node)
-            node.parentNode.removeChild(node)
-            self.signalNodelist(nodeSet(parentnode))
-            return rv
-  
-    def pullValues(self, location):
-        """Wait for values, remove them from the document, return it (as list of strings)"""
-        with self:
-            nodelist = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
-            if not nodelist:
-                self.waitLocation(location)
-                nodelist = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
-            assert nodelist
-            rv = self._getValueList(nodelist)
-            parentList = []
-            for node in nodelist:
-                parentNode = node.parentNode
-                parentNode.removeChild(node)
-                if not parentNode in parentList:
-                    parentList += nodeSet(parentNode)
-            self.signalNodelist(parentList)
-            return rv
-        
-    def trackValue(self, location, generation):
-        """Generator. Like waitValue, but keeps on returning changed paths"""
-        with self:
-            generation = self.waitLocation(location, generation)
-            node = xpath.findnode(location, self._doc.documentElement, namespaces=NAMESPACES)
-            assert node
-            return self.getXPathForElement(node), generation

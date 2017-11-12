@@ -26,7 +26,7 @@ def niceDelta(delta):
     return "%d weeks" % delta
     
     
-def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", max=0):
+def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", max=0, token=None):
     if not name or not path:
         raise myWebError("401 Required arguments (name or path) missing")
     message = None
@@ -61,46 +61,46 @@ def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", m
         service = service % name
     if alive == None:
         try:
-            DATABASE_ACCESS.delete_key(service + '/alive')
+            DATABASE_ACCESS.delete_key(service + '/alive', token)
         except web.HTTPError:
             pass
     else:
         xpAlive = 'true' if alive else ''
         try:
-            oldValue = DATABASE_ACCESS.get_key(service + '/alive', 'text/plain', None)
+            oldValue = DATABASE_ACCESS.get_key(service + '/alive', 'text/plain', None, token)
         except web.HTTPError:
             web.ctx.status = "200 OK"
             oldValue = 'rabarber'
             if oldValue != xpAlive:
                 try:
-                    rv = DATABASE_ACCESS.put_key(service + '/alive', 'text/plain', None, xpAlive, 'text/plain', replace=True)
+                    rv = DATABASE_ACCESS.put_key(service + '/alive', 'text/plain', None, xpAlive, 'text/plain', token, replace=True)
                 except web.HTTPError:
                     raise myWebError("501 Failed to store into %s" % (service + '/alive'))
                 if alive:
                     # If the service is alive we delete any error message and we also reset the "ignore errors" indicator
                     try:
-                        DATABASE_ACCESS.delete_key(service + '/ignoreErrorUntil')
+                        DATABASE_ACCESS.delete_key(service + '/ignoreErrorUntil', token)
                     except web.HTTPError:
                         pass
 
     if latest < 0:
         try:
-            DATABASE_ACCESS.delete_key(service + '/lastActivity')
+            DATABASE_ACCESS.delete_key(service + '/lastActivity', token)
         except web.HTTPError:
             pass
     else:
         try:
-            rv = DATABASE_ACCESS.put_key(service + '/lastActivity', 'text/plain', None, str(int(latest)), 'text/plain', replace=True)
+            rv = DATABASE_ACCESS.put_key(service + '/lastActivity', 'text/plain', None, str(int(latest)), 'text/plain', token, replace=True)
         except web.HTTPError:
             raise myWebError("501 Failed to store into %s" % (service + '/lastActivity'))
 
     if not message:
         try:
-            DATABASE_ACCESS.delete_key(service + '/errorMessage')
+            DATABASE_ACCESS.delete_key(service + '/errorMessage', token)
         except web.HTTPError:
             pass
     else:
         try:
-            rv = DATABASE_ACCESS.put_key(service + '/errorMessage', 'text/plain', None, message, 'text/plain', replace=True)
+            rv = DATABASE_ACCESS.put_key(service + '/errorMessage', 'text/plain', None, message, 'text/plain', token, replace=True)
         except web.HTTPError:
             raise myWebError("501 Failed to store into %s" % (service + '/errorMessage'))

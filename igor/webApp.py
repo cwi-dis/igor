@@ -291,6 +291,8 @@ class runPlugin:
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
         pluginToken = access.singleton.tokenForPlugin(command)
+        allArgs['token'] = pluginToken
+        
         # Find plugindata and per-user plugindata
         try:
             pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (command), 'application/x-python-object', 'content', pluginToken)

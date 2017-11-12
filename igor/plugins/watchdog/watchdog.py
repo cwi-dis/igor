@@ -6,7 +6,7 @@ watchdog_device = None
 watchdog_timeout = 60
 stop_feeding = time.time() + watchdog_timeout
 
-def watchdog(timeout=None, device='/dev/watchdog'):
+def watchdog(timeout=None, device='/dev/watchdog', token=None):
     """Initialize and/or feed the watchdog"""
     global watchdog_device
     global watchdog_timeout

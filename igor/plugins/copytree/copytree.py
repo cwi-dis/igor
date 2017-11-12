@@ -14,7 +14,7 @@ DATABASE_ACCESS=None
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-def copytree(src=None, dst=None, mimetype="text/plain", method='PUT'):
+def copytree(src=None, dst=None, mimetype="text/plain", method='PUT', token=None):
     if not src:
         raise myWebError("401 Required argument name missing")
     if not dst:
@@ -23,7 +23,7 @@ def copytree(src=None, dst=None, mimetype="text/plain", method='PUT'):
     srcParsed = urlparse.urlparse(src)
     if srcParsed.scheme == '' and srcParsed.netloc == '':
         # Local source
-        srcValue = DATABASE_ACCESS.get_key(srcParsed.path, mimetype, None)
+        srcValue = DATABASE_ACCESS.get_key(srcParsed.path, mimetype, None, token)
     else:
         # Remote source
         h = httplib2.Http()
@@ -33,7 +33,7 @@ def copytree(src=None, dst=None, mimetype="text/plain", method='PUT'):
     
     dstParsed = urlparse.urlparse(dst)
     if dstParsed.scheme == '' and dstParsed.netloc == '':
-        rv = DATABASE_ACCESS.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, method=='PUT')
+        rv = DATABASE_ACCESS.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, token, method=='PUT')
     else:
         headers = {'Content-type' : mimetype}
         h = httplib2.Http()

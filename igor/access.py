@@ -2,6 +2,8 @@
 import web
 import xpath
 
+NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
+
 class AccessControlError(ValueError):
     pass
 

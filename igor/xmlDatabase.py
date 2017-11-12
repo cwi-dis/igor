@@ -484,11 +484,11 @@ class DBImpl(DBSerializer):
     def delValues(self, location, token):
         """Remove a (possibly empty) set of nodes from the document"""
         with self:
-            nodelist = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
+            nodeList = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
             for n in nodeList:
                 self._checkAccess('delete', n, token)
             parentList = []
-            for node in nodelist:
+            for node in nodeList:
                 parentNode = node.parentNode
                 parentNode.removeChild(node)
                 if not parentNode in parentList:

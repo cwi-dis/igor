@@ -24,7 +24,7 @@ def niceDelta(delta):
     delta = (delta+1) / 7
     return "%d weeks" % delta
     
-def systemHealth(ignore=None, duration=0):
+def systemHealth(ignore=None, duration=0, token):
     #
     # See if we have a request to ignore errors for a specific service (or sensor)
     #
@@ -33,10 +33,10 @@ def systemHealth(ignore=None, duration=0):
         targetPath = "%s/ignoreErrorUntil" % ignore
         if duration:
             ignoreUntil = time.time() + float(duration)
-            DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, str(int(ignoreUntil)), 'text/plain', replace=True)
+            DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, str(int(ignoreUntil)), 'text/plain', token, replace=True)
         else:
             try:
-                DATABASE_ACCESS.delete_key(targetPath)
+                DATABASE_ACCESS.delete_key(targetPath, token)
             except web.HTTPError:
                 web.ctx.status = "200 OK"
     #
@@ -46,7 +46,7 @@ def systemHealth(ignore=None, duration=0):
     badSensors = {}
     if 'sensorMaxInterval' in PLUGINDATA:
         sensorMaxInterval = PLUGINDATA['sensorMaxInterval']
-        sensors = DATABASE_ACCESS.get_key("sensors/*", "application/x-python-object", "multi")
+        sensors = DATABASE_ACCESS.get_key("sensors/*", "application/x-python-object", "multi", token)
         for xp, content in sensors.items():
             sensorName = xp[xp.rindex('/')+1:]
             lastActivity = content.get('lastActivity', None)
@@ -55,18 +55,18 @@ def systemHealth(ignore=None, duration=0):
                 miTime = float(sensorMaxInterval[sensorName])
                 if laTime + miTime < time.time():
                     errorMessage = 'No activity from %s sensors for %s' % (sensorName, niceDelta(time.time()-laTime))
-                    DATABASE_ACCESS.put_key(xp + '/errorMessage', 'text/plain', None, errorMessage, 'text/plain', replace=True)
+                    DATABASE_ACCESS.put_key(xp + '/errorMessage', 'text/plain', None, errorMessage, 'text/plain', token, replace=True)
                     content['errorMessage'] = errorMessage
                     badSensors[xp] = content
                 else:
                     # Delete any old error messages
                     try:
-                        DATABASE_ACCESS.delete_key(xp + '/errorMessage')
+                        DATABASE_ACCESS.delete_key(xp + '/errorMessage', token)
                     except web.HTTPError:
                         web.ctx.status = "200 OK"
 
-    services = DATABASE_ACCESS.get_key("services/*", "application/x-python-object", "multi")
-    devices = DATABASE_ACCESS.get_key("devices/*", "application/x-python-object", "multi")
+    services = DATABASE_ACCESS.get_key("services/*", "application/x-python-object", "multi", token)
+    devices = DATABASE_ACCESS.get_key("devices/*", "application/x-python-object", "multi", token)
     #
     # For all sensors and services see whether we have an error condition.
     #
@@ -79,17 +79,17 @@ def systemHealth(ignore=None, duration=0):
             ignoreUntil = int(content['ignoreErrorUntil'])
             if ignoreUntil < time.time():
                 hasIgnore = False
-                DATABASE_ACCESS.delete_key(xp + '/ignoreErrorUntil')
+                DATABASE_ACCESS.delete_key(xp + '/ignoreErrorUntil', token)
         if hasIgnore:
             hasError = False
         targetPath = "environment/systemHealth/messages/" + serviceName
         if hasError:
             # Copy error into environment/systemHealth
-            DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, content['errorMessage'], 'text/plain', replace=True)
+            DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, content['errorMessage'], 'text/plain', token, replace=True)
         else:
             # Remove error from environment/systemHealth if it is there currently
             try:
-                DATABASE_ACCESS.delete_key(targetPath)
+                DATABASE_ACCESS.delete_key(targetPath, token)
             except web.HTTPError:
                 web.ctx.status = "200 OK"
                 pass

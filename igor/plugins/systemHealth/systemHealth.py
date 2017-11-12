@@ -24,7 +24,7 @@ def niceDelta(delta):
     delta = (delta+1) / 7
     return "%d weeks" % delta
     
-def systemHealth(ignore=None, duration=0, token):
+def systemHealth(ignore=None, duration=0, token=None):
     #
     # See if we have a request to ignore errors for a specific service (or sensor)
     #

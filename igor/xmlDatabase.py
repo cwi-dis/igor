@@ -517,10 +517,10 @@ class DBImpl(DBSerializer):
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodelist = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
+            nodeList = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
             for n in nodeList:
                 self._checkAccess('get', n, token)
-            return self._getValueList(nodelist)
+            return self._getValueList(nodeList)
         
     def getElements(self, location, operation, token, context=None):
         """Return a list of DOM nodes (elements only, for now) that match the location"""

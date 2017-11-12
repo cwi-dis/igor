@@ -290,7 +290,7 @@ class runPlugin:
         token = access.singleton.tokenForRequest(web.ctx.env)
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
-        pluginToken = access.singleton.tokenForPlugin(name)
+        pluginToken = access.singleton.tokenForPlugin(command)
         # Find plugindata and per-user plugindata
         try:
             pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (command), 'application/x-python-object', 'content', pluginToken)

@@ -21,7 +21,7 @@ $def with ()
 	
 	<h2>Exceptional conditions</h2>
 	
-	$ messages = DATABASE.getValues('/data/environment/systemHealth/messages/*', 'get', token)
+	$ messages = DATABASE.getValues('/data/environment/systemHealth/messages/*', token)
 	$if messages:
 		<p>The following exceptional conditions (for services, sensors and actuators) are currently noted:</p>
 		<ul>

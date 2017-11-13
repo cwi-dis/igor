@@ -67,4 +67,4 @@ The `AccessChecker` object has one method:
 	- `'post'` (to create children elements)
 	- `'delete'` (remove the element)
 	- `'run'` (run the action or plugin)
-	- 
+	

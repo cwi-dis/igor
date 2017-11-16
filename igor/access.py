@@ -23,7 +23,7 @@ class IgorAccessToken(DummyAccessToken):
     def addToHeaders(self, headers):
         pass
 
-_igorSelfToken = DummyAccessToken()
+_igorSelfToken = IgorAccessToken()
 
 class AccessToken(DummyAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""

@@ -221,7 +221,7 @@ class IgorServer:
         if self.urlCaller:
             self.urlCaller.stop()
             self.urlCaller = None
-        self.save()
+        self.save(token)
         if self.profile:
             self.profile.disable()
             if PROFILER_STATS is None:
@@ -232,7 +232,7 @@ class IgorServer:
         sys.exit(0)
         
     def restart(self, token):
-        self.save()
+        self.save(token)
         os.closerange(3, MAXFD)
         os.execl(sys.executable, sys.executable, *sys.argv)
         

@@ -275,12 +275,12 @@ class DBImpl(DBSerializer):
     
     def __init__(self, filename):
         DBSerializer.__init__(self)
+        import access
+        self.access = access.singleton
         self._terminating = False
         self._domimpl = xml.dom.getDOMImplementation()
         self.filename = filename
         self.initialize(filename=filename)
-        import access
-        self.access = access.singleton
         
     def _checkAccess(self, operation, element, token):
         assert token
@@ -291,9 +291,18 @@ class DBImpl(DBSerializer):
             return
         raise DBAccessError
 
+    def filterAfterLoad(self, nodeOrDoc, token):
+        with self:
+            return nodeOrDoc
+        
+    def filterBeforeSave(self, nodeOrDoc,token):
+        with self:
+            return nodeOrDoc
+        
     def saveFile(self):
         newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
-        self._doc.writexml(open(newFilename + '~', 'w'))
+        docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
+        docToSave.writexml(open(newFilename + '~', 'w'))
         os.link(newFilename + '~', newFilename)
         os.rename(newFilename + '~', self.filename)
         # Remove outdated saves
@@ -316,11 +325,12 @@ class DBImpl(DBSerializer):
         """Reset the document to a known value (passed as an XML string"""
         with self:
             if filename:
-                self._doc = xml.dom.minidom.parse(filename)
+                newDoc = xml.dom.minidom.parse(filename)
             elif xmlstring:
-                self._doc = xml.dom.minidom.parseString(xmlstring)
+                newDoc = xml.dom.minidom.parseString(xmlstring)
             else:
-                self._doc = self._domimpl.createDocument('', 'root', None)
+                newDoc = self._domimpl.createDocument('', 'root', None)
+            self._doc = self.filterAfterLoad(newDoc, self.access.tokenForIgor())
     
     def _createElementWithEscaping(self, tag):
         if TAG_PATTERN.match(tag) and not tag == "_e":

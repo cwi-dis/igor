@@ -4,14 +4,23 @@ import xpath
 
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
+NORMAL_OPERATIONS = {'get', 'put', 'post', 'run'}
+AUTH_OPERATIONS = {'auth'}
+ALL_OPERATIONS = NORMAL_OPERATIONS | AUTH_OPERATIONS
+
+# For the time being: define this to have the default token checker allow everything
+# the dummy token allows
+DEFAULT_IS_ALLOW_ALL=True
+
 class AccessControlError(ValueError):
     pass
 
 class DummyAccessToken:
     """An access token (or set of tokens) that can be carried by a request"""
 
-    def __init__(self):
-        pass
+    def __init__(self, allowOperations=[], matchAll=False):
+        self.allowOperations = allowOperations
+        self.matchAll = matchAll
 
     def addToHeaders(self, headers):
         pass
@@ -23,12 +32,13 @@ class IgorAccessToken(DummyAccessToken):
     def addToHeaders(self, headers):
         pass
 
-_igorSelfToken = IgorAccessToken()
+_igorSelfToken = IgorAccessToken(matchAll=True, allowOperations=ALL_OPERATIONS)
 
 class AccessToken(DummyAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
 
     def __init__(self, content):
+        DummyAccessToken.__init__(self, allowOperations=NORMAL_OPERATIONS)
         self.content = content
         
     def addToHeaders(self, headers):
@@ -44,7 +54,15 @@ class DummyAccessChecker:
         pass
         
     def allowed(self, operation, token):
-        return True
+        assert operation in ALL_OPERATIONS
+        if DEFAULT_IS_ALLOW_ALL:
+            return True
+        match = token.matchAll
+        if not match:
+            return False
+        if operation in token.allowOperations:
+            return True
+        return False
            
 class AccessChecker(DummyAccessChecker):
     """An object that checks whether an operation (or request) has the right permission"""
@@ -53,10 +71,13 @@ class AccessChecker(DummyAccessChecker):
         self.content = content
         
     def allowed(self, operation, token):
-        if token is _igorSelfToken:
+        assert operation in ALL_OPERATIONS
+        match = token.matchAll or (token.getContent() == self.content)
+        if not match:
+            return False
+        if operation in token.allowOperations:
             return True
-        rv = token.getContent() == self.content
-        return rv
+        return False
 
 class Access:
     def __init__(self):

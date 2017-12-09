@@ -11,6 +11,7 @@ import datetime
 import dateutil.parser
 
 TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
+ILLEGAL_XML_CHARACTERS_PATTERN = re.compile(u'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf\ufffe-\uffff]')
 
 class DBKeyError(KeyError):
     pass
@@ -459,6 +460,8 @@ class DBImpl(DBSerializer):
                 if type(data) is type(True):
                     data = 'true' if data else ''
                 data = unicode(data)
+                # Clean illegal unicode characters
+                data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
                 newnode.appendChild(self._doc.createTextNode(data))
                 return newnode
             for k, v in data.items():

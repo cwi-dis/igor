@@ -18,6 +18,7 @@
 RUNAS=%(user)s
 DAEMON="igorServer"
 IGOR_DIR="%(database)s"
+export PATH=$PATH:/usr/sbin:~$RUNAS/bin
 
 # Using the lsb functions to perform the operations.
 . /lib/lsb/init-functions
@@ -36,7 +37,7 @@ start() {
     return 1
   fi
   echo 'Starting service…' >&2
-  local CMD="$SCRIPT >\"$LOGFILE\" 2>&1 & echo \$!"
+  local CMD="PATH=$PATH $SCRIPT >\"$LOGFILE\" 2>&1 & echo \$!"
   su -c "$CMD" $RUNAS > "$PIDFILE"
   echo 'Service started' >&2
 }

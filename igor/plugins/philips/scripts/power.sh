@@ -9,8 +9,9 @@ xon|xtrue)
 	echo Philips powered on
 	;;
 xoff|xfalse|x)
-	$philipsPowerCmd 12
-	echo Philips powered off
+	#$philipsPowerCmd 12
+	#echo Philips powered off
+	echo Philips not powered off
 	;;
 *)
 	echo Unknown Philips power state $igor_power

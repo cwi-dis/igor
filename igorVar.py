@@ -143,12 +143,14 @@ def main():
 					data = json.dumps(decodedData)
 				except ValueError:
 					print >>sys.stderr, "%s: no valid JSON data read from stdin" % sys.argv[0]
+					print >>sys.stderr, data
 					sys.exit(1)
 			elif args.put == 'application/xml':
 				try:
 					decodedData = xml.etree.ElementTree.fromstring(data)
 				except xml.etree.ElementTree.ParseError:
 					print >> sys.stderr, "%s: no valid XML data read from stdin" % sys.argv[0]
+					print >>sys.stderr, data
 					sys.exit(1)
 			elif args.checkdata:
 				print >>sys.stderr, "%s: --checkdata only allowed for JSON and XML data"

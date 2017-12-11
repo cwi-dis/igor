@@ -52,6 +52,8 @@ class URLCallRunner(threading.Thread):
                     rep = self.app.request(url, method=method, data=data, headers=headers)
                     resultStatus = rep.status
                     resultData = rep.data
+                    if not resultData:
+                        resultData = resultStatus
                 else:
                     # Remote.
                     # xxxjack have to work out exceptions

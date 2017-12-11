@@ -457,6 +457,8 @@ class DBImpl(DBSerializer):
             newnode = self._createElementWithEscaping(tag)
             if not isinstance(data, dict):
                 # Not key/value, so a raw value. Convert to something string-like
+                if data is None:
+                    data = ''
                 if type(data) is type(True):
                     data = 'true' if data else ''
                 data = unicode(data)

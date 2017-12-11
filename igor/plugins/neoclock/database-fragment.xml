@@ -12,13 +12,13 @@
 		<action>
 			<xpath>/data/sensors/buienradar</xpath>
 			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=600&amp;temporalStatus=0x206060/{data[1]/level * 0.01 - 0.4}/{data[2]/level * 0.01 - 0.4}/{data[3]/level * 0.01 - 0.4}/{data[4]/level * 0.01 - 0.4}/{data[5]/level * 0.01 - 0.4}/{data[6]/level * 0.01 - 0.4}/{data[7]/level * 0.01 - 0.4}/{data[8]/level * 0.01 - 0.4}/{data[9]/level * 0.01 - 0.4}/{data[10]/level * 0.01 - 0.4}/{data[11]/level * 0.01 - 0.4}/{data[12]/level * 0.01 - 0.4}</url>
-			<representing>/data/devices/neoclock</representing>
+			<representing>devices/neoclock</representing>
 		</action>
 		<action>
 			<xpath>/data/environment/systemHealth/messages</xpath>
 			<interval>60</interval>
 			<url>http://{/data/plugindata/neoclock/host}/alert?timeout=300&amp;status={igor_ifthenelse(string(/data/environment/systemHealth/messages),"0x603000","")}/0x600000</url>
-			<representing>/data/devices/neoclock</representing>
+			<representing>devices/neoclock</representing>
 		</action>
 	</actions>
 	<plugindata>

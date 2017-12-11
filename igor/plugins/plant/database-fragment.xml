@@ -7,7 +7,7 @@
 		<action>
 			<xpath>/data/devices/plant/pos</xpath>
 			<url>http://plant.local/stepper/0?pos={.}</url>
-			<representing>/data/devices/plant</representing>
+			<representing>devices/plant</representing>
 		</action>
 		<action>
 			<xpath>/data/environment/energy/electricity</xpath>
@@ -21,7 +21,7 @@
 		<action>
 			<interval>600</interval>
 			<url>/pluginscripts/plant/pull</url>
-			<representing>/data/devices/plant</representing>
+			<representing>devices/plant</representing>
 			<aggregate>true</aggregate>
 		</action>			
 	</actions>

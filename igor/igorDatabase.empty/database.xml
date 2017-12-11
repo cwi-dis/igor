@@ -16,6 +16,12 @@
 			<rebootCount>0</rebootCount>
 		</introspection>
 	</environment>
+	<status>
+		<igor/>
+		<sensors/>
+		<devices/>
+		<services/>
+	</status>
 	<sensors/>
 	<devices>
 	</devices>
@@ -50,6 +56,7 @@
 			<interval>3600</interval>
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
+			<representing>igor/save</representing>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
 		</action>
         <action>

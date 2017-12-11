@@ -14,11 +14,19 @@ x)
 esac
 backupFilename=`$tmutil latestbackup 2>&1`
 if [ $? -ne 0 ]; then
-	igorVar --put text/plain --data "" services/$igor_name/alive
-	igorVar --put text/plain --data "$igor_name status cannot be determined: $backupFilename" services/$igor_name/errorMessage
+	cat << endcat | igorVar --post application/json --data "$igor_name status cannot be determined: $backupFilename" /internal/updateStatus
+{ "representing" : "$igor_name",
+  "alive" : false,
+  "resultData" : "$igor_name status cannot be determined: $backupFilename"
+}
+endcat
+	
 else
-	igorVar --put text/plain --data "true" services/$igor_name/alive
 	backupTime=`echo "$backupFilename" | sed -e 's@.*/\([0-9][[0-9][0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9]\)\([0-9][0-9]\)\([0-9][0-9]\)@\1-\2-\3 \4:\5:\6@'`
-	igorVar --put text/plain --data "$backupTime" services/$igor_name/lastActivity
-	igorVar --delete services/$igor_name/errorMessage
-fi
+	cat << endcat | igorVar --post application/json --data "$igor_name status cannot be determined: $backupFilename" /internal/updateStatus
+{ "representing" : "$igor_name",
+  "alive" : false,
+  "lastSuccess" : "$backupTime",
+  "resultData" : ""
+}
+endcat

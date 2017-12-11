@@ -119,7 +119,7 @@ class IgorServer:
         hostName = besthostname.besthostname()
         url = 'http://%s:%d/data' % (hostName, self.port)
         data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION)
-        tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data))
+        tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data), representing='igor/core')
         self.urlCaller.callURL(tocall)
         
     def run(self):
@@ -138,9 +138,51 @@ class IgorServer:
             return open(logfn).read()
         raise Web.HTTPError('404 Log file not available')
         
-    def updateStatus(self, representing=None, success=None, resultData=None):
+    def updateStatus(self, representing=None, success=None, resultData=None, lastActivity=None, lastSuccess=None):
         """Update status field of some service/sensor/actuator after an action"""
-        print 'xxxjack updateStatus(%s, %s, %s) not yet implemented' % (representing, success, resultData)
+        print 'xxxjack updateStatus(%s, %s, %s)' % (representing, success, resultData)
+        if representing.startswith('/data/'):
+            representing = representing[len('/data/'):]
+        if lastActivity == None:
+            lastActivity = time.time()
+        else:
+            lastActivity = float(lastActivity)
+        if lastSuccess == None and success:
+            lastSuccess = lastActivity
+#        newRecord = dict(lastActivity=lastActivity, lastFailure=alive=(not not success), message=resultData)
+#        if success:
+#            newRecord['lastSuccess'] = lastActivity
+#            newRecord['ignoreErrorsUntil'] = None
+#        else:
+#            newRecord['lastFailure'] = lastActivity
+        
+        # xxxjack this needs to be done differently. Too much spaghetti.
+        dbAccess = webApp.DATABASE_ACCESS
+        
+        key = 'status/' + representing
+        
+        # Check whether record exists, otherwise create it (empty)
+        try:
+            _ = dbAccess.get_key(key, 'application/x-python-object', 'content')
+        except web.HTTPError:
+            _ = dbAccess.put_key(key, 'application/x-python-object', None, '', 'text/plain')
+            
+        # Fill only entries we want
+        _ = dbAccess.put_key(key + '/alive', 'application/x-python-object', None, not not success, 'application/x-python-object')
+        _ = dbAccess.put_key(key + '/lastActivity', 'application/x-python-object', None, lastActivity, 'application/x-python-object')
+        _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object')
+        if success:
+            _ = dbAccess.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object')
+            resultData = ''
+        else:
+            _ = dbAccess.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object')
+            if not resultData:
+                resultData = 'unknown failure'
+        if type(resultData) == type({}):
+            for k, v in resultData.items():
+                _ = dbAccess.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object')
+        else:
+            _ = dbAccess.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object')
         
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""

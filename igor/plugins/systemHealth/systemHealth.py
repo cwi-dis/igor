@@ -46,50 +46,45 @@ def systemHealth(ignore=None, duration=0):
     badSensors = {}
     if 'sensorMaxInterval' in PLUGINDATA:
         sensorMaxInterval = PLUGINDATA['sensorMaxInterval']
-        sensors = DATABASE_ACCESS.get_key("sensors/*", "application/x-python-object", "multi")
-        for xp, content in sensors.items():
-            sensorName = xp[xp.rindex('/')+1:]
-            lastActivity = content.get('lastActivity', None)
-            if lastActivity and sensorName in sensorMaxInterval:
-                laTime = float(lastActivity)
-                miTime = float(sensorMaxInterval[sensorName])
-                if laTime + miTime < time.time():
-                    errorMessage = 'No activity from %s sensors for %s' % (sensorName, niceDelta(time.time()-laTime))
-                    DATABASE_ACCESS.put_key(xp + '/errorMessage', 'text/plain', None, errorMessage, 'text/plain', replace=True)
-                    content['errorMessage'] = errorMessage
-                    badSensors[xp] = content
-                else:
-                    # Delete any old error messages
-                    try:
-                        DATABASE_ACCESS.delete_key(xp + '/errorMessage')
-                    except web.HTTPError:
-                        web.ctx.status = "200 OK"
+        sensors = DATABASE_ACCESS.get_key("status/sensors/*", "application/x-python-object", "multi")
+        if sensors:
+            for xp, content in sensors.items():
+                sensorName = xp[xp.rindex('/')+1:]
+                lastActivity = content.get('lastActivity', None)
+                if lastActivity and sensorName in sensorMaxInterval:
+                    laTime = float(lastActivity)
+                    miTime = float(sensorMaxInterval[sensorName])
+                    if laTime + miTime < time.time():
+                        errorMessage = 'No activity from %s sensors for %s' % (sensorName, niceDelta(time.time()-laTime))
+                        DATABASE_ACCESS.put_key(xp + '/errorMessage', 'text/plain', None, errorMessage, 'text/plain', replace=True)
+                        content['errorMessage'] = errorMessage
+                        badSensors[xp] = content
 
-    services = DATABASE_ACCESS.get_key("services/*", "application/x-python-object", "multi")
-    devices = DATABASE_ACCESS.get_key("devices/*", "application/x-python-object", "multi")
+    statuses = DATABASE_ACCESS.get_key("status/*/*", "application/x-python-object", "multi")
     #
     # For all sensors and services see whether we have an error condition.
     #
-    for xp, content in services.items() + devices.items() + badSensors.items():
-        serviceName = xp[xp.rindex('/')+1:]
-        hasError = 'errorMessage' in content
-        hasIgnore = 'ignoreErrorUntil' in content
-        if hasError and hasIgnore:
-            # Check whether the ignore is still valid, delete if not
-            ignoreUntil = int(content['ignoreErrorUntil'])
-            if ignoreUntil < time.time():
-                hasIgnore = False
-                DATABASE_ACCESS.delete_key(xp + '/ignoreErrorUntil')
-        if hasIgnore:
-            hasError = False
-        targetPath = "environment/systemHealth/messages/" + serviceName
-        if hasError:
-            # Copy error into environment/systemHealth
-            DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, content['errorMessage'], 'text/plain', replace=True)
-        else:
-            # Remove error from environment/systemHealth if it is there currently
-            try:
-                DATABASE_ACCESS.delete_key(targetPath)
-            except web.HTTPError:
-                web.ctx.status = "200 OK"
-                pass
+    if statuses:
+        for xp, content in statuses.items():
+            serviceName = xp[xp.rindex('/')+1:]
+            hasError = 'errorMessage' in content
+            hasIgnore = 'ignoreErrorUntil' in content
+            if hasError and hasIgnore:
+                # Check whether the ignore is still valid, clear if not
+                ignoreUntil = int(content['ignoreErrorUntil'])
+                if ignoreUntil < time.time():
+                    hasIgnore = False
+                    DATABASE_ACCESS.put_key(xp + '/ignoreErrorUntil', 'text/plain', None, '', 'text/plain', replace=True)
+            if hasIgnore:
+                hasError = False
+            targetPath = "environment/systemHealth/messages/" + serviceName
+            if hasError:
+                # Copy error into environment/systemHealth
+                DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, content['errorMessage'], 'text/plain', replace=True)
+            else:
+                # Remove error from environment/systemHealth if it is there currently
+                try:
+                    DATABASE_ACCESS.delete_key(targetPath)
+                except web.HTTPError:
+                    web.ctx.status = "200 OK"
+                    pass

@@ -293,7 +293,8 @@ class runPlugin:
             
         try:
             rv = method(**allArgs)
-        except TypeError, arg:
+        except ValueError, arg:
+        #except TypeError, arg:
             raise myWebError("401 Error calling plugin method %s: %s" % (command, arg))
         return rv
     
@@ -650,6 +651,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 element = self.db.elementFromTagAndData(tag, valueDict)
             return element
         elif mimetype == 'text/plain':
+            # xxxjack should check that value is a string or unicode
+            element = self.db.elementFromTagAndData(tag, value)
+            return element
+        elif mimetype == 'application/x-python-object':
             element = self.db.elementFromTagAndData(tag, value)
             return element
         else:

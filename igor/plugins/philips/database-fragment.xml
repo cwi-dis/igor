@@ -7,12 +7,12 @@
 		<action>
 			<xpath>/data/devices/tv/power</xpath>
 			<url>/pluginscripts/philips/power?power={.}</url>
-			<representing>/data/devices/tv</representing>
+			<representing>devices/tv</representing>
 		</action>
 		<action>
 			<xpath>/data/devices/tv/*[name()!='power']</xpath>
 			<url>/pluginscripts/philips/push?{name()}={.}</url>
-			<representing>/data/devices/tv</representing>
+			<representing>devices/tv</representing>
 		</action>
 		<action>
 			<interval>60</interval>

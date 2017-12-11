@@ -140,7 +140,6 @@ class IgorServer:
         
     def updateStatus(self, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None):
         """Update status field of some service/sensor/actuator after an action"""
-        print 'xxxjack updateStatus(%s, %s, %s)' % (representing, alive, resultData)
         if representing.startswith('/data/'):
             representing = representing[len('/data/'):]
         if lastActivity == None:

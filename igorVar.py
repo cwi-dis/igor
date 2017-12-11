@@ -9,6 +9,7 @@ import time
 import json
 import pprint
 import xml.etree.ElementTree
+import socket
 
 DEFAULT_URL="http://framboos.local:9333/data"
 if 'IGORSERVER_URL' in os.environ:
@@ -69,7 +70,11 @@ class IgorServer:
 			print >>sys.stderr, "... Headers", headers
 			if data:
 				print >>sys.stderr, "... Data", repr(data)
-		reply, content = h.request(url, method=method, headers=headers, body=data)
+		try:
+			reply, content = h.request(url, method=method, headers=headers, body=data)
+		except socket.error, arg:
+			print >>sys.stderr, "%s: Error %s for %s" % (sys.argv[0], arg, url)
+			sys.exit(1)
 		if VERBOSE:
 			print >>sys.stderr, "<<< Headers", reply
 			print >>sys.stderr, "...", repr(content)

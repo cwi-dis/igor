@@ -16,4 +16,4 @@ x)
 	exit 1
 	;;
 esac
-echo $igor_pluginData | python $dirFitbit/getFitbit.py --stdin | igorVar --put application/json --checkdata --timestamp sensors/fitbit/$igor_user
+echo $igor_pluginData | python $dirFitbit/getFitbit.py --stdin | igorVar --put application/json --checknonempty sensors/fitbit/$igor_user

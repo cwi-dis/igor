@@ -108,7 +108,7 @@ def main():
 	parser.add_argument("--post", metavar="MIMETYPE", help="POST data of type MIMETYPE, from --data or stdin")
 	parser.add_argument("--data", metavar="DATA", help="POST or PUT DATA, in stead of reading from stdin")
 	parser.add_argument("--checkdata", action="store_true", help="Check that data is valid XML or JSON")
-	parser.add_argument("--timestamp", action="store_true", help="Add lastActivity timestamp to XML or JSON data")
+	parser.add_argument("--checknonempty", action="store_true", help="Check that data is valid XML or JSON data, and fail silently on empty data")
 	parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
 	parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line")
 	parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument")
@@ -131,17 +131,15 @@ def main():
 		data = args.data
 		if data is None:
 			data = sys.stdin.read()
-		if args.checkdata or args.timestamp:
+		if args.checkdata or args.checknonempty:
 			# Check that data is valid JSON or XML.
 			# If no data is read at all only exit with nonzero status, assume the previous
 			# part of the pipeline has already issues an error.
-			if not data:
+			if not data and args.checknonempty:
 				sys.exit(1)
 			if args.put == 'application/json':
 				try:
 					decodedData = json.loads(data)
-					if args.timestamp:
-						decodedData['lastActivity'] = str(int(time.time()))
 					data = json.dumps(decodedData)
 				except ValueError:
 					print >>sys.stderr, "%s: no valid JSON data read from stdin" % sys.argv[0]
@@ -149,15 +147,11 @@ def main():
 			elif args.put == 'application/xml':
 				try:
 					decodedData = xml.etree.ElementTree.fromstring(data)
-					if args.timestamp:
-						n = xml.etree.ElementTree.SubElement(decodedData, 'lastActivity')
-						n.text = str(int(time.time()))
-						data = xml.etree.ElementTree.tostring(decodedData)
 				except xml.etree.ElementTree.ParseError:
 					print >> sys.stderr, "%s: no valid XML data read from stdin" % sys.argv[0]
 					sys.exit(1)
-			else:
-				print >>sys.stderr, "%s: --checkdata and --timestamp only allowed for JSON and XML data"
+			elif args.checkdata:
+				print >>sys.stderr, "%s: --checkdata only allowed for JSON and XML data"
 				sys.exit(1)
 		elif not data and not args.allow_empty:
 			print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]

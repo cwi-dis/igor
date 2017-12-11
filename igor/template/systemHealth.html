@@ -15,8 +15,8 @@ $def with ()
 	<h1>Igor System Health</h1>
 	
 	<p>
-		Igor has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot')},
-		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount')} times during its lifetime.
+		Igor has been running since ${DATABASE.getValue('/data/status/igor/core/startTime')},
+		and was rebooted ${DATABASE.getValue('/data/status/igor/core/rebootCount')} times during its lifetime.
 	</p>
 	
 	<h2>Exceptional conditions</h2>

@@ -4,14 +4,8 @@
 		<action>
 			<interval>900</interval>
 			<url>/pluginscripts/netatmo/pull</url>
+			<representing>sensors/netatmo</representing>
 			<aggregate>true</aggregate>
-		</action>
-		<action>
-			<xpath>/data/sensors/netAtmo/*[1]/When</xpath>
-			<method>PUT</method>
-            <url>/data/environment/introspection/lastActivity/netAtmo</url>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_dateTime(.)}</data>
 		</action>
 	</actions>
 </data>

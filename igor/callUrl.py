@@ -66,8 +66,8 @@ class URLCallRunner(threading.Thread):
                 print 'URLCaller: exception while calling URL'
                 traceback.print_exc(file=sys.stdout)
             print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
-            success = resultStatus[:3] == '200'
-            if not success or DEBUG:
+            alive = resultStatus[:3] == '200'
+            if not alive or DEBUG:
                 if resultData:
                     print 'Output:'
                     resultLines = resultData.splitlines()
@@ -75,7 +75,7 @@ class URLCallRunner(threading.Thread):
                         print '\t'+line
             representing = tocall.get('representing')
             if representing:
-                args = dict(representing=representing, success=success, resultData=resultData)
+                args = dict(representing=representing, alive=alive, resultData=resultData)
                 self.app.request('/internal/updateStatus', method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 
     def dump(self):

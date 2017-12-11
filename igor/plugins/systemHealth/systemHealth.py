@@ -67,8 +67,8 @@ def systemHealth(ignore=None, duration=0):
     if statuses:
         for xp, content in statuses.items():
             serviceName = xp[xp.rindex('/')+1:]
-            hasError = 'errorMessage' in content
-            hasIgnore = 'ignoreErrorUntil' in content
+            hasError = content.get('errorMessage')
+            hasIgnore = content.get('ignoreErrorUntil')
             if hasError and hasIgnore:
                 # Check whether the ignore is still valid, clear if not
                 ignoreUntil = int(content['ignoreErrorUntil'])

@@ -5,7 +5,7 @@ import time
 import json
 
 DATABASE_ACCESS=None
-WEBAPP=None
+COMMANDS=None
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
@@ -27,7 +27,8 @@ def lan(name=None, service='services/%s', ip=None, port=80, timeout=5):
     status = dict(representing=service, alive=(not not alive))
     if not alive:
         status['resultData'] = '%s is not available' % name
-    WEBAPP.request('/internal/updateStatus', method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
+    toCall = dict(url='/internal/updateStatus', method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
+    COMMANDS.urlCaller.callURL(toCall)
     if alive:
         return 'ok\n'
     return '%s is not available\n' % name

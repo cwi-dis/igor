@@ -6,7 +6,7 @@ import os
 import time
 
 DATABASE_ACCESS=None
-WEBAPP=None
+COMMANDS=None
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
@@ -66,5 +66,6 @@ def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", m
         status['lastSuccess'] = int(latest)
     if message:
         status['resultData'] = message
-    WEBAPP.request('/internal/updateStatus', method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
+    toCall = dict(url='/internal/updateStatus', method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
+    COMMANDS.urlCaller.callURL(toCall)
     return str(int(time.time()-latest))

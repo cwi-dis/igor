@@ -44,15 +44,23 @@ class XPathFunctionExtension(xpath.expr.Function):
         try:
             return dateutil.parser.parse(str)
         except ValueError:
-            raise xpath.XPathError("Invalid DateTime")
+            try:
+                timestamp = float(str)
+                return datetime.datetime.fromtimestamp(timestamp)
+            except ValueError:
+                raise xpath.XPathError("Invalid DateTime '%s'" % str)
         
     @function(0, 1)
     def f_igor_timestamp(self, node, pos, size, context, dt=None):
         if dt is None:
             dt = datetime.datetime.now()
         else:
-            dt = self._str2DateTime(dt)
-        return int(time.time())
+            dt = xpath.expr.string(dt)
+            if dt:
+                dt = self._str2DateTime(dt)
+            else:
+                dt = datetime.datetime.now()
+        return int(time.mktime(dt.timetuple()))
         
     @function(0, 1)
     def f_igor_dateTime(self, node, pos, size, context, timestamp=None):

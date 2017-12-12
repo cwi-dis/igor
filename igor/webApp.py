@@ -72,7 +72,8 @@ class static:
             web.header('Content-type', mimetype)
             globals = dict(
                 DATABASE=DATABASE,
-                COMMANDS=COMMANDS
+                COMMANDS=COMMANDS,
+                str=str
                 )                
             template = web.template.frender(filename, globals=globals)
             return template(**web.input())

@@ -11,6 +11,23 @@ $def with ()
 	}
 	</style>
 </head>
+$code:
+	def ago(path):
+		value = DATABASE.getValue(path)
+		if not value: return ''
+		value = DATABASE.getValue('igor_timestamp()-igor_timestamp('+path+')')
+		rv = float(value)
+		if rv < 60: return str(int(rv)) + 's'
+		rv /= 60
+		if rv < 60: return str(int(rv)) + 'm'
+		rv /= 60
+		if rv < 24: return str(int(rv)) + 'h'
+		rv /= 24
+		if rv < 7: return str(int(rv)) + 'd'
+		rv /= 7
+		if rv < 52: return str(int(rv)) + 'w'
+		rv /= 52
+		return str(int(rv))+'y'
 <body>
 	<h1>Igor System Health</h1>
 	
@@ -49,21 +66,9 @@ $def with ()
 			<tr>
 				<td>$s.tagName</td>
 				<td>${DATABASE.getValue('/data/status/igor/' + s.tagName + '/alive')}</td>
-				
-				$code:
-					lastActivity = DATABASE.getValue('/data/status/igor/' + s.tagName + '/lastActivity')
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/status/igor/' + s.tagName + '/lastActivity)')	
-				<td>$lastActivity</td>
-				
-				$code:
-					lastSuccess = DATABASE.getValue('/data/status/igor/' + s.tagName + '/lastSuccess')
-					if lastSuccess: lastSuccess = DATABASE.getValue('igor_dateTime(/data/status/igor/' + s.tagName + '/lastSuccess)')
-				<td>$lastSuccess</td>
-				
-				$code:
-					lastFailure = DATABASE.getValue('/data/status/igor/' + s.tagName + '/lastFailure')
-					if lastFailure: lastFailure = DATABASE.getValue('igor_dateTime(/data/status/igor/' + s.tagName + '/lastFailure)')
-				<td>$lastFailure</td>
+				<td>$ago('/data/status/igor/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/igor/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/igor/' + s.tagName + '/lastFailure')</td>
 				
 				$ msg = DATABASE.getValue('/data/status/igor/' + s.tagName + '/errorMessage')
 				<td>$msg</td>
@@ -105,20 +110,9 @@ $def with ()
 				<td>$s.tagName</td>
 				<td>${DATABASE.getValue('/data/status/services/' + s.tagName + '/alive')}</td>
 				
-				$code:
-					lastActivity = DATABASE.getValue('/data/status/services/' + s.tagName + '/lastActivity')
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/status/services/' + s.tagName + '/lastActivity)')
-				<td>$lastActivity</td>
-
-				$code:
-					lastSuccess = DATABASE.getValue('/data/status/services/' + s.tagName + '/lastSuccess')
-					if lastSuccess: lastSuccess = DATABASE.getValue('igor_dateTime(/data/status/services/' + s.tagName + '/lastSuccess)')
-				<td>$lastSuccess</td>
-
-				$code:
-					lastFailure = DATABASE.getValue('/data/status/services/' + s.tagName + '/lastFailure')
-					if lastFailure: lastFailure = DATABASE.getValue('igor_dateTime(/data/status/services/' + s.tagName + '/lastFailure)')
-				<td>$lastFailure</td>
+				<td>$ago('/data/status/services/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/services/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/services/' + s.tagName + '/lastFailure')</td>
 
 				$ msg = DATABASE.getValue('/data/status/services/' + s.tagName + '/errorMessage')
 				<td>$msg</td>
@@ -161,20 +155,9 @@ $def with ()
 				<td>$s.tagName</td>
 				<td>${DATABASE.getValue('/data/status/sensors/' + s.tagName + '/alive')}</td>
 				
-				$code:
-					lastActivity = DATABASE.getValue('/data/status/sensors/' + s.tagName + '/lastActivity')
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/status/sensors/' + s.tagName + '/lastActivity)')
-				<td>$lastActivity</td>
-
-				$code:
-					lastSuccess = DATABASE.getValue('/data/status/sensors/' + s.tagName + '/lastSuccess')
-					if lastSuccess: lastSuccess = DATABASE.getValue('igor_dateTime(/data/status/sensors/' + s.tagName + '/lastSuccess)')
-				<td>$lastSuccess</td>
-
-				$code:
-					lastFailure = DATABASE.getValue('/data/status/sensors/' + s.tagName + '/lastFailure')
-					if lastFailure: lastFailure = DATABASE.getValue('igor_dateTime(/data/status/sensors/' + s.tagName + '/lastFailure)')
-				<td>$lastFailure</td>
+				<td>$ago('/data/status/sensors/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/sensors/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/sensors/' + s.tagName + '/lastFailure')</td>
 
 				$ msg = DATABASE.getValue('/data/status/sensors/' + s.tagName + '/errorMessage')
 				<td>$msg</td>
@@ -216,21 +199,10 @@ $def with ()
 				<td>$s.tagName</td>
 				<td>${DATABASE.getValue('/data/status/devices/' + s.tagName + '/alive')}</td>
 
-				$code:
-					lastActivity = DATABASE.getValue('/data/status/devices/' + s.tagName + '/lastActivity')
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/status/devices/' + s.tagName + '/lastActivity)')
-					
-				<td>$lastSuccess</td>
-				$code:
-					lastSuccess = DATABASE.getValue('/data/status/devices/' + s.tagName + '/lastSuccess')
-					if lastSuccess: lastSuccess = DATABASE.getValue('igor_dateTime(/data/status/devices/' + s.tagName + '/lastSuccess)')
-					
-				<td>$lastSuccess</td>
-				$code:
-					lastFailure = DATABASE.getValue('/data/status/devices/' + s.tagName + '/lastFailure')
-					if lastFailure: lastFailure = DATABASE.getValue('igor_dateTime(/data/status/devices/' + s.tagName + '/lastFailure)')
-					
-				<td>$lastFailure</td>
+				<td>$ago('/data/status/devices/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/devices/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/devices/' + s.tagName + '/lastFailure')</td>
+
 				$ msg = DATABASE.getValue('/data/status/devices/' + s.tagName + '/errorMessage')
 				<td>$msg</td>
 				$code:

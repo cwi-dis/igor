@@ -1,4 +1,5 @@
 #!/bin/sh
+PATH=$PATH:/usr/local/bin:$HOME/bin
 case x$igor_remoteHost in
 x)
 	tmutil=tmutil

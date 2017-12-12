@@ -49,6 +49,8 @@ def systemHealth(ignore=None, duration=0):
         sensors = DATABASE_ACCESS.get_key("status/sensors/*", "application/x-python-object", "multi")
         if sensors:
             for xp, content in sensors.items():
+                if type(content) != type({}):
+                    raise myWebError("500 expected nested element for %s in status/sensors" % xp)
                 sensorName = xp[xp.rindex('/')+1:]
                 lastActivity = content.get('lastActivity', None)
                 if lastActivity and sensorName in sensorMaxInterval:
@@ -66,6 +68,8 @@ def systemHealth(ignore=None, duration=0):
     #
     if statuses:
         for xp, content in statuses.items():
+            if type(content) != type({}):
+                raise myWebError("500 expected nested element for %s in status/*" % xp)
             serviceName = xp[xp.rindex('/')+1:]
             hasError = content.get('errorMessage')
             hasIgnore = content.get('ignoreErrorUntil')

@@ -14,7 +14,7 @@ $def with ()
 		port ${DATABASE.getValue('/data/services/igor/port')}. Welcome!
 	</p>
 	<p>
-		It has been running since ${DATABASE.getValue('/data/services/igor/startTime')},
+		It has been running since ${DATABASE.getValue('igor_dateTime(/data/services/igor/startTime)')},
 		and was rebooted ${DATABASE.getValue('/data/services/igor/rebootCount')} times during its lifetime.
 	</p>
 	

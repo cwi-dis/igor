@@ -127,7 +127,7 @@ class URLCaller:
         parsedUrl = urlparse.urlparse(url)
         if parsedUrl.scheme:
             self.extRunner.callURL(tocall)
-        elif parsedUrl.path.startswith('/data/'):
+        elif parsedUrl.path.startswith('/data/') or parsedUrl.path.startswith('/internal/') or parsedUrl.path.startswith('/action/'):
             self.dataRunner.callURL(tocall)
         else:
             self.otherRunner.callURL(tocall)

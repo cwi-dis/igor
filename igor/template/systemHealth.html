@@ -81,10 +81,10 @@ $code:
 				
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=86400&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=604800&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=2592000&returnTo=/systemHealth.html">1m</a>
 					</td>
 				$else:
 					<td></td>
@@ -125,10 +125,10 @@ $code:
 
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=36000&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=864000&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=25920000&returnTo=/systemHealth.html">1m</a>
 					</td>
 				$else:
 					<td></td>
@@ -170,10 +170,10 @@ $code:
 
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=864000&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=25920000&returnTo=/systemHealth.html">1m</a>
 					</td>
 				$else:
 					<td></td>
@@ -214,10 +214,10 @@ $code:
 
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=86400&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=604800&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=2592000&returnTo=/systemHealth.html">1m</a>
 					</td>
 				$else:
 					<td></td>

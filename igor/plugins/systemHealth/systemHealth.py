@@ -24,13 +24,14 @@ def niceDelta(delta):
     delta = (delta+1) / 7
     return "%d weeks" % delta
     
-def systemHealth(ignore=None, duration=0):
+def systemHealth(ignore=None, duration=0, returnTo=None):
     #
     # See if we have a request to ignore errors for a specific service (or sensor)
     #
+    print 'xxxjack systemHealth ignore=', ignore, 'duration=', duration, 'returnTo=', returnTo
     if ignore:
         # Request to ignore a specific service for some time.
-        targetPath = "%s/ignoreErrorUntil" % ignore
+        targetPath = "status/%s/ignoreErrorUntil" % ignore
         if duration:
             ignoreUntil = time.time() + float(duration)
             DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, str(int(ignoreUntil)), 'text/plain', replace=True)
@@ -92,3 +93,5 @@ def systemHealth(ignore=None, duration=0):
                 except web.HTTPError:
                     web.ctx.status = "200 OK"
                     pass
+    if returnTo:
+        raise web.seeother(returnTo)

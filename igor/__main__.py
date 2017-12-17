@@ -123,7 +123,7 @@ class IgorServer:
         """Put our details in the database"""
         hostName = besthostname.besthostname()
         url = 'http://%s:%d/data' % (hostName, self.port)
-        oldRebootCount = self.database.getValue('/data/services/igor/rebootCount')
+        oldRebootCount = self.database.getValue('/data/services/igor/rebootCount', self.access.tokenForIgor())
         rebootCount = 0
         if oldRebootCount:
             try:
@@ -152,7 +152,7 @@ class IgorServer:
             return open(logfn).read()
         raise Web.HTTPError('404 Log file not available')
         
-    def updateStatus(self, subcommand=None, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None):
+    def updateStatus(self, subcommand=None, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None, token=None):
         """Update status field of some service/sensor/actuator after an action"""
         if subcommand:
             representing = subcommand
@@ -172,27 +172,27 @@ class IgorServer:
         
         # Check whether record exists, otherwise create it (empty)
         try:
-            _ = dbAccess.get_key(key, 'application/x-python-object', 'content')
+            _ = dbAccess.get_key(key, 'application/x-python-object', 'content', token)
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-            _ = dbAccess.put_key(key, 'application/x-python-object', None, '', 'text/plain')
+            _ = dbAccess.put_key(key, 'application/x-python-object', None, '', 'text/plain', token)
             
         # Fill only entries we want
-        _ = dbAccess.put_key(key + '/alive', 'application/x-python-object', None, not not alive, 'application/x-python-object')
-        _ = dbAccess.put_key(key + '/lastActivity', 'application/x-python-object', None, lastActivity, 'application/x-python-object')
-        _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object')
+        _ = dbAccess.put_key(key + '/alive', 'application/x-python-object', None, not not alive, 'application/x-python-object', token)
+        _ = dbAccess.put_key(key + '/lastActivity', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
+        _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object', token)
         if alive:
-            _ = dbAccess.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object')
+            _ = dbAccess.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object', token)
             resultData = ''
         else:
-            _ = dbAccess.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object')
+            _ = dbAccess.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
             if not resultData:
                 resultData = 'unknown failure'
         if type(resultData) == type({}):
             for k, v in resultData.items():
-                _ = dbAccess.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object')
+                _ = dbAccess.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object', token)
         else:
-            _ = dbAccess.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object')
+            _ = dbAccess.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
         return ''
         
     def updateActions(self):

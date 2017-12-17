@@ -16,6 +16,4 @@ x)
 	exit 1
 	;;
 esac
-echo xxxjack fitbit env
-printenv
 echo $igor_pluginData | python $dirFitbit/getFitbit.py --stdin | igorVar --put application/json --checknonempty sensors/fitbit/$igor_user

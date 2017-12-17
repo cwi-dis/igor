@@ -28,7 +28,6 @@ def systemHealth(ignore=None, duration=0, returnTo=None):
     #
     # See if we have a request to ignore errors for a specific service (or sensor)
     #
-    print 'xxxjack systemHealth ignore=', ignore, 'duration=', duration, 'returnTo=', returnTo
     if ignore:
         # Request to ignore a specific service for some time.
         targetPath = "status/%s/ignoreErrorUntil" % ignore

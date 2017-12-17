@@ -583,7 +583,6 @@ class DBImpl(DBSerializer):
         with self:
             nodelist = xpath.find(location, self._doc.documentElement)
             parentList = []
-            #print 'xxxjack delValues', repr(nodelist)
             for node in nodelist:
                 parentNode = node.parentNode
                 parentNode.removeChild(node)

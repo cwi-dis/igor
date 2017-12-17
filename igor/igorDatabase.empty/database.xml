@@ -83,11 +83,11 @@
 		<action>
 			<name>updateIgor</name>
 			<interval>60</interval>
-			<url>/data/status/igor/core/ticker</url>
+			<url>/data/services/igor/ticker</url>
 			<representing>igor/core</representing>
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
-			<data>{number(/data/status/igor/core/ticker)+1}</data>
+			<data>{number(/data/services/igor/ticker)+1}</data>
 		</action>
 	</actions>
 	<sandbox/>

@@ -118,7 +118,14 @@ class IgorServer:
         """Put our details in the database"""
         hostName = besthostname.besthostname()
         url = 'http://%s:%d/data' % (hostName, self.port)
-        data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION)
+        oldRebootCount = self.database.getValue('/data/services/igor/rebootCount')
+        rebootCount = 0
+        if oldRebootCount:
+            try:
+                rebootCount = int(oldRebootCount)+1
+            except ValueError:
+                pass
+        data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount)
         tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data), representing='igor/core')
         self.urlCaller.callURL(tocall)
         

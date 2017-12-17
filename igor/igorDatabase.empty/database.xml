@@ -34,15 +34,6 @@
 	        <url>/internal/started</url>
 	    </action>
 		<action>
-			<name>rebooted</name>
-			<xpath>/data/services/igor/startTime</xpath>
-			<url>/data/services/igor/rebootCount</url>
-			<method>PUT</method>
-			<mimetype>text/plain</mimetype>
-			<data>{number(/data/services/igor/rebootCount)+1}</data>
-
-		</action>
-		<action>
 			<name>save</name>
 			<interval>3600</interval>
 			<minInterval>60</minInterval>

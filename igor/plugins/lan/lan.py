@@ -24,10 +24,10 @@ def lan(name=None, service='services/%s', ip=None, port=80, timeout=5):
     if '%' in service:
         service = service % name
 
-    status = dict(representing=service, alive=(not not alive))
+    status = dict(alive=(not not alive))
     if not alive:
         status['resultData'] = '%s is not available' % name
-    toCall = dict(url='/internal/updateStatus', method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
+    toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
     COMMANDS.urlCaller.callURL(toCall)
     if alive:
         return 'ok\n'

@@ -138,8 +138,10 @@ class IgorServer:
             return open(logfn).read()
         raise Web.HTTPError('404 Log file not available')
         
-    def updateStatus(self, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None):
+    def updateStatus(self, subcommand=None, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None):
         """Update status field of some service/sensor/actuator after an action"""
+        if subcommand:
+            representing = subcommand
         if representing.startswith('/data/'):
             representing = representing[len('/data/'):]
         if lastActivity == None:

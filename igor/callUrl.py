@@ -77,8 +77,8 @@ class URLCallRunner(threading.Thread):
                         print '\t'+line
             representing = tocall.get('representing')
             if representing:
-                args = dict(representing=representing, alive=alive, resultData=resultData)
-                self.app.request('/internal/updateStatus', method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
+                args = dict(alive=alive, resultData=resultData)
+                self.app.request('/internal/updateStatus/%s' % representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 
     def dump(self):
         rv = 'URLCaller %s (%s):\n' % (repr(self), self.what)

@@ -25,9 +25,8 @@ endcat
 	
 else
 	backupTime=`echo "$backupFilename" | sed -e 's@.*/\([0-9][[0-9][0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9]\)\([0-9][0-9]\)\([0-9][0-9]\)@\1-\2-\3 \4:\5:\6@'`
-	cat << endcat | igorVar --post application/json --checkdata /internal/updateStatus
-{ "representing" : "services/$igor_name",
-  "alive" : false,
+	cat << endcat | igorVar --post application/json --checkdata /internal/updateStatus/services/$igor_name
+{ "alive" : false,
   "lastSuccess" : "$backupTime",
   "resultData" : ""
 }

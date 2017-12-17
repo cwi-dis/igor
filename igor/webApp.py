@@ -30,7 +30,8 @@ urls = (
     '/pluginscripts/([^/]*)/([^/]*)', 'runScript',
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
-    '/internal/(.*)', 'runCommand',
+    '/internal/([^/]*)', 'runCommand',
+    '/internal/([^/]*)/(.*)', 'runCommand',
     '/action/(.*)', 'runAction',
     '/trigger/(.*)', 'runTrigger',
     '/plugin/([^/]*)', 'runPlugin',
@@ -184,7 +185,7 @@ class runCommand:
         web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
         return ''
         
-    def GET(self, command):
+    def GET(self, command, subcommand=None):
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -192,13 +193,15 @@ class runCommand:
         except AttributeError:
             raise web.notfound()
         allArgs = dict(web.input())
+        if subcommand:
+            allArgs['subcommand'] = subcommand
         try:
             rv = method(**allArgs)
         except TypeError, arg:
             raise myWebError("401 Error calling command method %s: %s" % (command, arg))
         return rv
 
-    def POST(self, command):
+    def POST(self, command, subcommand=None):
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -213,6 +216,8 @@ class runCommand:
                 allArgs = json.loads(argData)
             except ValueError:
                 raise myWebError("POST to /internal/... expects JSON data")
+        if subcommand:
+            allArgs['subcommand'] = subcommand
         try:
             rv = method(**allArgs)
         except TypeError, arg:

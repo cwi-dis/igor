@@ -62,11 +62,11 @@ def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", m
         service = service % name
 
     # Now fill in fields. Note that we can also have missing fields (which we delete)
-    status = dict(representing=service, alive=(not not alive))
+    status = dict(alive=(not not alive))
     if latest > 0:
         status['lastSuccess'] = int(latest)
     if message:
         status['resultData'] = message
-    toCall = dict(url='/internal/updateStatus', method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
+    toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
     COMMANDS.urlCaller.callURL(toCall)
     return str(int(time.time()-latest))

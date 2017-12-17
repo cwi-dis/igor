@@ -68,7 +68,6 @@ def main():
                 print filename, '(symlinked)'
             else:
                 print filename
-        return
     elif sys.argv[1] == 'add':
         if len(sys.argv) < 3:
             print >>sys.stderr, "%s: add requires a pathname" % sys.argv[0]
@@ -116,7 +115,6 @@ def main():
         for name in names:
             if name[0] == '.' or name == 'readme.txt': continue
             print name
-        return
     elif sys.argv[1] in ('runatboot', 'runatlogin'):
         args = dict(
             user=username,
@@ -187,14 +185,14 @@ def main():
                 runcmds += ["sudo launchctl load %s" % daemonFile]
             else:
                 runcmds += ["sudo service igor start"]
-    if runcmds:
-        print 'Run the following commands:'
-        print '('
-        for cmd in runcmds: print '\t', cmd
-        print ')'
     else:
         print >>sys.stderr, '%s: unknown command: %s. Use --help for help.' % (sys.argv[0], sys.argv[1])
         sys.exit(1)
+    if runcmds:
+        print '# Run the following commands:'
+        print '('
+        for cmd in runcmds: print '\t', cmd
+        print ')'
     sys.exit(0)
     
 def installplugin(database, src, pluginname, cpfunc):

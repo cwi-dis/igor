@@ -33,7 +33,8 @@ urls = (
     '/internal/(.*)', 'runCommand',
     '/action/(.*)', 'runAction',
     '/trigger/(.*)', 'runTrigger',
-    '/plugin/(.*)', 'runPlugin',
+    '/plugin/([^/]*)', 'runPlugin',
+    '/plugin/([^/]*)/([^/]*)', 'runPlugin',
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
@@ -252,7 +253,7 @@ class runPlugin:
         web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
         return ''
         
-    def GET(self, command):
+    def GET(self, command, subcommand=None):
         if command in sys.modules:
             # Imported previously.
             mod = sys.modules[command]
@@ -287,8 +288,12 @@ class runPlugin:
             if userData:
                 pluginData.update(userData)
             mod.PLUGINDATA = userdata
+        if subcommand == None:
+            subcommand = command
+        else:
+            subcommand = command + '_' + subcommand
         try:
-            method = getattr(mod, command)
+            method = getattr(mod, subcommand)
         except AttributeError:
             raise web.notfound()
             

@@ -13,4 +13,12 @@ def testPlugin(*args, **kwargs):
     rv += "app=%s\n" % repr(app)
     return rv
     
+def testPlugin_method2(*args, **kwargs):
+    rv = "test-plugin method2\n"
+    rv += "args=%s, kwargs=%s\n" % (repr(args), repr(kwargs))
+    rv += "DATABASE=%s\n" % repr(DATABASE)
+    rv += "COMMANDS=%s\n" % repr(COMMANDS)
+    rv += "app=%s\n" % repr(app)
+    return rv
+    
     

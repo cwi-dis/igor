@@ -4,13 +4,7 @@
 		<action>
 			<interval>36000</interval>
 			<url>/pluginscripts/fitbit/pull?user=jack</url>
+			<representing>sensors/fitbit</representing>
 		</action>
 	</actions>
-	<action>
-		<xpath>/data/sensors/fitbit/*/*/time</xpath>
-		<method>PUT</method>
-		<url>/data/environment/introspection/lastActivity/smartMeter</url>
-		<mimetype>text/plain</mimetype>
-		<data>{igor_dateTime(igor_timestamp(concat(../date, ' ', .)))}</data>
-	</action>
 </data>

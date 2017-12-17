@@ -7,7 +7,7 @@
         <action>
             <xpath>/data/environment/lights/*</xpath>
             <url>/scripts/pluginscript/kaku/switch?state={.}&switch={/data/plugindata/kaku/switch[name=name($originalContext)]/id}</url>
-			<representing>/data/devices/kaku</representing>
+			<representing>devices/kaku</representing>
         </action>
     </actions>
     <plugindata>

@@ -31,10 +31,12 @@ urls = (
     '/pluginscripts/([^/]*)/([^/]*)', 'runScript',
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
-    '/internal/(.*)', 'runCommand',
+    '/internal/([^/]*)', 'runCommand',
+    '/internal/([^/]*)/(.*)', 'runCommand',
     '/action/(.*)', 'runAction',
     '/trigger/(.*)', 'runTrigger',
-    '/plugin/(.*)', 'runPlugin',
+    '/plugin/([^/]*)', 'runPlugin',
+    '/plugin/([^/]*)/([^/]*)', 'runPlugin',
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
@@ -75,7 +77,8 @@ class static:
             globals = dict(
                 DATABASE=DATABASE,
                 COMMANDS=COMMANDS,
-                token=token
+                token=token,
+                str=str
                 )                
             template = web.template.frender(filename, globals=globals)
             return template(**web.input())
@@ -188,7 +191,7 @@ class runCommand:
         web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
         return ''
         
-    def GET(self, command):
+    def GET(self, command, subcommand=None):
         token = access.singleton.tokenForRequest(web.ctx.env)
         if not COMMANDS:
             raise web.notfound()
@@ -197,13 +200,15 @@ class runCommand:
         except AttributeError:
             raise web.notfound()
         allArgs = dict(web.input())
+        if subcommand:
+            allArgs['subcommand'] = subcommand
         try:
             rv = method(token=token, **allArgs)
         except TypeError, arg:
             raise myWebError("401 Error calling command method %s: %s" % (command, arg))
         return rv
 
-    def POST(self, command):
+    def POST(self, command, subcommand=None):
         token = access.singleton.tokenForRequest(web.ctx.env)
         if not COMMANDS:
             raise web.notfound()
@@ -219,6 +224,8 @@ class runCommand:
                 allArgs = json.loads(argData)
             except ValueError:
                 raise myWebError("POST to /internal/... expects JSON data")
+        if subcommand:
+            allArgs['subcommand'] = subcommand
         try:
             rv = method(token=token, **allArgs)
         except TypeError, arg:
@@ -267,7 +274,7 @@ class runPlugin:
         web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
         return ''
         
-    def GET(self, command):
+    def GET(self, command, subcommand=None):
         if command in sys.modules:
             # Imported previously.
             mod = sys.modules[command]
@@ -309,14 +316,19 @@ class runPlugin:
             if userData:
                 pluginData.update(userData)
             mod.PLUGINDATA = userdata
+        if subcommand == None:
+            subcommand = command
+        else:
+            subcommand = command + '_' + subcommand
         try:
-            method = getattr(mod, command)
+            method = getattr(mod, subcommand)
         except AttributeError:
             raise web.notfound()
             
         try:
             rv = method(**allArgs)
-        except TypeError, arg:
+        except ValueError, arg:
+        #except TypeError, arg:
             raise myWebError("401 Error calling plugin method %s: %s" % (command, arg))
         return rv
     
@@ -686,6 +698,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 element = self.db.elementFromTagAndData(tag, valueDict)
             return element
         elif mimetype == 'text/plain':
+            # xxxjack should check that value is a string or unicode
+            element = self.db.elementFromTagAndData(tag, value)
+            return element
+        elif mimetype == 'application/x-python-object':
             element = self.db.elementFromTagAndData(tag, value)
             return element
         else:

@@ -7,3 +7,4 @@ The following parameters are accepted:
 * `name`: name of the service (string). This is used as the name of the element in `services`. Default `backup`.
 * `remoteHost`: hostname or ip-address where `tmutil` is run, using `ssh`. Default is to run locally.
 
+The status of the backup (including any error messages) is stored in `/data/status/services/_name_`.

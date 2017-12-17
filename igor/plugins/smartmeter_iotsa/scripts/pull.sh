@@ -3,4 +3,12 @@ if [ -x /usr/libexec/path_helper ]; then
 	eval `/usr/libexec/path_helper -s`
 fi
 
-curl --silent http://$igor_host/p1?format=xml | igorVar --put application/xml --checkdata --timestamp sensors/smartMeter
+smartmeter_data=`curl --silent http://$igor_host/p1?format=xml`
+case x$smartmeter_data in
+*smartMeter*)
+	echo $smartmeter_data | igorVar --put application/xml --checknonempty sensors/smartMeter
+	;;
+*)
+	echo $smartmeter_data 1>&2
+	exit 1
+esac

@@ -26,4 +26,3 @@ Three actions:
 
 * Every 60 seconds the DHCP database is parsed and `sensors/dhcp` is filled.
 * When a known device availability changes `environment/devices` is updated.
-* When new DHCP data is read `environment/introspection/lastActivity/dhcp` is updated. 

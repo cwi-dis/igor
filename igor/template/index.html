@@ -14,8 +14,8 @@ $def with ()
 		port ${DATABASE.getValue('/data/services/igor/port', token)}. Welcome!
 	</p>
 	<p>
-		It has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot', token)},
-		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount', token)} times during its lifetime.
+		It has been running since ${DATABASE.getValue('igor_dateTime(/data/services/igor/startTime)', token)},
+		and was rebooted ${DATABASE.getValue('/data/services/igor/rebootCount', token)} times during its lifetime.
 	</p>
 	
 	<p>

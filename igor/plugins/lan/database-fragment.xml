@@ -15,5 +15,11 @@
 			<url>/plugin/lan?name=internet&amp;ip=google.com.</url>
 			<aggregate>true</aggregate>
 		</action>
+		<action>
+			<interval>60</interval>
+			<url>/plugin/lan?name=igor&amp;service=igor/web&amp;ip={/data/services/igor/host}&amp;port={/data/services/igor/port}</url>
+			<aggregate>true</aggregate>
+			<notBefore>1512862407</notBefore>
+		</action>
 	</actions>
 </data>

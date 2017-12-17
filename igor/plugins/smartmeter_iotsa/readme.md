@@ -11,7 +11,6 @@ It reads all information including current electricity and gas use, electricity 
 
 ## schema
 
-* `environment/introspection/lastActivity/smartMeter`: isotime, last time smart meter was read.
 * `sensors/smartMeter`: raw data read from the smart meter:
 	* `timestamp`: Time of reading, as provided by the smart meter itself (isotime).
 	* `meter_id_electricity` and `meter_id_gas`: unique IDs of the meters (string).

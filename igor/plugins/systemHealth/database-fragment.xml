@@ -8,7 +8,7 @@
 		<action>
 			<name>systemHealth</name>
 			<interval>60</interval>
-			<xpath>/data/services/*/errorMessage | /data/devices/*/errorMessage | /data/sensors/*/errorMessage </xpath>
+			<xpath>/data/status/*/*/errorMessage</xpath>
 			<url>/plugin/systemHealth</url>
 		</action>
 	</actions>

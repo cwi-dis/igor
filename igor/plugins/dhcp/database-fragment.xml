@@ -7,6 +7,7 @@
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/dhcp/pull</url>
+			<representing>sensors/dhcp</representing>
 			<aggregate>true</aggregate>
 		</action>
         <action>
@@ -17,13 +18,6 @@
             <mimetype>text/plain</mimetype>
             <data>{alive}</data>
             <multiple>True</multiple>
-        </action>
-        <action>
-            <xpath>/data/sensors/dhcp/lease</xpath>
-            <url>/data/environment/introspection/lastActivity/dhcp</url>
-            <method>PUT</method>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_dateTime()}</data>
         </action>
 	</actions>
 	<plugindata>

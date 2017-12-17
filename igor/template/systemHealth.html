@@ -11,12 +11,29 @@ $def with ()
 	}
 	</style>
 </head>
+$code:
+	def ago(path):
+		value = DATABASE.getValue(path, token)
+		if not value: return ''
+		value = DATABASE.getValue('igor_timestamp()-igor_timestamp('+path+')', token)
+		rv = float(value)
+		if rv < 60: return str(int(rv)) + 's'
+		rv /= 60
+		if rv < 60: return str(int(rv)) + 'm'
+		rv /= 60
+		if rv < 24: return str(int(rv)) + 'h'
+		rv /= 24
+		if rv < 7: return str(int(rv)) + 'd'
+		rv /= 7
+		if rv < 52: return str(int(rv)) + 'w'
+		rv /= 52
+		return str(int(rv))+'y'
 <body>
 	<h1>Igor System Health</h1>
 	
 	<p>
-		Igor has been running since ${DATABASE.getValue('/data/environment/introspection/lastActivity/reboot', token)},
-		and was rebooted ${DATABASE.getValue('/data/environment/introspection/rebootCount', token)} times during its lifetime.
+		Igor has been running since ${DATABASE.getValue('igor_dateTime(/data/services/igor/startTime)', token)},
+		and was rebooted ${DATABASE.getValue('/data/services/igor/rebootCount', token)} times during its lifetime.
 	</p>
 	
 	<h2>Exceptional conditions</h2>
@@ -31,34 +48,87 @@ $def with ()
 	$else:
 		<p>Igor is currently not aware of any exceptional conditions (for services, sensors and actuators). </p>
 		
+	<h2>Igor selfcheck status</h2>
+	
+	$ functionalities = DATABASE.getElements('/data/status/igor/*', 'get', token)
+	<table style="width:100%">
+		<tr>
+			<th>Functionality</th>
+			<th>Alive?</th>
+			<th>Last Attempt</th>
+			<th>Last Success</th>
+			<th>Last Failure</th>
+			<th>Current Error</th>
+			<th>Ignored until</th>
+			<th>Ignore for:</th>
+		</tr>
+		$for s in functionalities:
+			<tr>
+				<td>$s.tagName</td>
+				<td>${DATABASE.getValue('/data/status/igor/' + s.tagName + '/alive', token)}</td>
+				<td>$ago('/data/status/igor/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/igor/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/igor/' + s.tagName + '/lastFailure')</td>
+				
+				$ msg = DATABASE.getValue('/data/status/igor/' + s.tagName + '/errorMessage', token)
+				<td>$msg</td>
+				
+				$code:
+					muted = DATABASE.getValue('/data/status/igor/' + s.tagName + '/ignoreErrorUntil', token)
+					if muted:
+						muted = DATABASE.getValue('igor_dateTime(/data/status/igor/' + s.tagName + '/ignoreErrorUntil)', token)
+				<td>$muted</td>
+				
+				$if msg:
+					<td>
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=86400&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=604800&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=2592000&returnTo=/systemHealth.html">1m</a>
+					</td>
+				$else:
+					<td></td>
+			</tr>
+	</table>
+		
 	<h2>Service status</h2>
 	
-	$ services = DATABASE.getElements('/data/services/*', 'get', token)
+	$ services = DATABASE.getElements('/data/status/services/*', 'get', token)
 	<table style="width:100%">
 		<tr>
 			<th>Service</th>
 			<th>Alive?</th>
-			<th>Error condition</th>
-			<th>Ignored? (seconds)</th>
-			<th>Ignore</th>
+			<th>Last Attempt</th>
+			<th>Last Success</th>
+			<th>Last Failure</th>
+			<th>Current Error</th>
+			<th>Ignored until</th>
+			<th>Ignore for:</th>
 		</tr>
 		$for s in services:
 			<tr>
 				<td>$s.tagName</td>
-				<td>${DATABASE.getValue('/data/services/' + s.tagName + '/alive', token)}</td>
-				$ msg = DATABASE.getValue('/data/services/' + s.tagName + '/errorMessage', token)
+				<td>${DATABASE.getValue('/data/status/services/' + s.tagName + '/alive', token)}</td>
+				
+				<td>$ago('/data/status/services/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/services/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/services/' + s.tagName + '/lastFailure')</td>
+
+				$ msg = DATABASE.getValue('/data/status/services/' + s.tagName + '/errorMessage', token)
 				<td>$msg</td>
+
 				$code:
-					muted = DATABASE.getValue('/data/services/' + s.tagName + '/ignoreErrorUntil', token)
-					if muted: muted = DATABASE.getValue('igor_dateTime(/data/services/' + s.tagName + '/ignoreErrorUntil)', token)
-					
+					muted = DATABASE.getValue('/data/status/services/' + s.tagName + '/ignoreErrorUntil', token)
+					if muted:
+						muted = DATABASE.getValue('igor_dateTime(/data/status/services/' + s.tagName + '/ignoreErrorUntil)', token)
 				<td>$muted</td>
+
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=36000&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=864000&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=25920000&returnTo=/systemHealth.html">1m</a>
 					</td>
 				$else:
 					<td></td>
@@ -68,36 +138,42 @@ $def with ()
 		
 	<h2>Sensor status</h2>
 	
-	$ sensors = DATABASE.getElements('/data/sensors/*', 'get', token)
+	$ sensors = DATABASE.getElements('/data/status/sensors/*', 'get', token)
 	<table style="width:100%">
 		<tr>
 			<th>Sensor Class</th>
+			<th>Alive?</th>
 			<th>Last Activity</th>
-			<th>Error condition</th>
-			<th>Ignored? (seconds)</th>
-			<th>Ignore</th>
+			<th>Last Success</th>
+			<th>Last Failure</th>
+			<th>Current Error</th>
+			<th>Ignored until</th>
+			<th>Ignore for:</th>
 		</tr>
 		$for s in sensors:
 			<tr>
 				<td>$s.tagName</td>
-				$code:
-					lastActivity = DATABASE.getValue('/data/sensors/' + s.tagName + '/lastActivity', token)
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/sensors/' + s.tagName + '/lastActivity)', token)
-					
-				<td>$lastActivity</td>
-				$ msg = DATABASE.getValue('/data/sensors/' + s.tagName + '/errorMessage', token)
+				<td>${DATABASE.getValue('/data/status/sensors/' + s.tagName + '/alive', token)}</td>
+				
+				<td>$ago('/data/status/sensors/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/sensors/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/sensors/' + s.tagName + '/lastFailure')</td>
+
+				$ msg = DATABASE.getValue('/data/status/sensors/' + s.tagName + '/errorMessage', token)
 				<td>$msg</td>
+
 				$code:
-					muted = DATABASE.getValue('/data/sensors/' + s.tagName + '/ignoreErrorUntil', token)
-					if muted: muted = DATABASE.getValue('igor_dateTime(/data/sensors/' + s.tagName + '/ignoreErrorUntil)', token)
-					
+					muted = DATABASE.getValue('/data/status/sensors/' + s.tagName + '/ignoreErrorUntil', token)
+					if muted:
+						muted = DATABASE.getValue('igor_dateTime(/data/status/sensors/' + s.tagName + '/ignoreErrorUntil)', token)
 				<td>$muted</td>
+
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=864000&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=25920000&returnTo=/systemHealth.html">1m</a>
 					</td>
 				$else:
 					<td></td>
@@ -110,30 +186,38 @@ $def with ()
 	<table style="width:100%">
 		<tr>
 			<th>Device</th>
+			<th>Alive?</th>
 			<th>Last Activity</th>
-			<th>Error condition</th>
-			<th>Ignored? (seconds)</th>
-			<th>Ignore</th>
+			<th>Last Success</th>
+			<th>Last Failure</th>
+			<th>Current Error</th>
+			<th>Ignored until</th>
+			<th>Ignore for:</th>
 		</tr>
 		$for s in devices:
 			<tr>
 				<td>$s.tagName</td>
-				$code:
-					lastActivity = DATABASE.getValue('/data/devices/' + s.tagName + '/lastActivity', token)
-					if lastActivity: lastActivity = DATABASE.getValue('igor_dateTime(/data/devices/' + s.tagName + '/lastActivity)'), token
-				<td>$lastActivity</td>
-				$ msg = DATABASE.getValue('/data/devices/' + s.tagName + '/errorMessage', token)
+				<td>${DATABASE.getValue('/data/status/devices/' + s.tagName + '/alive', token)}</td>
+
+				<td>$ago('/data/status/devices/' + s.tagName + '/lastActivity')</td>
+				<td>$ago('/data/status/devices/' + s.tagName + '/lastSuccess')</td>
+				<td>$ago('/data/status/devices/' + s.tagName + '/lastFailure')</td>
+
+				$ msg = DATABASE.getValue('/data/status/devices/' + s.tagName + '/errorMessage', token)
 				<td>$msg</td>
 				$code:
-					muted = DATABASE.getValue('/data/devices/' + s.tagName + '/ignoreErrorUntil', token)
-					if muted: muted = DATABASE.getValue('igor_dateTime(/data/devices/' + s.tagName + '/ignoreErrorUntil)', token)
+					muted = DATABASE.getValue('/data/status/devices/' + s.tagName + '/ignoreErrorUntil', token)
+					if muted:
+						muted = DATABASE.getValue('igor_dateTime(/data/status/devices/' + s.tagName + '/ignoreErrorUntil)', token)
+					
 				<td>$muted</td>
+
 				$if msg:
 					<td>
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=3600">1h</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=86400">1d</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=604800">1w</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=2592000">1m</a>
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=86400&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=604800&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=2592000&returnTo=/systemHealth.html">1m</a>
 					</td>
 				$else:
 					<td></td>

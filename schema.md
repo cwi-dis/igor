@@ -100,6 +100,37 @@ For most plugins, an _isotime_ telling when the plugin was last active. `igor` r
 #### environment/introspection/rebootCount
 An _integer_ telling how many times Igor was succesfully restarted on this database.
 
+## status
+
+Status information on everything Igor knows about, such as whether services and devices are functioning, when they were last accessed correctly and any error messages produced.
+
+Each entry has a number of fields:
+
+- `alive` (boolean) true if last attempt to access the device or service was successful.
+- `errorMessage` (string, optional) human-readable error message in case last attempt was unsuccessful.
+- `lastActivity` (timestamp) time of the last attempt to access the device or service.
+- `lastSuccess` (timestamp, optional) time of the most recent successful access.
+- `lastFailure` (timestamp, optional) time of the most recent unsuccessful access.
+- `ignoreErrorsUntil` (timestamp, optional) "silencing" timestamp, the [systemHealth](igor/plugins/systemHealth/readme.md) plugin will not complain about errors in this entry until the given time.
+
+Entries are grouped by their type:
+
+- `status/igor` Igor components, insofar they can be tested separately:
+	- `status/igor/start` Igor main server startup. This entry has a few more fields beside the ones listed above:
+		- `status/igor/start/url`: Base URL to use with `igorVar --url` (string).
+		- `status/igor/start/host`: Host name on which this Igor instance runs (string).
+		- `status/igor/start/port`: Port on which this Igor listens (integer).
+		- `status/igor/start/version`: Igor version (string).
+		- `status/igor/start/count`: How often this Igor instance has been (re)started.
+	- `status/igor/core` the Igor main server loop
+	- `status/igor/save` saving the Igor database to disk
+	- `status/igor/web` the external HTTP interface to Igor
+- `status/sensors` Sensors, or sensor categories (for sensors such as [ble](igor/plugins/ble/readme.md) where a single plugin handles multiple sensors. Entries are named for the sensor or category.
+- `status/devices` Devices (actuators and appliances). Entries are named for the individual device.
+- `status/services` Services external to Igor, for which only status information is kept. Some examples:
+	- `status/services/internet` whether the internet connection works. Determined by the [lan plugin](igor/plugins/lan/readme.md) by trying to access _google.com_.
+	- `status/services/backup` whether Time Machine backups are made. Determined by the [timemachine plugin](igor/plugins/timemachine/readme.md).
+
 ## sensors
 
 Stores low level information from devices that are generally considered read-only such as temperature sensors. See the descriptions of the individual plugins for details:
@@ -123,25 +154,6 @@ See the descriptions of the individual plugins for details:
 * `devices/tv`: Television set, information like power status, current channel, etc. See [philips plugin readme](igor/plugins/philips/readme.md).
 * `devices/plant`: Current position of the movable plant, see [plant plugin readme](igor/plugins/plant/readme.md).
 * `devices/lcd`: Adding a new `devices/lcd/message` will result in this message being displayed. See [lcd plugin readme](igor/plugins/lcd/readme.md).
-
-## services
-
-Store mainly availability information about services (such as backups, internet connection and igor itself).
-
-Services tend to be monitored by _actions_ items that use the [lan plugin](igor/plugins/lan/readme.md) to try to contact them and then set an `alive` boolean. For example:
-
-* `services/internet/alive`: Set by `internet` action if google.com can be contacted (boolean).
-* `services/internet/errorMessage`: If the service is not alive this contains a (human understandable) error message (string).
-* `services/internet/ignoreErrorUntil`: May be set by the user to ignore errors for a period of time (timestamp). `alive` and `errorMessage` will still be updated during that time, but any subsequent actions depending on the error condition (such as lighting a global "something is wrong" indicator) will not happen.
-
-The Igor "device" data is filled in by Igor itself, and consists of the following fields:
-
-* `services/igor/url`: Base URL to use with `igorVar --url` (string).
-* `services/igor/host`: Host name on which this Igor instance runs (string).
-* `services/igor/port`: Port on which this Igor listens (integer).
-* `services/igor/version`: Igor version (string).
-* `services/igor/startTime`: Time this instance was started (timestamp).
-* `services/igor/alive`: True when Igor is running (boolean).
 
 ## people
 

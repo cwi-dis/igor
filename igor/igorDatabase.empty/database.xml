@@ -12,10 +12,14 @@
 			<messages/>
 		</systemHealth>
 		<introspection>
-			<lastActivity/>
-			<rebootCount>0</rebootCount>
 		</introspection>
 	</environment>
+	<status>
+		<igor/>
+		<sensors/>
+		<devices/>
+		<services/>
+	</status>
 	<sensors/>
 	<devices>
 	</devices>
@@ -30,26 +34,11 @@
 	        <url>/internal/started</url>
 	    </action>
 		<action>
-			<name>rebooted</name>
-            <xpath>/data/services/igor/startTime</xpath>
-            <url>/data/environment/introspection/lastActivity/reboot</url>
-            <method>PUT</method>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_dateTime(.)}</data>
-		</action>
-		<action>
-			<name>rebooted</name>
-            <xpath>/data/services/igor/startTime</xpath>
-            <url>/data/environment/introspection/rebootCount</url>
-            <method>PUT</method>
-            <mimetype>text/plain</mimetype>
-            <data>{number(/data/environment/introspection/rebootCount)+1}</data>
-		</action>
-		<action>
 			<name>save</name>
 			<interval>3600</interval>
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
+			<representing>igor/save</representing>
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
 		</action>
         <action>
@@ -85,10 +74,11 @@
 		<action>
 			<name>updateIgor</name>
 			<interval>60</interval>
-			<url>/data/environment/introspection/lastActivity/igor</url>
+			<url>/data/services/igor/ticker</url>
+			<representing>igor/core</representing>
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
-			<data>{igor_dateTime()}</data>
+			<data>{number(/data/services/igor/ticker)+1}</data>
 		</action>
 	</actions>
 	<sandbox/>

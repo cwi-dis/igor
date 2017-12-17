@@ -4,8 +4,10 @@ import web
 import glob
 import os
 import time
+import json
 
 DATABASE_ACCESS=None
+COMMANDS=None
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
@@ -56,51 +58,15 @@ def lastFileAccess(name=None, service='services/%s', path=None, stamp="mtime", m
                 delta = time.time() - latest
                 message = "%s has not been active for %s" % (name, niceDelta(delta))
 
-    # Now fill in fields. Note that we can also have missing fields (which we delete)
     if '%' in service:
         service = service % name
-    if alive == None:
-        try:
-            DATABASE_ACCESS.delete_key(service + '/alive', token)
-        except web.HTTPError:
-            pass
-    else:
-        xpAlive = 'true' if alive else ''
-        try:
-            oldValue = DATABASE_ACCESS.get_key(service + '/alive', 'text/plain', None, token)
-        except web.HTTPError:
-            web.ctx.status = "200 OK"
-            oldValue = 'rabarber'
-            if oldValue != xpAlive:
-                try:
-                    rv = DATABASE_ACCESS.put_key(service + '/alive', 'text/plain', None, xpAlive, 'text/plain', token, replace=True)
-                except web.HTTPError:
-                    raise myWebError("501 Failed to store into %s" % (service + '/alive'))
-                if alive:
-                    # If the service is alive we delete any error message and we also reset the "ignore errors" indicator
-                    try:
-                        DATABASE_ACCESS.delete_key(service + '/ignoreErrorUntil', token)
-                    except web.HTTPError:
-                        pass
 
-    if latest < 0:
-        try:
-            DATABASE_ACCESS.delete_key(service + '/lastActivity', token)
-        except web.HTTPError:
-            pass
-    else:
-        try:
-            rv = DATABASE_ACCESS.put_key(service + '/lastActivity', 'text/plain', None, str(int(latest)), 'text/plain', token, replace=True)
-        except web.HTTPError:
-            raise myWebError("501 Failed to store into %s" % (service + '/lastActivity'))
-
-    if not message:
-        try:
-            DATABASE_ACCESS.delete_key(service + '/errorMessage', token)
-        except web.HTTPError:
-            pass
-    else:
-        try:
-            rv = DATABASE_ACCESS.put_key(service + '/errorMessage', 'text/plain', None, message, 'text/plain', token, replace=True)
-        except web.HTTPError:
-            raise myWebError("501 Failed to store into %s" % (service + '/errorMessage'))
+    # Now fill in fields. Note that we can also have missing fields (which we delete)
+    status = dict(alive=(not not alive))
+    if latest > 0:
+        status['lastSuccess'] = int(latest)
+    if message:
+        status['resultData'] = message
+    toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'}, token=token)
+    COMMANDS.urlCaller.callURL(toCall)
+    return str(int(time.time()-latest))

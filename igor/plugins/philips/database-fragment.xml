@@ -7,24 +7,17 @@
 		<action>
 			<xpath>/data/devices/tv/power</xpath>
 			<url>/pluginscripts/philips/power?power={.}</url>
-			<representing>/data/devices/tv</representing>
+			<representing>devices/tv</representing>
 		</action>
 		<action>
 			<xpath>/data/devices/tv/*[name()!='power']</xpath>
 			<url>/pluginscripts/philips/push?{name()}={.}</url>
-			<representing>/data/devices/tv</representing>
+			<representing>devices/tv</representing>
 		</action>
 		<action>
 			<interval>60</interval>
 			<url>/pluginscripts/philips/pull</url>
 			<aggregate>true</aggregate>
-		</action>			
-		<action>
-			<xpath>/data/devices/tv</xpath>
-			<method>PUT</method>
-            <url>/data/environment/introspection/lastActivity/tv</url>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_dateTime()}</data>
 		</action>
 	</actions>
 </data>

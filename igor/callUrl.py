@@ -54,6 +54,8 @@ class URLCallRunner(threading.Thread):
                     rep = self.app.request(url, method=method, data=data, headers=headers)
                     resultStatus = rep.status
                     resultData = rep.data
+                    if not resultData:
+                        resultData = resultStatus
                 else:
                     # Remote.
                     r = requests.request(method, url, data=data, headers=headers)
@@ -66,8 +68,8 @@ class URLCallRunner(threading.Thread):
                 print 'URLCaller: exception while calling URL'
                 traceback.print_exc(file=sys.stdout)
             print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
-            success = resultStatus[:3] == '200'
-            if not success or DEBUG:
+            alive = resultStatus[:3] == '200'
+            if not alive or DEBUG:
                 if resultData:
                     print 'Output:'
                     resultLines = resultData.splitlines()
@@ -75,8 +77,8 @@ class URLCallRunner(threading.Thread):
                         print '\t'+line
             representing = tocall.get('representing')
             if representing:
-                args = dict(representing=representing, success=success, resultData=resultData)
-                self.app.request('/internal/updateStatus', method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
+                args = dict(alive=alive, resultData=resultData)
+                self.app.request('/internal/updateStatus/%s' % representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 
     def dump(self):
         rv = 'URLCaller %s (%s):\n' % (repr(self), self.what)
@@ -126,7 +128,7 @@ class URLCaller:
         parsedUrl = urlparse.urlparse(url)
         if parsedUrl.scheme:
             self.extRunner.callURL(tocall)
-        elif parsedUrl.path.startswith('/data/'):
+        elif parsedUrl.path.startswith('/data/') or parsedUrl.path.startswith('/internal/') or parsedUrl.path.startswith('/action/'):
             self.dataRunner.callURL(tocall)
         else:
             self.otherRunner.callURL(tocall)

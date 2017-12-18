@@ -259,6 +259,7 @@ class runPlugin:
         return ''
         
     def GET(self, command, subcommand=None):
+        print 'xxxjack runPlugin', command, subcommand
         if command in sys.modules:
             # Imported previously.
             mod = sys.modules[command]
@@ -292,7 +293,7 @@ class runPlugin:
                 userData = {}
             if userData:
                 pluginData.update(userData)
-            mod.PLUGINDATA = userdata
+        mod.PLUGINDATA = pluginData
         if subcommand == None:
             subcommand = command
         else:
@@ -300,6 +301,7 @@ class runPlugin:
         try:
             method = getattr(mod, subcommand)
         except AttributeError:
+            print 'xxxjack did not find', subcommand, 'in', mod
             raise web.notfound()
             
         try:

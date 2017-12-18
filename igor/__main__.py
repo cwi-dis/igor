@@ -180,7 +180,7 @@ class IgorServer:
         else:
             _ = dbAccess.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object')
             if not resultData:
-                resultData = 'unknown failure'
+                resultData = '%s failed without error message' % representing
         if type(resultData) == type({}):
             for k, v in resultData.items():
                 _ = dbAccess.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object')

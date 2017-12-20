@@ -1,4 +1,4 @@
-# Igor sample plugins
+# Igor plugins
 
 Igor comes with a set of standard plugins. Some of these can be used as-is, and installed using (for example):
 
@@ -9,6 +9,37 @@ igorSetup addstd copytree
 Some are more examples that you should copy and adapt to your own need, or use as inspiration. 
 
 Plugins take their name (for use in `plugindata`, for example) from the name they are installed under. So you can install multiple independent copies (for example as _say_ and _sayInBedroom_) and use different plugindata to control each copy of the plugin.
+
+## Plugin Structure
+
+### pluginname.py
+
+A plugin can be implemented in Python. Then it must define a function `igorPlugin(pluginName, pluginData)` which is called whenever any method of the
+plugin is to be called. This function should return an object on which the individual methods are looked up. The `igorPlugin` function is called
+every time a plugin method needs to be called, but it can of course return a singleton object. See the _watchdog_ plugin for an example. _PluginName_
+is the name under which the plugin has been installed, and _PluginData_ is filled from `/data/plugindata/_pluginname_`.
+
+Accessing `/plugin/pluginname` will call the `index()` method. Accessing `/plugin/pluginname/methodname` will call `methodname()`. 
+The method is called with `**kwargs` encoding the plugin arguments, and if there is a `user` argument there will be an additional argument `userData`
+which is filled from `/data/identities/_user_/plugindata/_pluginname_`.
+
+On plugin import a number of global variables are added to the module to allow access to Igor:
+
+- `DATABASE` is the XML database
+- `DATABASE_ACCESS` is the higher-level database accessor
+- `COMMANDS` is where the `/internal` methods live
+- `WEBAPP` is the web.py _Application_ object
+
+### scripts
+
+A plugin can be (partially) implemented with shell scripts. Accessing `/pluginscript/pluginname/scriptname` will try to run `pluginname/scripts/scriptname.sh`.
+
+Scripts get an environment variable `IGORSERVER_URL` set correctly so they can use the _igorVar_ command easily.
+
+Each argument is passed to the script (in Python notation) with `igor_` prepended to the name.
+
+The per-plugin data from `/data/plugindata/_pluginname_` and (if the _user_ argument is present) the per-user per-plugin data from `/data/identities/_user_/plugindata/_pluginname_`
+is encoded as a Python dictionary and passed in the `igor_pluginData` environment variable.
 
 ### database-fragment.xml
 
@@ -24,91 +55,93 @@ Usually there is a file `database-fragment.xml` that show the entries needed. Ba
 
 Installation of these entries into the database is not automatic, when you install the plugin you should manually insert them into the database. This requires a bit of knowledge, because you may have to modify some elements (such as hostname fields) and you may need to duplicate some (with modifications) for example if you want the _lan_ plugin to test different services.
 
-## ble
+## Included Igor Standard Plugins
+
+### ble
 
 Listens to Bluetooth Low Energy advertisements to determine which devices are in range. See [ble/readme.md](ble/readme.md) for details.
 
-## buienradar
+### buienradar
 
 Stores rain forecast for the coming hour. See [buienradar/readme.md](buienradar/readme.md) for details.
 
-## copytree
+### copytree
 
 Copies subtree ```src``` to ```dst```. Both src and dst can be local or remote, allowing mirroring from one Igor to another (or actually between any two REST servers). Optional arguments ```mimetype``` and ```method``` are available.
 
-## dhcp
+### dhcp
 
 Queries database of DHCP server on local machine and stores all active dhcp leases. See [dhcp/readme.md](dhcp/readme.md) for details.
 
-## fitbit
+### fitbit
 
 Retrieves health data from Fitbit devices using the Fitbit cloud API and stores this in ```sensors/fitbit```. See [fitbit/readme.md](fitbit/readme.md) for details.
 Currently broken.
 
-## homey
+### homey
 
 Example Homey integration. See [homey/readme.md](homey/readme.md) for details.
 
 Needs work.
 
-## iirfid
+### iirfid
 
 Example RFID reader integration. See [iirfid/readme.md](iirfid/readme.md) for details.
 
-## kaku
+### kaku
 
 Turns lights (or other devices) on and off using a KlikAanKlikUit device. See [kaku/readme.md](kaku/readme.md) for details.
 
-## lan
+### lan
 
 Determines whether a local (or remote) internet service is up and running.
 See [lan/readme.md](lan/readme.md) for details.
 
-## lcd
+### lcd
 
 Displays messages on an LCD display. See [lcd/readme.md](lcd/readme.md) for details.
 
-## neoclock
+### neoclock
 
 Driver for NeoClock internet-connected clock. See [neoclock/readme.md](neoclock/readme.md) for details.
 
-## netatmo
+### netatmo
 
 Driver for NetAtmo weather stations. See [netatmo/readme.md](netatmo/readme.md) for details.
 
-## philips
+### philips
 
 Example of controlling a Philips television. See [philips/readme.md](philips/readme.md) for details.
 
-## plant
+### plant
 
 Move an internet-connected plant up and down. See [plant/readme.md](plant/readme.md) for details.
 
-## say
+### say
 
 Speaks messages to the user. See [say/readme.md](say/readme.md) for details.
 
-## smartmeter_iotsa
+### smartmeter_iotsa
 
 Reads current energy use in the household using a iotsa SmartMeter reader. See [smartmeter_iotsa/readme.md](smartmeter_iotsa/readme.md) for details.
 
-## smartmeter_rfduino
+### smartmeter_rfduino
 
 Older Bluetooth-based version of _smartmeter___iotsa_, reads current energy use in the household using a RFDuino-based SmartMeter reader.
 
-## systemHealth
+### systemHealth
 
 Collects error messages from `services/*`, `devices/*` and `sensors/*` and stores these in `environment/systemHealth`. See [systemHealth/readme.md](systemHealth/readme.md) for details.
 
-## testPlugin
+### testPlugin
 
 A Python-based plugin that simply shows all the arguments it has been passed. This can be used as the starting point for a python-based plugin.
 
-## timemachine
+### timemachine
 
 Checks last time that Apple Time Machine backed up specific machines. See [timemachine/readme.md](timemachine/readme.md) for details.
 
-## watchdog
+### watchdog
 
 Reboots the host system in case of problems. See [watchdog/readme.md](watchdog/readme.md) for details.
 

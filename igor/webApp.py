@@ -35,7 +35,7 @@ urls = (
     '/action/(.*)', 'runAction',
     '/trigger/(.*)', 'runTrigger',
     '/plugin/([^/]*)', 'runPlugin',
-    '/plugin/([^/]*)/([^/]*)', 'runPlugin',
+    '/plugin/([^/]*)/([^/_]*)', 'runPlugin',
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
@@ -258,59 +258,71 @@ class runPlugin:
         web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
         return ''
         
-    def GET(self, command, subcommand=None):
-        print 'xxxjack runPlugin', command, subcommand
+    def GET(self, pluginName, methodName='index'):
+        #
+        # Import plugin as a submodule of igor.plugins
+        #
         import igor.plugins # Make sure the base package exists
-        moduleName = 'igor.plugins.'+command
+        moduleName = 'igor.plugins.'+pluginName
         if moduleName in sys.modules:
             # Imported previously.
-            mod = sys.modules[moduleName]
+            pluginModule = sys.modules[moduleName]
         else:
             # New. Try to import.
-            moduleDir = os.path.join(PLUGINDIR, command)
+            moduleDir = os.path.join(PLUGINDIR, pluginName)
             try:
-                mfile, mpath, mdescr = imp.find_module(command, [moduleDir])
-                mod = imp.load_module(moduleName, mfile, mpath, mdescr)
+                mfile, mpath, mdescr = imp.find_module(pluginName, [moduleDir])
+                pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
                 raise web.notfound()
+            #
             # Tell the new module about the database and the app
+            #
             initDatabaseAccess()
-            mod.DATABASE = DATABASE
-            mod.DATABASE_ACCESS = DATABASE_ACCESS
-            mod.COMMANDS = COMMANDS
-            mod.WEBAPP = WEBAPP
+            pluginModule.DATABASE = DATABASE
+            pluginModule.DATABASE_ACCESS = DATABASE_ACCESS
+            pluginModule.COMMANDS = COMMANDS
+            pluginModule.WEBAPP = WEBAPP
         allArgs = dict(web.input())
-        # Find plugindata and per-user plugindata
+        #
+        # Find plugindata and instantiate plugin class
+        #
         try:
-            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (command), 'application/x-python-object', 'content')
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content')
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
+        try:
+            factory = getattr(pluginModule, 'igorPlugin')
+        except AttributeError:
+            raise myWebError("401 Plugin %s problem: misses igorPlugin() method" % (pluginName))
+        pluginObject = factory(pluginName, pluginData)
+        #
+        # If there is a user argument also get userData
+        #
         if allArgs.has_key('user'):
             user = allArgs['user']
             try:
-                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, command), 'application/x-python-object', 'content')
+                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content')
             except web.HTTPError:
                 web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-                userData = {}
-            if userData:
-                pluginData.update(userData)
-        mod.PLUGINDATA = pluginData
-        if subcommand == None:
-            subcommand = command
-        else:
-            subcommand = command + '_' + subcommand
+            else:
+                allArgs['userData'] = userData
+        #
+        # Find the method and call it.
+        #
         try:
-            method = getattr(mod, subcommand)
+            method = getattr(pluginObject, methodName)
         except AttributeError:
-            print 'xxxjack did not find', subcommand, 'in', mod
             raise web.notfound()
-            
         try:
             rv = method(**allArgs)
         except ValueError, arg:
-        #except TypeError, arg:
-            raise myWebError("401 Error calling plugin method %s: %s" % (command, arg))
+            raise myWebError("401 Error calling plugin method %s: %s" % (pluginName, arg))
+        if rv == None:
+            rv = ''
+        if not isinstance(rv, basestring):
+            rv = str(rv)
         return rv
     
 class xmlDatabaseEvaluate:

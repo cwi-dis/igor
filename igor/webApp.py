@@ -260,15 +260,17 @@ class runPlugin:
         
     def GET(self, command, subcommand=None):
         print 'xxxjack runPlugin', command, subcommand
-        if command in sys.modules:
+        import igor.plugins # Make sure the base package exists
+        moduleName = 'igor.plugins.'+command
+        if moduleName in sys.modules:
             # Imported previously.
-            mod = sys.modules[command]
+            mod = sys.modules[moduleName]
         else:
             # New. Try to import.
             moduleDir = os.path.join(PLUGINDIR, command)
             try:
                 mfile, mpath, mdescr = imp.find_module(command, [moduleDir])
-                mod = imp.load_module(command, mfile, mpath, mdescr)
+                mod = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
                 raise web.notfound()
             # Tell the new module about the database and the app

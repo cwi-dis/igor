@@ -14,6 +14,7 @@ import imp
 import threading
 import cProfile
 import pstats
+import myLogger
 from _version import VERSION
 
 import sys
@@ -317,8 +318,10 @@ def main():
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
     parser.add_argument("--profile", action="store_true", help="Enable Python profiler (debugging Igor only)")
+    parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
     args = parser.parse_args()
     
+    myLogger.install(args.logLevel)
     if args.version:
         print VERSION
         sys.exit(0)

@@ -38,7 +38,8 @@ class FitbitPlugin:
         self.user = None
         
     def _refresh(self, tokenData):
-        DATABASE_ADDESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', replace=True)
+        print 'fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
+        DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', replace=True)
     
     def index(self, user=None, userData={}, methods='get_bodyweight', **kwargs):
         if not user:
@@ -98,10 +99,13 @@ class FitbitPlugin:
         if not code:
             raise myWebError("401 fitbitplugin/auth2 requires 'code' argument")
 
-        fb = Fitbit(**oauthSettings)
+        step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content')
+        step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
+
+        fb = Fitbit(state=state, redirect_uri=step2url, **oauthSettings)
 
         token = fb.client.fetch_access_token(code)
-        _refresh(token, user=state)
+        self._refresh(token)
         return 'ok\n'
 
 def igorPlugin(pluginName, pluginData):

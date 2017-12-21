@@ -56,7 +56,7 @@ class FitbitPlugin:
                 raise myWebError("401 Fitbitplugin requires global plugindata '%s'" % k)
             oauthSettings[k] = self.pluginData[k]
         
-        fb = fitbit.Fitbit(refresh_cb=_refresh, **oauthSettings)
+        fb = Fitbit(refresh_cb=_refresh, **oauthSettings)
     
         results = {}
         methods = methods.split(',')

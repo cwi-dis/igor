@@ -26,16 +26,16 @@ def initDatabaseAccess():
         _ = xmlDatabaseAccess()
         
 urls = (
-    '/scripts/([^/]*)', 'runScript',
-    '/pluginscripts/([^/]*)/([^/]*)', 'runScript',
+    '/scripts/([^/]+)', 'runScript',
+    '/pluginscripts/([^/]+)/([^/]+)', 'runScript',
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
-    '/internal/([^/]*)', 'runCommand',
-    '/internal/([^/]*)/(.*)', 'runCommand',
-    '/action/(.*)', 'runAction',
-    '/trigger/(.*)', 'runTrigger',
-    '/plugin/([^/]*)', 'runPlugin',
-    '/plugin/([^/]*)/([^/_]*)', 'runPlugin',
+    '/internal/([^/]+)', 'runCommand',
+    '/internal/([^/]+)/(.+)', 'runCommand',
+    '/action/(.+)', 'runAction',
+    '/trigger/(.+)', 'runTrigger',
+    '/plugin/([^/]+)', 'runPlugin',
+    '/plugin/([^/]+)/([^/_]+)', 'runPlugin',
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
@@ -274,6 +274,7 @@ class runPlugin:
                 mfile, mpath, mdescr = imp.find_module(pluginName, [moduleDir])
                 pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
+                print 'xxxjack import failed for', pluginName, mpath
                 raise web.notfound()
             #
             # Tell the new module about the database and the app
@@ -314,6 +315,7 @@ class runPlugin:
         try:
             method = getattr(pluginObject, methodName)
         except AttributeError:
+            print 'xxxjack Method', methodName, 'not found in', pluginObject
             raise web.notfound()
         try:
             rv = method(**allArgs)

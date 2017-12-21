@@ -65,7 +65,7 @@ class FitbitPlugin:
             item = m()
             results.update(item)
         
-        DATABASE_ACCESS.put_key('sensors/fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', replace=True)
+        DATABASE_ACCESS.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', replace=True)
         return 'ok\n'
     
     def auth1(self, user=None, userData={}, **kwargs):

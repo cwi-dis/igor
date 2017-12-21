@@ -73,10 +73,10 @@ Copies subtree ```src``` to ```dst```. Both src and dst can be local or remote, 
 
 Queries database of DHCP server on local machine and stores all active dhcp leases. See [dhcp/readme.md](dhcp/readme.md) for details.
 
-### fitbit
+### _fitbit
 
-Retrieves health data from Fitbit devices using the Fitbit cloud API and stores this in ```sensors/fitbit```. See [fitbit/readme.md](fitbit/readme.md) for details.
-Currently broken.
+Retrieves health data from Fitbit devices using the Fitbit cloud API and stores this in ```sensors/_fitbit```. See [_fitbit/readme.md](_fitbit/readme.md) for details.
+Not the underscore: the plugin is called `_fitbit` because otherwise it would have a name clash with the underlying Python module it uses.
 
 ### homey
 

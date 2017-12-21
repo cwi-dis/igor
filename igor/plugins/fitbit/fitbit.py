@@ -4,14 +4,22 @@ Currently a quick hack using either direct database access or httplib2, synchron
 Should use callUrl, so local/remote becomes similar, and some form
 of callback mechanism so it can run asynchronously.
 """
+print 'xxxjack fitbit plugin'
 import requests
 import web
 import json
 import urlparse
 import urllib
-import fitbit
+from fitbit import Fitbit
 from requests.packages import urllib3
 urllib3.disable_warnings()
+import os
+import sys
+
+print 'xxxjack fitbit own name, file', __name__, __file__
+print 'xxxjack fitbit fitbit name, file', Fitbit.__module__, Fitbit.__module__
+#print 'xxxjack cwd', os.getcwd()
+#print 'xxxjack path', sys.path
 
 DATABASE_ACCESS=None
 PLUGINDATA=None
@@ -69,7 +77,7 @@ class FitbitPlugin:
             oauthSettings[k] = self.pluginData[k]
     
         
-        fb = fitbit.Fitbit(**oauthSettings)
+        fb = Fitbit(**oauthSettings)
     
         step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content')
         step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
@@ -90,7 +98,7 @@ class FitbitPlugin:
         if not code:
             raise myWebError("401 fitbitplugin/auth2 requires 'code' argument")
 
-        fb = fitbit.Fitbit(**oauthSettings)
+        fb = Fitbit(**oauthSettings)
 
         token = fb.client.fetch_access_token(code)
         _refresh(token, user=state)

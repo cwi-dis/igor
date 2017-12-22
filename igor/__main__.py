@@ -241,13 +241,20 @@ class IgorServer:
         self.triggerHandler.triggerTrigger(triggerNode)
         
     def save(self):
+        """Saves the database to the filesystem"""
         self.database.saveFile()
+        return 'OK'
+        
+    def queue(self, subcommand):
+        """Queues an internal command through callUrl (used for save/stop/restart)"""
+        self.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand))
         return 'OK'
         
     def started(self):
         return "IgorServer started"
         
     def stop(self):
+        """Exits igorServer after saving"""
         global PROFILER_STATS
         if self.actionHandler:
             self.actionHandler.stop()
@@ -272,8 +279,9 @@ class IgorServer:
         sys.exit(0)
         
     def restart(self):
+        """Saves the database and restarts igorServer"""
         self.save()
-        os.closerange(3, MAXFD)
+        os.closerange(3, subprocess.MAXFD)
         os.execl(sys.executable, sys.executable, *sys.argv)
         
     def command(self):

@@ -98,7 +98,10 @@ class URLCallRunner(threading.Thread):
     def stop(self):
         self.stopping = True
         self.queue.put(None)
-        self.join()
+        try:
+            self.join()
+        except RuntimeError:
+            pass # This can happen if we are actually running via callUrl ourselves...
         
 class URLCaller:
     def __init__(self, app):

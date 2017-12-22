@@ -23,6 +23,7 @@ print 'xxxjack fitbit fitbit name, file', Fitbit.__module__, Fitbit.__module__
 
 DATABASE_ACCESS=None
 PLUGINDATA=None
+COMMANDS=None
 
 KEYS_PER_APP=['client_id', 'client_secret']
 KEYS_PER_USER = ['access_token', 'refresh_token']
@@ -38,8 +39,10 @@ class FitbitPlugin:
         self.user = None
         
     def _refresh(self, tokenData):
-        print 'fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
+        print 'xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
         DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', replace=True)
+        COMMANDS.queue('save')
+        print 'xxxjack queued save call'
     
     def index(self, user=None, userData={}, methods=None, **kwargs):
         if not user:

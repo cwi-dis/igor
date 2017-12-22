@@ -41,7 +41,7 @@ class FitbitPlugin:
         print 'fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
         DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', replace=True)
     
-    def index(self, user=None, userData={}, methods='get_bodyweight', **kwargs):
+    def index(self, user=None, userData={}, methods=None, **kwargs):
         if not user:
             raise myWebError("401 Fitbitplugin requires user argument")
         self.user = user
@@ -58,15 +58,26 @@ class FitbitPlugin:
         
         fb = Fitbit(refresh_cb=self._refresh, **oauthSettings)
     
+        # Populate kwargs from userData, unless already specified in the parameters
+        for k, v in userData.items():
+            if k != 'token' and k != 'methods' and not k in kwargs:
+                kwargs[k] = v
+        # Convert to strings (fitbit library doesn't like unicode)
+        for k, v in kwargs.items():
+            kwargs[k] = v
+            
         results = {}
+        if methods == None:
+            methods = userData.get('methods', 'get_bodyweight')
         methods = methods.split(',')
         for method in methods:
             m = getattr(fb, method)
-            item = m()
+            item = m(**kwargs)
+            print "xxxjack method", method, "returned", m
             results.update(item)
         
         DATABASE_ACCESS.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', replace=True)
-        return 'ok\n'
+        return str(results)
     
     def auth1(self, user=None, userData={}, **kwargs):
         if not user:

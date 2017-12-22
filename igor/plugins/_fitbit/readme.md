@@ -35,7 +35,9 @@ If all this worked Igor can now get the health data for _yournamehere_. You can 
 
 ## plugin entrypoints
 
-- `/plugin/_fitbit?user=yournamehere` Obtain health data for user _yournamehere_, refreshing the access tokens as needed.
+- `/plugin/_fitbit?user=yournamehere` Obtain health data for user _yournamehere_, refreshing the access tokens as needed. Optional parameters:
+	- `methods` a comma-separated list of methods to call (default: `get_bodyweight`). See [Python Fitbit documentation](https://python-fitbit.readthedocs.io) for the details.
+	- All other keyword arguments are passed to each of the methods in turn.
 - `/plugin/_fitbit/auth1?user=yournamehere` Start the authentication process for user _yournamehere_ to enable Igor to obtain the health data.
 - `/plugin/_fitbit/auth2?code=...&state=yournamehere` Second step in the authentication process, called through browser redirection by Fitbit.
 
@@ -44,10 +46,14 @@ If all this worked Igor can now get the health data for _yournamehere_. You can 
 * `plugindata/_fitbit` Identity of this Igor for the Fitbit cloud service:
 	* `client_id` the identity of your application (Igor)
 	* `client_secret` the password of your application (Igor)
+	* `system` Should be `en_GB` for mettric values.
 * `identities/_yournamehere_/plugindata/_fitbit` Fitbit access data for person _yournamehere_:
 	* `token` Fitbit token. Most important fields are `refresh_token` and `access_token`.
+	* `methods` and other keyword arguments can be specified, these will be used as defaults when `/plugin/_fitbit` is called for this user.
 * `sensors/fitbit/_yournamehere_` Fitbit measurements for person _yournamehere_:
-	* `weight` Weight
+	* `body-weight` Weight data time series:
+		* `value` The value of this measurement
+		* `dateTime` For which date the value is.
 	* ...
 	
 ## actions

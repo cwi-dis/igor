@@ -20,11 +20,15 @@ class LanPlugin:
         if not ip:
             ip = name
         alive = True
+        detail = ''
         try:
             s = socket.create_connection((ip, int(port)), timeout)
-        except socket.error:
+        except socket.gaierror:
             alive = False
-
+            detail = ' (host %s unknown)' % ip
+        except socket.error, e:
+            alive = False
+            detail = ' (%s)' % e.args[1]
         if '%' in service:
             service = service % name
 
@@ -35,7 +39,7 @@ class LanPlugin:
         COMMANDS.urlCaller.callURL(toCall)
         if alive:
             return 'ok\n'
-        return '%s is not available\n' % name
+        return '%s is not available%s\n' % (name, detail)
     
 def igorPlugin(pluginName, pluginData):
     return LanPlugin()

@@ -28,7 +28,10 @@ class LanPlugin:
             detail = ' (host %s unknown)' % ip
         except socket.error, e:
             alive = False
-            detail = ' (%s)' % e.args[1]
+            if e.args[1:]:
+                detail = ' (%s)' % e.args[1]
+            else:
+                detail = ' (%s)' % repr(e)
         if '%' in service:
             service = service % name
 

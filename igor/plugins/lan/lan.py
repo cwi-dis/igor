@@ -34,7 +34,7 @@ class LanPlugin:
 
         status = dict(alive=(not not alive))
         if not alive:
-            status['resultData'] = '%s is not available' % name
+            status['resultData'] = '%s is not available%s' % (name, detail)
         toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'})
         COMMANDS.urlCaller.callURL(toCall)
         if alive:

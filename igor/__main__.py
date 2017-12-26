@@ -174,7 +174,8 @@ class IgorServer:
         # Fill only entries we want
         _ = dbAccess.put_key(key + '/alive', 'application/x-python-object', None, not not alive, 'application/x-python-object')
         _ = dbAccess.put_key(key + '/lastActivity', 'application/x-python-object', None, lastActivity, 'application/x-python-object')
-        _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object')
+        if lastSuccess:
+            _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object')
         if alive:
             _ = dbAccess.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object')
             resultData = ''

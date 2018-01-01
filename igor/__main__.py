@@ -52,7 +52,7 @@ def enable_thread_profiling():
     
 
 class IgorServer:
-    def __init__(self, datadir, port=9333, advertise=False, profile=False):
+    def __init__(self, datadir, port=9333, advertise=False, profile=False, ssl=False):
         #
         # Create the database, and tell the web application about it
         #
@@ -61,6 +61,7 @@ class IgorServer:
             enable_thread_profiling()
             self.profile = cProfile.Profile()
             self.profile.enable()
+        self.ssl = ssl
         self.port = port
         self.app = webApp.WEBAPP
         self.datadir = datadir
@@ -118,7 +119,10 @@ class IgorServer:
     def fillSelfData(self):
         """Put our details in the database"""
         hostName = besthostname.besthostname()
-        url = 'http://%s:%d/data' % (hostName, self.port)
+        protocol = 'http'
+        if self.ssl:
+            protocol = 'https'
+        url = '%s://%s:%d/data' % (protocol, hostName, self.port)
         oldRebootCount = self.database.getValue('/data/services/igor/rebootCount')
         rebootCount = 0
         if oldRebootCount:
@@ -126,11 +130,15 @@ class IgorServer:
                 rebootCount = int(oldRebootCount)+1
             except ValueError:
                 pass
-        data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount)
+        data = dict(host=hostName, url=url, port=self.port, protocol=protocol, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount)
         tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data), representing='igor/core')
         self.urlCaller.callURL(tocall)
         
     def run(self):
+        if self.ssl:
+            from web.wsgiserver import CherryPyWSGIServer
+            CherryPyWSGIServer.ssl_certificate = os.path.join(self.datadir, 'igor.crt')
+            CherryPyWSGIServer.ssl_private_key = os.path.join(self.datadir, 'igor.key')
         self.app.run(port=self.port)
         
     def dump(self):
@@ -323,6 +331,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run the Igor home automation server")
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
+    parser.add_argument("-s", "--ssl", action="store_true", help="Use https (ssl) on the service")
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
@@ -342,7 +351,7 @@ def main():
         webApp.DEBUG = True
     datadir = args.database
     try:
-        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile)
+        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, ssl=args.ssl)
     except IOError, arg:
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]

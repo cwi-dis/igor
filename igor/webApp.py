@@ -115,6 +115,8 @@ class runScript:
             # Tell plugin about our url, if we know it
             myUrl = DATABASE_ACCESS.get_key('services/igor/url', 'application/x-python-object', 'content')
             env['IGORSERVER_URL'] = myUrl
+            if myUrl[:6] == 'https:':
+                env['IGORSERVER_NOVERIFY'] = 'true'
         except web.HTTPError:
             pass
         try:

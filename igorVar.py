@@ -17,13 +17,15 @@ if 'IGORSERVER_URL' in os.environ:
 VERBOSE=False
 
 class IgorServer:
-	def __init__(self, url, bearer_token=None, access_token=None):
+	def __init__(self, url, bearer_token=None, access_token=None, certs=None, noverify=False):
 		self.baseUrl = url
 		if url[-1] != '/':
 			url = url + '/'
 		self.url = url
 		self.bearer_token = bearer_token
 		self.access_token = access_token
+		self.certs = certs
+		self.noverify = noverify
 		
 	def get(self, item, variant=None, format=None):
 		if format == None:
@@ -64,7 +66,7 @@ class IgorServer:
 			headers['Content-Type'] = datatype
 		if self.bearer_token:
 			headers['Authorization'] = 'Bearer %s' % self.bearer_token
-		h = httplib2.Http()
+		h = httplib2.Http(ca_certs=self.certs, disable_ssl_certificate_validation=self.noverify)
 		if VERBOSE:
 			print >>sys.stderr, ">>> GET", url
 			print >>sys.stderr, "... Headers", headers
@@ -112,15 +114,20 @@ def main():
 	parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
 	parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line")
 	parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument")
+	parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures")
+	parser.add_argument("--certs", metavar='CERTFILE', help="Verify https certificates from given file")
 	
 	parser.add_argument("var", help="Variable to retrieve")
 	args = parser.parse_args()
 	VERBOSE=args.verbose
 	
+	noverifyEnv = os.environ.get('IGORSERVER_NOVERIFY')
+	if noverifyEnv and noverifyEnv != "no":
+	    args.noverify = True
 	url = args.url
 	if args.eval:
 		url.replace("/data", "/evaluate")
-	server = IgorServer(url, bearer_token=args.bearer, access_token=args.access)
+	server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, noverify=args.noverify, certs=args.certs)
 	if args.python:
 		args.mimetype = 'application/json'
 	if args.delete:

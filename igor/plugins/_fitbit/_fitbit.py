@@ -37,17 +37,19 @@ class FitbitPlugin:
         self.pluginName = pluginName
         self.pluginData = pluginData
         self.user = None
+        self.token = None
         
     def _refresh(self, tokenData):
         print 'xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
-        DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', replace=True)
+        DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', self.token, replace=True)
         COMMANDS.queue('save')
         print 'xxxjack queued save call'
     
-    def index(self, user=None, userData={}, methods=None, **kwargs):
+    def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
         if not user:
             raise myWebError("401 Fitbitplugin requires user argument")
         self.user = user
+        self.token = token
         if not 'token' in userData:
             raise myWebError("401 Fitbitplugin requires 'token' plugindata for user '%s'" % user)
         oauthSettings = userData['token']
@@ -79,10 +81,10 @@ class FitbitPlugin:
             print "xxxjack method", method, "returned", m
             results.update(item)
         
-        DATABASE_ACCESS.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', replace=True)
+        DATABASE_ACCESS.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)
         return str(results)
     
-    def auth1(self, user=None, userData={}, **kwargs):
+    def auth1(self, user=None, userData={}, token=None, **kwargs):
         if not user:
             raise myWebError("401 fitbitplugin/auth1 requires 'user' argument")
         oauthSettings = {}
@@ -94,15 +96,16 @@ class FitbitPlugin:
         
         fb = Fitbit(**oauthSettings)
     
-        step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content')
+        step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content', token)
         step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
         #step2url += '?' + urllib.urlencode(dict(user=user))
         redirectUrl, _ = fb.client.authorize_token_url(redirect_uri=step2url, state=user)
         raise web.seeother(redirectUrl)
     
-    def auth2(self, code=None, state=None, **kwargs):
+    def auth2(self, code=None, state=None, token=None, **kwargs):
         oauthSettings = {}
         self.user = state
+        self.token = token
         for k in KEYS_PER_APP:
             if not k in self.pluginData:
                 raise myWebError("401 fitbitplugin/auth2 requires global plugindata '%s'" % k)

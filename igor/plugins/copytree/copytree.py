@@ -13,32 +13,40 @@ DATABASE_ACCESS=None
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+    
+class CopyTree:
+    def __init__(self):
+        pass
 
-def copytree(src=None, dst=None, mimetype="text/plain", method='PUT', token=None):
-    if not src:
-        raise myWebError("401 Required argument name missing")
-    if not dst:
-        raise myWebError("401 Required argument dst missing")
+    def index(self, src=None, dst=None, mimetype="text/plain", method='PUT', token=None):
+        if not src:
+            raise myWebError("401 Required argument name missing")
+        if not dst:
+            raise myWebError("401 Required argument dst missing")
     
-    srcParsed = urlparse.urlparse(src)
-    if srcParsed.scheme == '' and srcParsed.netloc == '':
-        # Local source
-        srcValue = DATABASE_ACCESS.get_key(srcParsed.path, mimetype, None, token)
-    else:
-        # Remote source
-        h = httplib2.Http()
-        resp, srcValue = h.request(src, headers=dict(Accept=mimetype))
-        if resp.status != 200:
-            raise myWebError("%d %s (%s)" % (resp.status, resp.reason, src))
+        srcParsed = urlparse.urlparse(src)
+        if srcParsed.scheme == '' and srcParsed.netloc == '':
+            # Local source
+            srcValue = DATABASE_ACCESS.get_key(srcParsed.path, mimetype, None, token)
+        else:
+            # Remote source
+            h = httplib2.Http()
+            resp, srcValue = h.request(src, headers=dict(Accept=mimetype))
+            if resp.status != 200:
+                raise myWebError("%d %s (%s)" % (resp.status, resp.reason, src))
     
-    dstParsed = urlparse.urlparse(dst)
-    if dstParsed.scheme == '' and dstParsed.netloc == '':
-        rv = DATABASE_ACCESS.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, token, method=='PUT')
-    else:
-        headers = {'Content-type' : mimetype}
-        h = httplib2.Http()
-        resp, rv = h.request(dst, method=method, headers=headers, data=srcValue)
-        if resp.status != 200:
-            raise myWebError("%d %s (%s)" % (resp.status, resp.reason, dst))
-    
-    return rv
+        dstParsed = urlparse.urlparse(dst)
+        if dstParsed.scheme == '' and dstParsed.netloc == '':
+            rv = DATABASE_ACCESS.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, token, method=='PUT')
+        else:
+            headers = {'Content-type' : mimetype}
+            h = httplib2.Http()
+            resp, rv = h.request(dst, method=method, headers=headers, data=srcValue)
+            if resp.status != 200:
+                raise myWebError("%d %s (%s)" % (resp.status, resp.reason, dst))
+
+        return rv
+
+def igorPlugin(pluginName, pluginData):
+        return CopyTree()
+        

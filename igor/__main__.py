@@ -15,6 +15,7 @@ import imp
 import threading
 import cProfile
 import pstats
+import myLogger
 from _version import VERSION
 
 import sys
@@ -180,14 +181,15 @@ class IgorServer:
         # Fill only entries we want
         _ = dbAccess.put_key(key + '/alive', 'application/x-python-object', None, not not alive, 'application/x-python-object', token)
         _ = dbAccess.put_key(key + '/lastActivity', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
-        _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object', token)
+        if lastSuccess:
+            _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object', token)
         if alive:
             _ = dbAccess.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object', token)
             resultData = ''
         else:
             _ = dbAccess.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
             if not resultData:
-                resultData = 'unknown failure'
+                resultData = '%s failed without error message' % representing
         if type(resultData) == type({}):
             for k, v in resultData.items():
                 _ = dbAccess.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object', token)
@@ -247,13 +249,20 @@ class IgorServer:
         self.triggerHandler.triggerTrigger(triggerNode)
         
     def save(self, token):
+        """Saves the database to the filesystem"""
         self.database.saveFile()
         return 'OK'
         
     def started(self, token):
         return "IgorServer started"
         
+    def queue(self, subcommand, token):
+        """Queues an internal command through callUrl (used for save/stop/restart)"""
+        self.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
+        return 'OK'
+        
     def stop(self, token):
+        """Exits igorServer after saving"""
         global PROFILER_STATS
         if self.actionHandler:
             self.actionHandler.stop()
@@ -279,7 +288,7 @@ class IgorServer:
         
     def restart(self, token):
         self.save(token)
-        os.closerange(3, MAXFD)
+        os.closerange(3, subprocess.MAXFD)
         os.execl(sys.executable, sys.executable, *sys.argv)
         
     def command(self, token):
@@ -324,8 +333,10 @@ def main():
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
     parser.add_argument("--profile", action="store_true", help="Enable Python profiler (debugging Igor only)")
+    parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
     args = parser.parse_args()
     
+    myLogger.install(args.logLevel)
     if args.version:
         print VERSION
         sys.exit(0)

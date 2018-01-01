@@ -27,16 +27,16 @@ def initDatabaseAccess():
         _ = xmlDatabaseAccess()
         
 urls = (
-    '/scripts/([^/]*)', 'runScript',
-    '/pluginscripts/([^/]*)/([^/]*)', 'runScript',
+    '/scripts/([^/]+)', 'runScript',
+    '/pluginscripts/([^/]+)/([^/]+)', 'runScript',
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
-    '/internal/([^/]*)', 'runCommand',
-    '/internal/([^/]*)/(.*)', 'runCommand',
-    '/action/(.*)', 'runAction',
-    '/trigger/(.*)', 'runTrigger',
-    '/plugin/([^/]*)', 'runPlugin',
-    '/plugin/([^/]*)/([^/]*)', 'runPlugin',
+    '/internal/([^/]+)', 'runCommand',
+    '/internal/([^/]+)/(.+)', 'runCommand',
+    '/action/(.+)', 'runAction',
+    '/trigger/(.+)', 'runTrigger',
+    '/plugin/([^/]+)', 'runPlugin',
+    '/plugin/([^/]+)/([^/_]+)', 'runPlugin',
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
@@ -274,62 +274,78 @@ class runPlugin:
         web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
         return ''
         
-    def GET(self, command, subcommand=None):
-        if command in sys.modules:
+    def GET(self, pluginName, methodName='index'):
+        #
+        # Import plugin as a submodule of igor.plugins
+        #
+        import igor.plugins # Make sure the base package exists
+        moduleName = 'igor.plugins.'+pluginName
+        if moduleName in sys.modules:
             # Imported previously.
-            mod = sys.modules[command]
+            pluginModule = sys.modules[moduleName]
         else:
             # New. Try to import.
-            moduleDir = os.path.join(PLUGINDIR, command)
+            moduleDir = os.path.join(PLUGINDIR, pluginName)
             try:
-                mfile, mpath, mdescr = imp.find_module(command, [moduleDir])
-                mod = imp.load_module(command, mfile, mpath, mdescr)
+                mfile, mpath, mdescr = imp.find_module(pluginName, [moduleDir])
+                pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
+                print 'xxxjack import failed for', pluginName, mpath
                 raise web.notfound()
+            #
             # Tell the new module about the database and the app
+            #
             initDatabaseAccess()
-            mod.DATABASE = DATABASE
-            mod.DATABASE_ACCESS = DATABASE_ACCESS
-            mod.COMMANDS = COMMANDS
-            mod.WEBAPP = WEBAPP
+            pluginModule.DATABASE = DATABASE
+            pluginModule.DATABASE_ACCESS = DATABASE_ACCESS
+            pluginModule.COMMANDS = COMMANDS
+            pluginModule.WEBAPP = WEBAPP
         allArgs = dict(web.input())
 
         token = access.singleton.tokenForRequest(web.ctx.env)
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
-        pluginToken = access.singleton.tokenForPlugin(command)
+        pluginToken = access.singleton.tokenForPlugin(pluginName)
         allArgs['token'] = pluginToken
         
         # Find plugindata and per-user plugindata
         try:
-            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (command), 'application/x-python-object', 'content', pluginToken)
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
+        try:
+            factory = getattr(pluginModule, 'igorPlugin')
+        except AttributeError:
+            raise myWebError("401 Plugin %s problem: misses igorPlugin() method" % (pluginName))
+        pluginObject = factory(pluginName, pluginData)
+        #
+        # If there is a user argument also get userData
+        #
         if allArgs.has_key('user'):
             user = allArgs['user']
             try:
-                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, command), 'application/x-python-object', 'content', pluginToken)
+                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
             except web.HTTPError:
                 web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-                userData = {}
-            if userData:
-                pluginData.update(userData)
-            mod.PLUGINDATA = userdata
-        if subcommand == None:
-            subcommand = command
-        else:
-            subcommand = command + '_' + subcommand
+            else:
+                allArgs['userData'] = userData
+        #
+        # Find the method and call it.
+        #
         try:
-            method = getattr(mod, subcommand)
+            method = getattr(pluginObject, methodName)
         except AttributeError:
+            print 'xxxjack Method', methodName, 'not found in', pluginObject
             raise web.notfound()
-            
         try:
             rv = method(**allArgs)
         except ValueError, arg:
-        #except TypeError, arg:
-            raise myWebError("401 Error calling plugin method %s: %s" % (command, arg))
+            raise myWebError("401 Error calling plugin method %s: %s" % (pluginName, arg))
+        if rv == None:
+            rv = ''
+        if not isinstance(rv, basestring):
+            rv = str(rv)
         return rv
     
 class xmlDatabaseEvaluate:

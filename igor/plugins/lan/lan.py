@@ -26,6 +26,9 @@ class LanPlugin:
         except socket.gaierror:
             alive = False
             detail = ' (host %s unknown)' % ip
+        except socket.timeout:
+            alive = False
+            detail = ' (timeout connecting to %s)' % ip
         except socket.error, e:
             alive = False
             if e.args[1:]:

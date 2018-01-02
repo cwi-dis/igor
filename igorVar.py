@@ -10,21 +10,40 @@ import json
 import pprint
 import xml.etree.ElementTree
 import socket
+import ConfigParser
 
-DEFAULT_URL="http://framboos.local:9333/data"
-if 'IGORSERVER_URL' in os.environ:
-	DEFAULT_URL = os.environ['IGORSERVER_URL']
+CONFIG = ConfigParser.ConfigParser(
+    dict(
+        url="http://igor.local:9333/data",
+        bearer=None,
+        access=None,
+        certificate=None,
+        noverify=None,
+        verbose=None,
+    ))
+CONFIG.add_section('igor')
+CONFIG.read(os.path.expanduser('~/.igor/igor.cfg'))
+# Override from environment:
+for k, _ in CONFIG.items('igor'):
+    envKey = 'IGORSERVER_' + k.upper()
+    if envKey in os.environ:
+        CONFIG.set('igor', k, os.environ[envKey])
+        
+# DEFAULT_URL="http://framboos.local:9333/data"
+# if 'IGORSERVER_URL' in os.environ:
+# 	DEFAULT_URL = os.environ['IGORSERVER_URL']
+
 VERBOSE=False
 
 class IgorServer:
-	def __init__(self, url, bearer_token=None, access_token=None, certs=None, noverify=False):
+	def __init__(self, url, bearer_token=None, access_token=None, certificate=None, noverify=False):
 		self.baseUrl = url
 		if url[-1] != '/':
 			url = url + '/'
 		self.url = url
 		self.bearer_token = bearer_token
 		self.access_token = access_token
-		self.certs = certs
+		self.certificate = certificate
 		self.noverify = noverify
 		
 	def get(self, item, variant=None, format=None):
@@ -66,7 +85,7 @@ class IgorServer:
 			headers['Content-Type'] = datatype
 		if self.bearer_token:
 			headers['Authorization'] = 'Bearer %s' % self.bearer_token
-		h = httplib2.Http(ca_certs=self.certs, disable_ssl_certificate_validation=self.noverify)
+		h = httplib2.Http(ca_certs=self.certificate, disable_ssl_certificate_validation=self.noverify)
 		if VERBOSE:
 			print >>sys.stderr, ">>> GET", url
 			print >>sys.stderr, "... Headers", headers
@@ -94,7 +113,7 @@ class IgorServer:
 def main():
 	global VERBOSE
 	parser = argparse.ArgumentParser(description="Access Igor home automation service and other http databases")
-	parser.add_argument("-u", "--url", help="Base URL of the server (default: %s, environment IGORSERVER_URL)" % DEFAULT_URL, default=DEFAULT_URL)
+	parser.add_argument("-u", "--url", help="Base URL of the server (default: %s, environment IGORSERVER_URL)" % CONFIG.get('igor', 'url'), default=CONFIG.get('igor', 'url'))
 	parser.add_argument("-e", "--eval", action="store_true", help="Evaluate XPath expression in stead of retrieving variable (by changing /data to /evaluate in URL)")
 	parser.add_argument("-v", "--variant", help="Variant of data to get (or put, post)")
 	parser.add_argument("-M", "--mimetype", help="Get result as given mimetype")
@@ -103,7 +122,7 @@ def main():
 	parser.add_argument("--xml", dest="mimetype", action="store_const", const="application/xml", help="Get result as XML")
 	parser.add_argument("--python", action="store_true", help="Get result as Python (converted from JSON)")
 	parser.add_argument("--pretty", action="store_true", help="Pretty-print result (only for Python, currently)")
-	parser.add_argument("--verbose", action="store_true", help="Print what is happening")
+	parser.add_argument("--verbose", action="store_true", help="Print what is happening", default=CONFIG.get('igor', 'verbose'))
 	parser.add_argument("--delete", action="store_true", help="Delete variable")
 	parser.add_argument("--create", action="store_true", help="Create or clear a variable")
 	parser.add_argument("--put", metavar="MIMETYPE", help="PUT data of type MIMETYPE, from --data or stdin")
@@ -112,10 +131,10 @@ def main():
 	parser.add_argument("--checkdata", action="store_true", help="Check that data is valid XML or JSON")
 	parser.add_argument("--checknonempty", action="store_true", help="Check that data is valid XML or JSON data, and fail silently on empty data")
 	parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
-	parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line")
-	parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument")
-	parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures")
-	parser.add_argument("--certs", metavar='CERTFILE', help="Verify https certificates from given file")
+	parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line", default=CONFIG.get('igor', 'bearer'))
+	parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument", default=CONFIG.get('igor', 'access'))
+	parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures", default=CONFIG.get('igor', 'noverify'))
+	parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file", default=CONFIG.get('igor', 'certificate'))
 	
 	parser.add_argument("var", help="Variable to retrieve")
 	args = parser.parse_args()
@@ -127,7 +146,9 @@ def main():
 	url = args.url
 	if args.eval:
 		url.replace("/data", "/evaluate")
-	server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, noverify=args.noverify, certs=args.certs)
+	if args.certificate:
+	    args.certificate = os.path.join(os.path.expanduser('~/.igor'), args.certificate)
+	server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, noverify=args.noverify, certificate=args.certificate)
 	if args.python:
 		args.mimetype = 'application/json'
 	if args.delete:

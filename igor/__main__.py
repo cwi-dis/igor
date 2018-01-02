@@ -61,10 +61,24 @@ class IgorServer:
             enable_thread_profiling()
             self.profile = cProfile.Profile()
             self.profile.enable()
-        self.ssl = ssl
+        
         self.port = port
         self.app = webApp.WEBAPP
         self.datadir = datadir
+        
+        self.ssl = ssl
+        if self.ssl:
+            self.privateKeyFile = os.path.join(self.datadir, 'igor.key')
+            self.certificateFile = os.path.join(self.datadir, 'igor.crt')
+            import OpenSSL.crypto
+            certificateData = open(self.certificateFile, 'rb').read()
+            certificate = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificateData)
+            self.certificateFingerprint = certificate.digest("sha1")
+        else:
+            self.privateKeyFile = None
+            self.certificateFile = None
+            self.certificateFingerprint = None
+
         self.database = xmlDatabase.DBImpl(os.path.join(self.datadir, 'database.xml'))
         webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
         webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
@@ -131,14 +145,16 @@ class IgorServer:
             except ValueError:
                 pass
         data = dict(host=hostName, url=url, port=self.port, protocol=protocol, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount)
+        if self.certificateFingerprint:
+            data['fingerprint'] = self.certificateFingerprint
         tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data), representing='igor/core')
         self.urlCaller.callURL(tocall)
         
     def run(self):
         if self.ssl:
             from web.wsgiserver import CherryPyWSGIServer
-            CherryPyWSGIServer.ssl_certificate = os.path.join(self.datadir, 'igor.crt')
-            CherryPyWSGIServer.ssl_private_key = os.path.join(self.datadir, 'igor.key')
+            CherryPyWSGIServer.ssl_certificate = self.certificateFile
+            CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         self.app.run(port=self.port)
         
     def dump(self):
@@ -350,7 +366,7 @@ def main():
         xmlDatabase.DEBUG = True
         webApp.DEBUG = True
     datadir = args.database
-    print 'igorServer %s starting from %s' % (VERSION, sys.argv[0])
+    print 'igorServer %s running from %s' % (VERSION, sys.argv[0])
     try:
         igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, ssl=args.ssl)
     except IOError, arg:

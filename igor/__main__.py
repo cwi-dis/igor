@@ -350,6 +350,7 @@ def main():
         xmlDatabase.DEBUG = True
         webApp.DEBUG = True
     datadir = args.database
+    print 'igorServer %s starting from %s' % (VERSION, sys.argv[0])
     try:
         igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, ssl=args.ssl)
     except IOError, arg:

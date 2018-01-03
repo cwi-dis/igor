@@ -26,7 +26,6 @@ def initDatabaseAccess():
         _ = xmlDatabaseAccess()
         
 urls = (
-    '/scripts/([^/]+)', 'runScript',
     '/pluginscripts/([^/]+)/([^/]+)', 'runScript',
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
@@ -90,18 +89,12 @@ class runScript:
         web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
         return ''
         
-    def GET(self, name, arg2=None):
-        if arg2:
-            # Plugin script command.
-            scriptDir = os.path.join(PLUGINDIR, name, 'scripts')
-            command = arg2
-        else:
-            scriptDir = SCRIPTDIR
-            command = name
+    def GET(self, pluginName, scriptName):
+        scriptDir = os.path.join(PLUGINDIR, pluginName, 'scripts')
             
         allArgs = web.input()
-        if '/' in command or '.' in command:
-            raise myWebError("401 Cannot use / or . in command")
+        if '/' in scriptName or '.' in scriptName:
+            raise myWebError("401 Cannot use / or . in scriptName")
             
         if allArgs.has_key('args'):
             args = shlex.split(allArgs.args)
@@ -120,7 +113,7 @@ class runScript:
         except web.HTTPError:
             pass
         try:
-            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content')
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content')
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
@@ -134,7 +127,7 @@ class runScript:
         if allArgs.has_key('user'):
             user = allArgs['user']
             try:
-                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, name), 'application/x-python-object', 'content')
+                userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content')
             except web.HTTPError:
                 web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
                 userData = {}
@@ -146,27 +139,27 @@ class runScript:
             if type(pluginData) == type({}):
                 for k, v in pluginData.items():
                     env['igor_'+k] = str(v)
-        # Check whether we need to use an interpreter on the command
-        command = os.path.join(scriptDir, command)
-        if os.path.exists(command):
+        # Check whether we need to use an interpreter on the scriptName
+        scriptName = os.path.join(scriptDir, scriptName)
+        if os.path.exists(scriptName):
             interpreter = None
-        elif os.path.exists(command + '.py'):
-            command = command + '.py'
+        elif os.path.exists(scriptName + '.py'):
+            scriptName = scriptName + '.py'
             interpreter = "python"
-        elif os.name == 'posix' and os.path.exists(command + '.sh'):
-            command = command + '.sh'
+        elif os.name == 'posix' and os.path.exists(scriptName + '.sh'):
+            scriptName = scriptName + '.sh'
             interpreter = 'sh'
         else:
-            raise myWebError("401 command not found: %s" % command)
+            raise myWebError("401 scriptName not found: %s" % scriptName)
         if interpreter:
-            args = [interpreter, command] + args
+            args = [interpreter, scriptName] + args
         else: # Could add windows and .bat here too, if needed
-            args = [command] + args
+            args = [scriptName] + args
         # Call the command and get the output
         try:
             rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env)
         except subprocess.CalledProcessError, arg:
-            msg = "502 Command %s exited with status code=%d" % (command, arg.returncode)
+            msg = "502 Command %s exited with status code=%d" % (scriptName, arg.returncode)
             output = msg + '\n\n' + arg.output
             # Convenience for internal logging: if there is 1 line of output only we append it to the error message.
             argOutputLines = arg.output.split('\n')
@@ -175,7 +168,7 @@ class runScript:
                 output = ''
             raise web.HTTPError(msg, {"Content-type": "text/plain"}, output)
         except OSError, arg:
-            raise myWebError("502 Error running command: %s: %s" % (command, arg.strerror))
+            raise myWebError("502 Error running command: %s: %s" % (scriptName, arg.strerror))
         return rv
 
 class runCommand:

@@ -52,7 +52,7 @@ def enable_thread_profiling():
     
 
 class IgorServer:
-    def __init__(self, datadir, port=9333, advertise=False, profile=False, ssl=False):
+    def __init__(self, datadir, port=9333, advertise=False, profile=False, nossl=False):
         #
         # Create the database, and tell the web application about it
         #
@@ -66,9 +66,13 @@ class IgorServer:
         self.app = webApp.WEBAPP
         self.datadir = datadir
         
-        self.ssl = ssl
+        self.ssl = not nossl
+        keyFile = os.path.join(self.datadir, 'igor.key')
+        if self.ssl and not os.path.exists(keyFile):
+            print 'Warning: Using http in stead of https: no private key file', keyFile
+            self.ssl = False
         if self.ssl:
-            self.privateKeyFile = os.path.join(self.datadir, 'igor.key')
+            self.privateKeyFile = keyFile
             self.certificateFile = os.path.join(self.datadir, 'igor.crt')
             import OpenSSL.crypto
             certificateData = open(self.certificateFile, 'rb').read()
@@ -347,7 +351,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run the Igor home automation server")
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
-    parser.add_argument("-s", "--ssl", action="store_true", help="Use https (ssl) on the service")
+    parser.add_argument("-s", "--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
@@ -368,7 +372,7 @@ def main():
     datadir = args.database
     print 'igorServer %s running from %s' % (VERSION, sys.argv[0])
     try:
-        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, ssl=args.ssl)
+        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl)
     except IOError, arg:
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]

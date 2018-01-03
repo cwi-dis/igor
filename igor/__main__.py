@@ -53,7 +53,7 @@ def enable_thread_profiling():
     
 
 class IgorServer:
-    def __init__(self, datadir, port=9333, advertise=False, profile=False):
+    def __init__(self, datadir, port=9333, advertise=False, profile=False, nossl=False):
         #
         # Create the database, and tell the web application about it
         #
@@ -62,9 +62,28 @@ class IgorServer:
             enable_thread_profiling()
             self.profile = cProfile.Profile()
             self.profile.enable()
+        
         self.port = port
         self.app = webApp.WEBAPP
         self.datadir = datadir
+        
+        self.ssl = not nossl
+        keyFile = os.path.join(self.datadir, 'igor.key')
+        if self.ssl and not os.path.exists(keyFile):
+            print 'Warning: Using http in stead of https: no private key file', keyFile
+            self.ssl = False
+        if self.ssl:
+            self.privateKeyFile = keyFile
+            self.certificateFile = os.path.join(self.datadir, 'igor.crt')
+            import OpenSSL.crypto
+            certificateData = open(self.certificateFile, 'rb').read()
+            certificate = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificateData)
+            self.certificateFingerprint = certificate.digest("sha1")
+        else:
+            self.privateKeyFile = None
+            self.certificateFile = None
+            self.certificateFingerprint = None
+
         self.database = xmlDatabase.DBImpl(os.path.join(self.datadir, 'database.xml'))
         webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
         webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
@@ -123,19 +142,28 @@ class IgorServer:
     def fillSelfData(self):
         """Put our details in the database"""
         hostName = besthostname.besthostname()
-        url = 'http://%s:%d/data' % (hostName, self.port)
-        oldRebootCount = self.database.getValue('/data/services/igor/rebootCount', self.access.tokenForIgor())
+        protocol = 'http'
+        if self.ssl:
+            protocol = 'https'
+        url = '%s://%s:%d/data' % (protocol, hostName, self.port)
+        oldRebootCount = self.database.getValue('/data/services/igor/rebootCount', token=self.access.tokenForIgor())
         rebootCount = 0
         if oldRebootCount:
             try:
                 rebootCount = int(oldRebootCount)+1
             except ValueError:
                 pass
-        data = dict(host=hostName, url=url, port=self.port, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount)
+        data = dict(host=hostName, url=url, port=self.port, protocol=protocol, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount)
+        if self.certificateFingerprint:
+            data['fingerprint'] = self.certificateFingerprint
         tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data), representing='igor/core', token=self.access.tokenForIgor())
         self.urlCaller.callURL(tocall)
         
     def run(self):
+        if self.ssl:
+            from web.wsgiserver import CherryPyWSGIServer
+            CherryPyWSGIServer.ssl_certificate = self.certificateFile
+            CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         self.app.run(port=self.port)
         
     def dump(self, token=None):
@@ -329,6 +357,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run the Igor home automation server")
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
+    parser.add_argument("-s", "--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
@@ -347,8 +376,9 @@ def main():
         xmlDatabase.DEBUG = True
         webApp.DEBUG = True
     datadir = args.database
+    print 'igorServer %s running from %s' % (VERSION, sys.argv[0])
     try:
-        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile)
+        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl)
     except IOError, arg:
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]

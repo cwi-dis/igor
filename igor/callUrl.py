@@ -45,6 +45,7 @@ class URLCallRunner(threading.Thread):
             try:
                 resultStatus = ""
                 resultData = ""
+                errorMessage = ""
                 datetime = time.strftime('%d/%b/%Y %H:%M:%S')
                 parsedUrl = urlparse.urlparse(url)
                 if DEBUG: print 'URLCaller.run calling', url, 'method', method, 'headers', headers, 'data', data
@@ -62,10 +63,22 @@ class URLCallRunner(threading.Thread):
                     resultStatus = str(r.status_code)
                     resultData = r.text
             except requests.exceptions.RequestException as e:
-                resultStatus = '502 URLCaller: %s' % traceback.format_exception_only(type(e), e.message)[0].strip()
+                msg = traceback.format_exception_only(type(e), e.message)[0].strip()
+                resultStatus = '502 URLCaller: %s' % msg
+                errorMessage = msg
+                    # xxxjack have to work out exceptions
+                    h = httplib2.Http()
+                    resp, content = h.request(url, method, body=data, headers=headers)
+                    resultStatus = "%s %s" % (resp.status, resp.reason)
+                    resultData = content
+            except httplib2.HttpLib2Error as e:
+                msg = traceback.format_exception_only(type(e), e.message)[0].strip()
+                resultStatus = '502 URLCaller: %s' % msg
+                errorMessage = msg
             except:
-                resultStatus = '502 URLCaller: exception while calling URL'
-                print 'URLCaller: exception while calling URL'
+                resultStatus = '502 URLCaller: exception while calling URL %s' % url
+                print resultStatus
+                errorMessage = resultStatus
                 traceback.print_exc(file=sys.stdout)
             print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
             alive = resultStatus[:3] == '200'
@@ -77,6 +90,8 @@ class URLCallRunner(threading.Thread):
                         print '\t'+line
             representing = tocall.get('representing')
             if representing:
+                if not alive and not resultData:
+                    resultData = errorMessage
                 args = dict(alive=alive, resultData=resultData)
                 self.app.request('/internal/updateStatus/%s' % representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 

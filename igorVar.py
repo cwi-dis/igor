@@ -46,7 +46,7 @@ class IgorServer:
         if certificate:
             certificate = os.path.join(os.path.expanduser('~/.igor'), certificate)
         self.certificate = certificate
-        self.noverify = noverify
+        self.noverify = not not noverify
         
     def get(self, item, variant=None, format=None):
         if format == None:
@@ -87,6 +87,9 @@ class IgorServer:
             headers['Content-Type'] = datatype
         if self.bearer_token:
             headers['Authorization'] = 'Bearer %s' % self.bearer_token
+        if VERBOSE:
+            if self.certificate or self.noverify:
+                print 'certificate=%s, noverify=%s' % (repr(self.certificate), repr(self.noverify))
         h = httplib2.Http(ca_certs=self.certificate, disable_ssl_certificate_validation=self.noverify)
         if VERBOSE:
             print >>sys.stderr, ">>> GET", url

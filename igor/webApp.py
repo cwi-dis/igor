@@ -276,7 +276,7 @@ class runPlugin:
                 mfile, mpath, mdescr = imp.find_module(pluginName, [moduleDir])
                 pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
-                print 'xxxjack import failed for', pluginName, mpath
+                print 'xxxjack import failed for', pluginName
                 raise web.notfound()
             #
             # Tell the new module about the database and the app

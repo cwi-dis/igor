@@ -66,15 +66,6 @@ class URLCallRunner(threading.Thread):
                 msg = traceback.format_exception_only(type(e), e.message)[0].strip()
                 resultStatus = '502 URLCaller: %s' % msg
                 errorMessage = msg
-                    # xxxjack have to work out exceptions
-                    h = httplib2.Http()
-                    resp, content = h.request(url, method, body=data, headers=headers)
-                    resultStatus = "%s %s" % (resp.status, resp.reason)
-                    resultData = content
-            except httplib2.HttpLib2Error as e:
-                msg = traceback.format_exception_only(type(e), e.message)[0].strip()
-                resultStatus = '502 URLCaller: %s' % msg
-                errorMessage = msg
             except:
                 resultStatus = '502 URLCaller: exception while calling URL %s' % url
                 print resultStatus

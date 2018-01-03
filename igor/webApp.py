@@ -106,7 +106,7 @@ class runScript:
             args = []
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
-        pluginToken = access.singleton.tokenForPlugin(name)
+        pluginToken = access.singleton.tokenForPlugin(pluginName)
         # Setup global, per-plugin and per-user data for plugin scripts, if available
         env = copy.deepcopy(os.environ)
         initDatabaseAccess()
@@ -119,7 +119,7 @@ class runScript:
         except web.HTTPError:
             pass
         try:
-            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (name), 'application/x-python-object', 'content', pluginToken)
+            pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}

@@ -54,7 +54,8 @@ class DummyAccessChecker:
         pass
         
     def allowed(self, operation, token):
-        assert operation in ALL_OPERATIONS
+        if not operation in ALL_OPERATIONS:
+            raise web.InternalError("Access: unknown operation '%s'" % operation)
         if DEFAULT_IS_ALLOW_ALL:
             return True
         match = token.matchAll
@@ -71,7 +72,8 @@ class AccessChecker(DummyAccessChecker):
         self.content = content
         
     def allowed(self, operation, token):
-        assert operation in ALL_OPERATIONS
+        if not operation in ALL_OPERATIONS:
+            raise web.InternalError("Access: unknown operation '%s'" % operation)
         match = token.matchAll or (token.getContent() == self.content)
         if not match:
             return False

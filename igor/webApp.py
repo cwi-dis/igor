@@ -36,6 +36,7 @@ urls = (
     '/trigger/(.+)', 'runTrigger',
     '/plugin/([^/]+)', 'runPlugin',
     '/plugin/([^/]+)/([^/_]+)', 'runPlugin',
+    '/login/([^/]+)', 'runLogin',
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
@@ -93,10 +94,10 @@ class runScript:
         return ''
         
     def GET(self, pluginName, scriptName):
-        token = access.singleton.tokenForRequest(web.ctx.env)
+        allArgs = web.input()
+        token = access.singleton.tokenForRequest(web.ctx.env, allArgs)
         scriptDir = os.path.join(PLUGINDIR, pluginName, 'scripts')
             
-        allArgs = web.input()
         if '/' in scriptName or '.' in scriptName:
             raise myWebError("401 Cannot use / or . in scriptName")
             
@@ -187,18 +188,18 @@ class runCommand:
         return ''
         
     def GET(self, command, subcommand=None):
-        token = access.singleton.tokenForRequest(web.ctx.env)
+        allArgs = web.input()
+        token = access.singleton.tokenForRequest(web.ctx.env, allArgs)
         if not COMMANDS:
             raise web.notfound()
         try:
             method = getattr(COMMANDS, command)
         except AttributeError:
             raise web.notfound()
-        allArgs = dict(web.input())
         if subcommand:
             allArgs['subcommand'] = subcommand
         try:
-            rv = method(token=token, **allArgs)
+            rv = method(token=token, **dict(allArgs))
         except TypeError, arg:
             raise myWebError("401 Error calling command method %s: %s" % (command, arg))
         return rv
@@ -295,9 +296,9 @@ class runPlugin:
             pluginModule.DATABASE_ACCESS = DATABASE_ACCESS
             pluginModule.COMMANDS = COMMANDS
             pluginModule.WEBAPP = WEBAPP
-        allArgs = dict(web.input())
+        allArgs = web.input()
 
-        token = access.singleton.tokenForRequest(web.ctx.env)
+        token = access.singleton.tokenForRequest(web.ctx.env, allArgs)
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
         pluginToken = access.singleton.tokenForPlugin(pluginName)
@@ -334,7 +335,7 @@ class runPlugin:
             print 'xxxjack Method', methodName, 'not found in', pluginObject
             raise web.notfound()
         try:
-            rv = method(**allArgs)
+            rv = method(**dict(allArgs))
         except ValueError, arg:
             raise myWebError("401 Error calling plugin method %s: %s" % (pluginName, arg))
         if rv == None:
@@ -349,7 +350,32 @@ class xmlDatabaseEvaluate:
         initDatabaseAccess()
         token = access.singleton.tokenForRequest(web.ctx.env)
         return DATABASE_ACCESS.get_value(command, token)
-        
+    
+class runLogin:
+    """Login or logout"""
+    
+    def GET(self, command):
+        if command == 'login':
+            args = {}
+            token = access.singleton.tokenForRequest(web.ctx.env, args)
+            if 'user' in args:
+                # Already logged in. Go to main page.
+                raise web.seeother('/')
+            else:
+                # Not logged in. Ask for credentials.
+                web.header('WWW-Authenticate', 'Basic realm="igor"')
+                raise web.HTTPError('401 Unauthorized')
+        elif command == 'logout':
+            if 'user' in args:
+                # Logged in. Therefore we complain...
+                web.header('WWW-Authenticate', 'Basic realm="igor"')
+                raise web.HTTPError('401 Unauthorized')
+            else:
+                # Not logged in. That is what the user wants.
+                raise web.seeother('/')
+        else:
+            raise myWebError('401 Unknown login command "%s"' % command)  
+              
 class AbstractDatabaseAccess(object):
     """Abstract database that handles the high-level HTTP primitives.
     """

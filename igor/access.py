@@ -1,6 +1,7 @@
 # Access control
 import web
 import xpath
+import base64
 
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
@@ -29,16 +30,19 @@ class DummyAccessToken:
         return None
         
 class IgorAccessToken(DummyAccessToken):
+    """A token without an external representation that allows everything everywhere.
+    To be used sparingly by Igor itself."""
     def addToHeaders(self, headers):
         pass
-
+        
 _igorSelfToken = IgorAccessToken(matchAll=True, allowOperations=ALL_OPERATIONS)
+_accessSelfToken = _igorSelfToken
 
 class AccessToken(DummyAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
 
-    def __init__(self, content):
-        DummyAccessToken.__init__(self, allowOperations=NORMAL_OPERATIONS)
+    def __init__(self, content, allowOperations=NORMAL_OPERATIONS, matchAll=False):
+        DummyAccessToken.__init__(self, allowOperations=allowOperations, matchAll=matchAll)
         self.content = content
         
     def addToHeaders(self, headers):
@@ -83,7 +87,10 @@ class AccessChecker(DummyAccessChecker):
 
 class Access:
     def __init__(self):
-        pass
+        self.database = None
+        
+    def setDatabase(self, database):
+        self.database = database
         
     def checkerForElement(self, element):
         nodelist = xpath.find("au:requires", element, namespaces=NAMESPACES)
@@ -110,13 +117,48 @@ class Access:
     def tokenForIgor(self):
         return _igorSelfToken
         
-    def tokenForRequest(self, headers):
+    def tokenForRequest(self, headers, args=None):
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()
             if authFields[0].lower() == 'bearer':
                 return AccessToken(authFields[1])
+            if authFields[0].lower() == 'basic':
+                print 'xxxjack authfields[1]', authFields[1]
+                decoded = base64.b64decode(authFields[1])
+                print 'xxxjack decoded', decoded
+                username, password = decoded.split(':')
+                return self._login(username, password, args)
             # Add more here for other methods
         return DummyAccessToken()
 
+    def _login(self, username, password, args=None):
+        if self.database == None:
+            return DummyAccessToken()
+        if '/' in username:
+            raise web.HTTPError('401 Illegal username')
+        userElements = self.database.getElements('identities/' + username, 'get', _accessSelfToken)
+        if len(userElements) == 0:
+            web.header('WWW-Authenticate', 'Basic realm="igor"')
+            raise web.HTTPError('401 Unauthorized (no user given)')
+        if len(userElements) > 1:
+            raise AccessControlError('Multiple user entries')
+        userElement = userElements[0]
+        encryptedPassword = self.database.getValue('encryptedPassword', _accessSelfToken, userElement)
+        import passlib.hash
+        import passlib.utils.binary
+        salt = encryptedPassword.split('$')[3]
+        salt = passlib.utils.binary.ab64_decode(salt)
+        passwordHash = passlib.hash.pbkdf2_sha256.using(salt=salt).hash(password)
+        if encryptedPassword != passwordHash:
+            print 'xxxjack mismatched password', encryptedPassword, passwordHash
+            web.header('WWW_Authenticate', 'Basic realm="igor"')
+            raise web.HTTPError('401 Unauthorized (password does not match)')
+        print 'xxxjack logged in'
+        if args != None:
+            print 'xxxjack set user to', username
+            args['user'] = username
+            
+        return self.tokenForAction(userElement)
+        
 singleton = Access()

@@ -1,4 +1,4 @@
-$def with ()
+$def with (user=None, **kwargs)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,6 +18,14 @@ $def with ()
 		and was rebooted ${DATABASE.getValue('/data/services/igor/rebootCount', token)} times during its lifetime.
 	</p>
 	
+	$if user:
+		<p>
+			You are logged in as $user. To log out please re-visit the <a href="/login/logout">logout page</a> and enter an invalid username or password (yes, this is weird...:-).
+		</p>
+	$else:
+		<p>
+			You are not logged in. To log in please visit the <a href="/login/login">login page</a>.
+		</p>
 	<p>
 		For a general overview of the health of the various systems monitored by Igor see <a href="/systemHealth.html">/systemHealth.html</a>.
 	</p>

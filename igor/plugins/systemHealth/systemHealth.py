@@ -28,7 +28,7 @@ class SystemHealthPlugin:
     def __init__(self):
         pass
         
-    def index(self, ignore=None, duration=0, returnTo=None, token=None):
+    def index(self, ignore=None, duration=0, returnTo=None, token=None, user=None):
         #
         # See if we have a request to ignore errors for a specific service (or sensor)
         #

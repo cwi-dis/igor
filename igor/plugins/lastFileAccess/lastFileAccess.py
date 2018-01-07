@@ -31,7 +31,7 @@ class LastFileAccess:
     def __init__(self):
         pass
         
-    def index(self, name=None, service='services/%s', path=None, stamp="mtime", max=0, token=None):
+    def index(self, name=None, service='services/%s', path=None, stamp="mtime", max=0, token=None, user=None):
         if not name or not path:
             raise myWebError("401 Required arguments (name or path) missing")
         message = None

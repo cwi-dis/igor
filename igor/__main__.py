@@ -166,7 +166,7 @@ class IgorServer:
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         self.app.run(port=self.port)
         
-    def dump(self, token=None):
+    def dump(self, token=None, user=None):
         # xxxjack ignoring token for now
         rv = ''
         if self.urlCaller: rv += self.urlCaller.dump() + '\n'
@@ -174,7 +174,7 @@ class IgorServer:
         if self.eventSources: rv += self.eventSources.dump() + '\n'
         return rv
         
-    def log(self, token=None):
+    def log(self, token=None, user=None):
         # xxxjack ignoring token for now
         logfn = os.path.join(self.datadir, 'igor.log')
         if os.path.exists(logfn):
@@ -254,7 +254,7 @@ class IgorServer:
     def updateTriggers(self):
         pass
         
-    def runAction(self, actionname, token):
+    def runAction(self, actionname, token, user=None):
         if not self.actionHandler:
             raise web.notfound()
         nodes = self.database.getElements('actions/action[name="%s"]'%actionname, 'run', token)
@@ -264,7 +264,7 @@ class IgorServer:
             self.actionHandler.triggerAction(node)
         return 'OK'
     
-    def runTrigger(self, triggername, token):
+    def runTrigger(self, triggername, token, user=None):
         raise web.HTTPError("502 triggers not yet implemented")
         if not self.triggerHandler:
             raise web.notfound()
@@ -276,20 +276,20 @@ class IgorServer:
         triggerNode = triggerNodes[0]
         self.triggerHandler.triggerTrigger(triggerNode)
         
-    def save(self, token):
+    def save(self, token, user=None):
         """Saves the database to the filesystem"""
         self.database.saveFile()
         return 'OK'
         
-    def started(self, token):
+    def started(self, token, user=None):
         return "IgorServer started"
         
-    def queue(self, subcommand, token):
+    def queue(self, subcommand, token, user=None):
         """Queues an internal command through callUrl (used for save/stop/restart)"""
         self.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
         return 'OK'
         
-    def stop(self, token):
+    def stop(self, token, user=None):
         """Exits igorServer after saving"""
         global PROFILER_STATS
         if self.actionHandler:
@@ -314,12 +314,12 @@ class IgorServer:
             PROFILER_STATS.dump_stats("igor.profile")
         sys.exit(0)
         
-    def restart(self, token):
+    def restart(self, token, user=None):
         self.save(token)
         os.closerange(3, subprocess.MAXFD)
         os.execl(sys.executable, sys.executable, *sys.argv)
         
-    def command(self, token):
+    def command(self, token, user=None):
         rv = ''
         if 'IGORSERVER_DIR' in os.environ:
             rv = rv + 'export IGORSERVER_DIR=' + repr(os.environ['IGORSERVER_DIR']) + '\n'
@@ -331,7 +331,7 @@ class IgorServer:
         rv += '\n'
         return rv
         
-    def help(self, token):
+    def help(self, token, user=None):
         rv = 'Internal igor commands:\n'
         rv += 'help - this help\n'
         rv += 'version - return version number\n'
@@ -343,7 +343,7 @@ class IgorServer:
         rv += 'log - Show httpd-style log file of this Igor instance\n'
         return rv
         
-    def version(self, token):
+    def version(self, token, user=None):
         return VERSION + '\n'
     
 def main():

@@ -15,6 +15,7 @@ import imp
 import threading
 import cProfile
 import pstats
+import shelve
 import myLogger
 from _version import VERSION
 
@@ -67,6 +68,9 @@ class IgorServer:
         self.app = webApp.WEBAPP
         self.datadir = datadir
         
+        shelveFilename = os.path.join(self.datadir, 'igorSessions')
+        self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(shelveFilename)))
+        
         self.ssl = not nossl
         keyFile = os.path.join(self.datadir, 'igor.key')
         if self.ssl and not os.path.exists(keyFile):
@@ -89,12 +93,14 @@ class IgorServer:
         webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
         webApp.PLUGINDIR = os.path.join(datadir, 'plugins')
         webApp.STATICDIR = os.path.join(datadir, 'static')
+        webApp.SESSION = self.session
         webApp.COMMANDS = self
         
         #
         # Create the access control handler
         #
         self.access = access.singleton
+        self.access.setSession(self.session)
         #
         # Create and start the asynchronous URL accessor
         #
@@ -166,7 +172,7 @@ class IgorServer:
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         self.app.run(port=self.port)
         
-    def dump(self, token=None, user=None):
+    def dump(self, token=None):
         # xxxjack ignoring token for now
         rv = ''
         if self.urlCaller: rv += self.urlCaller.dump() + '\n'
@@ -174,7 +180,7 @@ class IgorServer:
         if self.eventSources: rv += self.eventSources.dump() + '\n'
         return rv
         
-    def log(self, token=None, user=None):
+    def log(self, token=None):
         # xxxjack ignoring token for now
         logfn = os.path.join(self.datadir, 'igor.log')
         if os.path.exists(logfn):
@@ -254,7 +260,7 @@ class IgorServer:
     def updateTriggers(self):
         pass
         
-    def runAction(self, actionname, token, user=None):
+    def runAction(self, actionname, token):
         if not self.actionHandler:
             raise web.notfound()
         nodes = self.database.getElements('actions/action[name="%s"]'%actionname, 'run', token)
@@ -264,7 +270,7 @@ class IgorServer:
             self.actionHandler.triggerAction(node)
         return 'OK'
     
-    def runTrigger(self, triggername, token, user=None):
+    def runTrigger(self, triggername, token):
         raise web.HTTPError("502 triggers not yet implemented")
         if not self.triggerHandler:
             raise web.notfound()
@@ -276,20 +282,20 @@ class IgorServer:
         triggerNode = triggerNodes[0]
         self.triggerHandler.triggerTrigger(triggerNode)
         
-    def save(self, token, user=None):
+    def save(self, token):
         """Saves the database to the filesystem"""
         self.database.saveFile()
         return 'OK'
         
-    def started(self, token, user=None):
+    def started(self, token):
         return "IgorServer started"
         
-    def queue(self, subcommand, token, user=None):
+    def queue(self, subcommand, token):
         """Queues an internal command through callUrl (used for save/stop/restart)"""
         self.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
         return 'OK'
         
-    def stop(self, token, user=None):
+    def stop(self, token):
         """Exits igorServer after saving"""
         global PROFILER_STATS
         if self.actionHandler:
@@ -314,12 +320,12 @@ class IgorServer:
             PROFILER_STATS.dump_stats("igor.profile")
         sys.exit(0)
         
-    def restart(self, token, user=None):
+    def restart(self, token):
         self.save(token)
         os.closerange(3, subprocess.MAXFD)
         os.execl(sys.executable, sys.executable, *sys.argv)
         
-    def command(self, token, user=None):
+    def command(self, token):
         rv = ''
         if 'IGORSERVER_DIR' in os.environ:
             rv = rv + 'export IGORSERVER_DIR=' + repr(os.environ['IGORSERVER_DIR']) + '\n'
@@ -331,7 +337,7 @@ class IgorServer:
         rv += '\n'
         return rv
         
-    def help(self, token, user=None):
+    def help(self, token):
         rv = 'Internal igor commands:\n'
         rv += 'help - this help\n'
         rv += 'version - return version number\n'
@@ -343,7 +349,7 @@ class IgorServer:
         rv += 'log - Show httpd-style log file of this Igor instance\n'
         return rv
         
-    def version(self, token, user=None):
+    def version(self, token):
         return VERSION + '\n'
     
 def main():

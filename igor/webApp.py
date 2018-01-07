@@ -21,6 +21,7 @@ PLUGINDIR=None  # The directory for plugins
 STATICDIR=None  # The directory for static content
 COMMANDS=None   # The command processor. Will be set by the main module.
 WEBAPP=None     # Will be set later in this module
+SESSION=None    # Will be set by the main program
 
 def initDatabaseAccess():
     if not DATABASE_ACCESS:
@@ -36,7 +37,7 @@ urls = (
     '/trigger/(.+)', 'runTrigger',
     '/plugin/([^/]+)', 'runPlugin',
     '/plugin/([^/]+)/([^/_]+)', 'runPlugin',
-    '/login/([^/]+)', 'runLogin',
+    '/login', 'runLogin',
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
@@ -51,6 +52,7 @@ def myWebError(msg):
 
 class static:
     def GET(self, name):
+        allArgs = web.input()
         token = access.singleton.tokenForRequest(web.ctx.env)
         if not name:
             name = 'index.html'
@@ -77,11 +79,12 @@ class static:
             globals = dict(
                 DATABASE=DATABASE,
                 COMMANDS=COMMANDS,
+                SESSION=SESSION,
                 token=token,
                 str=str
                 )                
             template = web.template.frender(filename, globals=globals)
-            return template(**web.input())
+            return template(**dict(allArgs))
         raise web.notfound()
 
 class runScript:
@@ -95,7 +98,7 @@ class runScript:
         
     def GET(self, pluginName, scriptName):
         allArgs = web.input()
-        token = access.singleton.tokenForRequest(web.ctx.env, allArgs)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         scriptDir = os.path.join(PLUGINDIR, pluginName, 'scripts')
             
         if '/' in scriptName or '.' in scriptName:
@@ -130,9 +133,12 @@ class runScript:
             if not v:
                 v = ''
             env['igor_'+k] = v
+        # If a user is logged in we use that as default for a user argument
+        if 'user' in SESSION and not 'user' in allArgs:
+            allArgs.user = SESSION.user
         # If there's a user argument see if we need to add per-user data
-        if allArgs.has_key('user'):
-            user = allArgs['user']
+        if 'user' in allArgs:
+            user = allArgs.user
             try:
                 userData = DATABASE_ACCESS.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', token)
             except web.HTTPError:
@@ -189,7 +195,7 @@ class runCommand:
         
     def GET(self, command, subcommand=None):
         allArgs = web.input()
-        token = access.singleton.tokenForRequest(web.ctx.env, allArgs)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -296,9 +302,10 @@ class runPlugin:
             pluginModule.DATABASE_ACCESS = DATABASE_ACCESS
             pluginModule.COMMANDS = COMMANDS
             pluginModule.WEBAPP = WEBAPP
+            pluginModule.SESSION = SESSION
         allArgs = web.input()
 
-        token = access.singleton.tokenForRequest(web.ctx.env, allArgs)
+        token = access.singleton.tokenForRequest(web.ctx.env)
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
         pluginToken = access.singleton.tokenForPlugin(pluginName)
@@ -354,27 +361,26 @@ class xmlDatabaseEvaluate:
 class runLogin:
     """Login or logout"""
     
-    def GET(self, command):
-        if command == 'login':
-            args = {}
-            token = access.singleton.tokenForRequest(web.ctx.env, args)
-            if 'user' in args:
-                # Already logged in. Go to main page.
+    def GET(self):
+        allArgs = web.input()
+        if 'logout' in allArgs:
+            SESSION.user = None
+            raise web.seeother('/')
+        username = allArgs.get('username')
+        password = allArgs.get('password')
+        if username and password:
+            if access.singleton.userAndPasswordCorrect(username, password):
+                SESSION.user = username
                 raise web.seeother('/')
-            else:
-                # Not logged in. Ask for credentials.
-                web.header('WWW-Authenticate', 'Basic realm="igor"')
-                raise web.HTTPError('401 Unauthorized')
-        elif command == 'logout':
-            if 'user' in args:
-                # Logged in. Therefore we complain...
-                web.header('WWW-Authenticate', 'Basic realm="igor"')
-                raise web.HTTPError('401 Unauthorized')
-            else:
-                # Not logged in. That is what the user wants.
-                raise web.seeother('/')
-        else:
-            raise myWebError('401 Unknown login command "%s"' % command)  
+        form = web.form.Form(
+            web.form.Textbox('username'),
+            web.form.Password('password'),
+            web.form.Button('login'),
+            web.form.Button('logout')
+            )
+        programDir = os.path.dirname(__file__)
+        template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
+        return template(form, SESSION.user)
               
 class AbstractDatabaseAccess(object):
     """Abstract database that handles the high-level HTTP primitives.

@@ -88,9 +88,13 @@ class AccessChecker(DummyAccessChecker):
 class Access:
     def __init__(self):
         self.database = None
+        self.session = None
         
     def setDatabase(self, database):
         self.database = database
+        
+    def setSession(self, session):
+        self.session = session
         
     def checkerForElement(self, element):
         nodelist = xpath.find("au:requires", element, namespaces=NAMESPACES)
@@ -117,7 +121,7 @@ class Access:
     def tokenForIgor(self):
         return _igorSelfToken
         
-    def tokenForRequest(self, headers, args=None):
+    def tokenForRequest(self, headers):
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()
@@ -128,23 +132,25 @@ class Access:
                 decoded = base64.b64decode(authFields[1])
                 print 'xxxjack decoded', decoded
                 username, password = decoded.split(':')
-                return self._login(username, password, args)
+                if self.userAndPasswordCorrect(username, password):
+                    return self.tokenForUser(username)
+                else:
+                    web.header('WWW_Authenticate', 'Basic realm="igor"')
+                    raise web.HTTPError('401 Unauthorized')
             # Add more here for other methods
+        if self.session and 'user' in self.session:
+            return self.tokenForUser(self.session.user)
         return DummyAccessToken()
 
-    def _login(self, username, password, args=None):
-        if self.database == None:
-            return DummyAccessToken()
+    def userAndPasswordCorrect(self, username, password):
+        if self.database == None or not username or not password:
+            return False
         if '/' in username:
             raise web.HTTPError('401 Illegal username')
-        userElements = self.database.getElements('identities/' + username, 'get', _accessSelfToken)
-        if len(userElements) == 0:
-            web.header('WWW-Authenticate', 'Basic realm="igor"')
-            raise web.HTTPError('401 Unauthorized (no user given)')
-        if len(userElements) > 1:
-            raise AccessControlError('Multiple user entries')
-        userElement = userElements[0]
-        encryptedPassword = self.database.getValue('encryptedPassword', _accessSelfToken, userElement)
+        encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken, userElement)
+        if not encryptedPassword:
+            print 'xxxjack no password for user', username
+            return False
         import passlib.hash
         import passlib.utils.binary
         salt = encryptedPassword.split('$')[3]
@@ -152,13 +158,7 @@ class Access:
         passwordHash = passlib.hash.pbkdf2_sha256.using(salt=salt).hash(password)
         if encryptedPassword != passwordHash:
             print 'xxxjack mismatched password', encryptedPassword, passwordHash
-            web.header('WWW_Authenticate', 'Basic realm="igor"')
-            raise web.HTTPError('401 Unauthorized (password does not match)')
-        print 'xxxjack logged in'
-        if args != None:
-            print 'xxxjack set user to', username
-            args['user'] = username
-            
-        return self.tokenForAction(userElement)
+            return False
+        return True
         
 singleton = Access()

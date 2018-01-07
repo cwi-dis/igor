@@ -1,0 +1,23 @@
+$def with (form, user)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Login</title>
+</head>
+<body>
+	<h1>Igor Login</h1>
+	
+	$if user:
+		<p>
+			You are currently logged in as $user.
+		</p>
+		<form action="/login">
+			<input type="submit" value="Logout">
+		</form>
+
+	<form action="/login" method="post">
+		$:form.render()
+	</form>
+</body>
+</html>

@@ -14,7 +14,7 @@ class LanPlugin:
     def __init__(self):
         pass
         
-    def index(self, name=None, service='services/%s', ip=None, port=80, timeout=5, token=None, user=None):
+    def index(self, name=None, service='services/%s', ip=None, port=80, timeout=5, token=None):
         if not name:
             raise myWebError("401 Required argument name missing")
         if not ip:

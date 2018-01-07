@@ -18,7 +18,7 @@ class CopyTree:
     def __init__(self):
         pass
 
-    def index(self, src=None, dst=None, mimetype="text/plain", method='PUT', token=None, user=None):
+    def index(self, src=None, dst=None, mimetype="text/plain", method='PUT', token=None):
         if not src:
             raise myWebError("401 Required argument name missing")
         if not dst:

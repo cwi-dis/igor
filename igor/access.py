@@ -24,6 +24,9 @@ class BaseAccessToken:
     def __init__(self):
         pass
 
+    def __repr__(self):
+        return "%s(0x%x)" % (self.__class__.__name__, id(self))
+        
     def hasExternalRepresentation(self):
         return False
         
@@ -34,7 +37,7 @@ class BaseAccessToken:
         pass
         
     def allows(self, operation, accessChecker):
-        if DEBUG: print 'access: %s %s: no access at all allowed by BaseAccessToken 0x%x' % (operation, accessChecker.destination, id(self))
+        if DEBUG: print 'access: %s %s: no access at all allowed by %s' % (operation, accessChecker.destination, self)
         return False
         
         
@@ -43,7 +46,7 @@ class IgorAccessToken(BaseAccessToken):
     To be used sparingly by Igor itself."""
         
     def allows(self, operation, accessChecker):
-        if DEBUG: print 'access: %s %s: allowed by IgorAccessToken' % (operation, accessChecker.destination)
+        if DEBUG: print 'access: %s %s: allowed by %s' % (operation, accessChecker.destination, self)
         return True
         
     def addToEnv(self, env):
@@ -51,7 +54,6 @@ class IgorAccessToken(BaseAccessToken):
         
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
-_defaultToken = BaseAccessToken()
 
 class AccessToken(BaseAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
@@ -69,14 +71,20 @@ class AccessToken(BaseAccessToken):
         
     def allows(self, operation, accessChecker):
         if not operation in self.allowOperations:
-            if DEBUG: print 'access: %s %s: no %s access allowed by AccessToken 0x%x' % (operation, accessChecker.destination, operation, id(self))
+            if DEBUG: print 'access: %s %s: no %s access allowed by AccessToken %s' % (operation, accessChecker.destination, operation, self)
             return False
         if self.content != accessChecker.content:
-            if DEBUG: print 'access: %s %s: signature mismatch for AccessToken 0x%x' % (operation, accessChecker.destination, id(self))
+            if DEBUG: print 'access: %s %s: signature mismatch for AccessToken %s' % (operation, accessChecker.destination, self)
             return False
-        if DEBUG: print 'access: %s %s: allowed by AccessToken 0x%x' % (operation, accessChecker.destination, id(self))
+        if DEBUG: print 'access: %s %s: allowed by AccessToken %s' % (operation, accessChecker.destination, self)
         return True
-        
+
+class DefaultAccessToken(AccessToken):
+    def __init__(self):
+        AccessToken.__init__(self, "DEFAULT-CAPABILITY")      
+         
+_defaultToken = DefaultAccessToken()
+
 class MultiAccessToken(BaseAccessToken):
 
     def __init__(self, contentList):
@@ -173,7 +181,8 @@ class Access:
             tokenValueList.append(carriesValue)
         if len(tokenValueList) > 1:
             return MultiAccessToken(tokenValueList)
-        return AccessToken(tokenValueList[0])
+        rv = AccessToken(tokenValueList[0])
+        return rv
         
     def tokenForAction(self, element):
         token =  self._tokenForElement(element)

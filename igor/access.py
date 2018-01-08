@@ -115,6 +115,14 @@ class Access:
         carriesValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
         return AccessToken(carriesValue)
         
+    def tokenForUser(self, username):
+        if not username or '/' in username:
+            raise web.HTTPError('401 Illegal username')
+        elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
+        if len(elements) != 1:
+            raise web.HTTPError('501 Database error: %d users named %s' % (len(elements), username))
+        return self.tokenForAction(elements[0])
+        
     def tokenForPlugin(self, pluginname):
         return self.tokenForIgor()
 
@@ -138,7 +146,7 @@ class Access:
                     web.header('WWW_Authenticate', 'Basic realm="igor"')
                     raise web.HTTPError('401 Unauthorized')
             # Add more here for other methods
-        if self.session and 'user' in self.session:
+        if self.session and 'user' in self.session and self.session.user:
             return self.tokenForUser(self.session.user)
         return DummyAccessToken()
 
@@ -147,7 +155,7 @@ class Access:
             return False
         if '/' in username:
             raise web.HTTPError('401 Illegal username')
-        encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken, userElement)
+        encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
         if not encryptedPassword:
             print 'xxxjack no password for user', username
             return False

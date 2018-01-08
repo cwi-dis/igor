@@ -1,4 +1,4 @@
-$def with (form, user)
+$def with (form, user, message)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,9 +13,14 @@ $def with (form, user)
 			You are currently logged in as $user.
 		</p>
 		<form action="/login">
-			<input type="submit" value="Logout">
+			<input type="submit" name="logout" value="logout">
 		</form>
 
+	$if message:
+		<p>
+			<em>$message</em>
+		</p>
+		
 	<form action="/login" method="post">
 		$:form.render()
 	</form>

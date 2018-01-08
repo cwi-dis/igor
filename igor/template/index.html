@@ -1,4 +1,4 @@
-$def with (user=None, **kwargs)
+$def with (**kwargs)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,9 +18,9 @@ $def with (user=None, **kwargs)
 		and was rebooted ${DATABASE.getValue('/data/services/igor/rebootCount', token)} times during its lifetime.
 	</p>
 	
-	$if user:
+	$if SESSION.user:
 		<p>
-			You are logged in as $user. To log out or login with different credentials please re-visit the <a href="/login">login page</a>.
+			You are logged in as $SESSION.user. To log out (or log in with different credentials) please visit the <a href="/login">login page</a>.
 		</p>
 	$else:
 		<p>

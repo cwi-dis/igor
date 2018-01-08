@@ -362,25 +362,34 @@ class runLogin:
     """Login or logout"""
     
     def GET(self):
+        return self.getOrPost()
+        
+    def POST(self):
+        return self.getOrPost()
+        
+    def getOrPost(self):
         allArgs = web.input()
+        print 'xxxjack login args', allArgs.keys()
         if 'logout' in allArgs:
             SESSION.user = None
             raise web.seeother('/')
+        message = None
         username = allArgs.get('username')
         password = allArgs.get('password')
-        if username and password:
+        if username:
             if access.singleton.userAndPasswordCorrect(username, password):
                 SESSION.user = username
                 raise web.seeother('/')
+            message = "Password and/or username incorrect."
         form = web.form.Form(
             web.form.Textbox('username'),
             web.form.Password('password'),
             web.form.Button('login'),
-            web.form.Button('logout')
             )
         programDir = os.path.dirname(__file__)
         template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
-        return template(form, SESSION.user)
+        print 'xxxjack render login user', SESSION.get('user'), 'message', message
+        return template(form, SESSION.get('user'), message)
               
 class AbstractDatabaseAccess(object):
     """Abstract database that handles the high-level HTTP primitives.

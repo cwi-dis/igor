@@ -101,7 +101,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["httplib2", "requests", "web.py", "python-dateutil", "py-dom-xpath-redux"],
+    install_requires=["httplib2", "requests", "web.py", "python-dateutil", "py-dom-xpath-redux", "passlib"],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

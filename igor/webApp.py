@@ -84,7 +84,10 @@ class static:
                 str=str
                 )                
             template = web.template.frender(filename, globals=globals)
-            return template(**dict(allArgs))
+            try:
+                return template(**dict(allArgs))
+            except xmlDatabase.DBAccessError:
+                return myWebError("401 unauthorized")
         raise web.notfound()
 
 class runScript:

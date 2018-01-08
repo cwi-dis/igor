@@ -41,7 +41,7 @@ class IgorAccessToken(BaseAccessToken):
         
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
-_defaultToken = _igorSelfToken # For now: will become BaseAccessToken() later.
+_defaultToken = BaseAccessToken()
 
 class AccessToken(BaseAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
@@ -128,9 +128,11 @@ class Access:
         self.session = session
         
     def checkerForElement(self, element):
+        if not element:
+            return DefaultAccessChecker()
         nodelist = xpath.find("au:requires", element, namespaces=NAMESPACES)
         if not nodelist:
-            return DefaultAccessChecker()
+            return self.checkerForElement(element.parentNode)
         if len(nodelist) > 1:
             raise AccessControlError("Action has multiple au:requires")
         requiresValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
@@ -140,17 +142,24 @@ class Access:
     def _tokenForElement(self, element):
         nodelist = xpath.find("au:carries", element, namespaces=NAMESPACES)
         if not nodelist:
-            return _defaultToken
+            return None
         tokenValueList = []
         for n in nodelist:
             carriesValue = "".join(t.nodeValue for t in n.childNodes if t.nodeType == t.TEXT_NODE)
             tokenValueList.append(carriesValue)
         if len(tokenValueList) > 1:
             return MultiAccessToken(tokenValueList)
-        return AccessToken(tokenValueList)
+        return AccessToken(tokenValueList[0])
         
     def tokenForAction(self, element):
-        return self._tokenForElement(element)
+        token =  self._tokenForElement(element)
+        if token == None:
+            # Check whether there is a default token for all actions
+            if element.parentNode:
+                token = self._tokenForElement(element.parentNode)
+        if token == None:
+            token = _defaultToken
+        return token
         
     def tokenForUser(self, username):
         if not username or '/' in username:
@@ -158,7 +167,10 @@ class Access:
         elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
         if len(elements) != 1:
             raise web.HTTPError('501 Database error: %d users named %s' % (len(elements), username))
-        return self._tokenForElement(elements[0])
+        token = self._tokenForElement(elements[0])
+        if token == None:
+            token = _defaultToken
+        return token
         
     def tokenForPlugin(self, pluginname):
         return self.tokenForIgor()
@@ -167,6 +179,7 @@ class Access:
         return _igorSelfToken
         
     def tokenForRequest(self, headers):
+        print 'xxxjack tokenForRequest', headers
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()

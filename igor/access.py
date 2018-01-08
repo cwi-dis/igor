@@ -108,12 +108,6 @@ class AccessChecker:
         if not operation in ALL_OPERATIONS:
             raise web.InternalError("Access: unknown operation '%s'" % operation)
         return token.allows(operation, self)
-        match = token.matchAll or (token.getContent() == self.content)
-        if not match:
-            return False
-        if operation in token.allowOperations:
-            return True
-        return False
     
 class DefaultAccessChecker(AccessChecker):
     """An object that checks whether an operation (or request) has the right permission"""

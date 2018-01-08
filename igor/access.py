@@ -16,74 +16,105 @@ DEFAULT_IS_ALLOW_ALL=True
 class AccessControlError(ValueError):
     pass
 
-class DummyAccessToken:
+class BaseAccessToken:
     """An access token (or set of tokens) that can be carried by a request"""
 
-    def __init__(self, allowOperations=[], matchAll=False):
-        self.allowOperations = allowOperations
-        self.matchAll = matchAll
+    def __init__(self):
+        pass
 
+    def hasExternalRepresentation(self):
+        return False
+        
     def addToHeaders(self, headers):
         pass
         
-    def getContent(self):
-        return None
+    def allows(self, operation, accessChecker):
+        return False
         
-class IgorAccessToken(DummyAccessToken):
+        
+class IgorAccessToken(BaseAccessToken):
     """A token without an external representation that allows everything everywhere.
     To be used sparingly by Igor itself."""
-    def addToHeaders(self, headers):
-        pass
         
-_igorSelfToken = IgorAccessToken(matchAll=True, allowOperations=ALL_OPERATIONS)
+    def allows(self, operation, accessChecker):
+        return True
+        
+_igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
+_defaultToken = _igorSelfToken # For now: will become BaseAccessToken() later.
 
-class AccessToken(DummyAccessToken):
+class AccessToken(BaseAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
 
-    def __init__(self, content, allowOperations=NORMAL_OPERATIONS, matchAll=False):
-        DummyAccessToken.__init__(self, allowOperations=allowOperations, matchAll=matchAll)
+    def __init__(self, content):
+        BaseAccessToken.__init__(self)
         self.content = content
+        self.allowOperations = NORMAL_OPERATIONS
+        
+    def hasExternalRepresentation(self):
+        return True
         
     def addToHeaders(self, headers):
         headers['Authorization'] = 'Bearer ' + self.content
         
-    def getContent(self):
-        return self.content
-        
-class DummyAccessChecker:
-    """An object that checks whether an operation (or request) has the right permission"""
-
-    def __init__(self):
-        pass
-        
-    def allowed(self, operation, token):
-        if not operation in ALL_OPERATIONS:
-            raise web.InternalError("Access: unknown operation '%s'" % operation)
-        if DEFAULT_IS_ALLOW_ALL:
-            return True
-        match = token.matchAll
-        if not match:
+    def allows(self, operation, accessChecker):
+        if not operation in self.allowOperations:
             return False
-        if operation in token.allowOperations:
-            return True
+        if self.content != accessChecker.content:
+            return False
+        return True
+        
+class MultiAccessToken(BaseAccessToken):
+
+    def __init__(self, contentList):
+        self.tokens = []
+        for c in contentList:
+            self.tokens.append(AccessToken(c))
+            
+    def hasExternalRepresentation(self):
+        for t in self.tokens:
+            if t.hasExternalRepresentation():
+                return True
         return False
+        
+    def addToHeaders(self, headers):
+        for t in self.tokens:
+            if t.hasExternalRepresentation():
+                t.addToHeaders(headers)
+                return
+        raise AccessControlError("Token has no external representation")
+        
+    def allows(self, opreation, accessChecker):
+        for t in self.tokens:
+            if t.allows(operation, accessChecker):
+                return True
+        return False      
            
-class AccessChecker(DummyAccessChecker):
+class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
 
     def __init__(self, content):
         self.content = content
         
     def allowed(self, operation, token):
+        if not token:
+            return False
         if not operation in ALL_OPERATIONS:
             raise web.InternalError("Access: unknown operation '%s'" % operation)
+        return token.allows(operation, self)
         match = token.matchAll or (token.getContent() == self.content)
         if not match:
             return False
         if operation in token.allowOperations:
             return True
         return False
+    
+class DefaultAccessChecker(AccessChecker):
+    """An object that checks whether an operation (or request) has the right permission"""
+
+    def __init__(self):
+        # This string will not occur anywhere (we hope:-)
+        self.content = repr(self)
 
 class Access:
     def __init__(self):
@@ -99,21 +130,27 @@ class Access:
     def checkerForElement(self, element):
         nodelist = xpath.find("au:requires", element, namespaces=NAMESPACES)
         if not nodelist:
-            return DummyAccessChecker()
+            return DefaultAccessChecker()
         if len(nodelist) > 1:
             raise AccessControlError("Action has multiple au:requires")
         requiresValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
         return AccessChecker(requiresValue)
             
         
-    def tokenForAction(self, element):
+    def _tokenForElement(self, element):
         nodelist = xpath.find("au:carries", element, namespaces=NAMESPACES)
         if not nodelist:
-            return DummyAccessToken()
-        if len(nodelist) > 1:
-            raise AccessControlError("Action has multiple au:carries")
-        carriesValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
-        return AccessToken(carriesValue)
+            return _defaultToken
+        tokenValueList = []
+        for n in nodelist:
+            carriesValue = "".join(t.nodeValue for t in n.childNodes if t.nodeType == t.TEXT_NODE)
+            tokenValueList.append(carriesValue)
+        if len(tokenValueList) > 1:
+            return MultiAccessToken(tokenValueList)
+        return AccessToken(tokenValueList)
+        
+    def tokenForAction(self, element):
+        return self._tokenForElement(element)
         
     def tokenForUser(self, username):
         if not username or '/' in username:
@@ -121,7 +158,7 @@ class Access:
         elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
         if len(elements) != 1:
             raise web.HTTPError('501 Database error: %d users named %s' % (len(elements), username))
-        return self.tokenForAction(elements[0])
+        return self._tokenForElement(elements[0])
         
     def tokenForPlugin(self, pluginname):
         return self.tokenForIgor()
@@ -146,7 +183,7 @@ class Access:
             # Add more here for other methods
         if self.session and 'user' in self.session and self.session.user:
             return self.tokenForUser(self.session.user)
-        return DummyAccessToken()
+        return _defaultToken
 
     def userAndPasswordCorrect(self, username, password):
         if self.database == None or not username or not password:

@@ -9,6 +9,8 @@ NORMAL_OPERATIONS = {'get', 'put', 'post', 'run'}
 AUTH_OPERATIONS = {'auth'}
 ALL_OPERATIONS = NORMAL_OPERATIONS | AUTH_OPERATIONS
 
+DEBUG=True
+
 # For the time being: define this to have the default token checker allow everything
 # the dummy token allows
 DEFAULT_IS_ALLOW_ALL=True
@@ -32,6 +34,7 @@ class BaseAccessToken:
         pass
         
     def allows(self, operation, accessChecker):
+        if DEBUG: print 'access: %s %s: no access at all allowed by BaseAccessToken 0x%x' % (operation, accessChecker.destination, id(self))
         return False
         
         
@@ -40,6 +43,7 @@ class IgorAccessToken(BaseAccessToken):
     To be used sparingly by Igor itself."""
         
     def allows(self, operation, accessChecker):
+        if DEBUG: print 'access: %s %s: allowed by IgorAccessToken' % (operation, accessChecker.destination)
         return True
         
     def addToEnv(self, env):
@@ -65,9 +69,12 @@ class AccessToken(BaseAccessToken):
         
     def allows(self, operation, accessChecker):
         if not operation in self.allowOperations:
+            if DEBUG: print 'access: %s %s: no %s access allowed by AccessToken 0x%x' % (operation, accessChecker.destination, operation, id(self))
             return False
         if self.content != accessChecker.content:
+            if DEBUG: print 'access: %s %s: signature mismatch for AccessToken 0x%x' % (operation, accessChecker.destination, id(self))
             return False
+        if DEBUG: print 'access: %s %s: allowed by AccessToken 0x%x' % (operation, accessChecker.destination, id(self))
         return True
         
 class MultiAccessToken(BaseAccessToken):
@@ -90,7 +97,8 @@ class MultiAccessToken(BaseAccessToken):
                 return
         raise AccessControlError("Token has no external representation")
         
-    def allows(self, opreation, accessChecker):
+    def allows(self, operation, accessChecker):
+        if DEBUG: print 'access: %s %s: MultiAccessToken(%d)' % (operation, accessChecker.destination, len(self.tokens))
         for t in self.tokens:
             if t.allows(operation, accessChecker):
                 return True
@@ -99,11 +107,15 @@ class MultiAccessToken(BaseAccessToken):
 class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
 
-    def __init__(self, content):
+    def __init__(self, content, destination=None):
         self.content = content
+        if destination == None:
+            destination = "some-element"
+        self.destination = destination
         
     def allowed(self, operation, token):
         if not token:
+            if DEBUG: print 'access: %s %s: no access allowed for token=None' % (operation, self.destination)
             return False
         if not operation in ALL_OPERATIONS:
             raise web.InternalError("Access: unknown operation '%s'" % operation)
@@ -115,6 +127,7 @@ class DefaultAccessChecker(AccessChecker):
     def __init__(self):
         # This string will not occur anywhere (we hope:-)
         self.content = repr(self)
+        self.destination = "(using default-accesschecker)"
 
 class Access:
     def __init__(self):
@@ -133,16 +146,21 @@ class Access:
     def setSession(self, session):
         self.session = session
         
-    def checkerForElement(self, element):
+    def checkerForElement(self, element, representingElement=None):
         if not element:
-            return DefaultAccessChecker()
+            raise AccessControlError("500 checkerForElement called with element=None")
         nodelist = xpath.find("au:requires", element, namespaces=NAMESPACES)
         if not nodelist:
-            return self.checkerForElement(element.parentNode)
+            return self.checkerForElement(element.parentNode, representingElement if representingElement else element)
         if len(nodelist) > 1:
             raise AccessControlError("Action has multiple au:requires")
         requiresValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
-        return AccessChecker(requiresValue)
+        destination = None
+        if DEBUG and self.database:
+            destination = self.database.getXPathForElement(element)
+            if representingElement:
+                destination += " (representing %s)" % self.database.getXPathForElement(representingElement)
+        return AccessChecker(requiresValue, destination)
             
         
     def _tokenForElement(self, element):
@@ -164,6 +182,7 @@ class Access:
             if element.parentNode:
                 token = self._tokenForElement(element.parentNode)
         if token == None:
+            if DEBUG: print 'access: no token found for action %s' % self.database.getXPathForElement(element)
             token = _defaultToken
         return token
         
@@ -176,6 +195,7 @@ class Access:
         token = self._tokenForElement(elements[0])
         if token == None:
             token = _defaultToken
+            if DEBUG: print 'access: no token found for user %s' % self.database.getXPathForElement(username)
         return token
         
     def tokenForPlugin(self, pluginname):
@@ -205,6 +225,7 @@ class Access:
             # Add more here for other methods
         if self.session and 'user' in self.session and self.session.user:
             return self.tokenForUser(self.session.user)
+        if DEBUG: print 'access: no token found for request %s' % headers.get('PATH_INFO', '???')
         return _defaultToken
 
     def userAndPasswordCorrect(self, username, password):

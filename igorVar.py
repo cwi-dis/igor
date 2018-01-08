@@ -147,7 +147,7 @@ def main():
     
     url = args.url
     if args.eval:
-        url.replace("/data", "/evaluate")
+        url = url.replace("/data", "/evaluate")
     server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, noverify=args.noverify, certificate=args.certificate)
     if args.python:
         args.mimetype = 'application/json'

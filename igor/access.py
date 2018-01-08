@@ -28,6 +28,9 @@ class BaseAccessToken:
     def addToHeaders(self, headers):
         pass
         
+    def addToEnv(self, env):
+        pass
+        
     def allows(self, operation, accessChecker):
         return False
         
@@ -38,6 +41,9 @@ class IgorAccessToken(BaseAccessToken):
         
     def allows(self, operation, accessChecker):
         return True
+        
+    def addToEnv(self, env):
+        env['IGOR_SELF_TOKEN'] = repr(self)
         
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
@@ -120,6 +126,12 @@ class Access:
     def __init__(self):
         self.database = None
         self.session = None
+        self.internalTokens = {}
+        
+    def internalTokenForToken(self, token):
+        k = str(random.random())
+        self.internalTokens[k] = token
+        return k
         
     def setDatabase(self, database):
         self.database = database
@@ -179,7 +191,10 @@ class Access:
         return _igorSelfToken
         
     def tokenForRequest(self, headers):
-        print 'xxxjack tokenForRequest', headers
+        if 'IGOR_SELF_TOKEN' in headers:
+            if headers['IGOR_SELF_TOKEN'] == repr(_igorSelfToken):
+                return _igorSelfToken
+            raise web.HTTPError('500 Incorrect IGOR_SELF_TOKEN')
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()

@@ -136,9 +136,7 @@ class Access:
             if authFields[0].lower() == 'bearer':
                 return AccessToken(authFields[1])
             if authFields[0].lower() == 'basic':
-                print 'xxxjack authfields[1]', authFields[1]
                 decoded = base64.b64decode(authFields[1])
-                print 'xxxjack decoded', decoded
                 username, password = decoded.split(':')
                 if self.userAndPasswordCorrect(username, password):
                     return self.tokenForUser(username)
@@ -157,7 +155,6 @@ class Access:
             raise web.HTTPError('401 Illegal username')
         encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
         if not encryptedPassword:
-            print 'xxxjack no password for user', username
             return False
         import passlib.hash
         import passlib.utils.binary
@@ -165,7 +162,6 @@ class Access:
         salt = passlib.utils.binary.ab64_decode(salt)
         passwordHash = passlib.hash.pbkdf2_sha256.using(salt=salt).hash(password)
         if encryptedPassword != passwordHash:
-            print 'xxxjack mismatched password', encryptedPassword, passwordHash
             return False
         return True
         

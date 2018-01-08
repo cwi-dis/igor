@@ -369,7 +369,6 @@ class runLogin:
         
     def getOrPost(self):
         allArgs = web.input()
-        print 'xxxjack login args', allArgs.keys()
         if 'logout' in allArgs:
             SESSION.user = None
             raise web.seeother('/')
@@ -388,7 +387,6 @@ class runLogin:
             )
         programDir = os.path.dirname(__file__)
         template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
-        print 'xxxjack render login user', SESSION.get('user'), 'message', message
         return template(form, SESSION.get('user'), message)
               
 class AbstractDatabaseAccess(object):

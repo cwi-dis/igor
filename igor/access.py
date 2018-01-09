@@ -156,7 +156,7 @@ class Access:
         
     def checkerForElement(self, element, representingElement=None):
         if not element:
-            raise AccessControlError("500 checkerForElement called with element=None")
+            return DefaultAccessChecker()
         nodelist = xpath.find("au:requires", element, namespaces=NAMESPACES)
         if not nodelist:
             return self.checkerForElement(element.parentNode, representingElement if representingElement else element)

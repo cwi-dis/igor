@@ -3,6 +3,7 @@ import urllib
 import time
 import threading
 import Queue
+import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
@@ -87,10 +88,17 @@ class Action:
                 if not shouldRun:
                     if DEBUG: print '\t%s: condition failed' % repr(node)
                     continue
-            # Evaluate URL and paramteres
-            url = self._evaluate(self.url, node, True)
-            if DEBUG: print '\t%s: calling %s' % (repr(node), url)
-            data = self._evaluate(self.data, node, False)
+            # Evaluate URL and paramters
+            try:
+                url = self._evaluate(self.url, node, True)
+                if DEBUG: print '\t%s: calling %s' % (repr(node), url)
+                data = self._evaluate(self.data, node, False)
+            except xmlDatabase.DBAccessError:
+                actionPath = self.hoster.database.getXPathForElement(self.element)
+                nodePath = self.hoster.database.getXPathForElement(node)
+                print "Error: action %s has no incorrect permission after firing on %s" % (actionPath, nodePath)
+                # self.hoster.app.request('/internal/updateStatus/%s' % self.representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
+                continue
             # Prepare to run
             tocall = dict(method=self.method, url=url, token=self.token)
             if data:

@@ -86,6 +86,7 @@ class URLCallRunner(threading.Thread):
                 if not alive and not resultData:
                     resultData = errorMessage
                 args = dict(alive=alive, resultData=resultData)
+                # xxxjack should we add the token here too?
                 self.app.request('/internal/updateStatus/%s' % representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 
     def dump(self):

@@ -15,6 +15,7 @@ import imp
 import threading
 import cProfile
 import pstats
+import shelve
 import myLogger
 from _version import VERSION
 
@@ -67,8 +68,8 @@ class IgorServer:
         self.app = webApp.WEBAPP
         self.datadir = datadir
         
-        sessionDirname = os.path.join(self.datadir, 'igorSessions')
-        self.session = web.session.Session(self.app, web.session.DiskStore(sessionDirname))
+        shelveFilename = os.path.join(self.datadir, 'igorSessions')
+        self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(shelveFilename)))
         
         self.ssl = not nossl
         keyFile = os.path.join(self.datadir, 'igor.key')

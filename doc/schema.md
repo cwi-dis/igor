@@ -3,6 +3,8 @@
 While there is very little in Igor that is hard-coded
 here is the schema that is generally used by Igor databases. 
 
+The (preliminary) schema for access control can be found in the separate document [capabilities.md](capabilities.md).
+
 The toplevel element is called `data`. Usually you can refer to the children of the toplevel element using a relative path such as `environment/location`, sometimes (within expressions triggered by events, for example) you must refer by absolute path, then you should use `/data/environment/location`.
 
 There is no formal schema, but in the descriptions of the leaf elements below we specify the type expected:

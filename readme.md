@@ -91,6 +91,9 @@ example code to help you develop your own plugins. See [igor/plugins/readme.md](
 Some of the plugins come with helper utilities or servers. See [helpers/readme.md](helpers/readme.md) for
 details.
 
+## REST entry points
+
+The entry points into Igor are described in [doc/rest.md](doc/rest.md).
 ## Schema
 
 A description of the database can be found in [schema.md](schema.md).

@@ -166,7 +166,7 @@ class Access:
         self.database = None
         self.session = None
         self.internalTokens = {}
-        self._defaultToken = None
+        self._defaultTokenInstance = None
         
     def internalTokenForToken(self, token):
         k = str(random.random())
@@ -179,15 +179,15 @@ class Access:
     def setSession(self, session):
         self.session = session
         
-    def defaultToken(self):
-        if self._defaultToken == None and self.database:
+    def _defaultToken(self):
+        if self._defaultTokenInstance == None and self.database:
             defaultContainer = self.database.getElements('au:access/au:defaultCapabilities', 'get', _accessSelfToken, namespaces=NAMESPACES)
             if len(defaultContainer) != 1:
                 raise web.HTTPError("501 Database should contain single au:access/au:defaultCapabilities")
-            self._defaultToken = self._tokenForElement(defaultContainer[0])
-        if self._defaultToken == None:
-            print 'access: defaultToken() called but no database (or no default token in database)'
-        return self._defaultToken
+            self._defaultTokenInstance = self._tokenForElement(defaultContainer[0])
+        if self._defaultTokenInstance == None:
+            print 'access: _defaultToken() called but no database (or no default token in database)'
+        return self._defaultTokenInstance
         
     def checkerForElement(self, element, representingElement=None):
         if not element:
@@ -218,7 +218,7 @@ class Access:
                 token = self._tokenForElement(element.parentNode)
         if token == None:
             if DEBUG: print 'access: no token found for action %s' % self.database.getXPathForElement(element)
-            token = self.defaultToken()
+            token = self._defaultToken()
         return token
         
     def tokenForUser(self, username):
@@ -229,7 +229,7 @@ class Access:
             raise web.HTTPError('501 Database error: %d users named %s' % (len(elements), username))
         token = self._tokenForElement(elements[0])
         if token == None:
-            token = self.defaultToken()
+            token = self._defaultToken()
             if DEBUG: print 'access: no token found for user %s' % self.database.getXPathForElement(username)
         return token
         
@@ -248,7 +248,8 @@ class Access:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()
             if authFields[0].lower() == 'bearer':
-                return ExternalAccessToken(authFields[1])
+                decoded = authFields[1] # base64.b64decode(authFields[1])
+                return self._externalAccessToken(decoded)
             if authFields[0].lower() == 'basic':
                 decoded = base64.b64decode(authFields[1])
                 username, password = decoded.split(':')
@@ -262,7 +263,7 @@ class Access:
             return self.tokenForUser(self.session.user)
         # xxxjack should we allow carrying tokens in cookies?
         if DEBUG: print 'access: no token found for request %s' % headers.get('PATH_INFO', '???')
-        return self.defaultToken()
+        return self._defaultToken()
 
     def userAndPasswordCorrect(self, username, password):
         if self.database == None or not username or not password:
@@ -280,5 +281,9 @@ class Access:
         if encryptedPassword != passwordHash:
             return False
         return True
+        
+    def _externalAccessToken(self, data):
+        print 'xxxjack attempt to get external access token for', data
+        return self._defaultToken()
         
 singleton = Access()

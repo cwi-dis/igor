@@ -96,7 +96,7 @@ class AccessToken(BaseAccessToken):
             if destHead != path or destTail[:1] != '/':
                 if DEBUG: print 'access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path)
                 return False
-        elif cascadingRule == 'children':
+        elif cascadingRule == 'child':
             if destHead != path or destTail[:1] != '/' or destTail.count('/') != 1:
                 if DEBUG: print 'access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path)
                 return False

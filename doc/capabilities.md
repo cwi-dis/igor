@@ -15,7 +15,7 @@ A capability is stored in an `au:capability` element with the following children
 	* `self` the element itself only.
 	* `descendant-or-self` the whole subtree rooted at the element (the element itself, its children, its grandchildren, etc).
 	* `descendant` the whole subtree rooted at the element except the element itself.
-	* `children` direct children of the element.
+	* `child` direct children of the element.
 	* More values may be added later.
 * `put` Together with `xpath` defines on which elements this capability grants `PUT` rights. Values as for `get`.
 * `post` Together with `xpath` defines on which elements this capability grants `POST` rights. Values as for `get`.

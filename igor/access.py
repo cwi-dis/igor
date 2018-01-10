@@ -9,7 +9,7 @@ NORMAL_OPERATIONS = {'get', 'put', 'post', 'run'}
 AUTH_OPERATIONS = {'auth'}
 ALL_OPERATIONS = NORMAL_OPERATIONS | AUTH_OPERATIONS
 
-DEBUG=True
+DEBUG=False
 
 # For the time being: define this to have the default token checker allow everything
 # the dummy token allows
@@ -117,17 +117,16 @@ class MultiAccessToken(BaseAccessToken):
             self.tokens.append(AccessToken(c))
             
     def hasExternalRepresentation(self):
-        for t in self.tokens:
+        for t in self.tokens[:1]:
             if t.hasExternalRepresentation():
                 return True
         return False
         
     def addToHeaders(self, headers):
-        for t in self.tokens:
+        for t in self.tokens[:1]:
             if t.hasExternalRepresentation():
                 t.addToHeaders(headers)
                 return
-        raise AccessControlError("Token has no external representation")
         
     def allows(self, operation, accessChecker):
         if DEBUG: print 'access: %s %s: MultiAccessToken(%d)' % (operation, accessChecker.destination, len(self.tokens))

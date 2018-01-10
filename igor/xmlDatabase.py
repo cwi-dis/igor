@@ -505,10 +505,10 @@ class DBImpl(DBSerializer):
             raise DBParamError('Not valid xml: %s' % xmltext)
         return newdoc.firstChild
                 
-    def delValues(self, location, token):
+    def delValues(self, location, token, namespaces=NAMESPACES):
         """Remove a (possibly empty) set of nodes from the document"""
         with self:
-            nodeList = xpath.find(location, self._doc.documentElement, namespaces=NAMESPACES)
+            nodeList = xpath.find(location, self._doc.documentElement, namespaces=namespaces)
             for n in nodeList:
                 self._checkAccess('delete', n, token)
             parentList = []
@@ -519,7 +519,7 @@ class DBImpl(DBSerializer):
                     parentList += nodeSet(parentNode)
             self.signalNodelist(parentList)
             
-    def getValue(self, location, token, context=None):
+    def getValue(self, location, token, context=None, namespaces=NAMESPACES):
         """Return a single value from the document (as string)"""
         with self:
             if context is None:
@@ -529,29 +529,29 @@ class DBImpl(DBSerializer):
             # if  complete nodeset is returned. If the expression is carefully crafted to
             # return a string it gives access to anything.
             #
-            result = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
+            result = xpath.find(location, context, originalContext=[context], namespaces=namespaces)
             if xpath.expr.nodesetp(result):
                 for n in result:
                     self._checkAccess('get', n, token)
                 return xpath.expr.string(result)
             return result
                     
-    def getValues(self, location, token, context=None):
+    def getValues(self, location, token, context=None, namespaces=NAMESPACES):
         """Return a list of node values from the document (as names and strings)"""
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodeList = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
+            nodeList = xpath.find(location, context, originalContext=[context], namespaces=namespaces)
             for n in nodeList:
                 self._checkAccess('get', n, token)
             return self._getValueList(nodeList)
         
-    def getElements(self, location, operation, token, context=None):
+    def getElements(self, location, operation, token, context=None, namespaces=NAMESPACES):
         """Return a list of DOM nodes (elements only, for now) that match the location"""
         with self:
             if context is None:
                 context = self._doc.documentElement
-            nodeList = xpath.find(location, context, originalContext=[context], namespaces=NAMESPACES)
+            nodeList = xpath.find(location, context, originalContext=[context], namespaces=namespaces)
             # Check we have access to all those nodes
             for n in nodeList:
                 self._checkAccess(operation, n, token)

@@ -61,30 +61,54 @@ class AccessToken(BaseAccessToken):
     def __init__(self, content):
         BaseAccessToken.__init__(self)
         self.content = content
-        self.allowOperations = NORMAL_OPERATIONS
+        print 'xxxjack AccessToken(%s)' % repr(self.content)
         
     def hasExternalRepresentation(self):
-        return True
+        return 'externalRepresentation' in self.content
         
     def addToHeaders(self, headers):
-        headers['Authorization'] = 'Bearer ' + self.content
+        externalRepresentation = self.content.get('externalRepresentation')
+        if not externalRepresentation:
+            return
+        headers['Authorization'] = 'Bearer ' + externalRepresentation
         
     def allows(self, operation, accessChecker):
-        if not operation in self.allowOperations:
+        cascadingRule = self.content.get(operation)
+        if not cascadingRule:
             if DEBUG: print 'access: %s %s: no %s access allowed by AccessToken %s' % (operation, accessChecker.destination, operation, self)
             return False
-        if self.content != accessChecker.content:
-            if DEBUG: print 'access: %s %s: signature mismatch for AccessToken %s' % (operation, accessChecker.destination, self)
+        path = self.content.get('xpath')
+        if not path:
+            if DEBUG: print 'access: %s %s: no path-based access allowed by AccessToken %s' % (operation, accessChecker.destination, operation, self)
             return False
+        dest = accessChecker.destination
+        destHead = dest[:len(path)]
+        destTail = dest[len(path):]
+        if cascadingRule == 'self':
+            if dest != path:
+                if DEBUG: print 'access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path)
+                return False
+        elif cascadingRule == 'descendant-or-self':
+            if destHead != path or destTail[:1] not in ('', '/'):
+                if DEBUG: print 'access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path)
+                return False
+        elif cascadingRule == 'descendant':
+            if destHead != path or destTail[:1] != '/':
+                if DEBUG: print 'access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path)
+                return False
+        elif cascadingRule == 'children':
+            if destHead != path or destTail[:1] != '/' or destTail.count('/') != 1:
+                if DEBUG: print 'access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path)
+                return False
+        else:
+            raise AccessControlError('Capability has unknown cascading rule %s for operation %s' % (cascadingRule, operation))
         if DEBUG: print 'access: %s %s: allowed by AccessToken %s' % (operation, accessChecker.destination, self)
         return True
 
-class DefaultAccessToken(AccessToken):
-    def __init__(self):
-        AccessToken.__init__(self, "DEFAULT-CAPABILITY")      
-         
-_defaultToken = DefaultAccessToken()
-
+class ExternalAccessToken(BaseAccessToken):
+    def __init__(self, content):
+        assert 0
+        
 class MultiAccessToken(BaseAccessToken):
 
     def __init__(self, contentList):
@@ -115,10 +139,7 @@ class MultiAccessToken(BaseAccessToken):
 class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
 
-    def __init__(self, content, destination=None):
-        self.content = content
-        if destination == None:
-            destination = "some-element"
+    def __init__(self, destination):
         self.destination = destination
         
     def allowed(self, operation, token):
@@ -134,14 +155,18 @@ class DefaultAccessChecker(AccessChecker):
 
     def __init__(self):
         # This string will not occur anywhere (we hope:-)
-        self.content = repr(self)
         self.destination = "(using default-accesschecker)"
 
+    def allowed(self, operation, token):
+        if DEBUG: print 'access: no access allowed by DefaultAccessChecker'
+        return False
+        
 class Access:
     def __init__(self):
         self.database = None
         self.session = None
         self.internalTokens = {}
+        self._defaultToken = None
         
     def internalTokenForToken(self, token):
         k = str(random.random())
@@ -154,34 +179,35 @@ class Access:
     def setSession(self, session):
         self.session = session
         
+    def defaultToken(self):
+        if self._defaultToken == None and self.database:
+            defaultContainer = self.database.getElements('au:access/au:defaultCapabilities', 'get', _accessSelfToken, namespaces=NAMESPACES)
+            if len(defaultContainer) != 1:
+                raise web.HTTPError("501 Database should contain single au:access/au:defaultCapabilities")
+            self._defaultToken = self._tokenForElement(defaultContainer[0])
+        if self._defaultToken == None:
+            print 'access: defaultToken() called but no database (or no default token in database)'
+        return self._defaultToken
+        
     def checkerForElement(self, element, representingElement=None):
         if not element:
+            print 'access: ERROR: attempt to get checkerForElement(None)'
             return DefaultAccessChecker()
-        nodelist = xpath.find("au:requires", element, namespaces=NAMESPACES)
-        if not nodelist:
-            return self.checkerForElement(element.parentNode, representingElement if representingElement else element)
-        if len(nodelist) > 1:
-            raise AccessControlError("Action has multiple au:requires")
-        requiresValue = "".join(t.nodeValue for t in nodelist[0].childNodes if t.nodeType == t.TEXT_NODE)
-        destination = None
-        if DEBUG and self.database:
-            destination = self.database.getXPathForElement(element)
-            if representingElement:
-                destination += " (representing %s)" % self.database.getXPathForElement(representingElement)
-        return AccessChecker(requiresValue, destination)
+        path = self.database.getXPathForElement(element)
+        if not path:
+            print 'access: ERROR: attempt to get checkForElement(%s) that has no XPath' % repr(element)
+            return DefaultAccessChecker()
+        return AccessChecker(path)
             
         
     def _tokenForElement(self, element):
-        nodelist = xpath.find("au:carries", element, namespaces=NAMESPACES)
+        nodelist = xpath.find("au:capability", element, namespaces=NAMESPACES)
         if not nodelist:
             return None
-        tokenValueList = []
-        for n in nodelist:
-            carriesValue = "".join(t.nodeValue for t in n.childNodes if t.nodeType == t.TEXT_NODE)
-            tokenValueList.append(carriesValue)
-        if len(tokenValueList) > 1:
-            return MultiAccessToken(tokenValueList)
-        rv = AccessToken(tokenValueList[0])
+        tokenDataList = map(lambda e: self.database.tagAndDictFromElement(e)[1], nodelist)
+        if len(tokenDataList) > 1:
+            return MultiAccessToken(tokenDataList)
+        rv = AccessToken(tokenDataList[0])
         return rv
         
     def tokenForAction(self, element):
@@ -192,7 +218,7 @@ class Access:
                 token = self._tokenForElement(element.parentNode)
         if token == None:
             if DEBUG: print 'access: no token found for action %s' % self.database.getXPathForElement(element)
-            token = _defaultToken
+            token = self.defaultToken()
         return token
         
     def tokenForUser(self, username):
@@ -203,7 +229,7 @@ class Access:
             raise web.HTTPError('501 Database error: %d users named %s' % (len(elements), username))
         token = self._tokenForElement(elements[0])
         if token == None:
-            token = _defaultToken
+            token = self.defaultToken()
             if DEBUG: print 'access: no token found for user %s' % self.database.getXPathForElement(username)
         return token
         
@@ -222,7 +248,7 @@ class Access:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()
             if authFields[0].lower() == 'bearer':
-                return AccessToken(authFields[1])
+                return ExternalAccessToken(authFields[1])
             if authFields[0].lower() == 'basic':
                 decoded = base64.b64decode(authFields[1])
                 username, password = decoded.split(':')
@@ -234,8 +260,9 @@ class Access:
             # Add more here for other methods
         if self.session and 'user' in self.session and self.session.user:
             return self.tokenForUser(self.session.user)
+        # xxxjack should we allow carrying tokens in cookies?
         if DEBUG: print 'access: no token found for request %s' % headers.get('PATH_INFO', '???')
-        return _defaultToken
+        return self.defaultToken()
 
     def userAndPasswordCorrect(self, username, password):
         if self.database == None or not username or not password:

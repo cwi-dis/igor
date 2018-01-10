@@ -8,19 +8,19 @@ Eventually this data will be hidden from normal Igor access, or moved to a separ
 
 A capability is stored in an `au:capability` element with the following children:
 
-* `au:comment` textual description, to keep us sane during development.
-* `au:xpath` an xpath referencing a single element (or a nonexisting element with a single expsiting parent element) to which this capability refers.
-* `au:get` Together with `au:xpath` defines on which elements this capability grants `GET` rights:
+* `comment` textual description, to keep us sane during development.
+* `xpath` an xpath referencing a single element (or a nonexisting element with a single expsiting parent element) to which this capability refers.
+* `get` Together with `xpath` defines on which elements this capability grants `GET` rights:
 	* empty (or non-existent): none.
 	* `self` the element itself only.
 	* `descendant-or-self` the whole subtree rooted at the element (the element itself, its children, its grandchildren, etc).
 	* `descendant` the whole subtree rooted at the element except the element itself.
 	* `children` direct children of the element.
 	* More values may be added later.
-* `au:put` Together with `au:xpath` defines on which elements this capability grants `PUT` rights. Values as for `au:get`.
-* `au:post` Together with `au:xpath` defines on which elements this capability grants `POST` rights. Values as for `au:get`.
-* `au:delete` Together with `au:xpath` defines on which elements this capability grants `DELETE` rights. Values as for `au:get`.
-* `au:externalRepresentation` (temporary, see _Open issues_ below) how to represent this token in the http header `Authentication: Bearer`.
+* `put` Together with `xpath` defines on which elements this capability grants `PUT` rights. Values as for `get`.
+* `post` Together with `xpath` defines on which elements this capability grants `POST` rights. Values as for `get`.
+* `delete` Together with `xpath` defines on which elements this capability grants `DELETE` rights. Values as for `get`.
+* `externalRepresentation` (temporary, see _Open issues_ below) how to represent this token in the http header `Authentication: Bearer`.
 * Crypto-based checking attributes will be added later.
 * Conditions (such as capability lifetime) will be added later.
 
@@ -31,7 +31,7 @@ A capability is stored in an `au:capability` element with the following children
 	* By allowing recursive `<au:capability>`?
 * Can we have a reference to a capability (in stead of requiring copying) in the database?
 	* By Xpath?
-	* An `<au:name>` field?
+	* An `<name>` field?
 	* Or `xml:id` or something like that?
 * Crypto protection of external capabilities requires a service (REST endpoint) that can supply the public key corrsponding to the private key this Igor used to sign.
 * Delegation and revocation will need to be handled.

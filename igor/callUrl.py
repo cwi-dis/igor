@@ -76,7 +76,7 @@ class URLCallRunner(threading.Thread):
             print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
             alive = resultStatus[:3] == '200'
             if not alive or DEBUG:
-                if resultData:
+                if resultData and resultData.strip() != resultStatus.strip():
                     print 'Output:'
                     resultLines = resultData.splitlines()
                     for line in resultLines:

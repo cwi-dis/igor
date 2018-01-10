@@ -96,7 +96,7 @@ details.
 The entry points into Igor are described in [doc/rest.md](doc/rest.md).
 ## Schema
 
-A description of the database can be found in [schema.md](schema.md).
+A description of the database can be found in [doc/schema.md](doc/schema.md).
 
 ## Missing functionality
 

@@ -2,6 +2,7 @@
 import web
 import xpath
 import base64
+import jwt
 
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
@@ -9,7 +10,7 @@ NORMAL_OPERATIONS = {'get', 'put', 'post', 'run'}
 AUTH_OPERATIONS = {'auth'}
 ALL_OPERATIONS = NORMAL_OPERATIONS | AUTH_OPERATIONS
 
-DEBUG=True
+DEBUG=False
 
 # For the time being: define this to have the default token checker allow everything
 # the dummy token allows
@@ -64,12 +65,14 @@ class AccessToken(BaseAccessToken):
         return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
         
     def hasExternalRepresentation(self):
-        return 'externalRepresentation' in self.content
+        return 'externalKey' in self.content
         
     def addToHeaders(self, headers):
-        externalRepresentation = self.content.get('externalRepresentation')
-        if not externalRepresentation:
+        externalKey = self.content.get('externalKey')
+        if not externalKey:
             return
+        externalRepresentation = jwt.encode(self.content, externalKey, algorithm='HS256')
+        if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
         headers['Authorization'] = 'Bearer ' + externalRepresentation
         
     def allows(self, operation, accessChecker):

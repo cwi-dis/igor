@@ -364,7 +364,7 @@ def main():
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
     parser.add_argument("-s", "--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
-    parser.add_argument("--debug", action="store_true", help="Enable debug output")
+    parser.add_argument("--debug", metavar="MODULE", help="Enable debug output for MODULE (all for all modules)")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
     parser.add_argument("--profile", action="store_true", help="Enable Python profiler (debugging Igor only)")
@@ -376,11 +376,12 @@ def main():
         print VERSION
         sys.exit(0)
     if args.debug:
-        callUrl.DEBUG = True
-        sseListener.DEBUG = True
-        actions.DEBUG = True
-        xmlDatabase.DEBUG = True
-        webApp.DEBUG = True
+        if args.debug in ('callUrl', 'all'): callUrl.DEBUG = True
+        if args.debug in ('sseListener', 'all'): sseListener.DEBUG = True
+        if args.debug in ('actions', 'all'): actions.DEBUG = True
+        if args.debug in ('xmlDatabase', 'all'): xmlDatabase.DEBUG = True
+        if args.debug in ('webApp', 'all'): webApp.DEBUG = True
+        if args.debug in ('access', 'all'): access.DEBUG = True
     datadir = args.database
     print 'igorServer %s running from %s' % (VERSION, sys.argv[0])
     try:

@@ -546,7 +546,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 if not tag:
                     raise web.BadRequest("PUT path must and with an element tag")
                 element = self.convertfrom(data, tag, datamimetype)
-                oldElements = self.db.getElements(key, 'put', token)
+                oldElements = self.db.getElements(key, 'put' if replace else 'post', token)
                 if not oldElements:
                     #
                     # Does not exist yet. See if we can create it
@@ -556,7 +556,10 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     #
                     # Find parent
                     #
-                    parentElements = self.db.getElements(parentPath, 'post', token)
+                    # NOTE: we get the parent node using the magic allow-everything Igor token.
+                    # This is safe, because the previous getElements call has checked that this request actually
+                    # has the required PUT or POST access.
+                    parentElements = self.db.getElements(parentPath, 'post', access.singleton.tokenForIgor())
                     if not parentElements:
                         raise web.notfound("404 Parent not found: %s" % parentPath)
                     if len(parentElements) > 1:

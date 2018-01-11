@@ -9,7 +9,7 @@ NORMAL_OPERATIONS = {'get', 'put', 'post', 'run'}
 AUTH_OPERATIONS = {'auth'}
 ALL_OPERATIONS = NORMAL_OPERATIONS | AUTH_OPERATIONS
 
-DEBUG=False
+DEBUG=True
 
 # For the time being: define this to have the default token checker allow everything
 # the dummy token allows
@@ -32,9 +32,9 @@ class BaseAccessToken:
         
     def addToHeaders(self, headers):
         pass
-        
+                
     def addToEnv(self, env):
-        pass
+        env['IGOR_SELF_TOKEN'] = singleton.internalTokenForToken(self)
         
     def allows(self, operation, accessChecker):
         if DEBUG: print 'access: %s %s: no access at all allowed by %s' % (operation, accessChecker.destination, self)
@@ -49,9 +49,6 @@ class IgorAccessToken(BaseAccessToken):
         if DEBUG: print 'access: %s %s: allowed by %s' % (operation, accessChecker.destination, self)
         return True
         
-    def addToEnv(self, env):
-        env['IGOR_SELF_TOKEN'] = repr(self)
-        
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
 
@@ -61,7 +58,10 @@ class AccessToken(BaseAccessToken):
     def __init__(self, content):
         BaseAccessToken.__init__(self)
         self.content = content
-        print 'xxxjack AccessToken(%s)' % repr(self.content)
+        if DEBUG:  print 'access: Created:', repr(self)
+        
+    def __repr__(self):
+        return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
         
     def hasExternalRepresentation(self):
         return 'externalRepresentation' in self.content
@@ -168,7 +168,7 @@ class Access:
         self._defaultTokenInstance = None
         
     def internalTokenForToken(self, token):
-        k = str(random.random())
+        k = id(token)
         self.internalTokens[k] = token
         return k
         
@@ -240,9 +240,9 @@ class Access:
         
     def tokenForRequest(self, headers):
         if 'IGOR_SELF_TOKEN' in headers:
-            if headers['IGOR_SELF_TOKEN'] == repr(_igorSelfToken):
-                return _igorSelfToken
-            raise web.HTTPError('500 Incorrect IGOR_SELF_TOKEN')
+            if headers['IGOR_SELF_TOKEN'] in self.internalTokens:
+                return self.internalTokens[headers['IGOR_SELF_TOKEN']]
+            raise web.HTTPError('500 Incorrect IGOR_SELF_TOKEN %s' % headers['IGOR_SELF_TOKEN'])
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()

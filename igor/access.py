@@ -232,7 +232,7 @@ class Access:
         token = self._tokenForElement(elements[0])
         if token == None:
             token = self._defaultToken()
-            if DEBUG: print 'access: no token found for user %s' % self.database.getXPathForElement(username)
+            if DEBUG: print 'access: no token found for user %s' % username
         return token
         
     def tokenForPlugin(self, pluginname):

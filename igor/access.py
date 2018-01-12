@@ -82,7 +82,7 @@ class AccessToken(BaseAccessToken):
             return False
         path = self.content.get('xpath')
         if not path:
-            if DEBUG: print 'access: %s %s: no path-based access allowed by AccessToken %s' % (operation, accessChecker.destination, operation, self)
+            if DEBUG: print 'access: %s %s: no path-based access allowed by AccessToken %s' % (operation, accessChecker.destination, self)
             return False
         dest = accessChecker.destination
         destHead = dest[:len(path)]

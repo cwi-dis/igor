@@ -6,7 +6,7 @@ import jwt
 
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
-NORMAL_OPERATIONS = {'get', 'put', 'post', 'run'}
+NORMAL_OPERATIONS = {'get', 'put', 'post', 'delete'}
 AUTH_OPERATIONS = {'auth'}
 ALL_OPERATIONS = NORMAL_OPERATIONS | AUTH_OPERATIONS
 
@@ -191,16 +191,24 @@ class Access:
             print 'access: _defaultToken() called but no database (or no default token in database)'
         return self._defaultTokenInstance
         
-    def checkerForElement(self, element, representingElement=None):
+    def checkerForElement(self, element):
         if not element:
             print 'access: ERROR: attempt to get checkerForElement(None)'
             return DefaultAccessChecker()
         path = self.database.getXPathForElement(element)
         if not path:
-            print 'access: ERROR: attempt to get checkForElement(%s) that has no XPath' % repr(element)
+            print 'access: ERROR: attempt to get checkerForElement(%s) that has no XPath' % repr(element)
+            return DefaultAccessChecker()
+        if not path.startswith('/data'):
+            print 'access: ERROR: attempt to get checkerForElement(%s) with unexpected XPath: %s' % (repr(element), path)
             return DefaultAccessChecker()
         return AccessChecker(path)
             
+    def checkerForEntrypoint(self, entrypoint):
+        if not entrypoint or entrypoint[0] != '/' or entrypoint.startswith('/data'):
+            print 'access: ERROR: attempt to get checkerForEntrypoint(%s)' % entrypoint
+            return DefaultAccessChecker()
+        return AccessChecker(entrypoint)
         
     def _tokenForElement(self, element):
         nodelist = xpath.find("au:capability", element, namespaces=NAMESPACES)

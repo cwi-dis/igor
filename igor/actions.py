@@ -96,7 +96,7 @@ class Action:
             except xmlDatabase.DBAccessError:
                 actionPath = self.hoster.database.getXPathForElement(self.element)
                 nodePath = self.hoster.database.getXPathForElement(node)
-                print "Error: action %s has no incorrect permission after firing on %s" % (actionPath, nodePath)
+                print "actions: Error: action %s lacks AWT permission for '%s' or '%s'" % (actionPath, self.url, self.data)
                 # self.hoster.app.request('/internal/updateStatus/%s' % self.representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 continue
             # Prepare to run

@@ -56,6 +56,9 @@ class static:
         token = access.singleton.tokenForRequest(web.ctx.env)
         if not name:
             name = 'index.html'
+        checker = access.singleton.checkerForEntrypoint('/static/' + name)
+        if not checker.allowed('get', token):
+            raise web.HTTPError('401 Unauthorized')
         databaseDir = STATICDIR
         programDir = os.path.dirname(__file__)
         
@@ -102,6 +105,10 @@ class runScript:
     def GET(self, pluginName, scriptName):
         allArgs = web.input()
         token = access.singleton.tokenForRequest(web.ctx.env)
+        checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+        if not checker.allowed('get', token):
+            raise web.HTTPError('401 Unauthorized')
+
         scriptDir = os.path.join(PLUGINDIR, pluginName, 'scripts')
             
         if '/' in scriptName or '.' in scriptName:
@@ -199,6 +206,10 @@ class runCommand:
     def GET(self, command, subcommand=None):
         allArgs = web.input()
         token = access.singleton.tokenForRequest(web.ctx.env)
+        checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+        if not checker.allowed('get', token):
+            raise web.HTTPError('401 Unauthorized')
+
         if not COMMANDS:
             raise web.notfound()
         try:
@@ -249,6 +260,10 @@ class runAction:
         if not COMMANDS:
             raise web.notfound()
         token = access.singleton.tokenForRequest(web.ctx.env)
+        checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+        if not checker.allowed('get', token):
+            raise web.HTTPError('401 Unauthorized')
+
         try:
             return COMMANDS.runAction(actionname, token)
         except xmlDatabase.DBAccessError:
@@ -265,6 +280,10 @@ class runTrigger:
         if not COMMANDS:
             raise web.notfound()
         token = access.singleton.tokenForRequest(web.ctx.env)
+        checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+        if not checker.allowed('get', token):
+            raise web.HTTPError('401 Unauthorized')
+
         try:
             return COMMANDS.runTrigger(triggername, token)
         except xmlDatabase.DBAccessError:
@@ -280,6 +299,11 @@ class runPlugin:
         return ''
         
     def GET(self, pluginName, methodName='index'):
+        token = access.singleton.tokenForRequest(web.ctx.env)
+        checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+        if not checker.allowed('get', token):
+            raise web.HTTPError('401 Unauthorized')
+
         #
         # Import plugin as a submodule of igor.plugins
         #
@@ -308,7 +332,6 @@ class runPlugin:
             pluginModule.SESSION = SESSION
         allArgs = web.input()
 
-        token = access.singleton.tokenForRequest(web.ctx.env)
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
         pluginToken = access.singleton.tokenForPlugin(pluginName)

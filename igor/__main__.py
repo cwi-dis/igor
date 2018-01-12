@@ -263,7 +263,7 @@ class IgorServer:
     def runAction(self, actionname, token):
         if not self.actionHandler:
             raise web.notfound()
-        nodes = self.database.getElements('actions/action[name="%s"]'%actionname, 'run', token)
+        nodes = self.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.access.tokenForIgor())
         if not nodes:
             raise web.notfound()
         for node in nodes:
@@ -274,7 +274,7 @@ class IgorServer:
         raise web.HTTPError("502 triggers not yet implemented")
         if not self.triggerHandler:
             raise web.notfound()
-        triggerNodes = self.database.getElements('triggers/%s' % triggername, 'run', token)
+        triggerNodes = self.database.getElements('triggers/%s' % triggername, 'get', self.access.tokenForIgor())
         if not triggerNodes:
             raise web.notfound()
         if len(triggerNodes) > 1:

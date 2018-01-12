@@ -20,7 +20,7 @@ A capability is stored in an `au:capability` element with the following children
 * `put` Together with `xpath` defines on which elements this capability grants `PUT` rights. Values as for `get`.
 * `post` Together with `xpath` defines on which elements this capability grants `POST` rights. Values as for `get`.
 * `delete` Together with `xpath` defines on which elements this capability grants `DELETE` rights. Values as for `get`.
-* `externalRepresentation` (temporary, see _Open issues_ below) how to represent this token in the http header `Authentication: Bearer`.
+* `externalKey` (temporary, see _Open issues_ below) sign with this key when storing as a JWT in `Authentication: Bearer`.
 * Crypto-based checking attributes will be added later.
 * Conditions (such as capability lifetime) will be added later.
 

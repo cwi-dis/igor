@@ -4,7 +4,6 @@ Currently a quick hack using either direct database access or httplib2, synchron
 Should use callUrl, so local/remote becomes similar, and some form
 of callback mechanism so it can run asynchronously.
 """
-print 'xxxjack fitbit plugin'
 import requests
 import web
 import json
@@ -16,10 +15,7 @@ urllib3.disable_warnings()
 import os
 import sys
 
-print 'xxxjack fitbit own name, file', __name__, __file__
-print 'xxxjack fitbit fitbit name, file', Fitbit.__module__, Fitbit.__module__
-#print 'xxxjack cwd', os.getcwd()
-#print 'xxxjack path', sys.path
+DEBUG=False
 
 DATABASE_ACCESS=None
 PLUGINDATA=None
@@ -40,10 +36,10 @@ class FitbitPlugin:
         self.token = None
         
     def _refresh(self, tokenData):
-        print 'xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
+        if DEBUG: print 'xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
         DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', self.token, replace=True)
         COMMANDS.queue('save')
-        print 'xxxjack queued save call'
+        if DEBUG: print 'xxxjack queued save call'
     
     def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
         if not user:
@@ -78,7 +74,7 @@ class FitbitPlugin:
         for method in methods:
             m = getattr(fb, method)
             item = m(**kwargs)
-            print "xxxjack method", method, "returned", m
+            if DEBUG: print "xxxjack method", method, "returned", m
             results.update(item)
         
         DATABASE_ACCESS.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)

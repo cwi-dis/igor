@@ -13,6 +13,7 @@ import xpath
 import xmlDatabase
 import mimetypes
 import access
+import traceback
 
 DATABASE=None   # The database itself. Will be set by main module
 DATABASE_ACCESS=None    # Will be set later by this module
@@ -319,7 +320,9 @@ class runPlugin:
                 mfile, mpath, mdescr = imp.find_module(pluginName, [moduleDir])
                 pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
-                print 'xxxjack import failed for', pluginName
+                print '------ import failed for', pluginName
+                traceback.print_exc()
+                print '------'
                 raise web.notfound()
             #
             # Tell the new module about the database and the app
@@ -365,7 +368,7 @@ class runPlugin:
         try:
             method = getattr(pluginObject, methodName)
         except AttributeError:
-            print 'xxxjack Method', methodName, 'not found in', pluginObject
+            print '----- Method', methodName, 'not found in', pluginObject
             raise web.notfound()
         try:
             rv = method(**dict(allArgs))

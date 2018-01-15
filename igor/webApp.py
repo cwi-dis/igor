@@ -58,7 +58,7 @@ class static:
             name = 'index.html'
         checker = access.singleton.checkerForEntrypoint('/static/' + name)
         if not checker.allowed('get', token):
-            raise web.HTTPError('401 Unauthorized')
+            raise myWebError('401 Unauthorized')
         databaseDir = STATICDIR
         programDir = os.path.dirname(__file__)
         
@@ -90,7 +90,7 @@ class static:
             try:
                 return template(**dict(allArgs))
             except xmlDatabase.DBAccessError:
-                return myWebError("401 unauthorized")
+                return myWebError("401 Unauthorized")
         raise web.notfound()
 
 class runScript:
@@ -107,12 +107,12 @@ class runScript:
         token = access.singleton.tokenForRequest(web.ctx.env)
         checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
         if not checker.allowed('get', token):
-            raise web.HTTPError('401 Unauthorized')
+            raise myWebError('401 Unauthorized')
 
         scriptDir = os.path.join(PLUGINDIR, pluginName, 'scripts')
             
         if '/' in scriptName or '.' in scriptName:
-            raise myWebError("401 Cannot use / or . in scriptName")
+            raise myWebError("400 Cannot use / or . in scriptName")
             
         if allArgs.has_key('args'):
             args = shlex.split(allArgs.args)
@@ -131,7 +131,7 @@ class runScript:
             if myUrl[:6] == 'https:':
                 env['IGORSERVER_NOVERIFY'] = 'true'
         except web.HTTPError:
-            pass
+            web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         try:
             pluginData = DATABASE_ACCESS.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
         except web.HTTPError:
@@ -173,7 +173,7 @@ class runScript:
             scriptName = scriptName + '.sh'
             interpreter = 'sh'
         else:
-            raise myWebError("401 scriptName not found: %s" % scriptName)
+            raise myWebError("404 scriptName not found: %s" % scriptName)
         if interpreter:
             args = [interpreter, scriptName] + args
         else: # Could add windows and .bat here too, if needed
@@ -208,7 +208,7 @@ class runCommand:
         token = access.singleton.tokenForRequest(web.ctx.env)
         checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
         if not checker.allowed('get', token):
-            raise web.HTTPError('401 Unauthorized')
+            raise myWebError('401 Unauthorized')
 
         if not COMMANDS:
             raise web.notfound()
@@ -221,7 +221,7 @@ class runCommand:
         try:
             rv = method(token=token, **dict(allArgs))
         except TypeError, arg:
-            raise myWebError("401 Error calling command method %s: %s" % (command, arg))
+            raise myWebError("400 Error in command method %s parameters: %s" % (command, arg))
         return rv
 
     def POST(self, command, subcommand=None):
@@ -245,7 +245,7 @@ class runCommand:
         try:
             rv = method(token=token, **allArgs)
         except TypeError, arg:
-            raise myWebError("401 Error calling command method %s: %s" % (command, arg))
+            raise myWebError("400 Error in command method %s parameters: %s" % (command, arg))
         return rv
 
 
@@ -262,7 +262,7 @@ class runAction:
         token = access.singleton.tokenForRequest(web.ctx.env)
         checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
         if not checker.allowed('get', token):
-            raise web.HTTPError('401 Unauthorized')
+            raise myWebError('401 Unauthorized')
 
         try:
             return COMMANDS.runAction(actionname, token)
@@ -282,7 +282,7 @@ class runTrigger:
         token = access.singleton.tokenForRequest(web.ctx.env)
         checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
         if not checker.allowed('get', token):
-            raise web.HTTPError('401 Unauthorized')
+            raise myWebError('401 Unauthorized')
 
         try:
             return COMMANDS.runTrigger(triggername, token)
@@ -302,7 +302,7 @@ class runPlugin:
         token = access.singleton.tokenForRequest(web.ctx.env)
         checker = access.singleton.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
         if not checker.allowed('get', token):
-            raise web.HTTPError('401 Unauthorized')
+            raise myWebError('401 Unauthorized')
 
         #
         # Import plugin as a submodule of igor.plugins
@@ -346,7 +346,7 @@ class runPlugin:
         try:
             factory = getattr(pluginModule, 'igorPlugin')
         except AttributeError:
-            raise myWebError("401 Plugin %s problem: misses igorPlugin() method" % (pluginName))
+            raise myWebError("501 Plugin %s problem: misses igorPlugin() method" % (pluginName))
         pluginObject = factory(pluginName, pluginData)
         #
         # If there is a user argument also get userData
@@ -370,7 +370,7 @@ class runPlugin:
         try:
             rv = method(**dict(allArgs))
         except ValueError, arg:
-            raise myWebError("401 Error calling plugin method %s: %s" % (pluginName, arg))
+            raise myWebError("400 Error in plugin method %s parameters: %s" % (command, arg))
         if rv == None:
             rv = ''
         if not isinstance(rv, basestring):
@@ -559,7 +559,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
     def put_key(self, key, mimetype, variant, data, datamimetype, token, replace=True):
         try:
             if not key:
-                raise myWebError("401 cannot PUT or POST whole document")
+                raise myWebError("400 cannot PUT or POST whole document")
             if key[0] != '/':
                 key = '/%s/%s' % (self.rootTag, key)
             if not variant: variant = 'ref'

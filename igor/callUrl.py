@@ -64,6 +64,9 @@ class URLCallRunner(threading.Thread):
                     r = requests.request(method, url, data=data, headers=headers)
                     resultStatus = str(r.status_code)
                     resultData = r.text
+                    # Stop-gap to get more info in the log, if possible
+                    if resultData.count('\n') <= 1 and resultData.startswith(resultStatus):
+                        resultStatus = resultData.strip()
             except requests.exceptions.RequestException as e:
                 msg = traceback.format_exception_only(type(e), e.message)[0].strip()
                 resultStatus = '502 URLCaller: %s' % msg

@@ -69,7 +69,7 @@ class IgorServer:
         self.datadir = datadir
         
         shelveFilename = os.path.join(self.datadir, 'igorSessions')
-        self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(shelveFilename)))
+        self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(shelveFilename, flag="n")))
         
         self.ssl = not nossl
         keyFile = os.path.join(self.datadir, 'igor.key')

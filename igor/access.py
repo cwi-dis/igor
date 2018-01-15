@@ -65,11 +65,19 @@ class AccessToken(BaseAccessToken):
         return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
         
     def hasExternalRepresentation(self):
-        return 'externalKey' in self.content
+        return 'iss' in self.content and 'aud' in self.content
         
     def addToHeaders(self, headers):
-        externalKey = self.content.get('externalKey')
+        iss = self.content.get('iss')
+        aud = self.content.get('aud')
+        # xxxjack Could check for multiple aud values based on URL to contact...
+        if not iss or not aud:
+            if DEBUG: print 'access: addToHeaders: no iss and aud, so no external representation'
+            return
+        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
+        externalKey = singleton.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         if not externalKey:
+            if DEBUG: print 'access: addToHeaders: no key found at %s' % keyPath
             return
         externalRepresentation = jwt.encode(self.content, externalKey, algorithm='HS256')
         if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)

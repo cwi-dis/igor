@@ -4,4 +4,4 @@ if [ -x /usr/libexec/path_helper ]; then
 fi
 dir=`dirname $0`
 bleURL=http://localhost:8081/
-igorVar --url $bleURL ble | igorVar --put application/json sensors/ble
+igorVar --url $bleURL ble | igorVar --put application/json --checknonempty sensors/ble

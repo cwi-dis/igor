@@ -98,8 +98,18 @@ class IgorServer:
                 print >>sys.stderr, "... Data", repr(data)
         try:
             reply, content = h.request(url, method=method, headers=headers, body=data)
-        except socket.error, arg:
-            print >>sys.stderr, "%s: Error %s for %s" % (sys.argv[0], arg, url)
+        except socket.error, e:
+            if e.args[1:]:
+                argstr = e.args[1]
+            else:
+                e = repr(e)
+            print >>sys.stderr, "%s: %s: %s" % (sys.argv[0], url, argstr)
+            sys.exit(1)
+        except socket.gaierror:
+            print >>sys.stderr, "%s: %s: unknown host" % (sys.argv[0], url)
+            sys.exit(1)
+        except socket.timeout:
+            print >>sys.stderr, "%s: %s: timeout during connect" % (sys.argv[0], url)
             sys.exit(1)
         if VERBOSE:
             print >>sys.stderr, "<<< Headers", reply

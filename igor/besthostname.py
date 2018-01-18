@@ -36,6 +36,8 @@ def besthostname():
         return hostname
     except socket.gaierror:
         pass
+    except socket.herror:
+        pass
     #
     # Otherwise return the IP address
     #

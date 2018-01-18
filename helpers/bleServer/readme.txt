@@ -21,3 +21,13 @@ Also install web.py, with "sudo pip install web.py"
 If you want to run bleServer at boot: read and possibly edit initscript-bleServer,
 move it to /etc/init.d/bleServer, run "sudo update-rc.d bleServer defaults" and
 reboot.
+
+Raspberry Pi Issues
+-------------------
+
+When running on the Raspberry Pi, first ensure that Bluetooth LE is working, and
+is working for your username. "sudo hcitool lescan" should produce some output
+and no errors. Otherwise you may need to install drivers, or configure them,
+or ensure your userID has bluetooth access (by being in the bluetooth group).
+See for example https://www.pi-supply.com/make/fix-raspberry-pi-3-bluetooth-issues/
+for some help.

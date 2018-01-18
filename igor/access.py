@@ -34,7 +34,7 @@ class BaseAccessToken:
         
     def addToHeaders(self, headers):
         pass
-                
+
     def addToHeadersAsOTP(self, headers):
         otp = singleton.produceOTPForToken(self)
         headers['Authorization'] = 'Basic ' + base64.b64encode(otp)
@@ -198,6 +198,10 @@ class Access:
         else:
             print 'access: Invalid OTP presented: ', otp
             raise web.HTTPError("498 Invalid OTP presented")
+            
+    def invalidateOTPForToken(self, otp):
+        if otp in self._otp2token:
+            del self._otp2token[otp]
             
     def setDatabase(self, database):
         self.database = database

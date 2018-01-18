@@ -163,6 +163,9 @@ class runScript:
             if type(pluginData) == type({}):
                 for k, v in pluginData.items():
                     env['igor_'+k] = str(v)
+        # Finally pass the token as an OTP (which has the form user:pass)
+        oneTimePassword = access.singleton.produceOTPForToken(pluginToken)
+        env['IGORSERVER_CREDENTIALS'] = oneTimePassword
         # Check whether we need to use an interpreter on the scriptName
         scriptName = os.path.join(scriptDir, scriptName)
         if os.path.exists(scriptName):
@@ -182,7 +185,9 @@ class runScript:
         # Call the command and get the output
         try:
             rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env)
+            access.singleton.invalidateOTPForToken(oneTimePassword)
         except subprocess.CalledProcessError, arg:
+            access.singleton.invalidateOTPForToken(oneTimePassword)
             msg = "502 Command %s exited with status code=%d" % (scriptName, arg.returncode)
             output = msg + '\n\n' + arg.output
             # Convenience for internal logging: if there is 1 line of output only we append it to the error message.
@@ -192,6 +197,7 @@ class runScript:
                 output = ''
             raise web.HTTPError(msg, {"Content-type": "text/plain"}, output)
         except OSError, arg:
+            access.singleton.invalidateOTPForToken(oneTimePassword)
             raise myWebError("502 Error running command: %s: %s" % (scriptName, arg.strerror))
         return rv
 

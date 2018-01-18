@@ -7,6 +7,7 @@ import sys
 import os
 import time
 import json
+import base64
 import pprint
 import xml.etree.ElementTree
 import socket
@@ -17,6 +18,7 @@ CONFIG = ConfigParser.ConfigParser(
         url="http://igor.local:9333/data",
         bearer=None,
         access=None,
+        credentials=None,
         certificate=None,
         noverify=None,
         verbose=None,
@@ -36,13 +38,14 @@ for k, _ in CONFIG.items('igor'):
 VERBOSE=False
 
 class IgorServer:
-    def __init__(self, url, bearer_token=None, access_token=None, certificate=None, noverify=False):
+    def __init__(self, url, bearer_token=None, access_token=None, credentials=None, certificate=None, noverify=False):
         self.baseUrl = url
         if url[-1] != '/':
             url = url + '/'
         self.url = url
         self.bearer_token = bearer_token
         self.access_token = access_token
+        self.credentials = credentials
         if certificate:
             certificate = os.path.join(os.path.expanduser('~/.igor'), certificate)
         self.certificate = certificate
@@ -85,8 +88,13 @@ class IgorServer:
             headers['Accept'] = format
         if datatype:
             headers['Content-Type'] = datatype
+        if self.bearer_token and self.credentials:
+            print >> sys.stderr, "%s: both bearer token and credentials specified" % sys.argv[0]
+            sys.exit(1)
         if self.bearer_token:
             headers['Authorization'] = 'Bearer %s' % self.bearer_token
+        if self.credentials:
+            headers['Authorization'] = 'Basic %s' % base64.b64encode(self.credentials)
         if VERBOSE:
             if self.certificate or self.noverify:
                 print 'certificate=%s, noverify=%s' % (repr(self.certificate), repr(self.noverify))
@@ -148,6 +156,7 @@ def main():
     parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
     parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line", default=CONFIG.get('igor', 'bearer'))
     parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument", default=CONFIG.get('igor', 'access'))
+    parser.add_argument("--credentials", metavar="USER:PASS", help="Add Authorization: Basic header line with given credentials", default=CONFIG.get('igor', 'credentials'))
     parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures", default=CONFIG.get('igor', 'noverify'))
     parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file", default=CONFIG.get('igor', 'certificate'))
     
@@ -158,7 +167,7 @@ def main():
     url = args.url
     if args.eval:
         url = url.replace("/data", "/evaluate")
-    server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, noverify=args.noverify, certificate=args.certificate)
+    server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
     if args.python:
         args.mimetype = 'application/json'
     if args.delete:

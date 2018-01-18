@@ -110,14 +110,11 @@ A method for easy installation (and updating and removal) of plugins is not impl
 a more user-friendly method of editing the database is not implemented yet.
 
 
-## Building and installing
+## Building and installing Igor
 
-See [DESCRIPTION.rst](DESCRIPTION.rst) for now.
+See [doc/using.md](doc/using.md).
 
-## Configuring the database
+## Configuring and running Igor
 
-See [DESCRIPTION.rst](DESCRIPTION.rst) for now.
+See [doc/using.md](doc/using.md).
 
-## Configuring for automatic execution
-
-See [DESCRIPTION.rst](DESCRIPTION.rst) for now.

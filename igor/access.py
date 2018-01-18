@@ -260,6 +260,7 @@ class Access:
     def tokenForRequest(self, headers):
         if 'IGOR_SELF_TOKEN' in headers:
             if headers['IGOR_SELF_TOKEN'] in self.internalTokens:
+                if DEBUG: print 'access: tokenForRequest: returning token found in IGOR_SELF_TOKEN'
                 return self.internalTokens[headers['IGOR_SELF_TOKEN']]
             raise web.HTTPError('500 Incorrect IGOR_SELF_TOKEN %s' % headers['IGOR_SELF_TOKEN'])
         if 'HTTP_AUTHORIZATION' in headers:
@@ -267,10 +268,12 @@ class Access:
             authFields = authHeader.split()
             if authFields[0].lower() == 'bearer':
                 decoded = authFields[1] # base64.b64decode(authFields[1])
+                if DEBUG: print 'access: tokenForRequest: returning token found in Authorization: Bearer header'
                 return self._externalAccessToken(decoded)
             if authFields[0].lower() == 'basic':
                 decoded = base64.b64decode(authFields[1])
                 username, password = decoded.split(':')
+                if DEBUG: print 'access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username
                 if self.userAndPasswordCorrect(username, password):
                     return self.tokenForUser(username)
                 else:
@@ -278,6 +281,7 @@ class Access:
                     raise web.HTTPError('401 Unauthorized')
             # Add more here for other methods
         if self.session and 'user' in self.session and self.session.user:
+            if DEBUG: print 'access: tokenForRequest: returning token for session.user %s' % self.session.user
             return self.tokenForUser(self.session.user)
         # xxxjack should we allow carrying tokens in cookies?
         if DEBUG: print 'access: no token found for request %s' % headers.get('PATH_INFO', '???')
@@ -285,11 +289,13 @@ class Access:
 
     def userAndPasswordCorrect(self, username, password):
         if self.database == None or not username or not password:
+            if DEBUG: print 'access: basic authentication: database, username or password missing'
             return False
         if '/' in username:
             raise web.HTTPError('401 Illegal username')
         encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
         if not encryptedPassword:
+            if DEBUG: print 'access: basic authentication: no encryptedPassword for user', username
             return False
         import passlib.hash
         import passlib.utils.binary
@@ -297,7 +303,9 @@ class Access:
         salt = passlib.utils.binary.ab64_decode(salt)
         passwordHash = passlib.hash.pbkdf2_sha256.using(salt=salt).hash(password)
         if encryptedPassword != passwordHash:
+            if DEBUG: print 'access: basic authentication: password mismatch for user', username
             return False
+        if DEBUG: print 'access: basic authentication: login for user', username
         return True
         
     def _externalAccessToken(self, data):

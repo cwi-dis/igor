@@ -3,6 +3,7 @@ import web
 import xpath
 import base64
 import jwt
+import random
 
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
@@ -35,7 +36,7 @@ class BaseAccessToken:
         pass
                 
     def addToEnv(self, env):
-        env['IGOR_SELF_TOKEN'] = singleton.internalTokenForToken(self)
+        env['IGOR_SELF_TOKEN'] = singleton.produceOTPForToken(self)
         
     def allows(self, operation, accessChecker):
         if DEBUG: print 'access: %s %s: no access at all allowed by %s' % (operation, accessChecker.destination, self)
@@ -175,14 +176,25 @@ class Access:
     def __init__(self):
         self.database = None
         self.session = None
-        self.internalTokens = {}
+        self._otp2token = {}
         self._defaultTokenInstance = None
         
-    def internalTokenForToken(self, token):
-        k = id(token)
-        self.internalTokens[k] = token
+    def produceOTPForToken(self, token):
+        k = '-otp-%d:%d' % (random.getrandbits(64), random.getrandbits(64))
+        self._otp2token[k] = token
+        print 'xxxjack', k
         return k
         
+    def consumeOTPForToken(self, otp):
+        # xxxjack should use a mutex here
+        token = self._otp2token.get(otp)
+        if token:
+            del self._otp2token[otp]
+            return token
+        else:
+            print 'access: Invalid OTP presented: ', otp
+            raise web.HTTPError("498 Invalid OTP presented")
+            
     def setDatabase(self, database):
         self.database = database
         
@@ -259,10 +271,8 @@ class Access:
         
     def tokenForRequest(self, headers):
         if 'IGOR_SELF_TOKEN' in headers:
-            if headers['IGOR_SELF_TOKEN'] in self.internalTokens:
-                if DEBUG: print 'access: tokenForRequest: returning token found in IGOR_SELF_TOKEN'
-                return self.internalTokens[headers['IGOR_SELF_TOKEN']]
-            raise web.HTTPError('500 Incorrect IGOR_SELF_TOKEN %s' % headers['IGOR_SELF_TOKEN'])
+            if DEBUG: print 'access: tokenForRequest: returning token for OTP found in IGOR_SELF_TOKEN'
+            return self.consumeOTPForToken(headers['IGOR_SELF_TOKEN'])
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()

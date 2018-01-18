@@ -36,12 +36,8 @@ class URLCallRunner(threading.Thread):
             data = tocall.get('data')
             headers = {}
             env = {}
-            token.addToHeaders(headers)
-            token.addToEnv(env)
             if 'mimetype' in tocall:
                 headers['Content-type'] = tocall['mimetype']
-            # xxxjack should also have credentials, etc
-            if headers == {}: headers = None
             if not method:
                 method = 'GET'
             try:
@@ -54,6 +50,8 @@ class URLCallRunner(threading.Thread):
                 if parsedUrl.scheme == '' and parsedUrl.netloc == '':
                     # Local. Call the app directly.
                     # xxxjack have to work out exceptions
+                    token.addToHeadersAsOTP(headers)
+                    if headers == {}: headers = None
                     rep = self.app.request(url, method=method, data=data, headers=headers, env=env)
                     resultStatus = rep.status
                     resultData = rep.data
@@ -61,6 +59,8 @@ class URLCallRunner(threading.Thread):
                         resultData = resultStatus
                 else:
                     # Remote.
+                    token.addToHeaders(headers)
+                    if headers == {}: headers = None
                     r = requests.request(method, url, data=data, headers=headers)
                     resultStatus = str(r.status_code)
                     resultData = r.text

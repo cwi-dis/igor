@@ -35,8 +35,9 @@ class BaseAccessToken:
     def addToHeaders(self, headers):
         pass
                 
-    def addToEnv(self, env):
-        env['IGOR_SELF_TOKEN'] = singleton.produceOTPForToken(self)
+    def addToHeadersAsOTP(self, headers):
+        otp = singleton.produceOTPForToken(self)
+        headers['Authorization'] = 'Basic ' + base64.b64encode(otp)
         
     def allows(self, operation, accessChecker):
         if DEBUG: print 'access: %s %s: no access at all allowed by %s' % (operation, accessChecker.destination, self)
@@ -50,6 +51,9 @@ class IgorAccessToken(BaseAccessToken):
     def allows(self, operation, accessChecker):
         if DEBUG: print 'access: %s %s: allowed by %s' % (operation, accessChecker.destination, self)
         return True
+        
+#    def addToEnv(self, env):
+#        raise AccessControlError("Attempt to pass the god-token through the web interface")
         
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
@@ -180,9 +184,9 @@ class Access:
         self._defaultTokenInstance = None
         
     def produceOTPForToken(self, token):
+        # The key format is carefully selected so it can be used as user:pass combination
         k = '-otp-%d:%d' % (random.getrandbits(64), random.getrandbits(64))
         self._otp2token[k] = token
-        print 'xxxjack', k
         return k
         
     def consumeOTPForToken(self, otp):
@@ -270,9 +274,6 @@ class Access:
         return _igorSelfToken
         
     def tokenForRequest(self, headers):
-        if 'IGOR_SELF_TOKEN' in headers:
-            if DEBUG: print 'access: tokenForRequest: returning token for OTP found in IGOR_SELF_TOKEN'
-            return self.consumeOTPForToken(headers['IGOR_SELF_TOKEN'])
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()
@@ -282,6 +283,10 @@ class Access:
                 return self._externalAccessToken(decoded)
             if authFields[0].lower() == 'basic':
                 decoded = base64.b64decode(authFields[1])
+                if decoded.startswith('-otp-'):
+                    # This is a one time pad, not a username/password combination
+                    if DEBUG: print 'access: tokenForRequest: found OTP in Authorization: Basic header'
+                    return self.consumeOTPForToken(decoded)
                 username, password = decoded.split(':')
                 if DEBUG: print 'access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username
                 if self.userAndPasswordCorrect(username, password):

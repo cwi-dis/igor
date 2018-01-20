@@ -64,6 +64,14 @@ class AccessToken(BaseAccessToken):
     def __init__(self, content):
         BaseAccessToken.__init__(self)
         self.content = content
+        # Check whether this capability is meant for this igor (no aud or aud matches our URL)
+        if 'aud' in content:
+            audience = content['aud']
+            ourUrl = singleton.database.getValue('services/igor/url', _accessSelfToken)
+            self.validForSelf = (aud == ourUrl)
+            if DEBUG: print 'access: <aud> matches: %s' % self.validForSelf
+        else:
+            self.validForSelf = True
         if DEBUG:  print 'access: Created:', repr(self)
         
     def __repr__(self):
@@ -72,23 +80,33 @@ class AccessToken(BaseAccessToken):
     def hasExternalRepresentation(self):
         return 'iss' in self.content and 'aud' in self.content
         
-    def addToHeaders(self, headers):
+    def getExternalRepresentation(self):
         iss = self.content.get('iss')
         aud = self.content.get('aud')
         # xxxjack Could check for multiple aud values based on URL to contact...
         if not iss or not aud:
-            if DEBUG: print 'access: addToHeaders: no iss and aud, so no external representation'
-            return
+            if DEBUG: print 'access: getExternalRepresentation: no iss and aud, so no external representation'
+            return None
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
         externalKey = singleton.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         if not externalKey:
-            if DEBUG: print 'access: addToHeaders: no key found at %s' % keyPath
+            if DEBUG: print 'access: getExternalRepresentation: no key found at %s' % keyPath
             return
         externalRepresentation = jwt.encode(self.content, externalKey, algorithm='HS256')
         if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
+        return externalRepresentation
+        
+    def addToHeaders(self, headers):
+        externalRepresentation = self.getExternalRepresentation()
+        if not externalRepresentation:
+            return
         headers['Authorization'] = 'Bearer ' + externalRepresentation
         
     def allows(self, operation, accessChecker):
+        # First check this this capability is for us.
+        if not self.validForSelf:
+            if DEBUG: print 'access: Not for this Igor: AccessToken %s' % self
+            return False
         cascadingRule = self.content.get(operation)
         if not cascadingRule:
             if DEBUG: print 'access: %s %s: no %s access allowed by AccessToken %s' % (operation, accessChecker.destination, operation, self)

@@ -24,10 +24,13 @@ class BaseAccessToken:
     """An access token (or set of tokens) that can be carried by a request"""
 
     def __init__(self):
-        pass
+        self.identifier = None
 
     def __repr__(self):
         return "%s(0x%x)" % (self.__class__.__name__, id(self))
+        
+    def getIdentifiers(self):
+        return [self.identifier]
         
     def hasExternalRepresentation(self):
         return False
@@ -47,6 +50,9 @@ class BaseAccessToken:
 class IgorAccessToken(BaseAccessToken):
     """A token without an external representation that allows everything everywhere.
     To be used sparingly by Igor itself."""
+
+    def __init__(self):
+        self.identifier = '*SUPER*'
         
     def allows(self, operation, accessChecker):
         if DEBUG: print 'access: %s %s: allowed by %s' % (operation, accessChecker.destination, self)
@@ -61,10 +67,18 @@ _accessSelfToken = _igorSelfToken
 class AccessToken(BaseAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
 
-    def __init__(self, content):
+    def __init__(self, content, defaultIdentifier=None):
         BaseAccessToken.__init__(self)
         self.content = content
+        #
+        # Determine identifier
+        #
+        if defaultIdentifier == None:
+            defaultIdentifier = 'no-id-%x' % id(self)
+        self.identifier = content.get('id', defaultIdentifier)
+        #
         # Check whether this capability is meant for this igor (no aud or aud matches our URL)
+        #
         if 'aud' in content:
             audience = content['aud']
             ourUrl = singleton.database.getValue('services/igor/url', _accessSelfToken)
@@ -149,7 +163,13 @@ class MultiAccessToken(BaseAccessToken):
         self.tokens = []
         for c in contentList:
             self.tokens.append(AccessToken(c))
-            
+
+    def getIdentifiers(self):
+        rv = []
+        for t in self.tokens:
+            rv += t.getIdentifiers()
+        return rv
+                    
     def hasExternalRepresentation(self):
         for t in self.tokens[:1]:
             if t.hasExternalRepresentation():
@@ -181,7 +201,13 @@ class AccessChecker:
             return False
         if not operation in ALL_OPERATIONS:
             raise web.InternalError("Access: unknown operation '%s'" % operation)
-        return token.allows(operation, self)
+        ok = token.allows(operation, self)
+        if not ok:
+            identifiers = token.getIdentifiers()
+            print '\taccess: %s %s: no access allowed by %d tokens:' % (operation, self.destination, len(identifiers))
+            for i in identifiers:
+                print '\t\t%s' % i
+        return ok
     
 class DefaultAccessChecker(AccessChecker):
     """An object that checks whether an operation (or request) has the right permission"""

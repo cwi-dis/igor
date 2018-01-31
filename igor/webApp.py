@@ -91,7 +91,7 @@ class static:
             try:
                 return template(**dict(allArgs))
             except xmlDatabase.DBAccessError:
-                return myWebError("401 Unauthorized")
+                return myWebError("401 Unauthorized (template rendering)")
         raise web.notfound()
 
 class runScript:
@@ -274,7 +274,7 @@ class runAction:
         try:
             return COMMANDS.runAction(actionname, token)
         except xmlDatabase.DBAccessError:
-            raise myWebError("401 Unauthorized")
+            raise myWebError("401 Unauthorized (while running action)")
         
 class runTrigger:
     def OPTIONS(self, *args):
@@ -294,7 +294,7 @@ class runTrigger:
         try:
             return COMMANDS.runTrigger(triggername, token)
         except xmlDatabase.DBAccessError:
-            raise myWebError("401 Unauthorized")
+            raise myWebError("401 Unauthorized (while running trigger)")
         
 class runPlugin:
     """Call a plugin method"""

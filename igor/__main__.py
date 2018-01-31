@@ -200,6 +200,9 @@ class IgorServer:
         if lastSuccess == None and alive:
             lastSuccess = lastActivity
         
+        # xxxjack unsure whether this is correct: do status updates using the igor supertoken.
+        token = self.access.tokenForIgor()
+        
         # xxxjack this needs to be done differently. Too much spaghetti.
         dbAccess = webApp.DATABASE_ACCESS
         

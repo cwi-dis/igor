@@ -8,7 +8,7 @@ import sys
 import time
 
 AVAILABLE_TIMEOUT=30   # A device is marked unavailable if it hasn't been seen for 30 seconds
-DELETE_TIMEOUT=30     # A device is removed if it hasn't been seen for 30 seconds
+DELETE_TIMEOUT=120     # A device is removed if it hasn't been seen for 2 minutes
 
 KEYS=['available', 'lastSeen', 'firstSeen', 'rssi']
 

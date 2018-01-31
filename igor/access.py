@@ -68,7 +68,7 @@ class AccessToken(BaseAccessToken):
         if 'aud' in content:
             audience = content['aud']
             ourUrl = singleton.database.getValue('services/igor/url', _accessSelfToken)
-            self.validForSelf = (aud == ourUrl)
+            self.validForSelf = (audience == ourUrl)
             if DEBUG: print 'access: <aud> matches: %s' % self.validForSelf
         else:
             self.validForSelf = True

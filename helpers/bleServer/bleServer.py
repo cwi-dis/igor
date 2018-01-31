@@ -7,8 +7,8 @@ import threading
 import sys
 import time
 
-AVAILABLE_TIMEOUT=120   # A device is marked unavailable if it hasn't been seen for 2 minutes
-DELETE_TIMEOUT=3600     # A device is removed if it hasn't been seen for an hour
+AVAILABLE_TIMEOUT=30   # A device is marked unavailable if it hasn't been seen for 30 seconds
+DELETE_TIMEOUT=30     # A device is removed if it hasn't been seen for 30 seconds
 
 KEYS=['available', 'lastSeen', 'firstSeen', 'rssi']
 

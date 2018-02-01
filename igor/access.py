@@ -8,18 +8,19 @@ import random
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
 NORMAL_OPERATIONS = {'get', 'put', 'post', 'delete'}
-AUTH_OPERATIONS = {'auth'}
+AUTH_OPERATIONS = {'delegate'}
 ALL_OPERATIONS = NORMAL_OPERATIONS | AUTH_OPERATIONS
 
 CASCADING_RULES = {'self', 'descendant', 'descendant-or-self', 'child'}
 CASCADING_RULES_IMPLIED = {
-    'self' : {},
-    'descendant' : {'child'},
-    'descendant-or-self' : {'self', 'descendant', 'child'},
-    'child' : {}
+    'self' : {'self'},
+    'descendant' : {'descendant', 'child'},
+    'descendant-or-self' : {'self', 'descendant', 'descendant-or-self', 'child'},
+    'child' : {'child'}
 }
 
 DEBUG=False
+DEBUG_DELEGATION=True
 
 # For the time being: define this to have the default token checker allow everything
 # the dummy token allows
@@ -53,6 +54,14 @@ class BaseAccessToken:
         if DEBUG: print 'access: %s %s: no access at all allowed by %s' % (operation, accessChecker.destination, self)
         return False
         
+    def _allowsDelegation(self, path, rights):
+        """Internal method - return True if the given path/rights are a subset of this token, and if this token can be delegated"""
+        return False
+        
+    def _getTokenWithIdentifier(self, identifier):
+        """Internal method - return the individual (sub)token with the given ID or None"""
+        return None
+        
     def addToHeaders(self, headers):
         """Add this token to the (http request) headers if it has an external representation"""
         pass
@@ -70,9 +79,15 @@ class IgorAccessToken(BaseAccessToken):
         self.identifier = '*SUPER*'
         
     def _allows(self, operation, accessChecker):
-        if DEBUG: print 'access: %s %s: allowed by %s' % (operation, accessChecker.destination, self)
+        if not operation in NORMAL_OPERATIONS:
+            if DEBUG: print 'access: %s %s: not allowed by supertoken' % (operation, accessChecker.destination)
+        if DEBUG: print 'access: %s %s: allowed by supertoken' % (operation, accessChecker.destination)
         return True
-        
+
+    def _allowsDelegation(self, path, rights):
+        """Internal method - return True, the supertoken is the root of all tokens"""
+        return True
+                
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
 
@@ -159,6 +174,58 @@ class AccessToken(BaseAccessToken):
         if DEBUG: print 'access: %s %s: allowed by AccessToken %s' % (operation, accessChecker.destination, self)
         return True
 
+    def _allowsDelegation(self, newPath, newRights):
+        """Internal method - return True if the given path/rights are a subset of this token, and if this token can be delegated"""
+        # Check whether this token can be delegated
+        if not self.validForSelf:
+            if DEBUG_DELEGATION: print 'access: Not for this Igor: AccessToken %s' % self
+            return False
+        if not self.content.get('delegate'):
+            if DEBUG_DELEGATION: print 'access: delegate %s: no delegation right on AccessToken %s' % (newPath, self)
+            return False
+        # Check whether the path is contained in our path
+        path = self.content.get('xpath')
+        if not path:
+            if DEBUG_DELEGATION: print 'access: delegate %s: no path-based access allowed by AccessToken %s' % (newPath, self)
+            return False
+        subPath = newPath[len(path):]
+        if not newPath.startswith(path) or not subPath[:1] in ('', '/'):
+            if DEBUG_DELEGATION: print 'access: delegate %s: path not contained within path for AccessToken %s' % (newPath, self)
+            return False
+        newIsSelf = subPath == ''
+        newIsChild = subPath.count('/') == 1
+        # Check that the requested rights match
+        for operation, newCascadingRule in newRights.items():
+            if not newCascadingRule:
+                # If we don't want this operation it is always okay.
+                continue
+            oldCascadingRule = self.content.get(operation)
+            if not oldCascadingRule:
+                # If the operation isn't allowed at all it's definitely not okay.
+                if DEBUG_DELEGATION: print 'access: delegate %s: no %s access allowed by AccessToken %s' % (newPath, operation, self)
+                return False
+            if newIsSelf:
+                if not newCascadingRule in CASCDING_RULES_IMPLIED.get(oldCascadingRule, {}):
+                    if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
+                    return False
+            elif newIsChild:
+                # xxxjack for now
+                if not oldCascadingRule in ('descendant', 'descendant-or-self'):
+                    if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
+                    return False
+            else:
+                # xxxjack for now
+                if not oldCascadingRule in ('descendant', 'descendant-or-self'):
+                    if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
+                    return False
+        # Everything seems to be fine.
+        return True       
+        
+    def _getTokenWithIdentifier(self, identifier):
+        if identifier == self.identifier:
+            return self
+        return None
+        
     def addToHeaders(self, headers):
         externalRepresentation = self._getExternalRepresentation()
         if not externalRepresentation:
@@ -195,6 +262,12 @@ class MultiAccessToken(BaseAccessToken):
                 return True
         return False      
 
+    def _getTokenWithIdentifier(self, identifier):
+        for t in tokens:
+            rv = t._getTokenWithIdentifier(identifier)
+            if rv: return rv
+        return None
+        
     def addToHeaders(self, headers):
         for t in self.tokens[:1]:
             if t._hasExternalRepresentation():
@@ -377,7 +450,25 @@ class Access:
         # xxxjack should we allow carrying tokens in cookies?
         if DEBUG: print 'access: no token found for request %s' % headers.get('PATH_INFO', '???')
         return self._defaultToken()
-
+        
+    def _externalAccessToken(self, data):
+        """Internal method - Create a token from the given "Authorization: bearer" data"""
+        # xxxjack not yet implemented
+        print 'xxxjack attempt to get external access token for', data
+        return self._defaultToken()
+    
+    def newToken(self, tokenId, newOwner, newPath, newRights):
+        """Create a new token based on an existing token. Returns ID of new token."""
+        assert 0
+        
+    def passToken(self, tokenId, oldOwner, newOwner):
+        """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
+        assert 0
+        
+    def exportToken(self, tokenId, audience):
+        """Create an external representation of this token, destined for the given audience"""
+        assert 0
+        
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""
         # xxxjack this method should not be in the Access element
@@ -400,13 +491,6 @@ class Access:
             return False
         if DEBUG: print 'access: basic authentication: login for user', username
         return True
-        
-    def _externalAccessToken(self, data):
-        """Internal method - Create a token from the given "Authorization: bearer" data"""
-        # xxxjack not yet implemented
-        print 'xxxjack attempt to get external access token for', data
-        return self._defaultToken()
-     
 #
 # Create a singleton Access object
 #   

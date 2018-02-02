@@ -185,7 +185,7 @@ class IgorServer:
         logfn = os.path.join(self.datadir, 'igor.log')
         if os.path.exists(logfn):
             return open(logfn).read()
-        raise Web.HTTPError('404 Log file not available')
+        raise web.HTTPError('404 Log file not available')
         
     def updateStatus(self, subcommand=None, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None, token=None):
         """Update status field of some service/sensor/actuator after an action"""
@@ -233,6 +233,14 @@ class IgorServer:
         else:
             _ = dbAccess.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
         return ''
+        
+    def accessControl(self, subcommand=None, **kwargs):
+        if not subcommand:
+            raise web.notfound()
+        method = getattr(self.access, subcommand, None)
+        if not subcommand:
+            raise web.notfound()
+        return method(**kwargs)
         
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""

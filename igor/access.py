@@ -62,6 +62,10 @@ class BaseAccessToken:
         """Internal method - return the individual (sub)token with the given ID or None"""
         return None
         
+    def _getTokenDescription(self):
+        """Returns a list with descriptions of all tokens in this tokenset"""
+        return [dict(id=self.identifier)]
+        
     def addToHeaders(self, headers):
         """Add this token to the (http request) headers if it has an external representation"""
         pass
@@ -87,7 +91,7 @@ class IgorAccessToken(BaseAccessToken):
     def _allowsDelegation(self, path, rights):
         """Internal method - return True, the supertoken is the root of all tokens"""
         return True
-                
+
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
 
@@ -209,12 +213,12 @@ class AccessToken(BaseAccessToken):
                     if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
                     return False
             elif newIsChild:
-                # xxxjack for now
+                # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
                     if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
                     return False
             else:
-                # xxxjack for now
+                # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
                     if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
                     return False
@@ -263,10 +267,17 @@ class MultiAccessToken(BaseAccessToken):
         return False      
 
     def _getTokenWithIdentifier(self, identifier):
-        for t in tokens:
+        for t in self.tokens:
             rv = t._getTokenWithIdentifier(identifier)
             if rv: return rv
         return None
+        
+    def _getTokenDescription(self):
+        """Returns a list with descriptions of all tokens in this tokenset"""
+        rv = []
+        for t in self.tokens:
+            rv += t._getTokenDescription()
+        return rv
         
     def addToHeaders(self, headers):
         for t in self.tokens[:1]:
@@ -457,15 +468,63 @@ class Access:
         print 'xxxjack attempt to get external access token for', data
         return self._defaultToken()
     
-    def newToken(self, tokenId, newOwner, newPath, newRights):
-        """Create a new token based on an existing token. Returns ID of new token."""
-        assert 0
+    def getTokenDescription(self, token):
+        """Returns a list of dictionaries which describe the tokens"""
+        return token._getTokenDescription()
         
-    def passToken(self, tokenId, oldOwner, newOwner):
+    def newToken(self, token, tokenId, newOwner, newPath, **kwargs):
+        """Create a new token based on an existing token. Returns ID of new token."""
+        #
+        # Split remaining args into rights and other content
+        #
+        newRights = {}
+        content = {}
+        for k, v in kwargs.items():
+            if k in ALL_OPERATIONS:
+                newRights[k] = v
+            else:
+                content[k] = v
+        #
+        # Check that original token exists, and allows this delegation
+        #
+        token = token._getTokenWithIdentifier(tokenId)
+        if not token:
+            if DEBUG_DELEGATION: print 'access: newToken: no such token ID: %s' % tokenId
+            raise web.HTTPError('404 No such token: %s' % tokenId)
+        if not token._allowsDelegation(newPath, newRights):
+            raise web.HTTPError('401 Delegation not allowed')
+        #
+        # Check the new parent exists
+        #
+        parentElement = self.database.getElements(newOwner, 'post', _accessSelfToken)
+        if len(parentElement) != 1:
+            if DEBUG_DELEGATION: print 'access: newToken: no unique destination %s' % newOwner
+            raise web.notfound()
+        parentElement = parentElement[1]
+        #
+        # Construct the data for the new token.
+        #
+        newId = 'token-%d' % random.getrandbits(64)
+        tokenData = dict(id=newId, xpath=newPath)
+        tokenData.update(newRights)
+        tokenData.update(content)
+
+        tokenTag = "{%s}capability" % NAMESPACES["au"]
+        element = self.database.elementFromTagAndData(tokenTag, tokenData)
+        #
+        # Insert into the tree
+        #
+        parentElement.appendChild(element)
+        #
+        # Return the ID
+        #
+        return newId
+        
+    def passToken(self, token, tokenId, oldOwner, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
         assert 0
         
-    def exportToken(self, tokenId, audience):
+    def exportToken(self, token, tokenId, audience):
         """Create an external representation of this token, destined for the given audience"""
         assert 0
         

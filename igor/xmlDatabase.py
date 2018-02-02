@@ -342,7 +342,10 @@ class DBImpl(DBSerializer):
                 newDoc = self._domimpl.createDocument('', 'root', None)
             self._doc = self.filterAfterLoad(newDoc, self.access.tokenForIgor())
     
-    def _createElementWithEscaping(self, tag):
+    def _createElementWithEscaping(self, tag, namespace=None):
+        if namespace:
+            assert TAG_PATTERN.match(tag)
+            return self._doc.createElementNS(namespace, tag)
         if TAG_PATTERN.match(tag) and not tag == "_e":
             return self._doc.createElement(tag)
         rv = self._doc.createElement("_e")
@@ -464,9 +467,9 @@ class DBImpl(DBSerializer):
             v['#text'] = texts
         return t, v
 
-    def elementFromTagAndData(self, tag, data):
+    def elementFromTagAndData(self, tag, data, namespace=None):
         with self:
-            newnode = self._createElementWithEscaping(tag)
+            newnode = self._createElementWithEscaping(tag, namespace)
             if not isinstance(data, dict):
                 # Not key/value, so a raw value. Convert to something string-like
                 if data is None:

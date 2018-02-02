@@ -500,7 +500,7 @@ class Access:
         if len(parentElement) != 1:
             if DEBUG_DELEGATION: print 'access: newToken: no unique destination %s' % newOwner
             raise web.notfound()
-        parentElement = parentElement[1]
+        parentElement = parentElement[0]
         #
         # Construct the data for the new token.
         #

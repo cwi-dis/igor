@@ -13,6 +13,16 @@ $def with (**kwargs)
 </head>
 <body>
 	<h1>Igor Capabilities</h1>
+	
+	$if 'user' in SESSION and SESSION.user:
+		<p>
+			You are logged in as $SESSION.user. Here is the list of capabilities assigned to your user identity.
+		</p>
+	$else:
+		<p>
+			You are not logged in. Here is the set of default capabilities.
+		</p>
+		
 	<table style="width:100%">
 		<tr>
 			<th>Command</th>
@@ -41,7 +51,7 @@ $def with (**kwargs)
 				<td>${cap.pop('comment', '')}</td>
 				<td>
 					$for k,v in cap.items():
-						${k}=${v}&nbsp;
+						${k}=${v}<br>
 				</td>
 			</tr>
 	</table>

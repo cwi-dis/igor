@@ -480,8 +480,13 @@ class Access:
         print 'xxxjack attempt to get external access token for', data
         return self._defaultToken()
     
-    def getTokenDescription(self, token):
+    def getTokenDescription(self, token, tokenId=None):
         """Returns a list of dictionaries which describe the tokens"""
+        if tokenId:
+            token = token._getTokenWithIdentifier(tokenId)
+            if not token:
+                if DEBUG_DELEGATION: print 'access: getTokenDescription: no such token ID: %s' % tokenId
+                raise web.HTTPError('404 No such token: %s' % tokenId)
         return token._getTokenDescription()
         
     def newToken(self, token, tokenId, newOwner, newPath, **kwargs):

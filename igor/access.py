@@ -64,7 +64,7 @@ class BaseAccessToken:
         
     def _getTokenDescription(self):
         """Returns a list with descriptions of all tokens in this tokenset"""
-        return [dict(id=self.identifier)]
+        return [dict(cid=self.identifier)]
         
     def addToHeaders(self, headers):
         """Add this token to the (http request) headers if it has an external representation"""
@@ -112,7 +112,7 @@ class AccessToken(BaseAccessToken):
         #
         if defaultIdentifier == None:
             defaultIdentifier = 'no-id-%x' % id(self)
-        self.identifier = content.get('id', defaultIdentifier)
+        self.identifier = content.get('cid', defaultIdentifier)
         #
         # Check whether this capability is meant for this igor (no aud or aud matches our URL)
         #
@@ -239,7 +239,7 @@ class AccessToken(BaseAccessToken):
     def _getTokenDescription(self):
         """Returns a list with descriptions of all tokens in this tokenset"""
         rv = dict(self.content)
-        rv['id'] = self.identifier
+        rv['cid'] = self.identifier
         return [rv]
         
     def addToHeaders(self, headers):
@@ -517,7 +517,7 @@ class Access:
         # Construct the data for the new token.
         #
         newId = 'token-%d' % random.getrandbits(64)
-        tokenData = dict(id=newId, xpath=newPath)
+        tokenData = dict(cid=newId, xpath=newPath)
         tokenData.update(newRights)
         tokenData.update(content)
 

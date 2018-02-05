@@ -85,6 +85,7 @@ class static:
                 COMMANDS=COMMANDS,
                 SESSION=SESSION,
                 token=token,
+                json=json,
                 str=str
                 )                
             template = web.template.frender(filename, globals=globals)

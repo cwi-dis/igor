@@ -100,7 +100,13 @@ class AccessToken(BaseAccessToken):
 
     def __init__(self, content, defaultIdentifier=None):
         BaseAccessToken.__init__(self)
-        self.content = content
+        self.content = dict(content)
+        toDelete = []
+        for k in self.content:
+            if not self.content[k]:
+                toDelete.append(k)
+        for k in toDelete:
+            del self.content[k]
         #
         # Determine identifier
         #
@@ -229,6 +235,12 @@ class AccessToken(BaseAccessToken):
         if identifier == self.identifier:
             return self
         return None
+        
+    def _getTokenDescription(self):
+        """Returns a list with descriptions of all tokens in this tokenset"""
+        rv = dict(self.content)
+        rv['id'] = self.identifier
+        return [rv]
         
     def addToHeaders(self, headers):
         externalRepresentation = self._getExternalRepresentation()

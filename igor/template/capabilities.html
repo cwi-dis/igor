@@ -1,0 +1,50 @@
+$def with (**kwargs)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Capabilities</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	<h1>Igor Capabilities</h1>
+	<table style="width:100%">
+		<tr>
+			<th>Command</th>
+			<th>ID</th>
+			<th>delegate</th>
+			<th>get</th>
+			<th>put</th>
+			<th>post</th>
+			<th>delete</th>
+			<th>xpath</th>
+			<th>Comment</th>
+			<th>Rest</th>
+		</tr>
+		
+		$ capList = COMMANDS.accessControl(subcommand='getTokenDescription', token=token)
+		$for cap in capList:
+			<tr>
+				<td></td>
+				<td>${cap.pop('id', '')}</td>
+				<td>${cap.pop('delegate', '')}</td>
+				<td>${cap.pop('get', '')}</td>
+				<td>${cap.pop('put', '')}</td>
+				<td>${cap.pop('post', '')}</td>
+				<td>${cap.pop('delete', '')}</td>
+				<td>${cap.pop('xpath', '')}</td>
+				<td>${cap.pop('comment', '')}</td>
+				<td>
+					$for k,v in cap.items():
+						${k}=${v}&nbsp;
+				</td>
+			</tr>
+	</table>
+
+</body>
+</html>

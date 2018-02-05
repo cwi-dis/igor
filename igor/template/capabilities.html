@@ -1,4 +1,4 @@
-$def with (**kwargs)
+$def with (action=None, cid=None, childCid=None, **kwargs)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,49 +12,136 @@ $def with (**kwargs)
 	</style>
 </head>
 <body>
-	<h1>Igor Capabilities</h1>
+
+	$if action == None:
+		<h1>Igor Capabilities</h1>
 	
-	$if 'user' in SESSION and SESSION.user:
-		<p>
-			You are logged in as $SESSION.user. Here is the list of capabilities assigned to your user identity.
-		</p>
-	$else:
-		<p>
-			You are not logged in. Here is the set of default capabilities.
-		</p>
+		$if 'user' in SESSION and SESSION.user:
+			<p>
+				You are logged in as $SESSION.user.
+				$if cid == None:
+					Here is the list of all capabilities assigned to your user identity.
+				$else:
+					Here is the information on capability ${cid}.
+			</p>
+		$else:
+			<p>
+				You are not logged in.
+				$if cid == None:
+					Here is the set of default capabilities you have access to.
+				$else:
+					Here is the information on capability ${cid}.
+			</p>
 		
-	<table style="width:100%">
-		<tr>
-			<th>Command</th>
-			<th>ID</th>
-			<th>delegate</th>
-			<th>get</th>
-			<th>put</th>
-			<th>post</th>
-			<th>delete</th>
-			<th>xpath</th>
-			<th>Comment</th>
-			<th>Rest</th>
-		</tr>
-		
-		$ capList = COMMANDS.accessControl(subcommand='getTokenDescription', token=token)
-		$for cap in capList:
+		<table style="width:100%">
 			<tr>
-				<td></td>
-				<td>${cap.pop('cid', '')}</td>
-				<td>${cap.pop('delegate', '')}</td>
-				<td>${cap.pop('get', '')}</td>
-				<td>${cap.pop('put', '')}</td>
-				<td>${cap.pop('post', '')}</td>
-				<td>${cap.pop('delete', '')}</td>
-				<td>${cap.pop('xpath', '')}</td>
-				<td>${cap.pop('comment', '')}</td>
-				<td>
-					$for k,v in cap.items():
-						${k}=${v}<br>
-				</td>
+				<th>OP</th>
+				<th>ID</th>
+				<th>get<br>put<br>post<br>delete</th>
+				<th>xpath</th>
+				<th>Comment</th>
+				<th>Rest</th>
+				<th>Children</th>
 			</tr>
-	</table>
+		
+			$ capList = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)
+			$for cap in capList:
+				$ cid = cap.pop('cid', '')
+				$ childIDs = cap.pop('child', [])
+				<tr>
+					<td>
+						<a href="/capabilities.html?action=transfer&cid=${cid}">xfer</a>
+						$if cap.pop('delegate', ''):
+							<br>
+							<a href="/capabilities.html?action=delegate&cid=${cid}">delegate</a>
+					</td>
+					<td>${cid}</td>
+					<td align="center">
+						${cap.pop('get', '-')}<br>
+						${cap.pop('put', '-')}<br>
+						${cap.pop('post', '-')}<br>
+						${cap.pop('delete', '-')}
+					</td>
+					<td>${cap.pop('xpath', '')}</td>
+					<td>${cap.pop('comment', '')}</td>
+					<td>
+						$for k,v in cap.items():
+							${k}=${v}<br>
+					</td>
+					<td>
+						$for c in childIDs:
+							${c}
+							<a href="/capabilities.html?action=revoke&cid=${cid}&childCid=${c}">(revoke)</a>
+							<br>
+					</td>
+				</tr>
+		</table>
+		$if cid != None:
+			<p><a href="/capabilities.html">Return to full listing</a></p>
+	$elif action == "delegate":
+		<h1>Delegate capability ${cid}</h1>
+		
+		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		
+		<form action="/internal/accessControl/newToken">
+			<table>
+				<tr>
+					<th>Field</th>
+					<th>New</th>
+					<th>Old</th>
+				</tr>
+				<input name="tokenId" type="hidden" value="${cid}">
+				<tr>
+					<td>Owner</td>
+					<td><input name="newOwner" type="text" value="/data/identities/EDIT"></td>
+					<td>...</td>
+				</tr>
+				<tr>
+					<td>Path</td>
+					<td><input name="newPath" type="text" value="${cap['xpath']}/EDIT"></td>
+					<td>${cap['xpath']}</td>
+				</tr>				
+				$for right in ['get', 'put', 'post', 'delete']:
+					<tr>
+						<td>${right}</td>
+						$ disabled = '' if cap.get(right, None) else ' disabled'
+						<td>
+							<select name="${right}" ${disabled}>
+								$ selected = ' selected' if not cap.get(right) else ''
+								<option value="" ${selected}>No access</option>
+								$ selected = ' selected' if cap.get(right) == 'self' else ''
+								<option value="self" ${selected}>self</option>
+								$ selected = ' selected' if cap.get(right) == 'descendant-or-self' else ''
+								<option value="descendant-or-self" ${selected}>descendant-or-self</option>
+								$ selected = ' selected' if cap.get(right) == 'descendant' else ''
+								<option value="descendant" ${selected}>descendant</option>
+								$ selected = ' selected' if cap.get(right) == 'child' else ''
+								<option value="child" ${selected}>child</option>
+							</select>
+						</td>
+						<td>${cap.get(right, 'no access')}</td>
+					</tr>
+				<tr>
+					<td>Comment</td>
+					<td><input name="comment" type="text"></td>
+					<td>${cap.get('comment', '')}</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><input type="submit" value="Delegate"></td>
+					<td></td>
+				</tr>
+			</table>
+		</form>
+		<p><a href="/capabilities.html">Return to listing</a></p>
+	$elif action == "transfer":
+		<p>Cannnot transfer ${cid} yet.</p>
+		
+		<p><a href="/capabilities.html">Return to listing</a></p>
+	$elif action == "revoke":
+		<p>Cannnot revoke child ${childCid} of ${cid} yet.</p>
+		
+		<p><a href="/capabilities.html">Return to listing</a></p>
 
 </body>
 </html>

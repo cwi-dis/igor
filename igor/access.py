@@ -26,6 +26,10 @@ DEBUG_DELEGATION=True
 # the dummy token allows
 DEFAULT_IS_ALLOW_ALL=True
 
+
+def myWebError(msg):
+    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
+
 class AccessControlError(ValueError):
     pass
 
@@ -264,7 +268,7 @@ class AccessToken(BaseAccessToken):
             return
         elif len(capNodeList) > 1:
             print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
-            raise web.InternalError("Access: multiple capabilities with cid=%s" % self.identifier)
+            raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
         capData = singleton.database.tagAndDictFromElement(capNodeList[0])[1]
         return AccessToken(capData)
         
@@ -309,7 +313,7 @@ class AccessToken(BaseAccessToken):
             return
         elif len(capNodeList) > 1:
             print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
-            raise web.InternalError("Access: multiple capabilities with cid=%s" % self.identifier)
+            raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
         oldCapElement = capNodeList[0]
         newCapElement = singleton.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
         parentElement = oldCapElement.parentNode
@@ -386,7 +390,7 @@ class AccessChecker:
             if DEBUG: print 'access: %s %s: no access allowed for token=None' % (operation, self.destination)
             return False
         if not operation in ALL_OPERATIONS:
-            raise web.InternalError("Access: unknown operation '%s'" % operation)
+            raise myWebError("500 Access: unknown operation '%s'" % operation)
         ok = token._allows(operation, self)
         if not ok:
             identifiers = token._getIdentifiers()
@@ -429,7 +433,7 @@ class Access:
             return token
         else:
             print 'access: Invalid OTP presented: ', otp
-            raise web.HTTPError("498 Invalid OTP presented")
+            raise myWebError("498 Invalid OTP presented")
             
     def invalidateOTPForToken(self, otp):
         """Invalidate an OTP, if it still exists. Used when a plugin script exits, in case it has not used its OTP"""
@@ -449,7 +453,7 @@ class Access:
         if self._defaultTokenInstance == None and self.database:
             defaultContainer = self.database.getElements('au:access/au:defaultCapabilities', 'get', _accessSelfToken, namespaces=NAMESPACES)
             if len(defaultContainer) != 1:
-                raise web.HTTPError("501 Database should contain single au:access/au:defaultCapabilities")
+                raise myWebError("501 Database should contain single au:access/au:defaultCapabilities")
             self._defaultTokenInstance = self._tokenForElement(defaultContainer[0])
         if self._defaultTokenInstance == None:
             print 'access: _defaultToken() called but no database (or no default token in database)'
@@ -502,10 +506,10 @@ class Access:
     def _tokenForUser(self, username):
         """Internal method - Return token(s) for a user with the given name"""
         if not username or '/' in username:
-            raise web.HTTPError('401 Illegal username')
+            raise myWebError('401 Illegal username')
         elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
         if len(elements) != 1:
-            raise web.HTTPError('501 Database error: %d users named %s' % (len(elements), username))
+            raise myWebError('501 Database error: %d users named %s' % (len(elements), username))
         token = self._tokenForElement(elements[0])
         if token == None:
             token = self._defaultToken()
@@ -563,7 +567,7 @@ class Access:
             token = token._getTokenWithIdentifier(tokenId)
             if not token:
                 if DEBUG_DELEGATION: print 'access: getTokenDescription: no such token ID: %s' % tokenId
-                raise web.HTTPError('404 No such token: %s' % tokenId)
+                raise myWebError('404 No such token: %s' % tokenId)
         return token._getTokenDescription()
         
     def newToken(self, token, tokenId, newOwner, newPath, **kwargs):
@@ -584,9 +588,9 @@ class Access:
         token = token._getTokenWithIdentifier(tokenId)
         if not token:
             if DEBUG_DELEGATION: print 'access: newToken: no such token ID: %s' % tokenId
-            raise web.HTTPError('404 No such token: %s' % tokenId)
+            raise myWebError('404 No such token: %s' % tokenId)
         if not token._allowsDelegation(newPath, newRights):
-            raise web.HTTPError('401 Delegation not allowed')
+            raise myWebError('401 Delegation not allowed')
         #
         # Check the new parent exists
         #
@@ -621,7 +625,11 @@ class Access:
     def revokeToken(self, token, parentId, tokenId):
         """Revoke a token"""
         parentToken = token._getTokenWithIdentifier(parentId)
+        if not parentToken:
+            raise myWebError("404 No such parent token: %s" % parentId)
         childToken = token._getTokenWithIdentifier(tokenId)
+        if not childToken:
+            raise myWebError("404 No such token: %s" % tokenId)
         self._addToRevokeList(tokenId)
         childToken._revoke()
         parentToken._delChild(tokenId)
@@ -647,7 +655,7 @@ class Access:
             if DEBUG: print 'access: basic authentication: database, username or password missing'
             return False
         if '/' in username:
-            raise web.HTTPError('401 Illegal username')
+            raise myWebError('401 Illegal username')
         encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
         if not encryptedPassword:
             if DEBUG: print 'access: basic authentication: no encryptedPassword for user', username

@@ -526,7 +526,7 @@ class Access:
         tokenData.update(newRights)
         tokenData.update(content)
 
-        element = self.database.elementFromTagAndData("capability", tokenData, namespace=NAMESPACES["au"])
+        element = self.database.elementFromTagAndData("capability", tokenData, namespace=NAMESPACES)
         #
         # Insert into the tree
         #

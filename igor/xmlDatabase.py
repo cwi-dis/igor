@@ -345,7 +345,10 @@ class DBImpl(DBSerializer):
     def _createElementWithEscaping(self, tag, namespace=None):
         if namespace:
             assert TAG_PATTERN.match(tag)
-            return self._doc.createElementNS(namespace, tag)
+            nsItems = namespace.items()
+            assert len(nsItems) == 1
+            nsTag, nsUrl = nsItems[0]
+            return self._doc.createElementNS(nsUrl, nsTag + ':' + tag)
         if TAG_PATTERN.match(tag) and not tag == "_e":
             return self._doc.createElement(tag)
         rv = self._doc.createElement("_e")

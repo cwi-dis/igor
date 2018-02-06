@@ -13,7 +13,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 </head>
 <body>
 
-	$if action == None:
+	$if action == None or action == 'list':
 		<h1>Igor Capabilities</h1>
 	
 		$if 'user' in SESSION and SESSION.user:
@@ -71,7 +71,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					</td>
 					<td>
 						$for c in childIDs:
-							${c}
+							<a href="/capabilities.html?action=list&cid=${c}">${c}</a>
 							<a href="/capabilities.html?action=revoke&cid=${cid}&childCid=${c}">(revoke)</a>
 							<br>
 					</td>
@@ -140,7 +140,36 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		
 		<p><a href="/capabilities.html">Return to listing</a></p>
 	$elif action == "revoke":
-		<p>Cannnot revoke child ${childCid} of ${cid} yet.</p>
+		<h1>Revoke capability ${cid}</h1>
+		
+		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		
+		<form action="/internal/accessControl/revokeToken">
+			<table>
+				<tr>
+					<th>Field</th>
+					<th>Value</th>
+				</tr>
+				<input name="tokenId" type="hidden" value="${cid}">
+				<tr>
+					<td>Path</td>
+					<td>${cap['xpath']}</td>
+				</tr>				
+				$for right in ['get', 'put', 'post', 'delete']:
+					<tr>
+						<td>${right}</td>
+						<td>${cap.get(right, 'no access')}</td>
+					</tr>
+				<tr>
+					<td>Comment</td>
+					<td>${cap.get('comment', '')}</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><input type="submit" value="Revoke"></td>
+				</tr>
+			</table>
+		</form>
 		
 		<p><a href="/capabilities.html">Return to listing</a></p>
 

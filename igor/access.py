@@ -242,7 +242,24 @@ class AccessToken(BaseAccessToken):
     def _getTokenWithIdentifier(self, identifier):
         if identifier == self.identifier:
             return self
-        return None
+        #
+        # We also return the data for child tokens, if needed.
+        # xxxjack I don't like this...
+        #
+        children = self.content.get('child', [])
+        if type(children) != type([]):
+            children = [children]
+        if not identifier in children:
+            return None
+        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
+        if len(capNodeList) == 0:
+            print 'access: Warning: Cannot save token %s because it is not in the database' % self.identifier
+            return
+        elif len(capNodeList) > 1:
+            print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
+            raise web.InternalError("Access: multiple capabilities with cid=%s" % self.identifier)
+        capData = singleton.database.tagAndDictFromElement(capNodeList[0])[1]
+        return AccessToken(capData)
         
     def _getTokenDescription(self):
         """Returns a list with descriptions of all tokens in this tokenset"""
@@ -570,6 +587,10 @@ class Access:
         
     def passToken(self, token, tokenId, oldOwner, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
+        assert 0
+        
+    def revokeToken(self, token, tokenId):
+        """Revoke a token"""
         assert 0
         
     def exportToken(self, token, tokenId, audience):

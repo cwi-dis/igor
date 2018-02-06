@@ -15,12 +15,17 @@ def main():
     parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures", default=igorVar.CONFIG.get('igor', 'noverify'))
     parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file", default=igorVar.CONFIG.get('igor', 'certificate'))
     parser.add_argument("action", help="Action to perform: help, save, stop, restart, command, ...")
+    parser.add_argument("arguments", help="Arguments to the action", metavar="NAME=VALUE", nargs="*")
     
     args = parser.parse_args()
     igorVar.VERBOSE = args.verbose
+    query = {}
+    for qstr in args.arguments:
+        qname, qvalue = qstr.split('=')
+        query[qname] = qvalue
     server = igorVar.IgorServer(args.url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
     try:
-        result = server.get("/internal/%s" % args.action)
+        result = server.get("/internal/%s" % args.action, query=query)
     except httplib2.HttpLib2Error as e:
         print >> sys.stderr, "%s: %s" % (sys.argv[0], traceback.format_exception_only(type(e), e.message)[0].strip())
         sys.exit(1)

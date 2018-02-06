@@ -51,31 +51,30 @@ class IgorServer:
         self.certificate = certificate
         self.noverify = not not noverify
         
-    def get(self, item, variant=None, format=None):
+    def get(self, item, variant=None, format=None, query={}):
         if format == None:
             format = 'application/xml'
-        return self._action("GET", item, variant, format)
+        return self._action("GET", item, variant, format=format, query=query)
         
-    def delete(self, item, variant=None, format=None):
+    def delete(self, item, variant=None, format=None, query={}):
         if variant == None:
             variant = "ref"
         if format == None:
             format = "text/plain"
-        return self._action("DELETE", item, variant, format)
+        return self._action("DELETE", item, variant, format=format, query=query)
         
-    def put(self, item, data, datatype, variant=None, format=None):
+    def put(self, item, data, datatype, variant=None, format=None, query={}):
         if format == None:
             format = 'text/plain'
-        return self._action("PUT", item, variant, format, data=data, datatype=datatype)
+        return self._action("PUT", item, variant, format=format, data=data, datatype=datatype, query=query)
         
-    def post(self, item, data, datatype, variant=None, format=None):
+    def post(self, item, data, datatype, variant=None, format=None, query={}):
         if format == None:
             format = 'text/plain'
         return self._action("POST", item, variant, format, data=data, datatype=datatype)
         
-    def _action(self, method, item, variant, format=None, data=None, datatype=None):
+    def _action(self, method, item, variant, format=None, data=None, datatype=None, query={}):
         url = urlparse.urljoin(self.url, item)
-        query = {}
         if variant:
             query['.VARIANT'] = variant
         if self.access_token:

@@ -215,7 +215,7 @@ class AccessToken(BaseAccessToken):
                 if DEBUG_DELEGATION: print 'access: delegate %s: no %s access allowed by AccessToken %s' % (newPath, operation, self)
                 return False
             if newIsSelf:
-                if not newCascadingRule in CASCDING_RULES_IMPLIED.get(oldCascadingRule, {}):
+                if not newCascadingRule in CASCADING_RULES_IMPLIED.get(oldCascadingRule, {}):
                     if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
                     return False
             elif newIsChild:

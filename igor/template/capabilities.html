@@ -140,9 +140,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		
 		<p><a href="/capabilities.html">Return to listing</a></p>
 	$elif action == "revoke":
-		<h1>Revoke capability ${cid}</h1>
+		<h1>Revoke capability ${childCid}</h1>
 		
-		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=childCid)[0]
 		
 		<form action="/internal/accessControl/revokeToken">
 			<table>
@@ -150,10 +150,15 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<th>Field</th>
 					<th>Value</th>
 				</tr>
-				<input name="tokenId" type="hidden" value="${cid}">
+				<input name="parentId" type="hidden" value="${cid}">
+				<input name="tokenId" type="hidden" value="${childCid}">
 				<tr>
-					<td>Path</td>
-					<td>${cap['xpath']}</td>
+					<td>ID</td>
+					<td>${childCid}</td>
+				</tr>				
+				<tr>
+					<td>Parent</td>
+					<td>${cid}</td>
 				</tr>				
 				$for right in ['get', 'put', 'post', 'delete']:
 					<tr>
@@ -163,6 +168,12 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td>Comment</td>
 					<td>${cap.get('comment', '')}</td>
+				</tr>
+				<tr>Children</tr>
+				<tr>
+					$for gcid in cap.get('child', []):
+						${gcid}
+						<br>
 				</tr>
 				<tr>
 					<td></td>

@@ -69,9 +69,16 @@ class BaseAccessToken:
     def _addChild(self, childId):
         """Register a new child token to this one"""
         assert 0
+
+    def _delChild(self, childId):
+        """Unregister a child token"""
         
     def _save(self):
         """Saves a token back to stable storage"""
+        assert 0
+        
+    def _revoke(self):
+        """Revoke this token"""
         assert 0
         
     def addToHeaders(self, headers):
@@ -277,7 +284,19 @@ class AccessToken(BaseAccessToken):
         """Register a new child token to this one"""
         if DEBUG_DELEGATION: print 'access: adding child %s to %s' % (childId, self.identifier)
         children = self.content.get('child', [])
+        if type(children) != type([]):
+            children = [children]
         children.append(childId)
+        self.content['child'] = children
+        self._save()
+        
+    def _delChild(self, childId):
+        """Unregister a child token"""
+        if DEBUG_DELEGATION: print 'access: adding child %s to %s' % (childId, self.identifier)
+        children = self.content.get('child', [])
+        if type(children) != type([]):
+            children = [children]
+        children.remove(childId)
         self.content['child'] = children
         self._save()
         
@@ -295,7 +314,17 @@ class AccessToken(BaseAccessToken):
         newCapElement = singleton.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
         parentElement = oldCapElement.parentNode
         parentElement.replaceChild(newCapElement, oldCapElement)
-                
+              
+    def _revoke(self):
+        """Revoke this token"""
+        if DEBUG_DELEGATION: print 'access: revoking capability %s' % self.identifier
+        children = self.content.get('child', [])
+        if type(children) != type([]):
+            children = [children]
+        for ch in children:
+            print 'access: WARNING: Recursive delete of capability not yet implemented: %s' % ch
+        singleton.database.delValues("//au:capability[cid='%s']" % self.identifier, _accessSelfToken, namespaces=NAMESPACES)
+          
 class ExternalAccessToken(BaseAccessToken):
     def __init__(self, content):
         assert 0
@@ -589,13 +618,27 @@ class Access:
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
         assert 0
         
-    def revokeToken(self, token, tokenId):
+    def revokeToken(self, token, parentId, tokenId):
         """Revoke a token"""
-        assert 0
+        parentToken = token._getTokenWithIdentifier(parentId)
+        childToken = token._getTokenWithIdentifier(tokenId)
+        self._addToRevokeList(tokenId)
+        childToken._revoke()
+        parentToken._delChild(tokenId)
         
     def exportToken(self, token, tokenId, audience):
         """Create an external representation of this token, destined for the given audience"""
         assert 0
+        
+    def _addToRevokeList(self, tokenId):
+        """Add given token to the revocation list"""
+        # xxxjack to be implemented
+        pass
+        
+    def _isTokenOnRevokeList(self, tokenId):
+        """Check whether a given token is on the revoke list"""
+        # xxxjack to be implemented
+        return False
         
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""

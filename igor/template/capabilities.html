@@ -48,6 +48,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 			$for cap in capList:
 				$ cid = cap.pop('cid', '')
 				$ childIDs = cap.pop('child', [])
+				$ if type(childIDs) != type([]): childIDs = [childIDs]
 				<tr>
 					<td>
 						<a href="/capabilities.html?action=transfer&cid=${cid}">xfer</a>

@@ -86,7 +86,8 @@ class static:
                 SESSION=SESSION,
                 token=token,
                 json=json,
-                str=str
+                str=str,
+                type=type
                 )                
             template = web.template.frender(filename, globals=globals)
             try:

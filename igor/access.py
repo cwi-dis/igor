@@ -66,6 +66,14 @@ class BaseAccessToken:
         """Returns a list with descriptions of all tokens in this tokenset"""
         return [dict(cid=self.identifier)]
         
+    def _addChild(self, childId):
+        """Register a new child token to this one"""
+        assert 0
+        
+    def _save(self):
+        """Saves a token back to stable storage"""
+        assert 0
+        
     def addToHeaders(self, headers):
         """Add this token to the (http request) headers if it has an external representation"""
         pass
@@ -247,7 +255,30 @@ class AccessToken(BaseAccessToken):
         if not externalRepresentation:
             return
         headers['Authorization'] = 'Bearer ' + externalRepresentation
+
+    def _addChild(self, childId):
+        """Register a new child token to this one"""
+        if DEBUG_DELEGATION: print 'access: adding child %s to %s' % (childId, self.identifier)
+        children = self.content.get('child', [])
+        children.append(childId)
+        self.content['child'] = children
+        self._save()
         
+    def _save(self):
+        """Saves a token back to stable storage"""
+        if DEBUG_DELEGATION: print 'access: saving capability %s' % self.identifier
+        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % self.identifier, 'put', _accessSelfToken, namespaces=NAMESPACES)
+        if len(capNodeList) == 0:
+            print 'access: Warning: Cannot save token %s because it is not in the database' % self.identifier
+            return
+        elif len(capNodeList) > 1:
+            print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
+            raise web.InternalError("Access: multiple capabilities with cid=%s" % self.identifier)
+        oldCapElement = capNodeList[0]
+        newCapElement = singleton.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
+        parentElement = oldCapElement.parentNode
+        parentElement.replaceChild(newCapElement, oldCapElement)
+                
 class ExternalAccessToken(BaseAccessToken):
     def __init__(self, content):
         assert 0
@@ -522,7 +553,8 @@ class Access:
         # Construct the data for the new token.
         #
         newId = 'token-%d' % random.getrandbits(64)
-        tokenData = dict(cid=newId, xpath=newPath)
+        token._addChild(newId)
+        tokenData = dict(cid=newId, xpath=newPath, parent=tokenId)
         tokenData.update(newRights)
         tokenData.update(content)
 

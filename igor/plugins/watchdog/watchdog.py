@@ -9,7 +9,7 @@ class WatchdogClass:
         self.stop_feeding = time.time() + self.watchdog_timeout
         watchdogClass._singleton = self
         
-    def index(self, timeout=None, device='/dev/watchdog', token):
+    def index(self, timeout=None, device='/dev/watchdog', token=None):
         """Initialize and/or feed the watchdog"""
         # Close the watchdog, if that is what is wanted
         if timeout == 0:

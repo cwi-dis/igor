@@ -85,6 +85,18 @@ class BaseAccessToken:
         """Revoke this token"""
         assert 0
         
+    def _getOwner(self):
+        """Is the current carrier the owner of this token?"""
+        return False
+        
+    def _setOwner(self, newOwner):
+        """Set new owner of this token"""
+        assert 0
+        
+    def _removeToken(self, tokenId):
+        """Remove token tokenId from this set"""
+        assert 0
+        
     def addToHeaders(self, headers):
         """Add this token to the (http request) headers if it has an external representation"""
         pass
@@ -117,8 +129,9 @@ _accessSelfToken = _igorSelfToken
 class AccessToken(BaseAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
 
-    def __init__(self, content, defaultIdentifier=None):
+    def __init__(self, content, defaultIdentifier=None, owner=None):
         BaseAccessToken.__init__(self)
+        self.owner = owner
         self.content = dict(content)
         toDelete = []
         for k in self.content:
@@ -276,6 +289,7 @@ class AccessToken(BaseAccessToken):
         """Returns a list with descriptions of all tokens in this tokenset"""
         rv = dict(self.content)
         rv['cid'] = self.identifier
+        rv['owner'] = self.owner
         return [rv]
         
     def addToHeaders(self, headers):
@@ -319,6 +333,33 @@ class AccessToken(BaseAccessToken):
         parentElement = oldCapElement.parentNode
         parentElement.replaceChild(newCapElement, oldCapElement)
               
+    def _getOwner(self):
+        return self.owner
+        
+    def _setOwner(self, newOwner):
+        """Set new owner of this token"""
+        if DEBUG_DELEGATION: print 'access: set owner %s on capability %s' % (newOwner, self.identifier)
+        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % self.identifier, 'delete', _accessSelfToken, namespaces=NAMESPACES)
+        if len(capNodeList) == 0:
+            print 'access: Warning: Cannot setOwner token %s because it is not in the database' % self.identifier
+            return
+        elif len(capNodeList) > 1:
+            print 'access: Error: Cannot setOwner token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
+            raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
+        oldCapElement = capNodeList[0]
+        parentElement = oldCapElement.parentNode
+        newParentElementList = singleton.database.getElements(newOwner, "post", _accessSelfToken)
+        if len(newParentElementList) == 0:
+            print 'access: cannot setOwner %s because it is not in the database'
+            raise myWebError("401 Unknown new token owner %s" % newOwner)
+        if len(newParentElementList) > 1:
+            print 'access: cannot setOwner %s because it occurs multiple times in the database'
+            raise myWebError("401 Multiple new token owner %s" % newOwner)
+        newParentElement = newParentElementList[0]
+        newCapElement = singleton.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
+        newParentElement.appendChild(oldCapElement) # This also removes it from where it is now...
+        self.owner = newOwner
+
     def _revoke(self):
         """Revoke this token"""
         if DEBUG_DELEGATION: print 'access: revoking capability %s' % self.identifier
@@ -335,10 +376,10 @@ class ExternalAccessToken(BaseAccessToken):
         
 class MultiAccessToken(BaseAccessToken):
 
-    def __init__(self, contentList):
+    def __init__(self, contentList, owner=None):
         self.tokens = []
         for c in contentList:
-            self.tokens.append(AccessToken(c))
+            self.tokens.append(AccessToken(c, owner=owner))
 
     def _getIdentifiers(self):
         rv = []
@@ -377,6 +418,17 @@ class MultiAccessToken(BaseAccessToken):
             if t._hasExternalRepresentation():
                 t.addToHeaders(headers)
                 return
+
+    def _removeToken(self, tokenId):
+        """Remove token tokenId from this set"""
+        toRemove = None
+        for t in self.tokens:
+            if t.identifier == tokenId:
+                toRemove = t
+                break
+        assert toRemove
+        self.tokens.remove(t)
+        
                    
 class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
@@ -480,15 +532,15 @@ class Access:
             return DefaultAccessChecker()
         return AccessChecker(entrypoint)
         
-    def _tokenForElement(self, element):
+    def _tokenForElement(self, element, owner=None):
         """Internal method - returns token(s) that are stored in a given element (identity/action/plugindata/etc)"""
         nodelist = xpath.find("au:capability", element, namespaces=NAMESPACES)
         if not nodelist:
             return None
         tokenDataList = map(lambda e: self.database.tagAndDictFromElement(e)[1], nodelist)
         if len(tokenDataList) > 1:
-            return MultiAccessToken(tokenDataList)
-        rv = AccessToken(tokenDataList[0])
+            return MultiAccessToken(tokenDataList, owner=owner)
+        rv = AccessToken(tokenDataList[0], owner=owner)
         return rv
         
     def tokenForAction(self, element):
@@ -510,7 +562,7 @@ class Access:
         elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
         if len(elements) != 1:
             raise myWebError('501 Database error: %d users named %s' % (len(elements), username))
-        token = self._tokenForElement(elements[0])
+        token = self._tokenForElement(elements[0], owner='identities/%s' % username)
         if token == None:
             token = self._defaultToken()
             if DEBUG: print 'access: no token found for user %s' % username
@@ -618,9 +670,17 @@ class Access:
         #
         return newId
         
-    def passToken(self, token, tokenId, oldOwner, newOwner):
+    def passToken(self, token, tokenId, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
-        assert 0
+        tokenToPass = token._getTokenWithIdentifier(tokenId)
+        oldOwner = tokenToPass._getOwner()
+        if not oldOwner:
+            raise myWebError("401 Not owner of token %s" % tokenId)
+        if oldOwner == newOwner:
+            return ''
+        if not tokenToPass._setOwner(newOwner):
+            raise myWebError("401 Cannot move token %s to new owner %s" % (tokenId, newOwner))
+        token._removeToken(tokenId)
         
     def revokeToken(self, token, parentId, tokenId):
         """Revoke a token"""

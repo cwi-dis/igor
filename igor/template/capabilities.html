@@ -51,7 +51,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				$ if type(childIDs) != type([]): childIDs = [childIDs]
 				<tr>
 					<td>
-						<a href="/capabilities.html?action=transfer&cid=${cid}">xfer</a>
+						$if cap.pop('owner', ''):
+							<a href="/capabilities.html?action=transfer&cid=${cid}">xfer</a>
 						$if cap.pop('delegate', ''):
 							<br>
 							<a href="/capabilities.html?action=delegate&cid=${cid}">delegate</a>

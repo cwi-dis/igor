@@ -342,7 +342,7 @@ class AccessToken(BaseAccessToken):
         capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % self.identifier, 'delete', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
             print 'access: Warning: Cannot setOwner token %s because it is not in the database' % self.identifier
-            return
+            return False
         elif len(capNodeList) > 1:
             print 'access: Error: Cannot setOwner token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
             raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
@@ -359,6 +359,7 @@ class AccessToken(BaseAccessToken):
         newCapElement = singleton.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
         newParentElement.appendChild(oldCapElement) # This also removes it from where it is now...
         self.owner = newOwner
+        return True
 
     def _revoke(self):
         """Revoke this token"""

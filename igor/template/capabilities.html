@@ -137,8 +137,46 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		</form>
 		<p><a href="/capabilities.html">Return to listing</a></p>
 	$elif action == "transfer":
-		<p>Cannnot transfer ${cid} yet.</p>
+		<h1>Delegate capability ${cid}</h1>
 		
+		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		
+		<form action="/internal/accessControl/passToken">
+			<table>
+				<tr>
+					<th>Field</th>
+					<th>New</th>
+					<th>Old</th>
+				</tr>
+				<input name="tokenId" type="hidden" value="${cid}">
+				<tr>
+					<td>Owner</td>
+					<td><input name="newOwner" type="text" value="/data/identities/EDIT"></td>
+					<td>...</td>
+				</tr>
+				<tr>
+					<td>Path</td>
+					<td>${cap['xpath']}</td>
+					<td>${cap['xpath']}</td>
+				</tr>				
+				$for right in ['get', 'put', 'post', 'delete']:
+					<tr>
+						<td>${right}</td>
+						<td>${cap.get(right, 'no access')}</td>
+						<td>${cap.get(right, 'no access')}</td>
+					</tr>
+				<tr>
+					<td>Comment</td>
+					<td>${cap.get('comment', '')}</td>
+					<td>${cap.get('comment', '')}</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><input type="submit" value="Transfer"></td>
+					<td></td>
+				</tr>
+			</table>
+		</form>
 		<p><a href="/capabilities.html">Return to listing</a></p>
 	$elif action == "revoke":
 		<h1>Revoke capability ${childCid}</h1>

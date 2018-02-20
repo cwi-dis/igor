@@ -52,10 +52,12 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td>
 						$if cap.pop('owner', ''):
-							<a href="/capabilities.html?action=transfer&cid=${cid}">xfer</a>
+							<a href="/capabilities.html?action=transfer&cid=${cid}">transfer</a>
 						$if cap.pop('delegate', ''):
 							<br>
 							<a href="/capabilities.html?action=delegate&cid=${cid}">delegate</a>
+							<br>
+							<a href="/capabilities.html?action=export&cid=${cid}">export</a>
 					</td>
 					<td>${cid}</td>
 					<td align="center">
@@ -173,6 +175,67 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td></td>
 					<td><input type="submit" value="Transfer"></td>
+					<td></td>
+				</tr>
+			</table>
+		</form>
+		<p><a href="/capabilities.html">Return to listing</a></p>
+	$elif action == "export":
+		<h1>Export capability ${cid}</h1>
+		
+		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		
+		<form action="/internal/accessControl/exportToken">
+			<table>
+				<tr>
+					<th>Field</th>
+					<th>New</th>
+					<th>Old</th>
+				</tr>
+				<input name="tokenId" type="hidden" value="${cid}">
+				<tr>
+					<td>Subject</td>
+					<td>
+						<select name="subject" required>
+						$for sub in COMMANDS.accessControl(subcommand='getSubjectList'):
+							<option value="$sub">$sub</option>
+						</select>
+					</td>
+					<td>n.a.</td>
+				</tr>
+				<tr>
+					<td>Lifetime (seconds)</td>
+					<td><input name="lifetime" type="text" value=""></td>
+					<td>n.a.</td>
+				</tr>
+				$for right in ['get', 'put', 'post', 'delete']:
+					<tr>
+						<td>${right}</td>
+						$ disabled = '' if cap.get(right, None) else ' disabled'
+						<td>
+							<select name="${right}" ${disabled}>
+								$ selected = ' selected' if not cap.get(right) else ''
+								<option value="" ${selected}>No access</option>
+								$ selected = ' selected' if cap.get(right) == 'self' else ''
+								<option value="self" ${selected}>self</option>
+								$ selected = ' selected' if cap.get(right) == 'descendant-or-self' else ''
+								<option value="descendant-or-self" ${selected}>descendant-or-self</option>
+								$ selected = ' selected' if cap.get(right) == 'descendant' else ''
+								<option value="descendant" ${selected}>descendant</option>
+								$ selected = ' selected' if cap.get(right) == 'child' else ''
+								<option value="child" ${selected}>child</option>
+							</select>
+						</td>
+						<td>${cap.get(right, 'no access')}</td>
+					</tr>
+				<tr>
+					<td>Comment</td>
+					<td><input name="comment" type="text"></td>
+					<td>${cap.get('comment', '')}</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><input type="submit" value="Export"></td>
 					<td></td>
 				</tr>
 			</table>

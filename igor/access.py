@@ -4,6 +4,8 @@ import xpath
 import base64
 import jwt
 import random
+import time
+import urlparse
 
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
@@ -92,6 +94,10 @@ class BaseAccessToken:
     def _setOwner(self, newOwner):
         """Set new owner of this token"""
         assert 0
+
+    def _getObject(self):
+        """Returns the object to which this token pertains"""
+        return None
         
     def _removeToken(self, tokenId):
         """Remove token tokenId from this set"""
@@ -150,7 +156,7 @@ class AccessToken(BaseAccessToken):
         #
         if 'aud' in content:
             audience = content['aud']
-            ourUrl = singleton.database.getValue('services/igor/url', _accessSelfToken)
+            ourUrl = singleton._getSelfAudience()
             self.validForSelf = (audience == ourUrl)
             if DEBUG: print 'access: <aud> matches: %s' % self.validForSelf
         else:
@@ -168,13 +174,13 @@ class AccessToken(BaseAccessToken):
         aud = self.content.get('aud')
         # xxxjack Could check for multiple aud values based on URL to contact...
         if not iss or not aud:
-            if DEBUG: print 'access: _getExternalRepresentation: no iss and aud, so no external representation'
-            return None
+            print 'access: _getExternalRepresentation: no iss and aud, so no external representation'
+            raise myWebError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
         externalKey = singleton.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         if not externalKey:
-            if DEBUG: print 'access: _getExternalRepresentation: no key found at %s' % keyPath
-            return
+            print 'access: _getExternalRepresentation: no key found at %s' % keyPath
+            raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
         externalRepresentation = jwt.encode(self.content, externalKey, algorithm='HS256')
         if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
         return externalRepresentation
@@ -361,6 +367,10 @@ class AccessToken(BaseAccessToken):
         self.owner = newOwner
         return True
 
+    def _getObject(self):
+        """Returns the object to which this token pertains"""
+        return self.content.get('xpath')
+
     def _revoke(self):
         """Revoke this token"""
         if DEBUG_DELEGATION: print 'access: revoking capability %s' % self.identifier
@@ -469,6 +479,7 @@ class Access:
         self.session = None
         self._otp2token = {}
         self._defaultTokenInstance = None
+        self._self_audience = None
         
     def produceOTPForToken(self, token):
         """Produce a one-time-password form of this token, for use internally or for passing to a plugin script (to be used once)"""
@@ -623,7 +634,7 @@ class Access:
                 raise myWebError('404 No such token: %s' % tokenId)
         return token._getTokenDescription()
         
-    def newToken(self, token, tokenId, newOwner, newPath, **kwargs):
+    def newToken(self, token, tokenId, newOwner, newPath=None, **kwargs):
         """Create a new token based on an existing token. Returns ID of new token."""
         #
         # Split remaining args into rights and other content
@@ -639,6 +650,8 @@ class Access:
         # Check that original token exists, and allows this delegation
         #
         token = token._getTokenWithIdentifier(tokenId)
+        if newPath == None:
+                newPath = token._getObject()
         if not token:
             if DEBUG_DELEGATION: print 'access: newToken: no such token ID: %s' % tokenId
             raise myWebError('404 No such token: %s' % tokenId)
@@ -647,7 +660,7 @@ class Access:
         #
         # Check the new parent exists
         #
-        parentElement = self.database.getElements(newOwner, 'post', _accessSelfToken)
+        parentElement = self.database.getElements(newOwner, 'post', _accessSelfToken, namespaces=NAMESPACES)
         if len(parentElement) != 1:
             if DEBUG_DELEGATION: print 'access: newToken: no unique destination %s' % newOwner
             raise web.notfound()
@@ -695,10 +708,48 @@ class Access:
         childToken._revoke()
         parentToken._delChild(tokenId)
         
-    def exportToken(self, token, tokenId, audience):
-        """Create an external representation of this token, destined for the given audience"""
-        assert 0
+    def exportToken(self, token, tokenId, subject=None, lifetime=None, **kwargs):
+        """Create an external representation of this token, destined for the given subject"""
+        #
+        # Add keys needed for external token
+        #
+        if subject:
+            kwargs['sub'] = subject
+        if not lifetime:
+            lifetime = 60*60*24*365 # One year
+        lifetime = int(lifetime)
+        kwargs['nvb'] = str(int(time.time())-1)
+        kwargs['nva'] = str(int(time.time()) + lifetime)
+        if not 'aud' in kwargs:
+            kwargs['aud'] = self._getSelfAudience()
+        kwargs['iss'] = self._getSelfIssuer()
+        #
+        # Create the new token
+        #
+        newTokenId = self.newToken(token, tokenId, self._getExternalTokenOwner(), **kwargs)
+        tokenToExport = token._getTokenWithIdentifier(newTokenId)
+        #
+        # Create the external representation
+        #
+        assert tokenToExport._hasExternalRepresentation()
+        externalRepresentation = tokenToExport._getExternalRepresentation()
+        return externalRepresentation
         
+    def _getSelfAudience(self):
+        """Return an audience identifier that refers to us"""
+        if not self._self_audience:
+            self._self_audience = singleton.database.getValue('services/igor/url', _accessSelfToken)
+        return self._self_audience
+
+
+    def _getSelfIssuer(self):
+        """Return ourselves as an issuer"""
+        return urlparse.urljoin(self._getSelfAudience(),  '/issuer')
+
+    def _getExternalTokenOwner(self):
+        """Return the location where we store external tokens"""
+        return '/data/au:access/au:exportedCapabilities'
+
     def _addToRevokeList(self, tokenId):
         """Add given token to the revocation list"""
         # xxxjack to be implemented
@@ -709,6 +760,23 @@ class Access:
         # xxxjack to be implemented
         return False
         
+    def getSubjectList(self):
+        """Return list of subjects that trust this issuer"""
+        # xxxjack this is wrong: it also returns keys shared with other issuers
+        subjectValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
+        subjectValues = map(lambda x : x[1], subjectValues)
+        subjectValues = list(subjectValues)
+        subjectValues.sort()
+        return subjectValues
+
+    def getAudienceList(self):
+        """Return list of audiences that trust this issuer"""
+        audienceValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
+        audienceValues = set(audienceValues)
+        audienceValues = list(audienceValues)
+        audienceValues.sort()
+        return audienceValues
+
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""
         # xxxjack this method should not be in the Access element

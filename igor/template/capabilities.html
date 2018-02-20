@@ -220,7 +220,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 						<td>Can Delegate</td>
 						<td>
 							$if cap.get('delegate'):
-							<input name="delegate" type="checkbox" value="true" checked>
+							<input name="delegate" type="checkbox" value="true">
 						</td>
 						<td>${'yes' if cap.get('delegate') else 'no'}</td>
 				</tr>			
@@ -281,18 +281,25 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				$for right in ['get', 'put', 'post', 'delete']:
 					<tr>
 						<td>${right}</td>
-						<td>${cap.get(right, 'no access')}</td>
+						<td>${cap.pop(right, 'no access')}</td>
 					</tr>
 				<tr>
 					<td>Comment</td>
-					<td>${cap.get('comment', '')}</td>
+					<td>${cap.pop('comment', '')}</td>
 				</tr>
-				<tr>Children</tr>
 				<tr>
-					$for gcid in cap.get('child', []):
-						${gcid}
-						<br>
+					<td>Children</td>
+					<td>
+						$for gcid in cap.pop('child', []):
+							${gcid}
+							<br>
+					</td>
 				</tr>
+				$for k, v in cap.items():
+					<tr>
+						<td>${k}</td>
+						<td>${v}</td>
+					</tr>
 				<tr>
 					<td></td>
 					<td><input type="submit" value="Revoke"></td>

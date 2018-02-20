@@ -381,10 +381,19 @@ class AccessToken(BaseAccessToken):
             print 'access: WARNING: Recursive delete of capability not yet implemented: %s' % ch
         singleton.database.delValues("//au:capability[cid='%s']" % self.identifier, _accessSelfToken, namespaces=NAMESPACES)
           
-class ExternalAccessToken(BaseAccessToken):
+class ExternalAccessTokenImplementation(AccessToken):
     def __init__(self, content):
-        assert 0
+        AccessToken.__init__(self, content)
         
+def ExternalAccessToken(content):
+    sharedKey = 'xyzzy'
+    try:
+        content = jwt.decode(content, sharedKey, algorithm='RS256')
+    except jwt.DecodeError:
+        print 'access: ERROR: incorrect signature on bearer token %s' % content
+        raise myWebError('400 Incorrect signature on key')
+    return ExternalAccessTokenImplementation(content)
+
 class MultiAccessToken(BaseAccessToken):
 
     def __init__(self, contentList, owner=None):
@@ -622,8 +631,7 @@ class Access:
     def _externalAccessToken(self, data):
         """Internal method - Create a token from the given "Authorization: bearer" data"""
         # xxxjack not yet implemented
-        print 'xxxjack attempt to get external access token for', data
-        return self._defaultToken()
+        return ExternalAccessToken(data)
     
     def getTokenDescription(self, token, tokenId=None):
         """Returns a list of dictionaries which describe the tokens"""

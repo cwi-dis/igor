@@ -104,7 +104,15 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<td>Path</td>
 					<td><input name="newPath" type="text" value="${cap['xpath']}/EDIT"></td>
 					<td>${cap['xpath']}</td>
-				</tr>				
+				</tr>
+				<tr>
+					<td>Can Delegate</td>
+					<td>
+						$if cap.get('delegate'):
+						<input name="delegate" type="checkbox" value="true" checked>
+					</td>
+					<td>${'yes' if cap.get('delegate') else 'no'}</td>
+				</tr>			
 				$for right in ['get', 'put', 'post', 'delete']:
 					<tr>
 						<td>${right}</td>
@@ -208,6 +216,14 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<td><input name="lifetime" type="text" value=""></td>
 					<td>n.a.</td>
 				</tr>
+				<tr>
+						<td>Can Delegate</td>
+						<td>
+							$if cap.get('delegate'):
+							<input name="delegate" type="checkbox" value="true" checked>
+						</td>
+						<td>${'yes' if cap.get('delegate') else 'no'}</td>
+				</tr>			
 				$for right in ['get', 'put', 'post', 'delete']:
 					<tr>
 						<td>${right}</td>

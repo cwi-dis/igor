@@ -642,7 +642,8 @@ class Access:
         newRights = {}
         content = {}
         for k, v in kwargs.items():
-            if k in ALL_OPERATIONS:
+            # Note delegate right is checked implicitly, below.
+            if k in NORMAL_OPERATIONS:
                 newRights[k] = v
             else:
                 content[k] = v

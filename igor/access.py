@@ -176,11 +176,7 @@ class AccessToken(BaseAccessToken):
         if not iss or not aud:
             print 'access: _getExternalRepresentation: no iss and aud, so no external representation'
             raise myWebError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
-        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
-        externalKey = singleton.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
-        if not externalKey:
-            print 'access: _getExternalRepresentation: no key found at %s' % keyPath
-            raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
+        externalKey = singleton._getSharedKey(iss, aud)
         externalRepresentation = jwt.encode(self.content, externalKey, algorithm='HS256')
         if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
         return externalRepresentation
@@ -386,12 +382,18 @@ class ExternalAccessTokenImplementation(AccessToken):
         AccessToken.__init__(self, content)
         
 def ExternalAccessToken(content):
-    sharedKey = 'xyzzy'
+    sharedKey = singleton._getSharedKey()
     try:
-        content = jwt.decode(content, sharedKey, algorithm='RS256')
+        content = jwt.decode(content, sharedKey, issuer=singleton._getSelfIssuer(), audience=singleton._getSelfAudience(), algorithm='RS256')
     except jwt.DecodeError:
         print 'access: ERROR: incorrect signature on bearer token %s' % content
         raise myWebError('400 Incorrect signature on key')
+    except jwt.InvalidIssuerError:
+        print 'access: ERROR: incorrect issuer on bearer token %s' % content
+        raise myWebError('400 Incorrect issuer on key')
+    except jwt.InvalidAudienceError:
+        print 'access: ERROR: incorrect audience on bearer token %s' % content
+        raise myWebError('400 Incorrect audience on key')
     return ExternalAccessTokenImplementation(content)
 
 class MultiAccessToken(BaseAccessToken):
@@ -758,6 +760,18 @@ class Access:
     def _getExternalTokenOwner(self):
         """Return the location where we store external tokens"""
         return '/data/au:access/au:exportedCapabilities'
+
+    def _getSharedKey(self, iss=None, aud=None):
+        if iss is None:
+            iss = self._getSelfIssuer()
+        if aud is None:
+            aud = self._getSelfAudience()
+        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
+        externalKey = self.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
+        if not externalKey:
+            print 'access: _getExternalRepresentation: no key found at %s' % keyPath
+            raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
+        return externalKey
 
     def _addToRevokeList(self, tokenId):
         """Add given token to the revocation list"""

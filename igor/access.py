@@ -689,7 +689,7 @@ class Access:
         #
         newId = 'token-%d' % random.getrandbits(64)
         token._addChild(newId)
-        tokenData = dict(cid=newId, xpath=newPath, parent=tokenId)
+        tokenData = dict(cid=newId, obj=newPath, parent=tokenId)
         tokenData.update(newRights)
         tokenData.update(content)
 

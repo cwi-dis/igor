@@ -221,9 +221,6 @@ class AccessToken(BaseAccessToken):
     def _allowsDelegation(self, newPath, newRights):
         """Internal method - return True if the given path/rights are a subset of this token, and if this token can be delegated"""
         # Check whether this token can be delegated
-        if not self.validForSelf:
-            if DEBUG_DELEGATION: print 'access: Not for this Igor: AccessToken %s' % self
-            return False
         if not self.content.get('delegate'):
             if DEBUG_DELEGATION: print 'access: delegate %s: no delegation right on AccessToken %s' % (newPath, self)
             return False

@@ -101,6 +101,7 @@ class IgorServer:
         #
         self.access = access.singleton
         self.access.setSession(self.session)
+        self.access.setCommand(self)
         #
         # Create and start the asynchronous URL accessor
         #

@@ -501,10 +501,16 @@ class Access:
     def __init__(self):
         self.database = None
         self.session = None
+        self.COMMAND = None
         self._otp2token = {}
         self._defaultTokenInstance = None
         self._self_audience = None
         
+    def _save(self):
+        """Save database or capability store, if possible"""
+        if self.COMMAND:
+            self.COMMAND.queue('save', _accessSelfToken)
+
     def produceOTPForToken(self, token):
         """Produce a one-time-password form of this token, for use internally or for passing to a plugin script (to be used once)"""
         # The key format is carefully selected so it can be used as user:pass combination
@@ -536,6 +542,10 @@ class Access:
         """Temporary helper method - Informs the access checker where sessions are stored"""
         self.session = session
         
+    def setCommand(self, command):
+        """Temporary helper method - Set command processor so access can save the database"""
+        self.COMMAND = command
+
     def _defaultToken(self):
         """Internal method - returns token(s) for operations/users/plugins/etc that have no explicit tokens"""
         if self._defaultTokenInstance == None and self.database:
@@ -699,6 +709,10 @@ class Access:
         #
         parentElement.appendChild(element)
         #
+        # Save
+        #
+        self._save()
+        #
         # Return the ID
         #
         return newId
@@ -714,6 +728,10 @@ class Access:
         if not tokenToPass._setOwner(newOwner):
             raise myWebError("401 Cannot move token %s to new owner %s" % (tokenId, newOwner))
         token._removeToken(tokenId)
+        #
+        # Save
+        #
+        self._save()
         
     def revokeToken(self, token, parentId, tokenId):
         """Revoke a token"""
@@ -726,6 +744,10 @@ class Access:
         self._addToRevokeList(tokenId)
         childToken._revoke()
         parentToken._delChild(tokenId)
+        #
+        # Save
+        #
+        self._save()
         
     def exportToken(self, token, tokenId, subject=None, lifetime=None, **kwargs):
         """Create an external representation of this token, destined for the given subject"""
@@ -752,6 +774,10 @@ class Access:
         #
         assert tokenToExport._hasExternalRepresentation()
         externalRepresentation = tokenToExport._getExternalRepresentation()
+        #
+        # Save
+        #
+        self._save()
         return externalRepresentation
         
     def _getSelfAudience(self):

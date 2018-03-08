@@ -37,8 +37,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 			<tr>
 				<th>OP</th>
 				<th>ID</th>
-				<th>get<br>put<br>post<br>delete</th>
-				<th>xpath</th>
+				<th>GET<br>PUT<br>POST<br>DELETE</th>
+				<th>Object</th>
 				<th>Comment</th>
 				<th>Rest</th>
 				<th>Children</th>
@@ -66,7 +66,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 						${cap.pop('post', '-')}<br>
 						${cap.pop('delete', '-')}
 					</td>
-					<td>${cap.pop('xpath', '')}</td>
+					<td>${cap.pop('obj', '')}</td>
 					<td>${cap.pop('comment', '')}</td>
 					<td>
 						$for k,v in cap.items():
@@ -102,8 +102,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				</tr>
 				<tr>
 					<td>Path</td>
-					<td><input name="newPath" type="text" value="${cap['xpath']}/EDIT"></td>
-					<td>${cap['xpath']}</td>
+					<td><input name="newPath" type="text" value="${cap['obj']}/EDIT"></td>
+					<td>${cap['obj']}</td>
 				</tr>
 				<tr>
 					<td>Can Delegate</td>
@@ -166,8 +166,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				</tr>
 				<tr>
 					<td>Path</td>
-					<td>${cap['xpath']}</td>
-					<td>${cap['xpath']}</td>
+					<td>${cap['obj']}</td>
+					<td>${cap['obj']}</td>
 				</tr>				
 				$for right in ['get', 'put', 'post', 'delete']:
 					<tr>

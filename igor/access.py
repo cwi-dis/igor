@@ -398,10 +398,12 @@ def ExternalAccessToken(content):
 
 class MultiAccessToken(BaseAccessToken):
 
-    def __init__(self, contentList, owner=None):
+    def __init__(self, contentList=[], tokenList=[], owner=None):
         self.tokens = []
         for c in contentList:
             self.tokens.append(AccessToken(c, owner=owner))
+        for t in tokenList:
+            self.tokens.append(t)
 
     def _getIdentifiers(self):
         rv = []
@@ -451,7 +453,21 @@ class MultiAccessToken(BaseAccessToken):
         assert toRemove
         self.tokens.remove(t)
         
-                   
+    def _appendToken(self, token):
+        """Add a token object to the end of the list of tokens"""
+        self.tokens.append(token)
+
+def _combineTokens(token1, token2):
+    """Return union of two tokens (which may be AccessToken, MultiAccessToken or None)"""
+    if token1 is None:
+        return token2
+    if token2 is None:
+        return token1
+    if hasattr(token1, '_appendToken'):
+        token1._appendToken(token2)
+        return token1
+    return MultiAccessToken(tokenList=[token1, token2])
+
 class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
 
@@ -569,14 +585,9 @@ class Access:
     def tokenForAction(self, element):
         """Return token(s) for an <action> element"""
         token =  self._tokenForElement(element)
-        if token == None:
-            # Check whether there is a default token for all actions
-            if element.parentNode:
-                token = self._tokenForElement(element.parentNode)
-        if token == None:
-            if DEBUG: print 'access: no token found for action %s' % self.database.getXPathForElement(element)
-            token = self._defaultToken()
-        return token
+        tokenForAllActions = self._tokenForElement(element.parentNode)
+        token = _combineTokens(token, tokenForAllActions)
+        return _combineTokens(token, self._defaultToken())
         
     def _tokenForUser(self, username):
         """Internal method - Return token(s) for a user with the given name"""
@@ -585,11 +596,11 @@ class Access:
         elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
         if len(elements) != 1:
             raise myWebError('501 Database error: %d users named %s' % (len(elements), username))
-        token = self._tokenForElement(elements[0], owner='identities/%s' % username)
-        if token == None:
-            token = self._defaultToken()
-            if DEBUG: print 'access: no token found for user %s' % username
-        return token
+        element = elements[0]
+        token = self._tokenForElement(element, owner='identities/%s' % username)
+        tokenForAllUsers = self._tokenForElement(element.parentNode)
+        token = _combineTokens(token, tokenForAllUsers)
+        return _combineTokens(token, self._defaultToken())
         
     def tokenForPlugin(self, pluginname):
         """Return token(s) for a plugin with the given pluginname"""

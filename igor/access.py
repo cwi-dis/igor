@@ -48,12 +48,16 @@ class BaseAccessToken:
         """Internal method - Returns a list of all token IDs of this token (and any subtokens it contains)"""
         return [self.identifier]
         
-    def _hasExternalRepresentation(self):
+    def _hasExternalRepresentationFor(self, url):
         """Internal method - return True if this token can be represented externally and _getExternalRepresentation can be called"""
         return False
         
     def _getExternalRepresentation(self):
         """Internal method - return the external representation of this token"""
+
+    def _getExternalContent(self):
+        """Internal method - return key/value pairs that are important for external representation"""
+        return {}
         
     def _allows(self, operation, accessChecker):
         """Internal method - return True if this token allows 'operation' on the element represented by 'accessChecker'"""
@@ -103,8 +107,8 @@ class BaseAccessToken:
         """Remove token tokenId from this set"""
         assert 0
         
-    def addToHeaders(self, headers):
-        """Add this token to the (http request) headers if it has an external representation"""
+    def addToHeadersFor(self, headers, url):
+        """Add this token to the (http request) headers if it has an external representation for this destination"""
         pass
 
     def addToHeadersAsOTP(self, headers):
@@ -166,8 +170,15 @@ class AccessToken(BaseAccessToken):
     def __repr__(self):
         return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
         
-    def _hasExternalRepresentation(self):
-        return 'iss' in self.content and 'aud' in self.content
+    def _hasExternalRepresentationFor(self, url):
+        return 'iss' in self.content and 'aud' in self.content and url.startswith(self.content['aud'])
+
+    def _getExternalContent(self):
+        rv = {}
+        if 'iss' in self.content: rv['iss'] = self.content['iss']
+        if 'aud' in self.content: rv['aud'] = self.content['aud']
+        if 'subj' in self.content: rv['subj'] = self.content['subj']
+        return rv
         
     def _getExternalRepresentation(self):
         iss = self.content.get('iss')
@@ -291,7 +302,8 @@ class AccessToken(BaseAccessToken):
         rv['owner'] = self.owner
         return [rv]
         
-    def addToHeaders(self, headers):
+    def addToHeadersFor(self, headers, url):
+        # xxxjack assume checking has been done
         externalRepresentation = self._getExternalRepresentation()
         if not externalRepresentation:
             return
@@ -401,6 +413,7 @@ class MultiAccessToken(BaseAccessToken):
             self.tokens.append(AccessToken(c, owner=owner))
         for t in tokenList:
             self.tokens.append(t)
+        self.externalTokenCache = {}
 
     def _getIdentifiers(self):
         rv = []
@@ -408,10 +421,14 @@ class MultiAccessToken(BaseAccessToken):
             rv += t._getIdentifiers()
         return rv
                     
-    def _hasExternalRepresentation(self):
-        for t in self.tokens[:1]:
-            if t._hasExternalRepresentation():
+    def _hasExternalRepresentationFor(self, url):
+        if url in self.externalTokenCache:
+            return not not self.externalTokenCache[url]
+        for t in self.tokens:
+            if t._hasExternalRepresentationFor(url):
+                self.externalTokenCache[url] = t
                 return True
+        self.externalTokenCache[url] = False
         return False
         
     def _allows(self, operation, accessChecker):
@@ -434,11 +451,11 @@ class MultiAccessToken(BaseAccessToken):
             rv += t._getTokenDescription()
         return rv
         
-    def addToHeaders(self, headers):
-        for t in self.tokens[:1]:
-            if t._hasExternalRepresentation():
-                t.addToHeaders(headers)
-                return
+    def addToHeadersFor(self, headers, url):
+        if self._hasExternalRepresentationFor(url):
+            t = self.externalTokenCache[url]
+            # xxxjack should cache
+            t.addToHeadersFor(headers, url)
 
     def _removeToken(self, tokenId):
         """Remove token tokenId from this set"""
@@ -449,10 +466,12 @@ class MultiAccessToken(BaseAccessToken):
                 break
         assert toRemove
         self.tokens.remove(t)
+        self.externalTokenCache = {}
         
     def _appendToken(self, token):
         """Add a token object to the end of the list of tokens"""
         self.tokens.append(token)
+        self.externalTokenCache = {}
 
 def _combineTokens(token1, token2):
     """Return union of two tokens (which may be AccessToken, MultiAccessToken or None)"""
@@ -700,6 +719,8 @@ class Access:
         newId = 'token-%d' % random.getrandbits(64)
         token._addChild(newId)
         tokenData = dict(cid=newId, obj=newPath, parent=tokenId)
+        moreData = token._getExternalContent()
+        tokenData.update(moreData)
         tokenData.update(newRights)
         tokenData.update(content)
 
@@ -772,7 +793,7 @@ class Access:
         #
         # Create the external representation
         #
-        assert tokenToExport._hasExternalRepresentation()
+        assert tokenToExport._hasExternalRepresentationFor(self._getSelfAudience())
         externalRepresentation = tokenToExport._getExternalRepresentation()
         #
         # Save

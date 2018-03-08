@@ -190,7 +190,7 @@ class AccessToken(BaseAccessToken):
         if not cascadingRule:
             if DEBUG: print 'access: %s %s: no %s access allowed by AccessToken %s' % (operation, accessChecker.destination, operation, self)
             return False
-        path = self.content.get('xpath')
+        path = self.content.get('obj')
         if not path:
             if DEBUG: print 'access: %s %s: no path-based access allowed by AccessToken %s' % (operation, accessChecker.destination, self)
             return False
@@ -228,7 +228,7 @@ class AccessToken(BaseAccessToken):
             if DEBUG_DELEGATION: print 'access: delegate %s: no delegation right on AccessToken %s' % (newPath, self)
             return False
         # Check whether the path is contained in our path
-        path = self.content.get('xpath')
+        path = self.content.get('obj')
         if not path:
             if DEBUG_DELEGATION: print 'access: delegate %s: no path-based access allowed by AccessToken %s' % (newPath, self)
             return False
@@ -365,7 +365,7 @@ class AccessToken(BaseAccessToken):
 
     def _getObject(self):
         """Returns the object to which this token pertains"""
-        return self.content.get('xpath')
+        return self.content.get('obj')
 
     def _revoke(self):
         """Revoke this token"""

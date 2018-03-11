@@ -204,10 +204,14 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td>Subject</td>
 					<td>
-						<select name="subject" required>
-						$for sub in COMMANDS.accessControl(subcommand='getSubjectList'):
-							<option value="$sub">$sub</option>
-						</select>
+						$ subjectList = COMMANDS.accessControl(subcommand='getSubjectList')
+						$if subjectList:
+							<select name="subject" required>
+							$for sub in subjectList:
+								<option value="$sub">$sub</option>
+							</select>
+						$else:
+							<input name="subject" type="text" value="">
 					</td>
 					<td>n.a.</td>
 				</tr>

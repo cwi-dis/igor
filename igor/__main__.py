@@ -235,13 +235,16 @@ class IgorServer:
             _ = dbAccess.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
         return ''
         
-    def accessControl(self, subcommand=None, **kwargs):
+    def accessControl(self, subcommand=None, returnTo=None, **kwargs):
         if not subcommand:
             raise web.notfound()
         method = getattr(self.access, subcommand, None)
         if not subcommand:
             raise web.notfound()
-        return method(**kwargs)
+        rv = method(**kwargs)
+        if returnTo and not rv:
+            raise web.seeother(returnTo)
+        return rv
         
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""

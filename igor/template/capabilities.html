@@ -91,6 +91,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		
 		<form action="/internal/accessControl/newToken">
+			<input name="returnTo" type="hidden" value="/capabilities.html">
 			<table>
 				<tr>
 					<th>Field</th>
@@ -155,6 +156,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		
 		<form action="/internal/accessControl/passToken">
+			<input name="returnTo" type="hidden" value="/capabilities.html">
 			<table>
 				<tr>
 					<th>Field</th>
@@ -197,6 +199,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		
 		<form action="/internal/accessControl/exportToken">
+			<input name="returnTo" type="hidden" value="/capabilities.html">
 			<table>
 				<tr>
 					<th>Field</th>
@@ -270,6 +273,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=childCid)[0]
 		
 		<form action="/internal/accessControl/revokeToken">
+			<input name="returnTo" type="hidden" value="/capabilities.html">
 			<table>
 				<tr>
 					<th>Field</th>

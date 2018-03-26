@@ -155,6 +155,7 @@ class AccessToken(BaseAccessToken):
         if defaultIdentifier == None:
             defaultIdentifier = 'no-id-%x' % id(self)
         self.identifier = content.get('cid', defaultIdentifier)
+        singleton._registerTokenWithIdentifier(self.identifier, self)
         #
         # Check whether this capability is meant for this igor (no aud or aud matches our URL)
         #
@@ -285,15 +286,7 @@ class AccessToken(BaseAccessToken):
             children = [children]
         if not identifier in children:
             return None
-        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
-        if len(capNodeList) == 0:
-            print 'access: Warning: Cannot save token %s because it is not in the database' % self.identifier
-            return
-        elif len(capNodeList) > 1:
-            print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
-            raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
-        capData = singleton.database.tagAndDictFromElement(capNodeList[0])[1]
-        return AccessToken(capData)
+        return singleton._loadTokenWithIdentifier(identifier)
         
     def _getTokenDescription(self):
         """Returns a list with descriptions of all tokens in this tokenset"""
@@ -441,7 +434,8 @@ class MultiAccessToken(BaseAccessToken):
     def _getTokenWithIdentifier(self, identifier):
         for t in self.tokens:
             rv = t._getTokenWithIdentifier(identifier)
-            if rv: return rv
+            if rv: 
+                return rv
         return None
         
     def _getTokenDescription(self):
@@ -524,6 +518,23 @@ class Access:
         self._otp2token = {}
         self._defaultTokenInstance = None
         self._self_audience = None
+        self._tokenCache = {}
+        
+    def _registerTokenWithIdentifier(self, identifier, token):
+        self._tokenCache[identifier] = token
+        
+    def _loadTokenWithIdentifier(self, identifier):
+        if identifier in self._tokenCache:
+            return self._tokenCache[identifier]
+        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
+        if len(capNodeList) == 0:
+            print 'access: Warning: Cannot get token %s (child of %s) because it is not in the database' % (identifier, self.identifier)
+            raise myWebError("500 Access: no capability with cid=%s (child of %s)" % (identifier, self.identifier))
+        elif len(capNodeList) > 1:
+            print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
+            raise myWebError("500 Access: multiple capabilities with cid=%s (child of %s)" % (identifier, self.identifier))
+        capData = singleton.database.tagAndDictFromElement(capNodeList[0])[1]
+        return AccessToken(capData)
         
     def _save(self):
         """Save database or capability store, if possible"""
@@ -790,6 +801,7 @@ class Access:
         #
         newTokenId = self.newToken(token, tokenId, self._getExternalTokenOwner(), **kwargs)
         tokenToExport = token._getTokenWithIdentifier(newTokenId)
+        
         #
         # Create the external representation
         #

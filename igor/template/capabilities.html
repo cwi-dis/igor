@@ -294,7 +294,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td>Children</td>
 					<td>
-						$for gcid in cap.pop('child', []):
+						$  childIDs = cap.pop('child', [])
+						$ if type(childIDs) != type([]): childIDs = [childIDs]
+						$for gcid in childIDs:
 							${gcid}
 							<br>
 					</td>

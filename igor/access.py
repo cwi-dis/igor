@@ -396,6 +396,13 @@ def ExternalAccessToken(content):
     except jwt.InvalidAudienceError:
         print 'access: ERROR: incorrect audience on bearer token %s' % content
         raise myWebError('400 Incorrect audience on key')
+    cid = content.get('cid')
+    if not cid:
+        print 'access: ERROR: no cid on bearer token %s' % content
+        raise myWebError('400 Missing cid on key')
+    if singleton._isTokenOnRevokeList():
+        print 'access: ERROR: token has been revoked: %s' % content
+        raise myWebError('400 Revoked token')
     return ExternalAccessTokenImplementation(content)
 
 class MultiAccessToken(BaseAccessToken):
@@ -519,6 +526,7 @@ class Access:
         self._defaultTokenInstance = None
         self._self_audience = None
         self._tokenCache = {}
+        self._revokeList = []
         
     def _registerTokenWithIdentifier(self, identifier, token):
         self._tokenCache[identifier] = token
@@ -853,13 +861,23 @@ class Access:
 
     def _addToRevokeList(self, tokenId):
         """Add given token to the revocation list"""
-        # xxxjack to be implemented
-        pass
+        if self._revokeList is None:
+            self._loadRevokeList()
+        if not tokenId in self._revokeList:
+            self._revokeList.append(tokenId)
+            element = self.database.elementFromTagAndData("revokedCapability", dict(cid=tokenId), namespace=NAMESPACES)
+            parents = self.database.getElements('au:access/au:revokedCapabilities', _accessSelfToken, namespaces=NAMESPACES)
+            assert len(parents) == 1
+            parents[0].appendChild(element)
         
     def _isTokenOnRevokeList(self, tokenId):
         """Check whether a given token is on the revoke list"""
-        # xxxjack to be implemented
-        return False
+        if self._revokeList is None:
+            self._loadRevokeList()
+        return tokenId in self._revokeList
+        
+    def _loadRevokeList(self):
+        self._revokeList = self.database.getValues('au:access/au:revokedCapabilities/au:revokedCapability/cid', _accessSelfToken, namespaces=NAMESPACES)
         
     def getSubjectList(self):
         """Return list of subjects that trust this issuer"""

@@ -58,6 +58,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 							<a href="/capabilities.html?action=delegate&cid=${cid}">delegate</a>
 							<br>
 							<a href="/capabilities.html?action=export&cid=${cid}">export</a>
+						$if 'iss' in cap and 'aud' in cap:
+							<br>
+							<a href="/internal/accessControl/externalRepresentation?tokenId=${cid}">external repr</a>
 					</td>
 					<td>${cid}</td>
 					<td align="center">
@@ -224,7 +227,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 						<td>Can Delegate</td>
 						<td>
 							$if cap.get('delegate'):
-							<input name="delegate" type="checkbox" value="true">
+								<input name="delegate" type="checkbox" value="false">
 						</td>
 						<td>${'yes' if cap.get('delegate') else 'no'}</td>
 				</tr>			

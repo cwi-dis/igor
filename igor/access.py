@@ -752,6 +752,8 @@ class Access:
     def passToken(self, token, tokenId, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
         tokenToPass = token._getTokenWithIdentifier(tokenId)
+        if not tokenToPass:
+            raise myWebError("401 No such token: %s" % tokenId)
         oldOwner = tokenToPass._getOwner()
         if not oldOwner:
             raise myWebError("401 Not owner of token %s" % tokenId)
@@ -812,6 +814,15 @@ class Access:
         #
         self._save()
         return externalRepresentation
+        
+    def externalRepresentation(self, token, tokenId):
+        tokenToExport = token._getTokenWithIdentifier(tokenId)
+        if not tokenToExport:
+            raise myWebError("401 No such token: %s" % tokenId)
+        assert tokenToExport._hasExternalRepresentationFor(self._getSelfAudience())
+        externalRepresentation = tokenToExport._getExternalRepresentation()
+        return externalRepresentation
+        
         
     def _getSelfAudience(self):
         """Return an audience identifier that refers to us"""

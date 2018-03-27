@@ -866,7 +866,7 @@ class Access:
         if not tokenId in self._revokeList:
             self._revokeList.append(tokenId)
             element = self.database.elementFromTagAndData("revokedCapability", dict(cid=tokenId), namespace=NAMESPACES)
-            parents = self.database.getElements('au:access/au:revokedCapabilities', _accessSelfToken, namespaces=NAMESPACES)
+            parents = self.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
             assert len(parents) == 1
             parents[0].appendChild(element)
         

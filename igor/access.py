@@ -783,7 +783,7 @@ class Access:
         childToken = token._getTokenWithIdentifier(tokenId)
         if not childToken:
             raise myWebError("404 No such token: %s" % tokenId)
-        self._addToRevokeList(tokenId)
+        self._addToRevokeList(tokenId, childToken.content.get('nva'))
         childToken._revoke()
         parentToken._delChild(tokenId)
         #
@@ -859,13 +859,16 @@ class Access:
             raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
         return externalKey
 
-    def _addToRevokeList(self, tokenId):
+    def _addToRevokeList(self, tokenId, nva=None):
         """Add given token to the revocation list"""
         if self._revokeList is None:
             self._loadRevokeList()
         if not tokenId in self._revokeList:
             self._revokeList.append(tokenId)
-            element = self.database.elementFromTagAndData("revokedCapability", dict(cid=tokenId), namespace=NAMESPACES)
+            revokeData = dict(cid=tokenId)
+            if nva:
+                revokeData['nva'] = nva
+            element = self.database.elementFromTagAndData("revokedCapability", revokeData, namespace=NAMESPACES)
             parents = self.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
             assert len(parents) == 1
             parents[0].appendChild(element)

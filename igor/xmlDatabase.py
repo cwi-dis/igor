@@ -425,14 +425,57 @@ class DBImpl(DBSerializer):
             index = ''
         return self.getXPathForElement(node.parentNode) + "/" + node.tagName + index
 
-    def tagAndDictFromElement(self, element):
+    def xmlFromElement(self, element, stripHidden=False):
+        """Return XML representation, possibly after stripping namespaced elements and attributes"""
+        if not stripHidden:
+            return element.toxml()
+        if element.namespaceURI:
+            return ''
+            
+        def _hasNS(e):
+            """Helper method to check whether anything is namespaced in the subtree"""
+            if e.namespaceURI:
+                return True
+            c = e.firstChild
+            while c:
+                if c.namespaceURI:
+                    return True
+                if _hasNS(c):
+                    return True
+                c = c.nextSibling
+        if not _hasNS(element):
+            return element.toxml()
+
+        copied = element.cloneNode(True)
+        def _stripNS(e):
+            """Helper method to strip all namespaced items from a subtree"""
+            assert not e.namespaceURI
+            toRemove = []
+            for c in e.childNodes:
+                if c.namespaceURI:
+                    toRemove.append(c)
+            for c in toRemove:
+                e.removeChild(c)
+            for c in e.childNodes:
+                _stripNS(c)
+        _stripNS(copied)
+        rv = copied.toxml()
+        copied.unlink()
+        return rv
+        
+    def tagAndDictFromElement(self, element, stripHidden=False):
+        if stripHidden and element.namespaceURI:
+            return '', {}
         t = self._getElementTagWithEscaping(element)
         v = {}
         texts = []
         child = element.firstChild
         while child:
+            if stripHidden and child.namespaceURI:
+                child = child.nextSibling
+                continue
             if child.nodeType == child.ELEMENT_NODE:
-                newt, newv = self.tagAndDictFromElement(child)
+                newt, newv = self.tagAndDictFromElement(child, stripHidden)
                 # If the element already exists we turn it into a list (if not done before)
                 if newt in v:
                     if type(v[newt]) != type([]):

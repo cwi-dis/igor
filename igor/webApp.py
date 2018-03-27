@@ -697,12 +697,12 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 return value
             else:
                 raise web.InternalError("Unimplemented mimetype %s for default or multi, simple value" % mimetype)
-        if variant == 'multi':
+        if variant in ('multi', 'multiraw'):
             if mimetype == "application/json":
                 rv = []
                 for item in value:
                     r = self.db.getXPathForElement(item)
-                    t, v = self.db.tagAndDictFromElement(item)
+                    t, v = self.db.tagAndDictFromElement(item, stripHidden=(variant != 'multiraw'))
                     rv.append({"ref":r, t:v})
                 return json.dumps(rv)+'\n'
             elif mimetype == "text/plain":
@@ -711,7 +711,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 rv = "<items>\n"
                 for item in value:
                     r = self.db.getXPathForElement(item)
-                    v = item.toxml()
+                    v = self.db.xmlFromElement(item, stripHidden=(variant != 'multiraw'))
                     rv += "<item>\n<ref>%s</ref>\n" % r
                     rv += v
                     rv += "\n</item>\n"
@@ -721,18 +721,18 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 rv = {}
                 for item in value:
                     r = self.db.getXPathForElement(item)
-                    t, v = self.db.tagAndDictFromElement(item)
+                    t, v = self.db.tagAndDictFromElement(item, stripHidden=(variant != 'multiraw'))
                     rv[r] = v
                 return rv
             else:
                 raise web.InternalError("Unimplemented mimetype %s for multi, nodeset" % mimetype)
-        # Final case: single node return
+        # Final case: single node return (either no variant or variant='raw')
         if len(value) == 0:
             raise web.notfound()
         if mimetype == "application/json":
             if len(value) > 1:
                 raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
-            t, v = self.db.tagAndDictFromElement(value[0])
+            t, v = self.db.tagAndDictFromElement(value[0], stripHidden=(variant != 'raw'))
             if variant == "content":
                 rv = json.dumps(v)
             else:
@@ -741,6 +741,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
         elif mimetype == "text/plain":
             rv = ""
             for item in value:
+                # xxxjack if variant != raw, will this leak information?
                 v = xpath.expr.string_value(item)
                 rv += v
                 rv += '\n'
@@ -748,11 +749,11 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
         elif mimetype == "application/xml":
             if len(value) > 1:
                 raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
-            return value[0].toxml()+'\n'
+            return self.db.xmlFromElement(value[0], stripHidden=(variant != 'raw'))+'\n'
         elif mimetype == 'application/x-python-object':
             if len(value) > 1:
                 raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
-            t, v = self.db.tagAndDictFromElement(value[0])
+            t, v = self.db.tagAndDictFromElement(value[0], stripHidden=(variant != 'raw'))
             return v
 
         else:

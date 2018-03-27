@@ -243,7 +243,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					$ rvalue = cap.pop(right, None)
 					<tr>
 						<td>${right}</td>
-						$ disabled = '' if cap.get(right, None) else ' disabled'
+						$ disabled = '' if rvalue else ' disabled'
 						<td>
 							<select name="${right}" ${disabled}>
 								$ selected = ' selected' if not rvalue else ''

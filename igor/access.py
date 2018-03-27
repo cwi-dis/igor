@@ -400,7 +400,7 @@ def ExternalAccessToken(content):
     if not cid:
         print 'access: ERROR: no cid on bearer token %s' % content
         raise myWebError('400 Missing cid on key')
-    if singleton._isTokenOnRevokeList():
+    if singleton._isTokenOnRevokeList(cid):
         print 'access: ERROR: token has been revoked: %s' % content
         raise myWebError('400 Revoked token')
     return ExternalAccessTokenImplementation(content)

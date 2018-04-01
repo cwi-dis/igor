@@ -29,38 +29,11 @@ def _combineTokens(token1, token2):
         return token1
     return MultiAccessToken(tokenList=[token1, token2])
 
-        
-class Access:
+
+class OTPHandler:
+    """Handle implementation of one-time-passwords (for passing tokens to plugins and scripts)"""
     def __init__(self):
-        self.database = None
-        self.session = None
-        self.COMMAND = None
         self._otp2token = {}
-        self._defaultTokenInstance = None
-        self._self_audience = None
-        self._tokenCache = {}
-        self._revokeList = []
-        
-    def _registerTokenWithIdentifier(self, identifier, token):
-        self._tokenCache[identifier] = token
-        
-    def _loadTokenWithIdentifier(self, identifier):
-        if identifier in self._tokenCache:
-            return self._tokenCache[identifier]
-        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
-        if len(capNodeList) == 0:
-            print 'access: Warning: Cannot get token %s (child of %s) because it is not in the database' % (identifier, self.identifier)
-            raise myWebError("500 Access: no capability with cid=%s (child of %s)" % (identifier, self.identifier))
-        elif len(capNodeList) > 1:
-            print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
-            raise myWebError("500 Access: multiple capabilities with cid=%s (child of %s)" % (identifier, self.identifier))
-        capData = singleton.database.tagAndDictFromElement(capNodeList[0])[1]
-        return AccessToken(capData)
-        
-    def _save(self):
-        """Save database or capability store, if possible"""
-        if self.COMMAND:
-            self.COMMAND.queue('save', _accessSelfToken)
 
     def produceOTPForToken(self, token):
         """Produce a one-time-password form of this token, for use internally or for passing to a plugin script (to be used once)"""
@@ -84,18 +57,30 @@ class Access:
         """Invalidate an OTP, if it still exists. Used when a plugin script exits, in case it has not used its OTP"""
         if otp in self._otp2token:
             del self._otp2token[otp]
-            
-    def setDatabase(self, database):
-        """Temporary helper method - Informs the access checker where it can find the database object"""
-        self.database = database
+
+class TokenStorage:
+    """Handle storing and retrieving capabilities"""
+    
+    def __init__(self):
+        self.database = None          
+        self._tokenCache = {}
+        self._defaultTokenInstance = None
+
+    def _registerTokenWithIdentifier(self, identifier, token):
+        self._tokenCache[identifier] = token
         
-    def setSession(self, session):
-        """Temporary helper method - Informs the access checker where sessions are stored"""
-        self.session = session
-        
-    def setCommand(self, command):
-        """Temporary helper method - Set command processor so access can save the database"""
-        self.COMMAND = command
+    def _loadTokenWithIdentifier(self, identifier):
+        if identifier in self._tokenCache:
+            return self._tokenCache[identifier]
+        capNodeList = self.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
+        if len(capNodeList) == 0:
+            print 'access: Warning: Cannot get token %s because it is not in the database' % identifier
+            raise myWebError("500 Access: no capability with cid=%s" % identifier)
+        elif len(capNodeList) > 1:
+            print 'access: Error: Cannot get token %s because it occurs %d times in the database' % (identifier, len(capNodeList))
+            raise myWebError("500 Access: multiple capabilities with cid=%s" % identifier)
+        capData = self.database.tagAndDictFromElement(capNodeList[0])[1]
+        return AccessToken(capData)
 
     def _defaultToken(self):
         """Internal method - returns token(s) for operations/users/plugins/etc that have no explicit tokens"""
@@ -108,6 +93,188 @@ class Access:
             print 'access: _defaultToken() called but no database (or no default token in database)'
         return self._defaultTokenInstance
         
+    def _tokenForUser(self, username):
+        """Internal method - Return token(s) for a user with the given name"""
+        if not username or '/' in username:
+            raise myWebError('401 Illegal username')
+        elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
+        if len(elements) != 1:
+            raise myWebError('501 Database error: %d users named %s' % (len(elements), username))
+        element = elements[0]
+        token = self._tokenForElement(element, owner='identities/%s' % username)
+        tokenForAllUsers = self._tokenForElement(element.parentNode)
+        token = _combineTokens(token, tokenForAllUsers)
+        return _combineTokens(token, self._defaultToken())
+ 
+    def _tokenForElement(self, element, owner=None):
+        """Internal method - returns token(s) that are stored in a given element (identity/action/plugindata/etc)"""
+        nodelist = xpath.find("au:capability", element, namespaces=NAMESPACES)
+        if not nodelist:
+            return None
+        tokenDataList = map(lambda e: self.database.tagAndDictFromElement(e)[1], nodelist)
+        if len(tokenDataList) > 1:
+            return MultiAccessToken(tokenDataList, owner=owner)
+        rv = AccessToken(tokenDataList[0], owner=owner)
+        return rv       
+        
+class RevokeList:
+    """Handles revocation list"""
+    def __init__(self):
+        self._revokeList = []
+        self.database = None
+
+    def _addToRevokeList(self, tokenId, nva=None):
+        """Add given token to the revocation list"""
+        if self._revokeList is None:
+            self._loadRevokeList()
+        if not tokenId in self._revokeList:
+            self._revokeList.append(tokenId)
+            revokeData = dict(cid=tokenId)
+            if nva:
+                revokeData['nva'] = nva
+            element = self.database.elementFromTagAndData("revokedCapability", revokeData, namespace=NAMESPACES)
+            parents = self.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
+            assert len(parents) == 1
+            parents[0].appendChild(element)
+        
+    def _isTokenOnRevokeList(self, tokenId):
+        """Check whether a given token is on the revoke list"""
+        if self._revokeList is None:
+            self._loadRevokeList()
+        return tokenId in self._revokeList
+        
+    def _loadRevokeList(self):
+        self._revokeList = self.database.getValues('au:access/au:revokedCapabilities/au:revokedCapability/cid', _accessSelfToken, namespaces=NAMESPACES)
+     
+class IssuerInterface:
+    """Implement interface to the issuer"""
+    def __init__(self):
+        self._self_audience = None
+        self.database = None
+
+    def _getSelfAudience(self):
+        """Return an audience identifier that refers to us"""
+        if not self._self_audience:
+            self._self_audience = self.database.getValue('services/igor/url', _accessSelfToken)
+        return self._self_audience
+
+    def _getSelfIssuer(self):
+        """Return URL for ourselves as an issuer"""
+        return urlparse.urljoin(self._getSelfAudience(),  '/issuer')
+
+    def _getSharedKey(self, iss=None, aud=None):
+        """Get secret key shared between issuer and audience"""
+        if iss is None:
+            iss = self._getSelfIssuer()
+        if aud is None:
+            aud = self._getSelfAudience()
+        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
+        externalKey = self.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
+        if not externalKey:
+            print 'access: _getExternalRepresentation: no key found at %s' % keyPath
+            raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
+        return externalKey
+
+    def _decodeIncomingData(self):
+        sharedKey = self._getSharedKey()
+        try:
+            content = jwt.decode(data, sharedKey, issuer=singleton._getSelfIssuer(), audience=singleton._getSelfAudience(), algorithm='RS256')
+        except jwt.DecodeError:
+            print 'access: ERROR: incorrect signature on bearer token %s' % content
+            raise myWebError('400 Incorrect signature on key')
+        except jwt.InvalidIssuerError:
+            print 'access: ERROR: incorrect issuer on bearer token %s' % content
+            raise myWebError('400 Incorrect issuer on key')
+        except jwt.InvalidAudienceError:
+            print 'access: ERROR: incorrect audience on bearer token %s' % content
+            raise myWebError('400 Incorrect audience on key')
+
+    def _encodeOutgoingData(self, tokenContent):
+        iss = tokenContent.get('iss')
+        aud = tokenContent.get('aud')
+        # xxxjack Could check for multiple aud values based on URL to contact...
+        if not iss or not aud:
+            print 'access: _getExternalRepresentation: no iss and aud, so no external representation'
+            raise myWebError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
+        externalKey = singleton._getSharedKey(iss, aud)
+        externalRepresentation = jwt.encode(tokenContent, externalKey, algorithm='HS256')
+        if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
+        return externalRepresentation
+        
+    def getSubjectList(self):
+        """Return list of subjects that trust this issuer"""
+        # xxxjack this is wrong: it also returns keys shared with other issuers
+        subjectValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
+        subjectValues = map(lambda x : x[1], subjectValues)
+        subjectValues = list(subjectValues)
+        subjectValues.sort()
+        return subjectValues
+
+    def getAudienceList(self):
+        """Return list of audiences that trust this issuer"""
+        audienceValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
+        audienceValues = set(audienceValues)
+        audienceValues = list(audienceValues)
+        audienceValues.sort()
+        return audienceValues
+
+class UserPasswords:
+    """Implements checking of passwords for users"""
+    
+    def __init__(self):
+        self.database = None
+
+    def userAndPasswordCorrect(self, username, password):
+        """Return True if username/password combination is valid"""
+        # xxxjack this method should not be in the Access element
+        if self.database == None or not username or not password:
+            if DEBUG: print 'access: basic authentication: database, username or password missing'
+            return False
+        if '/' in username:
+            raise myWebError('401 Illegal username')
+        encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
+        if not encryptedPassword:
+            if DEBUG: print 'access: basic authentication: no encryptedPassword for user', username
+            return False
+        import passlib.hash
+        import passlib.utils.binary
+        salt = encryptedPassword.split('$')[3]
+        salt = passlib.utils.binary.ab64_decode(salt)
+        passwordHash = passlib.hash.pbkdf2_sha256.using(salt=salt).hash(password)
+        if encryptedPassword != passwordHash:
+            if DEBUG: print 'access: basic authentication: password mismatch for user', username
+            return False
+        if DEBUG: print 'access: basic authentication: login for user', username
+        return True
+
+class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
+    def __init__(self):
+        OTPHandler.__init__(self)
+        TokenStorage.__init__(self)
+        RevokeList.__init__(self)
+        IssuerInterface.__init__(self)
+        UserPasswords.__init__(self)
+        self.database = None
+        self.session = None
+        self.COMMAND = None
+        
+    def _save(self):
+        """Save database or capability store, if possible"""
+        if self.COMMAND:
+            self.COMMAND.queue('save', _accessSelfToken)
+
+    def setDatabase(self, database):
+        """Temporary helper method - Informs the access checker where it can find the database object"""
+        self.database = database
+        
+    def setSession(self, session):
+        """Temporary helper method - Informs the access checker where sessions are stored"""
+        self.session = session
+        
+    def setCommand(self, command):
+        """Temporary helper method - Set command processor so access can save the database"""
+        self.COMMAND = command
+
     def checkerForElement(self, element):
         """Returns an AccessChecker for an XML element"""
         if not element:
@@ -129,35 +296,11 @@ class Access:
             return DefaultAccessChecker()
         return AccessChecker(entrypoint)
         
-    def _tokenForElement(self, element, owner=None):
-        """Internal method - returns token(s) that are stored in a given element (identity/action/plugindata/etc)"""
-        nodelist = xpath.find("au:capability", element, namespaces=NAMESPACES)
-        if not nodelist:
-            return None
-        tokenDataList = map(lambda e: self.database.tagAndDictFromElement(e)[1], nodelist)
-        if len(tokenDataList) > 1:
-            return MultiAccessToken(tokenDataList, owner=owner)
-        rv = AccessToken(tokenDataList[0], owner=owner)
-        return rv
-        
     def tokenForAction(self, element):
         """Return token(s) for an <action> element"""
         token =  self._tokenForElement(element)
         tokenForAllActions = self._tokenForElement(element.parentNode)
         token = _combineTokens(token, tokenForAllActions)
-        return _combineTokens(token, self._defaultToken())
-        
-    def _tokenForUser(self, username):
-        """Internal method - Return token(s) for a user with the given name"""
-        if not username or '/' in username:
-            raise myWebError('401 Illegal username')
-        elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
-        if len(elements) != 1:
-            raise myWebError('501 Database error: %d users named %s' % (len(elements), username))
-        element = elements[0]
-        token = self._tokenForElement(element, owner='identities/%s' % username)
-        tokenForAllUsers = self._tokenForElement(element.parentNode)
-        token = _combineTokens(token, tokenForAllUsers)
         return _combineTokens(token, self._defaultToken())
         
     def tokenForPlugin(self, pluginname):
@@ -201,8 +344,15 @@ class Access:
         
     def _externalAccessToken(self, data):
         """Internal method - Create a token from the given "Authorization: bearer" data"""
-        # xxxjack not yet implemented
-        return ExternalAccessToken(data)
+        content = self._decodeIncomingToken(data)
+        cid = content.get('cid')
+        if not cid:
+            print 'access: ERROR: no cid on bearer token %s' % content
+            raise myWebError('400 Missing cid on key')
+        if singleton._isTokenOnRevokeList(cid):
+            print 'access: ERROR: token has been revoked: %s' % content
+            raise myWebError('400 Revoked token')
+        return ExternalAccessTokenImplementation(content)
     
     def getTokenDescription(self, token, tokenId=None):
         """Returns a list of dictionaries which describe the tokens"""
@@ -344,96 +494,9 @@ class Access:
         externalRepresentation = tokenToExport._getExternalRepresentation()
         return externalRepresentation
         
-        
-    def _getSelfAudience(self):
-        """Return an audience identifier that refers to us"""
-        if not self._self_audience:
-            self._self_audience = singleton.database.getValue('services/igor/url', _accessSelfToken)
-        return self._self_audience
-
-
-    def _getSelfIssuer(self):
-        """Return ourselves as an issuer"""
-        return urlparse.urljoin(self._getSelfAudience(),  '/issuer')
-
     def _getExternalTokenOwner(self):
         """Return the location where we store external tokens"""
         return '/data/au:access/au:exportedCapabilities'
-
-    def _getSharedKey(self, iss=None, aud=None):
-        if iss is None:
-            iss = self._getSelfIssuer()
-        if aud is None:
-            aud = self._getSelfAudience()
-        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
-        externalKey = self.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
-        if not externalKey:
-            print 'access: _getExternalRepresentation: no key found at %s' % keyPath
-            raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
-        return externalKey
-
-    def _addToRevokeList(self, tokenId, nva=None):
-        """Add given token to the revocation list"""
-        if self._revokeList is None:
-            self._loadRevokeList()
-        if not tokenId in self._revokeList:
-            self._revokeList.append(tokenId)
-            revokeData = dict(cid=tokenId)
-            if nva:
-                revokeData['nva'] = nva
-            element = self.database.elementFromTagAndData("revokedCapability", revokeData, namespace=NAMESPACES)
-            parents = self.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
-            assert len(parents) == 1
-            parents[0].appendChild(element)
-        
-    def _isTokenOnRevokeList(self, tokenId):
-        """Check whether a given token is on the revoke list"""
-        if self._revokeList is None:
-            self._loadRevokeList()
-        return tokenId in self._revokeList
-        
-    def _loadRevokeList(self):
-        self._revokeList = self.database.getValues('au:access/au:revokedCapabilities/au:revokedCapability/cid', _accessSelfToken, namespaces=NAMESPACES)
-        
-    def getSubjectList(self):
-        """Return list of subjects that trust this issuer"""
-        # xxxjack this is wrong: it also returns keys shared with other issuers
-        subjectValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
-        subjectValues = map(lambda x : x[1], subjectValues)
-        subjectValues = list(subjectValues)
-        subjectValues.sort()
-        return subjectValues
-
-    def getAudienceList(self):
-        """Return list of audiences that trust this issuer"""
-        audienceValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
-        audienceValues = set(audienceValues)
-        audienceValues = list(audienceValues)
-        audienceValues.sort()
-        return audienceValues
-
-    def userAndPasswordCorrect(self, username, password):
-        """Return True if username/password combination is valid"""
-        # xxxjack this method should not be in the Access element
-        if self.database == None or not username or not password:
-            if DEBUG: print 'access: basic authentication: database, username or password missing'
-            return False
-        if '/' in username:
-            raise myWebError('401 Illegal username')
-        encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
-        if not encryptedPassword:
-            if DEBUG: print 'access: basic authentication: no encryptedPassword for user', username
-            return False
-        import passlib.hash
-        import passlib.utils.binary
-        salt = encryptedPassword.split('$')[3]
-        salt = passlib.utils.binary.ab64_decode(salt)
-        passwordHash = passlib.hash.pbkdf2_sha256.using(salt=salt).hash(password)
-        if encryptedPassword != passwordHash:
-            if DEBUG: print 'access: basic authentication: password mismatch for user', username
-            return False
-        if DEBUG: print 'access: basic authentication: login for user', username
-        return True
 #
 # Create a singleton Access object
 #   

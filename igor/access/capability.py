@@ -1,6 +1,5 @@
 from access.vars import *
 import base64
-import jwt
 
 class BaseAccessToken:
     """An access token (or set of tokens) that can be carried by a request"""
@@ -139,22 +138,16 @@ class AccessToken(BaseAccessToken):
         return 'iss' in self.content and 'aud' in self.content and url.startswith(self.content['aud'])
 
     def _getExternalContent(self):
-        rv = {}
+        rv = dict(cid=self.identifier)
+        if 'obj' in self.content: rv['obj'] = self.content['obj']
         if 'iss' in self.content: rv['iss'] = self.content['iss']
         if 'aud' in self.content: rv['aud'] = self.content['aud']
         if 'subj' in self.content: rv['subj'] = self.content['subj']
         return rv
         
     def _getExternalRepresentation(self):
-        iss = self.content.get('iss')
-        aud = self.content.get('aud')
-        # xxxjack Could check for multiple aud values based on URL to contact...
-        if not iss or not aud:
-            print 'access: _getExternalRepresentation: no iss and aud, so no external representation'
-            raise myWebError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
-        externalKey = singleton._getSharedKey(iss, aud)
-        externalRepresentation = jwt.encode(self.content, externalKey, algorithm='HS256')
-        if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
+        tokenContent = self._getExternalContent()
+        externalRepresentation = singleton._encodeOutgoingData(tokenContent)
         return externalRepresentation
         
     def _allows(self, operation, accessChecker):
@@ -346,28 +339,6 @@ class AccessToken(BaseAccessToken):
 class ExternalAccessTokenImplementation(AccessToken):
     def __init__(self, content):
         AccessToken.__init__(self, content)
-        
-def ExternalAccessToken(content):
-    sharedKey = singleton._getSharedKey()
-    try:
-        content = jwt.decode(content, sharedKey, issuer=singleton._getSelfIssuer(), audience=singleton._getSelfAudience(), algorithm='RS256')
-    except jwt.DecodeError:
-        print 'access: ERROR: incorrect signature on bearer token %s' % content
-        raise myWebError('400 Incorrect signature on key')
-    except jwt.InvalidIssuerError:
-        print 'access: ERROR: incorrect issuer on bearer token %s' % content
-        raise myWebError('400 Incorrect issuer on key')
-    except jwt.InvalidAudienceError:
-        print 'access: ERROR: incorrect audience on bearer token %s' % content
-        raise myWebError('400 Incorrect audience on key')
-    cid = content.get('cid')
-    if not cid:
-        print 'access: ERROR: no cid on bearer token %s' % content
-        raise myWebError('400 Missing cid on key')
-    if singleton._isTokenOnRevokeList(cid):
-        print 'access: ERROR: token has been revoked: %s' % content
-        raise myWebError('400 Revoked token')
-    return ExternalAccessTokenImplementation(content)
 
 class MultiAccessToken(BaseAccessToken):
 

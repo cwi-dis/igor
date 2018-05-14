@@ -6,17 +6,17 @@ import random
 import time
 import urlparse
 
-from access.vars import *
-from access.capability import *
-from access.checker import *
+from .vars import *
+from .capability import *
+from .checker import *
 
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
 
 # xxxjack temporary
 
-import access.capability
-access.capability._accessSelfToken = _accessSelfToken
+from . import capability
+capability._accessSelfToken = _accessSelfToken
 
 def _combineTokens(token1, token2):
     """Return union of two tokens (which may be AccessToken, MultiAccessToken or None)"""
@@ -501,4 +501,4 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
 # Create a singleton Access object
 #   
 singleton = Access()
-access.capability.singleton = singleton
+capability.singleton = singleton

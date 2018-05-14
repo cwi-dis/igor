@@ -1,4 +1,4 @@
-from access.vars import *
+from .vars import *
 import base64
 
 class BaseAccessToken:

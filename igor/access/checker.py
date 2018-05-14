@@ -1,4 +1,4 @@
-from access.vars import *
+from .vars import *
 
 class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""

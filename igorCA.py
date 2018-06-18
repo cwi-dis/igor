@@ -71,76 +71,89 @@ def main():
         #
         # Create root key and certificate
         #
-        print
-        print '=============== Creating root key and certificate'
         rootKeyFile = os.path.join(caDatabase, 'root', 'private', 'ca.key.pem')
-        ok = runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '4096')
-        if not ok:
-            sys.exit(1)
         rootCertFile = os.path.join(caDatabase, 'root', 'certs', 'ca.cert.pem')
         rootConfigFile = os.path.join(caDatabase, 'root', 'openssl.cnf')
-        ok = runSSLCommand('req', 
-            '-config', rootConfigFile, 
-            '-key', rootKeyFile, 
-            '-new', 
-            '-x509', 
-            '-days', '7300', 
-            '-sha256', 
-            '-extensions', 'v3_ca', 
-            '-out', rootCertFile
-            )
+        if  os.path.exists(rootKeyFile) and os.path.exists(rootCertFile) and os.path.exists(rootConfigFile):
+            print
+            print '=============== Root key and certificate already exist'
+        else:
+            print
+            print '=============== Creating root key and certificate'
+            ok = runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '4096')
+            if not ok:
+                sys.exit(1)
+            ok = runSSLCommand('req', 
+                '-config', rootConfigFile, 
+                '-key', rootKeyFile, 
+                '-new', 
+                '-x509', 
+                '-days', '7300', 
+                '-sha256', 
+                '-extensions', 'v3_ca', 
+                '-out', rootCertFile
+                )
+            if not ok:
+                sys.exit(1)
+        ok = runSSLCommand('x509', '-noout', '-text', '-in', rootCertFile)
         if not ok:
             sys.exit(1)
-        ok = runSSLCommand('x509', '-noout', '-text', '-in', rootCertFile)
-        print
-        print '=============== Creating intermediate key and certificate'
         #
         # Create intermediate key, CSR and certificate
         #
         intKeyFile = os.path.join(caDatabase, 'intermediate', 'private', 'intermediate.key.pem')
-        ok = runSSLCommand('genrsa', '-aes256', '-out', intKeyFile, '4096')
-        if not ok:
-            sys.exit(1)
-        intCsrFile = os.path.join(caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
         intCertFile = os.path.join(caDatabase, 'intermediate', 'certs', 'intermediate.cert.pem')
         intConfigFile = os.path.join(caDatabase, 'intermediate', 'openssl.cnf')
-        ok = runSSLCommand('req', 
-            '-config', intConfigFile, 
-            '-key', intKeyFile, 
-            '-new', 
-            '-sha256', 
-            '-out', intCsrFile
-            )
-        if not ok:
-            sys.exit(1)
-        ok = runSSLCommand('ca',
-            '-config', rootConfigFile,
-            '-extensions', 'v3_intermediate_ca',
-            '-days', '3650',
-            '-notext',
-            '-md', 'sha256',
-            '-in', intCsrFile,
-            '-out', intCertFile
-            )
-        if not ok:
-            sys.exit(1)
-        #
-        # Verify the intermediate certificate
-        #
-        ok = runSSLCommand('verify',
-            '-CAfile', rootCertFile,
-            intCertFile
-            )
-        if not ok:
-            sys.exit(1)
-        #
-        # Concatenate
-        #
         intAllCertFile = os.path.join(caDatabase, 'intermediate', 'certs', 'ca-chain.cert.pem')
-        ofp = open(intAllCertFile, 'w')
-        ofp.write(open(intCertFile).read())
-        ofp.write(open(rootCertFile).read())
-        ofp.close()
+        if os.path.exists(intKeyFile) and os.path.exists(intCertFile) and os.path.exists(intConfigFile) and os.path.exists(intAllCertFile):
+            print
+            print '=============== Intermediate key and certificate already exist'
+        else:
+            print
+            print '=============== Creating intermediate key and certificate'
+            ok = runSSLCommand('genrsa', '-out', intKeyFile, '4096')
+            if not ok:
+                sys.exit(1)
+            intCsrFile = os.path.join(caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
+            ok = runSSLCommand('req', 
+                '-config', intConfigFile, 
+                '-key', intKeyFile, 
+                '-new', 
+                '-sha256', 
+                '-out', intCsrFile
+                )
+            if not ok:
+                sys.exit(1)
+            ok = runSSLCommand('ca',
+                '-config', rootConfigFile,
+                '-extensions', 'v3_intermediate_ca',
+                '-days', '3650',
+                '-notext',
+                '-md', 'sha256',
+                '-in', intCsrFile,
+                '-out', intCertFile
+                )
+            if not ok:
+                sys.exit(1)
+            #
+            # Verify the intermediate certificate
+            #
+            ok = runSSLCommand('verify',
+                '-CAfile', rootCertFile,
+                intCertFile
+                )
+            if not ok:
+                sys.exit(1)
+            #
+            # Concatenate
+            #
+            ofp = open(intAllCertFile, 'w')
+            ofp.write(open(intCertFile).read())
+            ofp.write(open(rootCertFile).read())
+            ofp.close()
+        ok = runSSLCommand('x509', '-noout', '-text', '-in', intAllCertFile)
+        if not ok:
+            sys.exit(1)
         
         sys.exit(0)
     

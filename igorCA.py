@@ -113,10 +113,11 @@ def main():
             )
         if not ok:
             sys.exit(1)
-        ok = runSSLCommand('req',
+        ok = runSSLCommand('ca',
             '-config', rootConfigFile,
             '-extensions', 'v3_intermediate_ca',
             '-days', '3650',
+            '-notext',
             '-md', 'sha256',
             '-in', intCsrFile,
             '-out', intCertFile

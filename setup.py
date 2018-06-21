@@ -96,7 +96,7 @@ setup(
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
-       py_modules=["igorVar", "igorControl", "igorSetup"],
+       py_modules=["igorVar", "igorControl", "igorSetup", "igorCA"],
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -133,6 +133,7 @@ setup(
             'igorVar=igorVar:main',
             'igorControl=igorControl:main',
             'igorSetup=igorSetup:main',
+            'igorCA=igorCA:main'
         ],
     },
 )

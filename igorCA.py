@@ -12,10 +12,6 @@ USAGE="""
 Usage: %s command [args]
 
 Initialize or use igor Certificate Authority.
-
-help - this message
-initialize - Create root and intermediate keys/certs
-
 """
 
 class IgorCA:
@@ -45,16 +41,19 @@ class IgorCA:
         return True
     
     def main(self, command, args):
+        if command == 'help':
+            self.cmd_help()
+            sys.exit(0)
+
         if not os.path.exists(self.database):
             print >>sys.stderr, "%s: No Igor self.database at %s" % (self.argv0, self.database)
             sys.exit(1)
         
         if command == 'initialize':
-            if os.path.exists(self.intKeyFile) and os.path.exists(self.intCertFile) and os.path.exists(self.intAllCertFile):
-                print >>sys.stderr, '%s: Intermediate key and certificate already exist in %s' % (self.argv0, self.caDatabase)
+            ok = self.cmd_initialize()
+            if not ok:
                 sys.exit(1)
-            self.initialize()
-
+            sys.exit(0)
         #
         # All other commands require the self.database to exist and be populated with the keys
         #
@@ -66,30 +65,28 @@ class IgorCA:
             sys.exit(1)
         
     
-        runcmds = []
+        if not hasattr(self, 'cmd_' + command):
+            print >> sys.stderr, '%s: Unknown command "%s". Use help for help.' % (self.argv0, command)
+            sys.exit(1)
+        handler = getattr(self, 'cmd_' + command)
+        ok = handler(*args)
+        if not ok:
+            sys.exit(1)
+        sys.exit(0)
     
-        if command == 'list':
-            print >>sys.stderr, 'not yet implemented'
-            sys.exit(1)
-        elif command == 'getRoot':
-            sys.stdout.write(open(self.intAllCertFile).read())
-            sys.exit(0)
-        elif command == 'self':
-            self.selfSignSelf(args)
-            sys.exit(0)
-        elif command == 'sign':
-            print >>sys.stderr, 'not yet implemented'
-            sys.exit(1)
-        elif command == 'gen':
-            print >>sys.stderr, 'not yet implemented'
-            sys.exit(1)
-        else:
-            print >>sys.stderr, '%s: Unknown command: %s' % (self.argv0, command)
-            print >>sys.stderr, USAGE % self.argv0
-            sys.exit(1)
+    def cmd_help(self, *args):
+        """Show list of available commands"""
+        print USAGE % self.argv0
+        for name in dir(self):
+            if not name.startswith('cmd_'): continue
+            handler = getattr(self, name)
+            print '%-10s\t%s' % (name[4:], handler.__doc__)
     
-    def initialize(self):
-        """Initialize CA infrastructure, optionally root key/cert and intermediate key/cert"""
+    def cmd_initialize(self):
+        """create CA infrastructure, root key and certificate and intermediate key and certificate"""
+        if os.path.exists(self.intKeyFile) and os.path.exists(self.intCertFile) and os.path.exists(self.intAllCertFile):
+            print >>sys.stderr, '%s: Intermediate key and certificate already exist in %s' % (self.argv0, self.caDatabase)
+            return False
         #
         # Create infrastructure if needed
         #
@@ -112,7 +109,7 @@ class IgorCA:
             caGroupConfIn = os.path.join(caGroupDir, 'openssl.cnf.in')
             if os.path.exists(caGroupConf):
                 print >> sys.stderr, '%s: %s already exists' % (self.argv0, caGroupConf)
-                sys.exit(1)
+                return False
             data = open(caGroupConfIn).read()
             data = data.replace('%INSTALLDIR%', self.database)
             open(caGroupConf, 'w').write(data)
@@ -130,7 +127,7 @@ class IgorCA:
             print '=============== Creating root key and certificate'
             ok = self.runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '4096')
             if not ok:
-                sys.exit(1)
+                return False
             os.chmod(rootKeyFile, 0400)
             ok = self.runSSLCommand('req', 
                 '-config', rootConfigFile, 
@@ -143,11 +140,11 @@ class IgorCA:
                 '-out', rootCertFile
                 )
             if not ok:
-                sys.exit(1)
+                return False
             os.chmod(rootCertFile, 0400)
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', rootCertFile)
         if not ok:
-            sys.exit(1)
+            return False
         #
         # Create intermediate key, CSR and certificate
         #
@@ -156,7 +153,7 @@ class IgorCA:
         ok = self.runSSLCommand('genrsa', '-out', self.intKeyFile, '4096')
         os.chmod(self.intKeyFile, 0400)
         if not ok:
-            sys.exit(1)
+            return False
         intCsrFile = os.path.join(self.caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
         ok = self.runSSLCommand('req', 
             '-config', self.intConfigFile, 
@@ -166,7 +163,7 @@ class IgorCA:
             '-out', intCsrFile
             )
         if not ok:
-            sys.exit(1)
+            return False
         ok = self.runSSLCommand('ca',
             '-config', rootConfigFile,
             '-extensions', 'v3_intermediate_ca',
@@ -177,7 +174,7 @@ class IgorCA:
             '-out', self.intCertFile
             )
         if not ok:
-            sys.exit(1)
+            return False
         os.chmod(self.intCertFile, 0400)
         #
         # Verify the intermediate certificate
@@ -187,7 +184,7 @@ class IgorCA:
             self.intCertFile
             )
         if not ok:
-            sys.exit(1)
+            return False
         #
         # Concatenate
         #
@@ -200,16 +197,16 @@ class IgorCA:
         #
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', self.intAllCertFile)
         if not ok:
-            sys.exit(1)
+            return False
     
-        sys.exit(0)
+        return True
 
-    def selfSignSelf(self, allNames):
-        """Create an Igor server key and certificate and sign it with the intermediate Igor CA key"""
+    def cmd_self(self, *allNames):
+        """Create a server key and certificate for Igor itself, and sign it with the intermediate Igor CA key"""
         if len(allNames) < 1:
             print >>sys.stderr, '%s: self requires ALL names (commonName first) as arguments' % self.argv0
             print >> sys.stderr, 'for example: %s self igor.local localhost 127.0.0.1' % self.argv0
-            sys.exit(1)
+            return False
         # Construct commonName and subjectAltNames
         commonName = allNames[0]
         altNames = map(lambda x: 'DNS:' + x, allNames)
@@ -221,13 +218,13 @@ class IgorCA:
         igorCertFile = os.path.join(self.database, 'igor.crt')
         if os.path.exists(igorKeyFile) and os.path.exists(igorCertFile):
             print >>sys.stderr, '%s: igor.key and igor.crt already exist in %s' % (self.argv0, self.database)
-            sys.exit(1)
+            return False
         #
         # Create key
         #
         ok = self.runSSLCommand('genrsa', '-out', igorKeyFile, '2048')
         if not ok:
-            sys.exit(1)
+            return False
         os.chmod(igorKeyFile, 0400)
         #
         # Create CSR config file
@@ -248,7 +245,7 @@ class IgorCA:
             '-out', igorCsrFile
             )
         if not ok:
-            sys.exit(1)
+            return False
         #
         # Sign CSR
         #
@@ -262,18 +259,34 @@ class IgorCA:
             '-out', igorCertFile
             )
         if not ok:
-            sys.exit(1)
+            return False
         # Verify it
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', igorCertFile)
         if not ok:
-            sys.exit(1)
+            return False
+        return True
+                    
+    def cmd_getRoot(self):
+        """Returns the signing certificate chain (for installation in browser or operating system)"""
+        sys.stdout.write(open(self.intAllCertFile).read())
+        return True
+        
+    def cmd_sign(self):
+        """Sign a Certificate Signing Request. Not yet implemented."""
+        return False
+        
+    def cmd_gen(self):
+        """Generate a key and certificate. Not yet implemented."""
+        return False
 
+    def cmd_list(self):
+        """Return list of certificates signed. Not yet implemented."""
+        return False
+        
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] in ('help', '--help'):
-        print >>sys.stderr, USAGE % sys.argv[0]
-        sys.exit(1)
-       
     m = IgorCA(sys.argv[0])
+    if len(sys.argv) < 2:
+        return m.main('help', [])
     return m.main(sys.argv[1], sys.argv[2:])
     
 if __name__ == '__main__':

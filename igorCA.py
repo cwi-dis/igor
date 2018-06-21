@@ -7,6 +7,20 @@ import shutil
 import getpass
 import tempfile
 import subprocess
+import ConfigParser
+import re
+
+class SSLConfigParser(ConfigParser.RawConfigParser):
+    """SSL Configuration files are case-dependent"""
+    
+    SECTCRE = re.compile(
+        r'\[\s*'                                 # [
+        r'(?P<header>[^]\s]+)'                  # very permissive!
+        r'\s*\]'                                 # ]
+        )
+
+    def optionxform(self, optionstr):
+        return optionstr
 
 USAGE="""
 Usage: %s command [args]
@@ -74,6 +88,25 @@ class IgorCA:
             sys.exit(1)
         sys.exit(0)
     
+    def get_distinguishedName(self):
+        """Helper that returns DN in key-value dict"""
+        fp = subprocess.Popen(['openssl', 'x509', '-in', self.intCertFile, '-noout', '-subject'], stdout=subprocess.PIPE)
+        data, _ = fp.communicate()
+        if not data.startswith('subject='):
+            print >>sys.stderr, '%s: unexpected openssl x509 output: %s' % (self.argv0, data)
+            sys.exit(1)
+        data = data[8:]
+        data = data.strip()
+        dataItems = data.split('/')
+        rv = {}
+        for di in dataItems:
+            if not di: continue
+            diSplit = di.split('=')
+            k = diSplit[0]
+            v = '='.join(diSplit[1:])
+            rv[k] = v
+        return rv
+        
     def cmd_help(self, *args):
         """Show list of available commands"""
         print USAGE % self.argv0
@@ -210,7 +243,7 @@ class IgorCA:
         # Construct commonName and subjectAltNames
         commonName = allNames[0]
         altNames = map(lambda x: 'DNS:' + x, allNames)
-        altNames = 'subjectAltName = ' + ','.join(altNames)
+        altNames = ','.join(altNames)
 
         igorKeyFile = os.path.join(self.database, 'igor.key')
         igorCsrFile = os.path.join(self.database, 'igor.csr')
@@ -229,15 +262,30 @@ class IgorCA:
         #
         # Create CSR config file
         #
+        cfg = SSLConfigParser(allow_no_value=True)
+        cfg.readfp(open(self.intConfigFile), self.intConfigFile)
+        
+        # Get distinghuished name info and put in the config file
+        dnDict = self.get_distinguishedName()
+        dnDict['CN'] = commonName
+        cfg.remove_section('req_distinguished_name')
+        cfg.add_section('req_distinguished_name')
+        for k, v in dnDict.items():
+            cfg.set('req_distinguished_name', k, v)
+        # Set to non-interactive
+        cfg.set('req', 'prompt', 'no')
+        # Add the subjectAltName
+        cfg.set('req', 'req_extensions', 'req_ext')
+        cfg.add_section('req_ext')
+        cfg.set('req_ext', 'subjectAltName', altNames)
+        # Write to CSR config file
         ofp = open(igorCsrConfigFile, 'w')
-        ofp.write(open(self.intConfigFile).read())
-        ofp.write('\n[SAN]\n\n%s\n' % altNames)
+        cfg.write(ofp)
+        ofp.close()
         #
         # Create CSR
         #
         ok = self.runSSLCommand('req',
-            '-reqexts', 'SAN',
-            '-extensions', 'SAN',
             '-config', igorCsrConfigFile,
             '-key', igorKeyFile,
             '-new',

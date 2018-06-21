@@ -278,6 +278,8 @@ class IgorCA:
         cfg.set('req', 'req_extensions', 'req_ext')
         cfg.add_section('req_ext')
         cfg.set('req_ext', 'subjectAltName', altNames)
+        # And add subjectAltName to server_cert section
+        cfg.set('server_cert', 'subjectAltName', altNames)
         # Write to CSR config file
         ofp = open(igorCsrConfigFile, 'w')
         cfg.write(ofp)
@@ -298,7 +300,7 @@ class IgorCA:
         # Sign CSR
         #
         ok = self.runSSLCommand('ca',
-            '-config', self.intConfigFile,
+            '-config', igorCsrConfigFile,
             '-extensions', 'server_cert',
             '-days', '3650',
             '-notext',

@@ -10,6 +10,8 @@ import subprocess
 import ConfigParser
 import re
 
+IS_IP=re.compile(r'^[0-9.:]*$') # Not good enough, but does not match hostnames
+
 class SSLConfigParser(ConfigParser.RawConfigParser):
     """SSL Configuration files are case-dependent"""
     
@@ -106,6 +108,17 @@ class IgorCA:
             v = '='.join(diSplit[1:])
             rv[k] = v
         return rv
+        
+    def get_altNames(self, names):
+        """Helper to turn list of hostnames/ip addresses into subjectAltName"""
+        altNames = []
+        for n in names:
+            if IS_IP.match(n):
+                altNames.append('IP:' + n)
+            else:
+                altNames.append('DNS:' + n)
+        altNames = ','.join(altNames)
+        return altNames
         
     def cmd_help(self, *args):
         """Show list of available commands"""
@@ -242,8 +255,9 @@ class IgorCA:
             return False
         # Construct commonName and subjectAltNames
         commonName = allNames[0]
-        altNames = map(lambda x: 'DNS:' + x, allNames)
-        altNames = ','.join(altNames)
+        altNames = self.get_altNames(allNames)
+        print altNames
+        assert 0
 
         igorKeyFile = os.path.join(self.database, 'igor.key')
         igorCsrFile = os.path.join(self.database, 'igor.csr')

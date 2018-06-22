@@ -96,7 +96,7 @@ class IgorCA:
         data, _ = fp.communicate()
         if not data.startswith('subject='):
             print >>sys.stderr, '%s: unexpected openssl x509 output: %s' % (self.argv0, data)
-            sys.exit(1)
+            return None
         data = data[8:]
         data = data.strip()
         dataItems = data.split('/')
@@ -274,6 +274,15 @@ class IgorCA:
         sys.stdout.write(csr)
         return True
         
+    def do_getRoot(self):
+        """Return root certificate (in PEM form)"""
+        return open(self.intAllCertFile).read()
+        
+    def do_list(self):
+        """Return list of all signatures signed"""
+        indexFile = os.path.join(self.caDatabase, 'intermediate', 'index.txt')
+        return open(indexFile).read()
+
     def do_genCSR(self, keyFile, csrFile, csrConfigFile, *allNames):
         """Create key and CSR for a service. Returns CSR."""
         if len(allNames) < 1:
@@ -297,6 +306,8 @@ class IgorCA:
         # Create CSR config file
         #
         csrConfigFile = self.gen_configFile(commonName, altNames, csrConfigFile)
+        if not csrConfigFile:
+            return None
         #
         # Create CSR
         #
@@ -326,12 +337,16 @@ class IgorCA:
         # Get commonName and subjectAltName from the CSR
         #
         dnDict = self.get_distinguishedName('req', csrFile)
+        if not dnDict:
+            return None
         commonName = dnDict['CN']
         altNames = self.get_altNames('req', csrFile)
         #
         # Create signing config file
         #
         csrConfigFile = self.gen_configFile(commonName, altNames)
+        if not csrConfigFile:
+            return None
         #
         # Sign CSR
         #
@@ -356,6 +371,8 @@ class IgorCA:
             _, configFile = tempfile.mkstemp('.sslconfig')
 
         dnDict = self.get_distinguishedName('x509', self.intCertFile)
+        if not dnDict:
+            return None
         dnDict['CN'] = commonName
 
         cfg = SSLConfigParser(allow_no_value=True)
@@ -394,6 +411,8 @@ class IgorCA:
             return False
             
         cert = self.do_signCSR(csr)
+        if not cert:
+            return False
         open(igorCertFile, 'w').write(cert)
 
         # Verify it
@@ -404,7 +423,7 @@ class IgorCA:
                     
     def cmd_getRoot(self):
         """Returns the signing certificate chain (for installation in browser or operating system)"""
-        sys.stdout.write(open(self.intAllCertFile).read())
+        sys.stdout.write(self.do_getRoot())
         return True
         
     def cmd_sign(self):
@@ -412,7 +431,7 @@ class IgorCA:
         return False
         
     def cmd_gen(self, prefix=None, *allNames):
-        """Generate a key and certificate. Not yet implemented."""
+        """Generate a a server key and certificate for a named service and sign it with the intermediate Igor CA key."""
         if not prefix or not allNames:
             print >>sys.stderr, "Usage: %s gen keyfilenameprefix commonName [subjectAltNames ...]" % sys.argv[0]
             return False
@@ -430,6 +449,8 @@ class IgorCA:
             return False
             
         cert = self.do_signCSR(csr)
+        if not cert:
+            return False
         open(certFile, 'w').write(cert)
 
         # Verify it
@@ -439,7 +460,8 @@ class IgorCA:
         return True
 
     def cmd_list(self):
-        """Return list of certificates signed. Not yet implemented."""
+        """Return list of certificates signed."""
+        sys.stdout.write(self.do_list())
         return False
         
 def main():

@@ -29,7 +29,8 @@ INDEX_HTML="""<html lang="en">
 	<p>Create a key and CSR (Certificate Signing Request) locally, possibly using the <i>igorCA csr</i> command.</p>
 	<p>Enter the CSR in PEM for in the following field and submit.</p>
 	<form action="ca/sign">
-	<input type="text" name="csr">
+	<textarea name="csr" rows="8" cols="60"></textarea>
+	<br>
 	<input type="submit" value="Submit">
 	</form>
 	<p>The result is the (PEM-encoded) certificate you can use for your service (together with the key form the previous step).</p>
@@ -58,6 +59,8 @@ class CAPlugin:
     def sign(self, csr, token=None):
         self.initCA()
         cert = self.ca.do_signCSR(csr)
+        if not cert:
+            raise myWebError('Could not sign certificate')
         web.header('Content-type', 'application/x-pem-file')
         web.header('Content-Disposition', 'attachment; filename="certificate.pem"')
         return cert
@@ -65,6 +68,8 @@ class CAPlugin:
     def root(self, token=None):
         self.initCA()
         chain = self.ca.do_getRoot()
+        if not chain:
+            raise myWebError('Could not obtain root certificate chain')
         web.header('Content-type', 'application/x-pem-file')
         web.header('Content-Disposition', 'attachment; filename="igor-root-certificate-chain.pem"')
         return chain

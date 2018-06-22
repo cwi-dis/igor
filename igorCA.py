@@ -353,6 +353,7 @@ class IgorCA:
         _, certFile = tempfile.mkstemp('.cert')        
         ok = self.runSSLCommand('ca',
             '-config', csrConfigFile,
+            '-batch',
             '-extensions', 'server_cert',
             '-days', '3650',
             '-notext',

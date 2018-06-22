@@ -90,9 +90,9 @@ class IgorCA:
             sys.exit(1)
         sys.exit(0)
     
-    def get_distinguishedName(self):
+    def get_distinguishedName(self, type, configFile):
         """Helper that returns DN in key-value dict"""
-        fp = subprocess.Popen(['openssl', 'x509', '-in', self.intCertFile, '-noout', '-subject'], stdout=subprocess.PIPE)
+        fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-subject'], stdout=subprocess.PIPE)
         data, _ = fp.communicate()
         if not data.startswith('subject='):
             print >>sys.stderr, '%s: unexpected openssl x509 output: %s' % (self.argv0, data)
@@ -109,7 +109,26 @@ class IgorCA:
             rv[k] = v
         return rv
         
-    def get_altNames(self, names):
+    def get_altNames(self, type, configFile):
+        """Helper to get subjectAltName data from a request or certificate"""
+        fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-text'], stdout=subprocess.PIPE)
+        data, _ = fp.communicate()
+        data = data.splitlines()
+        while data and not 'X509v3 Subject Alternative Name' in data[0]:
+            del data[0]
+        if not data:
+            return None
+        del data[0]
+        # Now next line has subjectAltName.
+        fields = data[0].split(',')
+        rv = []
+        for f in fields:
+            f = f.strip()
+            f = f.replace('IP Address', 'IP')
+            rv.append(f)
+        return ','.join(rv)
+        
+    def fix_altNames(self, names):
         """Helper to turn list of hostnames/ip addresses into subjectAltName"""
         altNames = []
         for n in names:
@@ -247,41 +266,101 @@ class IgorCA:
     
         return True
 
-    def cmd_self(self, *allNames):
-        """Create a server key and certificate for Igor itself, and sign it with the intermediate Igor CA key"""
-        if len(allNames) < 1:
-            print >>sys.stderr, '%s: self requires ALL names (commonName first) as arguments' % self.argv0
-            print >> sys.stderr, 'for example: %s self igor.local localhost 127.0.0.1' % self.argv0
+    def cmd_selfCSR(self, *allNames):
+        """Create secret key and CSR for Igor itself. Outputs CSR."""
+        csr = self.do_selfCSR(*allNames)
+        if not csr:
             return False
-        # Construct commonName and subjectAltNames
-        commonName = allNames[0]
-        altNames = self.get_altNames(allNames)
-        print altNames
-        assert 0
-
-        igorKeyFile = os.path.join(self.database, 'igor.key')
-        igorCsrFile = os.path.join(self.database, 'igor.csr')
-        igorCsrConfigFile = os.path.join(self.database, 'igor.csrconfig')
-        igorCertFile = os.path.join(self.database, 'igor.crt')
-        if os.path.exists(igorKeyFile) and os.path.exists(igorCertFile):
-            print >>sys.stderr, '%s: igor.key and igor.crt already exist in %s' % (self.argv0, self.database)
+        sys.stdout.write(csr)
+        return True
+        
+    def do_genCSR(self, keyFile, csrFile, csrConfigFile, *allNames):
+        """Create key and CSR for a service. Returns CSR."""
+        if len(allNames) < 1:
+            print >>sys.stderr, '%s: genCSR requires ALL names (commonName first) as arguments' % self.argv0
+            print >> sys.stderr, 'for example: %s genCSR igor.local localhost 127.0.0.1' % self.argv0
             return False
         #
         # Create key
         #
-        ok = self.runSSLCommand('genrsa', '-out', igorKeyFile, '2048')
+        ok = self.runSSLCommand('genrsa', '-out', keyFile, '2048')
         if not ok:
-            return False
-        os.chmod(igorKeyFile, 0400)
+            return None
+        os.chmod(keyFile, 0400)
+        #
+        # Construct commonName and subjectAltNames
+        #
+        commonName = allNames[0]
+        altNames = self.fix_altNames(allNames)
+
         #
         # Create CSR config file
         #
+        csrConfigFile = self.gen_configFile(commonName, altNames, csrConfigFile)
+        #
+        # Create CSR
+        #
+        if not csrFile:
+            _, csrFile = tempfile.mkstemp('.csr')
+
+        ok = self.runSSLCommand('req',
+            '-config', csrConfigFile,
+            '-key', keyFile,
+            '-new',
+            '-sha256',
+            '-out', csrFile
+            )
+        if not ok:
+            return None
+        csrData = open(csrFile).read()
+        return csrData
+        
+    def do_signCSR(self, csr):
+        """Sign a CSR. Returns certificate."""
+        #
+        # Save the CSR to a file
+        #
+        _, csrFile = tempfile.mkstemp('.csr')
+        open(csrFile, 'w').write(csr)
+        #
+        # Get commonName and subjectAltName from the CSR
+        #
+        dnDict = self.get_distinguishedName('req', csrFile)
+        commonName = dnDict['CN']
+        altNames = self.get_altNames('req', csrFile)
+        #
+        # Create signing config file
+        #
+        csrConfigFile = self.gen_configFile(commonName, altNames)
+        #
+        # Sign CSR
+        #
+        _, certFile = tempfile.mkstemp('.cert')        
+        ok = self.runSSLCommand('ca',
+            '-config', csrConfigFile,
+            '-extensions', 'server_cert',
+            '-days', '3650',
+            '-notext',
+            '-md', 'sha256',
+            '-in', csrFile,
+            '-out', certFile
+            )
+        if not ok:
+            return None
+        cert = open(certFile).read()
+        return cert
+        
+    def gen_configFile(self, commonName, altNames, configFile=None):
+        """Helper function to create CSR or signing config file"""
+        if not configFile:
+            _, configFile = tempfile.mkstemp('.sslconfig')
+
+        dnDict = self.get_distinguishedName('x509', self.intCertFile)
+        dnDict['CN'] = commonName
+
         cfg = SSLConfigParser(allow_no_value=True)
         cfg.readfp(open(self.intConfigFile), self.intConfigFile)
-        
-        # Get distinghuished name info and put in the config file
-        dnDict = self.get_distinguishedName()
-        dnDict['CN'] = commonName
+ 
         cfg.remove_section('req_distinguished_name')
         cfg.add_section('req_distinguished_name')
         for k, v in dnDict.items():
@@ -295,35 +374,28 @@ class IgorCA:
         # And add subjectAltName to server_cert section
         cfg.set('server_cert', 'subjectAltName', altNames)
         # Write to CSR config file
-        ofp = open(igorCsrConfigFile, 'w')
+        ofp = open(configFile, 'w')
         cfg.write(ofp)
         ofp.close()
-        #
-        # Create CSR
-        #
-        ok = self.runSSLCommand('req',
-            '-config', igorCsrConfigFile,
-            '-key', igorKeyFile,
-            '-new',
-            '-sha256',
-            '-out', igorCsrFile
-            )
-        if not ok:
+        return configFile
+        
+    def cmd_self(self, *allNames):
+        """Create a server key and certificate for Igor itself, and sign it with the intermediate Igor CA key"""
+        igorKeyFile = os.path.join(self.database, 'igor.key')
+        igorCsrFile = os.path.join(self.database, 'igor.csr')
+        igorCsrConfigFile = os.path.join(self.database, 'igor.csrconfig')
+        igorCertFile = os.path.join(self.database, 'igor.crt')
+        if os.path.exists(igorKeyFile) and os.path.exists(igorCertFile):
+            print >>sys.stderr, '%s: igor.key and igor.crt already exist in %s' % (self.argv0, self.database)
             return False
-        #
-        # Sign CSR
-        #
-        ok = self.runSSLCommand('ca',
-            '-config', igorCsrConfigFile,
-            '-extensions', 'server_cert',
-            '-days', '3650',
-            '-notext',
-            '-md', 'sha256',
-            '-in', igorCsrFile,
-            '-out', igorCertFile
-            )
-        if not ok:
+            
+        csr = self.do_genCSR(igorKeyfile, igorCsrFile, igorCsrConfigFile, *allNames)
+        if not csr:
             return False
+            
+        cert = self.do_signCSR(csr)
+        open(igorCertFile, 'w').write(cert)
+
         # Verify it
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', igorCertFile)
         if not ok:
@@ -339,9 +411,32 @@ class IgorCA:
         """Sign a Certificate Signing Request. Not yet implemented."""
         return False
         
-    def cmd_gen(self):
+    def cmd_gen(self, prefix=None, *allNames):
         """Generate a key and certificate. Not yet implemented."""
-        return False
+        if not prefix or not allNames:
+            print >>sys.stderr, "Usage: %s gen keyfilenameprefix commonName [subjectAltNames ...]" % sys.argv[0]
+            return False
+        
+        keyFile = prefix + '.key'
+        csrFile = prefix + '.csr'
+        csrConfigFile = prefix + '.csrConfig'
+        certFile = prefix + '.crt'
+        if os.path.exists(keyFile) and os.path.exists(certFile):
+            print >>sys.stderr, '%s: %s and %s already exist' % (self.argv0, keyFile, certFile)
+            return False
+            
+        csr = self.do_genCSR(keyFile, csrFile, csrConfigFile, *allNames)
+        if not csr:
+            return False
+            
+        cert = self.do_signCSR(csr)
+        open(certFile, 'w').write(cert)
+
+        # Verify it
+        ok = self.runSSLCommand('x509', '-noout', '-text', '-in', certFile)
+        if not ok:
+            return False
+        return True
 
     def cmd_list(self):
         """Return list of certificates signed. Not yet implemented."""

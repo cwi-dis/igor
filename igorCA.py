@@ -411,7 +411,7 @@ class IgorCA:
             print >>sys.stderr, '%s: igor.key and igor.crt already exist in %s' % (self.argv0, self.database)
             return False
             
-        csr = self.do_genCSR(igorKeyfile, igorCsrFile, igorCsrConfigFile, *allNames)
+        csr = self.do_genCSR(igorKeyFile, igorCsrFile, igorCsrConfigFile, *allNames)
         if not csr:
             return False
             

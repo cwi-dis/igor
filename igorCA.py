@@ -258,6 +258,10 @@ class IgorCA:
         ofp.write(open(rootCertFile).read())
         ofp.close()
         #
+        # Now lock out the root directory structure.
+        #
+        os.chmod(os.path.join(self.caDatabase, 'root'), 0)
+        #
         # And finally print the chained file
         #
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', self.intAllCertFile)

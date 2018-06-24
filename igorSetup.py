@@ -28,7 +28,8 @@ stop - stop service (using normal OSX or Linux commands)
 rebuild - stop, rebuild and start the service (must be run in source directory)
 edit - stop, edit the database and restart the service
 rebuildedit - stop, edit database, rebuild and start the service (must be run in source directory)
-certificate - create self-signed https certificate for Igor
+certificate - create https certificate for Igor using Igor as CA
+certificateSelfSigned - create self-signed https certificate for Igor (deprecated)
 """
 
 OPENSSL_COMMAND='openssl req -config "%s" -new -x509 -sha256 -newkey rsa:2048 -nodes -keyout "%s" -days 365 -out "%s"'
@@ -198,7 +199,16 @@ def main():
     elif sys.argv[1] == 'certificate':
         hostnames = sys.argv[2:]
         if not hostnames:
-            print >> sys.stderr, "%s: %s requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1"
+            print >> sys.stderr, "%s: certificate requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % sys.argv[0]
+            sys.exit(1)
+        runcmds += [
+            "igorCA initialize # Unless done before",
+            "igorCA self "+" ".join(hostnames)
+        ]
+    elif sys.argv[1] == 'certificateSelfSigned':
+        hostnames = sys.argv[2:]
+        if not hostnames:
+            print >> sys.stderr, "%s: certificateSelfSigned requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % sys.argv[0]
             sys.exit(1)
         altnames = map(lambda (i, n): "DNS.%d = %s" % (i+1, n), zip(range(len(hostnames)), hostnames))
         altnames = '\n'.join(altnames)

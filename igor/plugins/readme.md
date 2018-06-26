@@ -65,6 +65,10 @@ Listens to Bluetooth Low Energy advertisements to determine which devices are in
 
 Stores rain forecast for the coming hour. See [buienradar/readme.md](buienradar/readme.md) for details.
 
+### ca
+
+Certificate Authority. Programming interface to the Igor SSL certificate authority that allows _https:_ access to local services (like Igor itself). See [ca/readme.md](ca/readme.md) for details.
+
 ### copytree
 
 Copies subtree ```src``` to ```dst```. Both src and dst can be local or remote, allowing mirroring from one Igor to another (or actually between any two REST servers). Optional arguments ```mimetype``` and ```method``` are available.

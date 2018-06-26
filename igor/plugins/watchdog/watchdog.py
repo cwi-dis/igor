@@ -3,11 +3,17 @@ import time
 import thread
 
 class WatchdogClass:
+    _singleton = None
+    
     def __init__(self):
         self.watchdog_device = None
         self.watchdog_timeout = 60
         self.stop_feeding = time.time() + self.watchdog_timeout
-        watchdogClass._singleton = self
+        WatchdogClass._singleton = self
+        
+    def __del__(self):
+        if self.watchdog_device:
+            self.watchdog_device.magic_close()
         
     def index(self, timeout=None, device='/dev/watchdog', token=None):
         """Initialize and/or feed the watchdog"""
@@ -22,7 +28,7 @@ class WatchdogClass:
         if not self.watchdog_device:
             import watchdogdev
             self.watchdog_device = watchdogdev.watchdog(device)
-            thread.start_new_thread(_feeder, ())
+            thread.start_new_thread(self._feeder, ())
             rv += "watchdog opened\n"
         # Set the timeout, if needed
         if timeout:

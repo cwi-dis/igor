@@ -18,7 +18,7 @@ On MacOS, open the certificate in _Keychain Access_. Add it to the _login_ keych
 
 ### Linux
 
-On Linux, rename the certificate so that it has a _.crt_ extension. Copy it into _/usr/share/ca-certificates_. Run _update-ca-certificates_. The latter two steps may have to be done using _sudo_.
+On Linux, rename the certificate so that it has a _.crt_ extension. Copy it into _/usr/share/ca-certificates_. Run _update-ca-certificates_. The latter two steps may have to be done using _sudo_. Maybe (unsure when) you have to run `dpkg-reconfigure ca-certificates` in stead of the update command and select your new certificate.
 
 ### Windows
 

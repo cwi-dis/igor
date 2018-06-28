@@ -61,6 +61,12 @@ class CAPlugin:
         statusData = self.ca.do_status()
         web.header('Content-type', 'text/plain')
         return statusData
+
+    def dn(self, token=None):
+        self.initCA()
+        dnData = self.ca.do_dn()
+        web.header('Content-type', 'application/json')
+        return dnData
         
     def csrtemplate(self, token=None):
         self.initCA()

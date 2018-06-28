@@ -76,7 +76,7 @@ class CAInterface:
         if not dnDict:
             return None
         commonName = dnDict['CN']
-        altNames = self.parent.get_altNames(csrFile)
+        altNames = self.parent.get_altNamesFromReq(csrFile)
         #
         # Create signing config file
         #

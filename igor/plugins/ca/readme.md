@@ -59,12 +59,25 @@ At startup, the existence of _~/.igor/igor.key_ and _~/.igor/igor.crt_ will caus
 
 ## Enabling https for other services
 
-Currently this needs to be done with the command line on the machine hosting Igor (to be fixed).
-
 To create a secret key and certificate for a service _foo_ (name for your personal enjoyment only) listening to addresses _foo.local_ and _192.168.4.1_ (names externally visible) run the following command in some temporary directory:
 
 ```
-igorCA foo foo.local 192.168.4.1
+igorCA gen foo foo.local 192.168.4.1
 ```
 
 This creates a number of files in the current directory: _foo.key_ and _foo.crt_ are the key and certificate. Copy these to the service. The other files (_foo.csr_ and _foo.csrconfig_) are temporary files.
+
+## Using igorCA on a different machine
+
+The `igorCA` command will normally use local filesystem access to obtain keys and certificates for signing, but it can also use the _ca plugin_ as an intermediate to do the actual signing.
+
+The command line to sign a key for a local igor server, using a master igor as the CA:
+
+```
+igorCA --remote --url https://masterigor.local:9333/data/ self
+```
+And the command line to sign a key for a service _foo_ using the default Igor:
+
+```
+igorCA --remote gen foo foo.local 192.168.4.1
+```

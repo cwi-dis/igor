@@ -56,19 +56,19 @@ class CAInterface:
 
     def ca_getRoot(self):
         """Return root certificate (in PEM form)"""
-        return open(self.ca.intAllCertFile).read()
+        return open(self.intAllCertFile).read()
         
     def ca_list(self):
         """Return list of all signatures signed"""
-        indexFile = os.path.join(self.ca.caDatabase, 'intermediate', 'index.txt')
+        indexFile = os.path.join(self.caDatabase, 'intermediate', 'index.txt')
         return open(indexFile).read()
 
     def get_distinguishedNameForCA(self):
-        return self.parent.get_distinguishedName('x509', self.ca.intCertFile)
+        return self.parent.get_distinguishedName('x509', self.intCertFile)
            
     def get_csrConfigTemplate(self):
         """Return filename for an openssl config file to be used as a template for new reequests"""
-        return self.ca.intConfigFile
+        return self.intConfigFile
         
 class CARemoteInterface:
     def __init__(self, parent, igorServer):
@@ -487,6 +487,9 @@ class IgorCA:
         """Returns the signing certificate chain (for installation in browser or operating system)"""
         sys.stdout.write(self.ca.ca_getRoot())
         return True
+        
+    def do_getRoot(self):
+        return self.ca.ca_getRoot()
         
     def cmd_sign(self):
         """Sign a Certificate Signing Request. Not yet implemented."""

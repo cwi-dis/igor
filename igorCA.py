@@ -79,7 +79,10 @@ class CARemoteInterface:
         return False
         
     def isOK(self):
-        return self.igor.get('/plugin/ca/status', format='text/plain')
+        rv = self.igor.get('/plugin/ca/status', format='text/plain')
+        if not rv:
+            print >>sys.stderr, rv
+        return rv
         
     def ca_getRoot(self):
         return self.igor.get('/plugin/ca/root', format='application/json')
@@ -547,7 +550,8 @@ class IgorCA:
         sys.stdout.write(open(fn).read())
         
     def do_csrtemplate(self):
-        return self.ca.get_csrConfigTemplate()
+        fn = self.ca.get_csrConfigTemplate()
+        return open(fn).read()
         
 def main():
     parser = argparse.ArgumentParser(description="Igor Certificate and Key utility")

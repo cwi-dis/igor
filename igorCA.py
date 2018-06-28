@@ -72,22 +72,22 @@ class CAInterface:
         #
         # Get commonName and subjectAltName from the CSR
         #
-        dnDict = self.get_distinguishedName('req', csrFile)
+        dnDict = self.parent.get_distinguishedName('req', csrFile)
         if not dnDict:
             return None
         commonName = dnDict['CN']
-        altNames = self.get_altNames(csrFile)
+        altNames = self.parent.get_altNames(csrFile)
         #
         # Create signing config file
         #
-        csrConfigFile = self.gen_configFile(commonName, altNames)
+        csrConfigFile = self.parent.gen_configFile(commonName, altNames)
         if not csrConfigFile:
             return None
         #
         # Sign CSR
         #
         _, certFile = tempfile.mkstemp('.cert')        
-        ok = self.runSSLCommand('ca',
+        ok = self.parent.runSSLCommand('ca',
             '-config', csrConfigFile,
             '-batch',
             '-extensions', 'server_cert',

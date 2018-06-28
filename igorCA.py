@@ -134,10 +134,11 @@ class CARemoteInterface:
         return self.igor.get('/plugin/ca/sign', format='text/plain', query=dict(csr=csr))
 
     def get_distinguishedNameForCA(self):
-        return self.igor.get('/plugin/ca/dn', format='application/json')
+        dnString = self.igor.get('/plugin/ca/dn', format='application/json')
+        return json.loads(dnString)
         
     def get_csrConfigTemplate(self):
-        rv = self.igor.get('/plugin/ca/template', format='text/plain')
+        rv = self.igor.get('/plugin/ca/csrtemplate', format='text/plain')
         _, configFile = tempfile.mkstemp('.sslconfig')
         open(configFile, 'w').write(rv)
         return configFile
@@ -441,7 +442,7 @@ class IgorCA:
         
     def do_signCSR(self, csr):
         """Sign a CSR. Returns certificate."""
-        return self.ca.signCSR(csr)
+        return self.ca.ca_signCSR(csr)
         
     def gen_configFile(self, commonName, altNames, configFile=None):
         """Helper function to create CSR or signing config file"""
@@ -454,7 +455,7 @@ class IgorCA:
         dnDict['CN'] = commonName
 
         cfg = SSLConfigParser(allow_no_value=True)
-        cfgSource = self.ca_get_csrConfigTemplate()
+        cfgSource = self.ca.get_csrConfigTemplate()
         cfg.readfp(open(cfgSource), cfgSource) # xxxjack
  
         cfg.remove_section('req_distinguished_name')

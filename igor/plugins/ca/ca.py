@@ -56,6 +56,18 @@ class CAPlugin:
         web.header('Content-type', 'text/plain')
         return listData
         
+    def status(self, token=None):
+        self.initCA()
+        statusData = self.ca.do_status()
+        web.header('Content-type', 'text/plain')
+        return statusData
+        
+    def csrtemplate(self, token=None):
+        self.initCA()
+        tmplData = self.ca.do_csrtemplate()
+        web.header('Content-type', 'text/plain')
+        return tmplData
+        
     def sign(self, csr, token=None):
         self.initCA()
         cert = self.ca.do_signCSR(csr)

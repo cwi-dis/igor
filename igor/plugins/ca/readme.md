@@ -61,7 +61,7 @@ At startup, the existence of _~/.igor/igor.key_ and _~/.igor/igor.crt_ will caus
 
 Currently this needs to be done with the command line on the machine hosting Igor (to be fixed).
 
-To create a secret key and certificate for a service _foo_ (name for your personal enjoyment only) listening to addresses _foo.local_ and _192.168.4.1_ (names externally visible) run the following command in some temprary directory:
+To create a secret key and certificate for a service _foo_ (name for your personal enjoyment only) listening to addresses _foo.local_ and _192.168.4.1_ (names externally visible) run the following command in some temporary directory:
 
 ```
 igorCA foo foo.local 192.168.4.1

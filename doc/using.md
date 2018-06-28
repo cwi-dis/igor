@@ -107,7 +107,7 @@ The _igorVar_ utility can also be used to communicate with other services that h
 
 ### igorCA
 
-Certificate Authority command line tool. Call without arguments for a list of commands.
+Certificate Authority command line tool. Call `igorCA help` for a list of commands. More detail (a little more:-) can be found in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md).
 
 ## ~/.igor directory structure
 

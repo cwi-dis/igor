@@ -9,6 +9,9 @@ import tempfile
 import subprocess
 import ConfigParser
 import re
+import json
+import argparse
+import igorVar
 
 IS_IP=re.compile(r'^[0-9.:]*$') # Not good enough, but does not match hostnames
 
@@ -30,8 +33,68 @@ Usage: %s command [args]
 Initialize or use igor Certificate Authority.
 """
 
+class CAInterface:
+    def __init__(self, parent, database):
+        self.parent = parent
+        self.caDatabase = os.path.join(database, 'ca')
+        self.intKeyFile = os.path.join(self.caDatabase, 'intermediate', 'private', 'intermediate.key.pem')
+        self.intCertFile = os.path.join(self.caDatabase, 'intermediate', 'certs', 'intermediate.cert.pem')
+        self.intAllCertFile = os.path.join(self.caDatabase, 'intermediate', 'certs', 'ca-chain.cert.pem')
+        self.intConfigFile = os.path.join(self.caDatabase, 'intermediate', 'openssl.cnf')
+        
+    def isLocal(self):
+        return True
+        
+    def isOK(self):
+        if not os.path.exists(self.caDatabase):
+            print >>sys.stderr, "%s: No Igor CA self.database at %s" % (self.argv0, self.caDatabase)
+            return False
+        if not (os.path.exists(self.intKeyFile) and os.path.exists(self.intCertFile) and os.path.exists(self.intAllCertFile)):
+            print >>sys.stderr, "%s: Intermediate key, certificate and chain don't exist in %s" % (self.argv0, self.caDatabase)
+            return False
+        return True
+
+    def ca_getRoot(self):
+        """Return root certificate (in PEM form)"""
+        return open(self.ca.intAllCertFile).read()
+        
+    def ca_list(self):
+        """Return list of all signatures signed"""
+        indexFile = os.path.join(self.ca.caDatabase, 'intermediate', 'index.txt')
+        return open(indexFile).read()
+
+    def get_distinguishedNameForCA(self):
+        return self.parent.get_distinguishedName('x509', self.ca.intCertFile)
+           
+    def get_csrConfigTemplate(self):
+        """Return filename for an openssl config file to be used as a template for new reequests"""
+        return self.ca.intConfigFile
+        
+class CARemoteInterface:
+    def __init__(self, parent, igorServer):
+        self.parent = parent
+        self.igor = igorServer
+        
+    def isLocal(self):
+        return False
+        
+    def isOK(self):
+        return self.igor.get('/plugin/ca/status', format='text/plain')
+        
+    def ca_getRoot(self):
+        return self.igor.get('/plugin/ca/root', format='application/json')
+        
+    def ca_list(self):
+        return self.igor.get('/plugin/ca/list', format='text/plain')
+           
+    def get_csrConfigTemplate(self):
+        rv = self.igor.get('/plugin/ca/template', format='text/plain')
+        _, configFile = tempfile.mkstemp('.sslconfig')
+        open(configFile, 'w').write(rv)
+        return configFile
+        
 class IgorCA:
-    def __init__(self, argv0):
+    def __init__(self, argv0, igorServer=None):
         self.argv0 = argv0
         # Find username even when sudoed
         username = os.environ.get("SUDO_USER", getpass.getuser())
@@ -41,12 +104,30 @@ class IgorCA:
         # Default self.database directory, CA directory and key/cert for signing.
         #
         self.database = os.path.join(os.path.expanduser('~'+username), '.igor')
-        self.caDatabase = os.path.join(self.database, 'ca')
-        self.intKeyFile = os.path.join(self.caDatabase, 'intermediate', 'private', 'intermediate.key.pem')
-        self.intCertFile = os.path.join(self.caDatabase, 'intermediate', 'certs', 'intermediate.cert.pem')
-        self.intAllCertFile = os.path.join(self.caDatabase, 'intermediate', 'certs', 'ca-chain.cert.pem')
-        self.intConfigFile = os.path.join(self.caDatabase, 'intermediate', 'openssl.cnf')
+        if igorServer:
+            self.ca = CARemoteInterface(self, igorServer)
+        else:
+            self.ca = CAInterface(self, self.database)
 
+    def get_distinguishedName(self, type, configFile):
+        """Helper that returns DN in key-value dict (from req or cert file)"""
+        fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-subject'], stdout=subprocess.PIPE)
+        data, _ = fp.communicate()
+        if not data.startswith('subject='):
+            print >>sys.stderr, '%s: unexpected openssl x509 output: %s' % (self.argv0, data)
+            return None
+        data = data[8:]
+        data = data.strip()
+        dataItems = data.split('/')
+        rv = {}
+        for di in dataItems:
+            if not di: continue
+            diSplit = di.split('=')
+            k = diSplit[0]
+            v = '='.join(diSplit[1:])
+            rv[k] = v
+        return rv
+        
     def runSSLCommand(self, *args):
         args = ('openssl',) + args
         print >>sys.stderr, '+', ' '.join(args)
@@ -70,14 +151,7 @@ class IgorCA:
             if not ok:
                 sys.exit(1)
             sys.exit(0)
-        #
-        # All other commands require the self.database to exist and be populated with the keys
-        #
-        if not os.path.exists(self.caDatabase):
-            print >>sys.stderr, "%s: No Igor CA self.database at %s" % (self.argv0, self.caDatabase)
-            sys.exit(1)
-        if not (os.path.exists(self.intKeyFile) and os.path.exists(self.intCertFile) and os.path.exists(self.intAllCertFile)):
-            print >>sys.stderr, "%s: Intermediate key, certificate and chain don't exist in %s" % (self.argv0, self.caDatabase)
+        if not self.ca.isOK():
             sys.exit(1)
         
     
@@ -90,28 +164,10 @@ class IgorCA:
             sys.exit(1)
         sys.exit(0)
     
-    def get_distinguishedName(self, type, configFile):
-        """Helper that returns DN in key-value dict"""
-        fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-subject'], stdout=subprocess.PIPE)
-        data, _ = fp.communicate()
-        if not data.startswith('subject='):
-            print >>sys.stderr, '%s: unexpected openssl x509 output: %s' % (self.argv0, data)
-            return None
-        data = data[8:]
-        data = data.strip()
-        dataItems = data.split('/')
-        rv = {}
-        for di in dataItems:
-            if not di: continue
-            diSplit = di.split('=')
-            k = diSplit[0]
-            v = '='.join(diSplit[1:])
-            rv[k] = v
-        return rv
-        
-    def get_altNames(self, type, configFile):
+  
+    def get_altNamesFromReq(self, configFile):
         """Helper to get subjectAltName data from a request or certificate"""
-        fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-text'], stdout=subprocess.PIPE)
+        fp = subprocess.Popen(['openssl', 'req', '-in', configFile, '-noout', '-text'], stdout=subprocess.PIPE)
         data, _ = fp.communicate()
         data = data.splitlines()
         while data and not 'X509v3 Subject Alternative Name' in data[0]:
@@ -149,27 +205,30 @@ class IgorCA:
     
     def cmd_initialize(self):
         """create CA infrastructure, root key and certificate and intermediate key and certificate"""
-        if os.path.exists(self.intKeyFile) and os.path.exists(self.intCertFile) and os.path.exists(self.intAllCertFile):
-            print >>sys.stderr, '%s: Intermediate key and certificate already exist in %s' % (self.argv0, self.caDatabase)
+        if not self.ca.isLocal():
+            print >>sys.stderr, "%s: initialize should only be used for local CA" % self.argv0
+            return False
+        if os.path.exists(self.ca.intKeyFile) and os.path.exists(self.ca.intCertFile) and os.path.exists(self.ca.intAllCertFile):
+            print >>sys.stderr, '%s: Intermediate key and certificate already exist in %s' % (self.argv0, self.ca.caDatabase)
             return False
         #
         # Create infrastructure if needed
         #
-        if not os.path.exists(self.caDatabase):
-            # Old igor, probably: self.caDatabase doesn't exist yet
+        if not os.path.exists(self.ca.caDatabase):
+            # Old igor, probably: self.ca.caDatabase doesn't exist yet
             print
             print '=============== Creating CA directories and infrastructure'
             src = os.path.join(self.igorDir, 'igorDatabase.empty')
             caSrc = os.path.join(src, 'ca')
             print >>sys.stderr, '%s: Creating %s' % (self.argv0, caSrc)
-            shutil.copytree(caSrc, self.caDatabase)
+            shutil.copytree(caSrc, self.ca.caDatabase)
         #
         # Create openssl.cnf files from openssl.cnf.in
         #
         for caGroup in ('root', 'intermediate'):
             print
             print '=============== Creating config for', caGroup
-            caGroupDir = os.path.join(self.caDatabase, caGroup)
+            caGroupDir = os.path.join(self.ca.caDatabase, caGroup)
             caGroupConf = os.path.join(caGroupDir, 'openssl.cnf')
             caGroupConfIn = os.path.join(caGroupDir, 'openssl.cnf.in')
             if os.path.exists(caGroupConf):
@@ -181,9 +240,9 @@ class IgorCA:
         #
         # Create root key and certificate
         #
-        rootKeyFile = os.path.join(self.caDatabase, 'root', 'private', 'ca.key.pem')
-        rootCertFile = os.path.join(self.caDatabase, 'root', 'certs', 'ca.cert.pem')
-        rootConfigFile = os.path.join(self.caDatabase, 'root', 'openssl.cnf')
+        rootKeyFile = os.path.join(self.ca.caDatabase, 'root', 'private', 'ca.key.pem')
+        rootCertFile = os.path.join(self.ca.caDatabase, 'root', 'certs', 'ca.cert.pem')
+        rootConfigFile = os.path.join(self.ca.caDatabase, 'root', 'openssl.cnf')
         if  os.path.exists(rootKeyFile) and os.path.exists(rootCertFile) and os.path.exists(rootConfigFile):
             print
             print '=============== Root key and certificate already exist'
@@ -215,14 +274,14 @@ class IgorCA:
         #
         print
         print '=============== Creating intermediate key and certificate'
-        ok = self.runSSLCommand('genrsa', '-out', self.intKeyFile, '4096')
-        os.chmod(self.intKeyFile, 0400)
+        ok = self.runSSLCommand('genrsa', '-out', self.ca.intKeyFile, '4096')
+        os.chmod(self.ca.intKeyFile, 0400)
         if not ok:
             return False
-        intCsrFile = os.path.join(self.caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
+        intCsrFile = os.path.join(self.ca.caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
         ok = self.runSSLCommand('req', 
-            '-config', self.intConfigFile, 
-            '-key', self.intKeyFile, 
+            '-config', self.ca.intConfigFile, 
+            '-key', self.ca.intKeyFile, 
             '-new', 
             '-sha256', 
             '-out', intCsrFile
@@ -236,40 +295,46 @@ class IgorCA:
             '-notext',
             '-md', 'sha256',
             '-in', intCsrFile,
-            '-out', self.intCertFile
+            '-out', self.ca.intCertFile
             )
         if not ok:
             return False
-        os.chmod(self.intCertFile, 0400)
+        os.chmod(self.ca.intCertFile, 0400)
         #
         # Verify the intermediate certificate
         #
         ok = self.runSSLCommand('verify',
             '-CAfile', rootCertFile,
-            self.intCertFile
+            self.ca.intCertFile
             )
         if not ok:
             return False
         #
         # Concatenate
         #
-        ofp = open(self.intAllCertFile, 'w')
-        ofp.write(open(self.intCertFile).read())
+        ofp = open(self.ca.intAllCertFile, 'w')
+        ofp.write(open(self.ca.intCertFile).read())
         ofp.write(open(rootCertFile).read())
         ofp.close()
         #
         # Now lock out the root directory structure.
         #
-        os.chmod(os.path.join(self.caDatabase, 'root'), 0)
+        os.chmod(os.path.join(self.ca.caDatabase, 'root'), 0)
         #
         # And finally print the chained file
         #
-        ok = self.runSSLCommand('x509', '-noout', '-text', '-in', self.intAllCertFile)
+        ok = self.runSSLCommand('x509', '-noout', '-text', '-in', self.ca.intAllCertFile)
         if not ok:
             return False
     
         return True
 
+    def cmd_dn(self):
+        """Return CA distinghuished name as a JSON structure"""
+        dnData = self.ca.get_distinguishedNameForCA()
+        json.dump(dnData, sys.stdout)
+        sys.stdout.write('\n')
+        
     def cmd_selfCSR(self, *allNames):
         """Create secret key and CSR for Igor itself. Outputs CSR."""
         csr = self.do_selfCSR(*allNames)
@@ -278,15 +343,6 @@ class IgorCA:
         sys.stdout.write(csr)
         return True
         
-    def do_getRoot(self):
-        """Return root certificate (in PEM form)"""
-        return open(self.intAllCertFile).read()
-        
-    def do_list(self):
-        """Return list of all signatures signed"""
-        indexFile = os.path.join(self.caDatabase, 'intermediate', 'index.txt')
-        return open(indexFile).read()
-
     def do_genCSR(self, keyFile, csrFile, csrConfigFile, *allNames):
         """Create key and CSR for a service. Returns CSR."""
         if len(allNames) < 1:
@@ -344,7 +400,7 @@ class IgorCA:
         if not dnDict:
             return None
         commonName = dnDict['CN']
-        altNames = self.get_altNames('req', csrFile)
+        altNames = self.get_altNames(csrFile)
         #
         # Create signing config file
         #
@@ -375,13 +431,14 @@ class IgorCA:
         if not configFile:
             _, configFile = tempfile.mkstemp('.sslconfig')
 
-        dnDict = self.get_distinguishedName('x509', self.intCertFile)
+        dnDict = self.ca.get_distinguishedNameForCA()
         if not dnDict:
             return None
         dnDict['CN'] = commonName
 
         cfg = SSLConfigParser(allow_no_value=True)
-        cfg.readfp(open(self.intConfigFile), self.intConfigFile)
+        cfgSource = self.ca_get_csrConfigTemplate()
+        cfg.readfp(open(cfgSource), cfgSource) # xxxjack
  
         cfg.remove_section('req_distinguished_name')
         cfg.add_section('req_distinguished_name')
@@ -428,7 +485,7 @@ class IgorCA:
                     
     def cmd_getRoot(self):
         """Returns the signing certificate chain (for installation in browser or operating system)"""
-        sys.stdout.write(self.do_getRoot())
+        sys.stdout.write(self.ca.ca_getRoot())
         return True
         
     def cmd_sign(self):
@@ -466,14 +523,48 @@ class IgorCA:
 
     def cmd_list(self):
         """Return list of certificates signed."""
-        sys.stdout.write(self.do_list())
+        sys.stdout.write(self.ca.ca_list())
         return False
         
+    def do_list(self):
+        return self.ca.ca_list()
+        
+    def cmd_status(self):
+        """Returns nothing if CA status is ok, otherwise error message"""
+        return self.ca.isOK()
+        
+    def do_status(self):
+        if self.ca.isOK():
+            return ""
+        return "CA server configuration error, or not initialized"
+        
+    def cmd_csrtemplate(self):
+        """Return template config file for for openSSL CSR request"""
+        fn = self.ca.get_csrConfigTemplate()
+        sys.stdout.write(open(fn).read())
+        
+    def do_csrtemplate(self):
+        return self.ca.get_csrConfigTemplate()
+        
 def main():
-    m = IgorCA(sys.argv[0])
-    if len(sys.argv) < 2:
+    parser = argparse.ArgumentParser(description="Igor Certificate and Key utility")
+    parser.add_argument("-r", "--remote", action="store_true", help="Use CA on remote Igor (default is on the local filesystem)")
+    parser.add_argument("-u", "--url", help="(remote only) Base URL of the server (default: %s, environment IGORSERVER_URL)" % igorVar.CONFIG.get('igor', 'url'), default=igorVar.CONFIG.get('igor', 'url'))
+    parser.add_argument("--bearer", metavar="TOKEN", help="(remote only) Add Authorization: Bearer TOKEN header line", default=igorVar.CONFIG.get('igor', 'bearer'))
+    parser.add_argument("--access", metavar="TOKEN", help="(remote only) Add access_token=TOKEN query argument", default=igorVar.CONFIG.get('igor', 'access'))
+    parser.add_argument("--credentials", metavar="USER:PASS", help="(remote only) Add Authorization: Basic header line with given credentials", default=igorVar.CONFIG.get('igor', 'credentials'))
+    parser.add_argument("--noverify", action='store_true', help="(remote only) Disable verification of https signatures", default=igorVar.CONFIG.get('igor', 'noverify'))
+    parser.add_argument("--certificate", metavar='CERTFILE', help="(remote only) Verify https certificates from given file", default=igorVar.CONFIG.get('igor', 'certificate'))
+    parser.add_argument("action", help="Action to perform: help, initialize, ...", default="help")
+    parser.add_argument("arguments", help="Arguments to the action", nargs="*")
+    args = parser.parse_args()
+    igorServer = None
+    if args.remote:
+        igorServer = igorVar.IgorServer(args.url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
+    m = IgorCA(sys.argv[0], igorServer)
+    if not args.action:
         return m.main('help', [])
-    return m.main(sys.argv[1], sys.argv[2:])
+    return m.main(args.action, args.arguments)
     
 if __name__ == '__main__':
     main()

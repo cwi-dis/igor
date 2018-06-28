@@ -63,6 +63,45 @@ class CAInterface:
         indexFile = os.path.join(self.caDatabase, 'intermediate', 'index.txt')
         return open(indexFile).read()
 
+    def ca_signCSR(self, csr):
+        #
+        # Save the CSR to a file
+        #
+        _, csrFile = tempfile.mkstemp('.csr')
+        open(csrFile, 'w').write(csr)
+        #
+        # Get commonName and subjectAltName from the CSR
+        #
+        dnDict = self.get_distinguishedName('req', csrFile)
+        if not dnDict:
+            return None
+        commonName = dnDict['CN']
+        altNames = self.get_altNames(csrFile)
+        #
+        # Create signing config file
+        #
+        csrConfigFile = self.gen_configFile(commonName, altNames)
+        if not csrConfigFile:
+            return None
+        #
+        # Sign CSR
+        #
+        _, certFile = tempfile.mkstemp('.cert')        
+        ok = self.runSSLCommand('ca',
+            '-config', csrConfigFile,
+            '-batch',
+            '-extensions', 'server_cert',
+            '-days', '3650',
+            '-notext',
+            '-md', 'sha256',
+            '-in', csrFile,
+            '-out', certFile
+            )
+        if not ok:
+            return None
+        cert = open(certFile).read()
+        return cert
+
     def get_distinguishedNameForCA(self):
         return self.parent.get_distinguishedName('x509', self.intCertFile)
            
@@ -86,11 +125,17 @@ class CARemoteInterface:
         return not rv
         
     def ca_getRoot(self):
-        return self.igor.get('/plugin/ca/root', format='application/json')
+        return self.igor.get('/plugin/ca/root', format='text/plain')
         
     def ca_list(self):
         return self.igor.get('/plugin/ca/list', format='text/plain')
            
+    def ca_signCSR(self, csr):
+        return self.igor.get('/plugin/ca/sign', format='text/plain', query=dict(csr=csr))
+
+    def get_distinguishedNameForCA(self):
+        return self.igor.get('/plugin/ca/dn', format='application/json')
+        
     def get_csrConfigTemplate(self):
         rv = self.igor.get('/plugin/ca/template', format='text/plain')
         _, configFile = tempfile.mkstemp('.sslconfig')
@@ -339,6 +384,10 @@ class IgorCA:
         json.dump(dnData, sys.stdout)
         sys.stdout.write('\n')
         
+    def do_dn(self):
+        dnData = self.ca.get_distinguishedNameForCA()
+        return json.dumps(dnData)
+                
     def cmd_selfCSR(self, *allNames):
         """Create secret key and CSR for Igor itself. Outputs CSR."""
         csr = self.do_selfCSR(*allNames)
@@ -392,43 +441,7 @@ class IgorCA:
         
     def do_signCSR(self, csr):
         """Sign a CSR. Returns certificate."""
-        #
-        # Save the CSR to a file
-        #
-        _, csrFile = tempfile.mkstemp('.csr')
-        open(csrFile, 'w').write(csr)
-        #
-        # Get commonName and subjectAltName from the CSR
-        #
-        dnDict = self.get_distinguishedName('req', csrFile)
-        if not dnDict:
-            return None
-        commonName = dnDict['CN']
-        altNames = self.get_altNames(csrFile)
-        #
-        # Create signing config file
-        #
-        csrConfigFile = self.gen_configFile(commonName, altNames)
-        if not csrConfigFile:
-            return None
-        #
-        # Sign CSR
-        #
-        _, certFile = tempfile.mkstemp('.cert')        
-        ok = self.runSSLCommand('ca',
-            '-config', csrConfigFile,
-            '-batch',
-            '-extensions', 'server_cert',
-            '-days', '3650',
-            '-notext',
-            '-md', 'sha256',
-            '-in', csrFile,
-            '-out', certFile
-            )
-        if not ok:
-            return None
-        cert = open(certFile).read()
-        return cert
+        return self.ca.signCSR(csr)
         
     def gen_configFile(self, commonName, altNames, configFile=None):
         """Helper function to create CSR or signing config file"""

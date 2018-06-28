@@ -47,10 +47,10 @@ class CAInterface:
         
     def isOK(self):
         if not os.path.exists(self.caDatabase):
-            print >>sys.stderr, "%s: No Igor CA self.database at %s" % (self.argv0, self.caDatabase)
+            print >>sys.stderr, "%s: No Igor CA self.database at %s" % (self.parent.argv0, self.caDatabase)
             return False
         if not (os.path.exists(self.intKeyFile) and os.path.exists(self.intCertFile) and os.path.exists(self.intAllCertFile)):
-            print >>sys.stderr, "%s: Intermediate key, certificate and chain don't exist in %s" % (self.argv0, self.caDatabase)
+            print >>sys.stderr, "%s: Intermediate key, certificate and chain don't exist in %s" % (self.parent.argv0, self.caDatabase)
             return False
         return True
 
@@ -81,9 +81,9 @@ class CARemoteInterface:
     def isOK(self):
         rv = self.igor.get('/plugin/ca/status', format='text/plain')
         rv = rv.strip()
-        if not rv:
-            print >>sys.stderr, rv
-        return rv
+        if rv:
+            print >>sys.stderr, "%s: remote CA: %s" % (self.parent.argv0, rv)
+        return not rv
         
     def ca_getRoot(self):
         return self.igor.get('/plugin/ca/root', format='application/json')

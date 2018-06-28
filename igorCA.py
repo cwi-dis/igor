@@ -80,6 +80,7 @@ class CARemoteInterface:
         
     def isOK(self):
         rv = self.igor.get('/plugin/ca/status', format='text/plain')
+        rv = rv.strip()
         if not rv:
             print >>sys.stderr, rv
         return rv

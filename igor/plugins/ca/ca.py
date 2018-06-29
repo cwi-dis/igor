@@ -22,6 +22,7 @@ INDEX_HTML="""<html lang="en">
 	<h1>Igor Certificate Authority</h1>
 	<h2>Root Certificate Chain</h2>
 	<p>To trust certificates signed by this Igor CA, download the <a href="ca/root">root certificate chain</a> and install in your browser or system.</p>
+	<p>If available, the <a href="/static/crl.pem">Certificate Revocation List</a> can be downloaded too.</p>
 	<h2>Listing all Certificates</h2>
 	<p>To list certificates signed by this Igor CA, see the <a href="ca/list">certificate listing</a>.</p>
 	<p>CRL and Revocation to be done later.</p>

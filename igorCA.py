@@ -450,7 +450,7 @@ class IgorCA:
         if not self.ca.isLocal():
             print >>sys.stderr, "%s: genCRL should only be used for local CA" % self.argv0
             return False
-        crFile = os.path.join(self.database, 'static', 'crl.pem')
+        crlFile = os.path.join(self.database, 'static', 'crl.pem')
         ok = self.runSSLCommand('ca', '-config', self.ca.intConfigFile, '-gencrl', '-out', crlFile)
         return ok
         

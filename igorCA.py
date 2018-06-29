@@ -13,7 +13,9 @@ import json
 import argparse
 import igorVar
 
-IS_IP=re.compile(r'^[0-9.:]*$') # Not good enough, but does not match hostnames
+
+#IS_IP=re.compile(r'^[0-9.:]*$') # Not good enough, but does not match hostnames
+IS_IP=re.compile(r'^[0-9:]*$') # Matches only IPv6 IP addresses so IPv4 addresses are (incorrectly) seen as hostnames
 
 class SSLConfigParser(ConfigParser.RawConfigParser):
     """SSL Configuration files are case-dependent"""

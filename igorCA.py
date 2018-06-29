@@ -302,7 +302,7 @@ class IgorCA:
         else:
             print
             print '=============== Creating root key and certificate'
-            ok = self.runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '4096' if self.keysize is None else self.keysize)
+            ok = self.runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '2048' if self.keysize is None else self.keysize)
             if not ok:
                 return False
             os.chmod(rootKeyFile, 0400)
@@ -327,7 +327,7 @@ class IgorCA:
         #
         print
         print '=============== Creating intermediate key and certificate'
-        ok = self.runSSLCommand('genrsa', '-out', self.ca.intKeyFile, '4096' if self.keysize is None else self.keysize)
+        ok = self.runSSLCommand('genrsa', '-out', self.ca.intKeyFile, '2048' if self.keysize is None else self.keysize)
         os.chmod(self.ca.intKeyFile, 0400)
         if not ok:
             return False
@@ -595,7 +595,7 @@ class IgorCA:
         
 def main():
     parser = argparse.ArgumentParser(description="Igor Certificate and Key utility")
-    parser.add_argument("-s", "--keysize", metavar="BITS", help="Override key size (default: 4096 for CA, 2048 for certificates)")
+    parser.add_argument("-s", "--keysize", metavar="BITS", help="Override key size (default: 2048)")
     parser.add_argument("-r", "--remote", action="store_true", help="Use CA on remote Igor (default is on the local filesystem)")
     parser.add_argument("-u", "--url", help="(remote only) Base URL of the server (default: %s, environment IGORSERVER_URL)" % igorVar.CONFIG.get('igor', 'url'), default=igorVar.CONFIG.get('igor', 'url'))
     parser.add_argument("--bearer", metavar="TOKEN", help="(remote only) Add Authorization: Bearer TOKEN header line", default=igorVar.CONFIG.get('igor', 'bearer'))

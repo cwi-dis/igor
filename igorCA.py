@@ -445,6 +445,28 @@ class IgorCA:
         """Sign a CSR. Returns certificate."""
         return self.ca.ca_signCSR(csr)
         
+    def cmd_genCRL(self):
+        """Generate CRL in static/crl.pem"""
+        if not self.ca.isLocal():
+            print >>sys.stderr, "%s: genCRL should only be used for local CA" % self.argv0
+            return False
+        crFile = os.path.join(self.database, 'static', 'crl.pem')
+        ok = self.runSSLCommand('ca', '-config', self.ca.intConfigFile, '-gencrl', '-out', crlFile)
+        return ok
+        
+    def cmd_revoke(self, number):
+        """Revoke a certificate. Argument is the number of the certificate to revoke (see list). Regenerates CRL as well."""
+        if not self.ca.isLocal():
+            print >>sys.stderr, "%s: revoke should only be used for local CA" % self.argv0
+            return False
+        certFile = os.path.join(self.ca.caDatabase, 'intermediate', 'newcerts', str(number)+'.pem')
+        if not os.path.exists(certFile):
+            print >>sys.stderr, "%s: no such certificate: %s" % (self.argv0, certFile)
+        ok = self.runSSLCommand('ca', '-config', self.ca.intConfigFile, '-revoke', certFile)
+        if not ok:
+            return False
+        return self.cmd_genCRL()
+        
     def gen_configFile(self, commonName, altNames, configFile=None):
         """Helper function to create CSR or signing config file"""
         if not configFile:

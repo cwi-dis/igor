@@ -169,14 +169,26 @@ class IgorCA:
             return None
         data = data[8:]
         data = data.strip()
-        dataItems = data.split('/')
+        # grr... Some openSSL implementations use / as separator, some use ,
         rv = {}
-        for di in dataItems:
-            if not di: continue
-            diSplit = di.split('=')
-            k = diSplit[0]
-            v = '='.join(diSplit[1:])
-            rv[k] = v
+        if '/' in data:
+            dataItems = data.split('/')
+            for di in dataItems:
+                if not di: continue
+                diSplit = di.split('=')
+                k = diSplit[0]
+                v = '='.join(diSplit[1:])
+                rv[k] = v
+        else:
+            dataItems = data.split(',')
+            for di in dataItems:
+                if not di: continue
+                diSplit = di.split('=')
+                k = diSplit[0]
+                v = '='.join(diSplit[1:])
+                k = k.strip()
+                v = v.strip()
+                rv[k] = v
         return rv
         
     def runSSLCommand(self, *args):

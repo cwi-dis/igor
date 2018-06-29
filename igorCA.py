@@ -285,9 +285,11 @@ class IgorCA:
             if os.path.exists(caGroupConf):
                 print >> sys.stderr, '%s: %s already exists' % (self.argv0, caGroupConf)
                 return False
-            data = open(caGroupConfIn).read()
-            data = data.replace('%INSTALLDIR%', self.database)
-            open(caGroupConf, 'w').write(data)
+            # Insert igor directory name into config file
+            cfg = SSLConfigParser(allow_no_value=True)
+            cfg.readfp(open(caGroupConfIn), caGroupConfIn)
+            cfg.set('CA_default', 'igordir', self.database)
+            cfg.write(open(caGroupConf, 'w'))
         #
         # Create root key and certificate
         #

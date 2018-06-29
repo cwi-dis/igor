@@ -7,7 +7,8 @@ default_ca = CA_default
 
 [ CA_default ]
 # Directory and file locations.
-dir               = %INSTALLDIR%/ca/root
+igordir			  = .
+dir               = $igordir/ca/root
 certs             = $dir/certs
 crl_dir           = $dir/crl
 new_certs_dir     = $dir/newcerts
@@ -42,18 +43,15 @@ stateOrProvinceName     = match
 organizationName        = match
 organizationalUnitName  = optional
 commonName              = supplied
-emailAddress            = optional
 
 [ policy_loose ]
 # Allow the intermediate CA to sign a more diverse range of certificates.
 # See the POLICY FORMAT section of the `ca` man page.
 countryName             = optional
 stateOrProvinceName     = optional
-localityName            = optional
 organizationName        = optional
 organizationalUnitName  = optional
 commonName              = supplied
-emailAddress            = optional
 
 [ req ]
 # Options for the `req` tool (`man req`).
@@ -71,19 +69,15 @@ x509_extensions     = v3_ca
 # See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
 countryName                     = Country Name (2 letter code)
 stateOrProvinceName             = State or Province Name
-localityName                    = Locality Name
 0.organizationName              = Organization Name
 organizationalUnitName          = Organizational Unit Name
 commonName                      = Common Name
-emailAddress                    = Email Address
 
 # Optionally, specify some defaults.
-countryName_default             = GB
-stateOrProvinceName_default     = England
-localityName_default            =
-0.organizationName_default      = Alice Ltd
+countryName_default             = NL
+stateOrProvinceName_default     = Netherlands
+0.organizationName_default      = Igor Inc
 organizationalUnitName_default  =
-emailAddress_default            =
 
 [ v3_ca ]
 # Extensions for a typical CA (`man x509v3_config`).
@@ -103,8 +97,6 @@ keyUsage = critical, digitalSignature, cRLSign, keyCertSign
 [ usr_cert ]
 # Extensions for client certificates (`man x509v3_config`).
 basicConstraints = CA:FALSE
-nsCertType = client, email
-nsComment = "OpenSSL Generated Client Certificate"
 subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid,issuer
 keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
@@ -113,8 +105,6 @@ extendedKeyUsage = clientAuth, emailProtection
 [ server_cert ]
 # Extensions for server certificates (`man x509v3_config`).
 basicConstraints = CA:FALSE
-nsCertType = server
-nsComment = "OpenSSL Generated Server Certificate"
 subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid,issuer:always
 keyUsage = critical, digitalSignature, keyEncipherment

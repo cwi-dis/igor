@@ -18,6 +18,7 @@
 	<plugindata>
 		<smartmeter_iotsa>
 			<host>smartmeter.local</host>
+			<protocol>https</protocol>
 		</smartmeter_iotsa>
 	</plugindata>
 	<environment>

@@ -6,7 +6,7 @@
 	<actions>
 		<action>
 			<xpath>/data/devices/plant/pos</xpath>
-			<url>https://plant.local/stepper/0?pos={.}</url>
+			<url>{/data/plugindata/plant/protocol}://{/data/plugindata/plant/host}/stepper/0?pos={.}</url>
 			<representing>devices/plant</representing>
 		</action>
 		<action>

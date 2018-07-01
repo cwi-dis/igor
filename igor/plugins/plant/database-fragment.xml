@@ -6,7 +6,7 @@
 	<actions>
 		<action>
 			<xpath>/data/devices/plant/pos</xpath>
-			<url>http://plant.local/stepper/0?pos={.}</url>
+			<url>{/data/plugindata/plant/protocol}://{/data/plugindata/plant/host}/stepper/0?pos={.}</url>
 			<representing>devices/plant</representing>
 		</action>
 		<action>
@@ -25,6 +25,12 @@
 			<aggregate>true</aggregate>
 		</action>			
 	</actions>
+	<plugindata>
+		<plant>
+			<host>plant.local</host>
+			<protocol>https</protocol>
+		</plant>
+	</plugindata>
 	<environment>
 		<energy/>
 	</environment>

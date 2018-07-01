@@ -2,16 +2,16 @@
 
 ## Installing the software
 
-Download the source via <https://github.com/cwi-dis/igor>. The install everything with
+Download the source via <https://github.com/cwi-dis/igor>. Then install everything with
 
 ```
 python setup.py build
 sudo python setup.py install
 ```
 
-This will install the main binary `igorServer` as well as the utilties `igorVar`, `igorSetup` and `igorControl`.
+This will install the main binary `igorServer` as well as the utilties `igorVar`, `igorSetup`, `igorControl` and `igorCA`.
 
-You may also want to install some of the helper utilities from _helpers_.
+You may also want to install some of the helper utilities from the `helpers` subdirectory.
 
 ## Setup the database
 
@@ -39,7 +39,22 @@ and point your browser at <http://localhost:9333> to see Igor in action.
 
 ### Security
 
-It is advised to run Igor with the secure _https_ protocol as opposed to the completely open _http_ protocol. Igor can use any SSL certificate, but simplest is to use a self-signed certificate. Run
+It is advised to run Igor with the secure _https_ protocol as opposed to the completely open _http_ protocol. Igor can use any SSL certificate, but simplest is to use a self-signed certificate or to configure Igor as a Certificate Authority.
+
+#### Igor as a CA
+
+Enabling Igor as a Certificate Authority is the best option if there are other services (such as Iotsa-based devices, or other Igors) that you want to protect with _https_. Details on using Igor as a CA are in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md) but here are the commands needed to get this kickstarted:
+
+```
+igorCA initialize
+igorCA self igor.local localhost 127.0.0.1 ::1
+```
+
+The `self` command should be given all hostnames and IP addresses via which you expect to access Igor, and the "canonical name" should be first.
+
+#### Self-signed Certificate
+
+Alternatively, to use a self-signed certificate for Igor, run
 
 ```
 igorSetup certificate
@@ -51,7 +66,7 @@ Now connect your browser to <https://localhost:9333>. You will get a number of w
 
 ### configuration
 
-You will need to configure your Igor to do something useful. See [../igor/plugins/readmd.md](../igor/plugins/readmd) for a list of useful plugins, and [schema.md](schema.md) for how to add useful actions to your database.
+You will need to configure your Igor to do something useful. See [../igor/plugins/readmd.md](../igor/plugins/readme.md) for a list of useful plugins, and [schema.md](schema.md) for how to add useful actions to your database.
 
 Stop Igor before editing your `~/.igor/database.xml` in a text editor. The following command helps you with this:
 
@@ -90,6 +105,10 @@ Uses the _http[s]_ interface so can be run on a different computer. Configuratio
 
 The _igorVar_ utility can also be used to communicate with other services that have a REST-like interface and uses JSON or XML as data format.
 
+### igorCA
+
+Certificate Authority command line tool. Call `igorCA help` for a list of commands. More detail (a little more:-) can be found in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md).
+
 ## ~/.igor directory structure
 
 The `~/.igor` directory can contain the following files and subdirectories:
@@ -99,6 +118,7 @@ The `~/.igor` directory can contain the following files and subdirectories:
 - `plugins` directory with installed plugins.
 - `igor.log` if _igorServer_ is started at system boot this is the _httpd-style_ log of all Igor activity.
 - `igor.crt` and `igor.key` if Igor is run in _https_ mode these are the certificate and key used. `igor.crt` is also used by _igorVar_ and _igorControl_ to check the server identity.
+- `ca` certificate authority data such as signing keys and certificates.
 - `igorSessions.db` may be available to store igor user sessions.
 - `igor.cfg` configuration file for _igorVar_ and _igorControl_ (not used by _igorServer_ or _igorSetup_). All values are stored in the `[igor]` section, with names identical to the long option name. So, the following file will change the default server used by _igorVar_ and _igorControl_:
 

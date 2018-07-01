@@ -2,7 +2,7 @@
 
 A NeoClock is a clock with 60 LEDs that shows the time, but additionally can show status information and alerts through a REST-like web service. It is built around an esp8266-based microprocessor board with NeoPixel LEDs.
 
-_The URL to help you build one for yourself will be provided here shortly_.
+Instructions for building (hardware and software) can be found at <https://github.com/dis-git/iotsaNeoClock>.
 
 This plugin uses the NeoClock to show three types of status information:
 
@@ -15,6 +15,7 @@ This plugin uses the NeoClock to show three types of status information:
 * `environment/systemHealth/messages`: if non-empty the neoClock will show a warning status
 * `sensors/buienradar`: if this exists it will be used to fill the rain forecast status
 * `plugindata/neoclock/host`: host name for the neoclock
+* `plugindata/neoclock/protocol`: protocol for accessing the neoclock (`http`, `https` or `coap`)
 
 ## requirements
 

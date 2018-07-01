@@ -47,6 +47,55 @@ External capabilities are protected using a symmetric key that is shared between
 
 ## Database schema additions
 
+### /data/au:access
+
+Required for further schema requirements.
+
+### /data/au:access/au:defaultCapabilities
+
+Required for further schema requirements.
+
+### /data/au:access/au:defaultCapabilities/au:capability
+
+Capabilities that will be used for any action, user or request that has no `Authentication: Bearer` header. For users and actions this set of capabilities is also valid if they have their own set. In other words: their own set augments the set of capabilities, it does not replace it.
+
+### /data/au:access/au:exportedCapabilities
+
+Stores each `au:capability` for which an external representation has been created. Mainly so that each capability has an "owner".
+
+### /data/au:access/au:revokedCapabilities
+
+Stores all external capabilities that have been revoced. For each such capability there is a `au:revokedCapability` with at least a field `cid` that holds the capability ID. Optionally there is an `nva` field, Not Valid After, copied from the original capability, that indicates when this revoked capability can be cleaned up because the original is no longer valid.
+
+### /data/au:access/au:unusedCapabilities
+
+This is an optional area to store capabilities that  are valid but currently not used, and that have no owner.
+
+### /data/au:access/au:sharedKeys
+
+Stores symmetric keys shared between Igor and a single external party. These keys are used to sign outgoing capabilities (and check incoming capabilities). Each key is stored in an `au:sharedKey` element with the following fields:
+
+* `iss` Issuer.
+* `aud` (optional) Audience.
+* `sub` (optional) Subject.
+* `externalKey` Symmteric key to use.
+
+Keys are looked up either by the combination of _iss_ and _aud_ (for outgoing keys) or _iss_ and _sub_ (for incoming keys).
+
+**NOTE** The `externalKey` data here is truly secret (it is a shared key). Therefore, this data should be moved out of the database and stored externally, really. To be fixed.
+
+### /data/identities
+
+Required for further schema requirements.
+
+### /data/identities/admin
+
+User that holds the master capabilities, capabilities with fairly unlimited access from which more limited capabilities are descended (through delegation).
+
+### /data/identities/au:capabilitiy
+
+Capabilities carried by all users that are logged in.
+
 ### /data/identities/_user_/au:capability
 
 Capabilities this user will carry when logged in.
@@ -59,17 +108,3 @@ Capabilities this action will carry when executing.
 
 Capabilities this plugin will carry when executing.
 
-### /data/au:access/au:defaultCapabilities
-
-Capabilities that will be used for any request that has no `Authentication: Bearer` header, or actions, users or plugins that do not have their capabilities specified. 
-
-### /data/au:access/au:sharedKeys
-
-Stores symmetric keys shared between Igor and a single external party. These keys are used to sign outgoing capabilities (and check incoming capabilities). Each key is stored in an `au:sharedKey` element with the following fields:
-
-* `iss` Issuer.
-* `aud` (optional) Audience.
-* `sub` (optional) Subject.
-* `externalKey` Symmteric key to use.
-
-Keys are looked up either by the combination of _iss_ and _aud_ (for outgoing keys) or _iss_ and _sub_ (for incoming keys).

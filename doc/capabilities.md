@@ -9,43 +9,36 @@ Eventually this data will be hidden from normal Igor access, or moved to a separ
 A capability is stored in an `au:capability` element.
 
 * `comment` textual description, to keep us sane during development.
-* `xpath` an xpath referencing a single element (or a nonexisting element with a single expsiting parent element) to which this capability refers.
-* `get` Together with `xpath` defines on which elements this capability grants `GET` rights:
-	* empty (or non-existent): none.
-	* `self` the element itself only.
-	* `descendant-or-self` the whole subtree rooted at the element (the element itself, its children, its grandchildren, etc).
-	* `descendant` the whole subtree rooted at the element except the element itself.
-	* `child` direct children of the element.
-	* More values may be added later.
-* `put` Together with `xpath` defines on which elements this capability grants `PUT` rights. Values as for `get`.
-* `post` Together with `xpath` defines on which elements this capability grants `POST` rights. Values as for `get`.
-* `delete` Together with `xpath` defines on which elements this capability grants `DELETE` rights. Values as for `get`.
+* `cid` unique ID of this capability.
+* `child` one entry for each child (delegated) capability of this capability.
+* `parent` parent of this capability.
+* `delegate` boolean, if `true` this capability can be delegated.
+* `obj` an xpath referencing a single element (or a nonexisting element with a single existing parent element) to which this capability refers. Rights on that object and its descendants are governed by a number of other fields:
+	* `get` Together with `obj` defines on which elements this capability grants `GET` rights:
+		* empty (or non-existent): none.
+		* `self` the element itself only.
+		* `descendant-or-self` the whole subtree rooted at the element (the element itself, its children, its grandchildren, etc).
+		* `descendant` the whole subtree rooted at the element except the element itself.
+		* `child` direct children of the element.
+		* More values may be added later.
+	* `put` Together with `obj` defines on which elements this capability grants `PUT` rights. Values as for `get`.
+	* `post` Together with `obj` defines on which elements this capability grants `POST` rights. Values as for `get`.
+	* `delete` Together with `obj` defines on which elements this capability grants `DELETE` rights. Values as for `get`.
 
 Capabilities that have an external representation may have a few extra fields:
 
 * `iss` Issuer of this capability. Usually the URL of `/issuer` on this igor.
 * `aud` Audience of this capability. Required for capabilities that Igor will encode as a JWT in an outgoing `Authentication: Bearer` header.
 * `sub` Subject of this capability. Required for capabilities that Igor receives as JWT in an incoming `Authentication: Bearer` header.
-* For outgoing capabilities there may be other fields that are meaningful to the _audience_ of the capability. For example, a capability for a _Iotsa_ device will contain a `right` field.
+* For outgoing capabilities there may be other fields that are meaningful to the _audience_ of the capability.
 
 External capabilities are protected using a symmetric key that is shared between Issuer and Audience (for outgoing capabilities) or Issuer and Subject (for incoming keys). This key is used to sign the JWT.
 
-## Open issues
-
-* How do we store multiple capabilities? 
-	* As a list of capabilitities? With its own `<au:capabilitList>` tag or simply collected by enumerating all capabilities?
-	* By allowing recursive `<au:capability>`?
-* Can we have a reference to a capability (in stead of requiring copying) in the database?
-	* By Xpath?
-	* An `<name>` field?
-	* Or `xml:id` or something like that?
-* The symmetric protection is still tied too much with Igor also being the issuer. Needs to be fixed.
-* Delegation and revocation will need to be handled.
-* There seems to be no reason to give internal capabilities an identity, but that may change for external capabilities (especially in the light of revocation).
-
-* The internal representation sketched above follows Igor schema philosophy. We may switch to the schema of the original paper, and we may do so only externally.
-
 ## Database schema additions
+
+### /internal/accessControl
+
+Not really part of the database, but this is the entry point to manage (list, delegate, revoke) capabilities.
 
 ### /data/au:access
 
@@ -53,11 +46,15 @@ Required for further schema requirements.
 
 ### /data/au:access/au:defaultCapabilities
 
-Required for further schema requirements.
-
-### /data/au:access/au:defaultCapabilities/au:capability
-
 Capabilities that will be used for any action, user or request that has no `Authentication: Bearer` header. For users and actions this set of capabilities is also valid if they have their own set. In other words: their own set augments the set of capabilities, it does not replace it.
+
+These capabilities should be here:
+
+- get(descendant-or-self), /data/environment
+- get(descendant-or-self), /data/status
+- get(descendant-or-self), /data/services/igor
+- get(child), /static
+- get(child), /internal/accessControl
 
 ### /data/au:access/au:exportedCapabilities
 
@@ -86,21 +83,37 @@ Keys are looked up either by the combination of _iss_ and _aud_ (for outgoing ke
 
 ### /data/identities
 
-Required for further schema requirements.
+Capabilities carried by all users that are logged in. Contains at least:
+
+- get(descendent-or-self), /data/people
 
 ### /data/identities/admin
 
 User that holds the master capabilities, capabilities with fairly unlimited access from which more limited capabilities are descended (through delegation).
 
-### /data/identities/au:capabilitiy
+There are at least the following capabilities, of which most other capabilities are descended (through delegation and narrowing the scope):
 
-Capabilities carried by all users that are logged in.
+- get(descendant-or-self)+put(descendant-or-self)+post(descendant)+delete(descendant), /data
+- get(descendant), /action
+- get(descendant), /internal
 
-### /data/identities/_user_/au:capability
 
-Capabilities this user will carry when logged in.
+### /data/identities/_user_
 
-### /data/actions/action/au:capability
+Capabilities this user will carry when logged in. Contains at least:
+
+- get(descendent-or-self)+put(descendent)+post(descendent)+delete(descendent), /data/identities/_user_
+- put(descendent)+post(descendent)+delete(descendent), /data/people/_user_
+
+### /data/actions
+
+Capabilities that are carried by all actions. Contains at least:
+
+- get(descendant), /plugin
+- get(descendant), /pluginscripts
+- get(child), /action
+
+### /data/actions/action
 
 Capabilities this action will carry when executing.
 

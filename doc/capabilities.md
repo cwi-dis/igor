@@ -96,7 +96,7 @@ There are at least the following capabilities, of which most other capabilities 
 - get(descendant-or-self)+put(descendant-or-self)+post(descendant)+delete(descendant), /data
 - get(descendant), /action
 - get(descendant), /internal
-
+- an empty capability (no rights, no object) with `cid=root` and no parent. This is the root of the capability tree.
 
 ### /data/identities/_user_
 
@@ -121,3 +121,45 @@ Capabilities this action will carry when executing.
 
 Capabilities this plugin will carry when executing.
 
+## Capability consistency checks
+
+Capabilities need to be checked for consistency, and for adherence to the schema. 
+
+The following checks are needed as a first order check, and ensure the base infrastructure for the schema is in place:
+
+- `/data/au:access` exists.
+- `/data/au:access/au:defaultCapabilities` exists.
+- `/data/au:access/au:exportedCapabilities` exists.
+- `/data/au:access/au:revokedCapabilities` exists.
+- `/data/au:access/au:unusedCapabilities` exists.
+- `/data/au:access/au:sharedKeys` exists.
+- `/data/identities` exists.
+- `/data/identities/admin` exists.
+- `/data/identities/admin/au:capability[cid='0']` exists.
+- `/data/actions` exists.
+
+As a second order check we enumerate all capabilities and check the following assertions. These ensure that the tree of all capabilities is consistent:
+
+-  Each capability must have a unique `cid`. 
+- Each capability (except `cid=0`) must have an existing `parent`, if not the capability is given `parent=0`.
+- Each capability must have its `cid` listed in the parent `child` fields. If not it is added.
+- Each `child` of each capability must exist. If not the `child` is removed.
+
+As a third check we check that every capability is in an expected location. In other words, the DOM parent of the capability os one of:
+
+- Any of the containers in the first check, or
+- `/data/identities/*`
+- `/data/plugindata/*`
+- `/data/actions/action`
+
+Capabilities that fail this check are moved into `/data/au:access/au:unusedCapabilities`.
+
+As a final check we test that the default set of capabilities (as per the schema above) exist and are in their correct location.
+
+## Capability actions on agent changes
+
+To be determined what is needed when adding/removing/changing users, plugins and actions. 
+
+Also to be determined whether anything needs to be done when adding/removing/changing services, sensors or devices.
+
+Clearly the capabilities in the schema section will need to be added when users are added, but there is probably more (such as adding external access capabilities when a new device is added).

@@ -239,7 +239,7 @@ class IgorServer:
         if not subcommand:
             raise web.notfound()
         method = getattr(self.access, subcommand, None)
-        if not subcommand:
+        if not method:
             raise web.notfound()
         rv = method(**kwargs)
         if returnTo and not rv:

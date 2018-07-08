@@ -138,7 +138,9 @@ The following checks are needed as a first order check, and ensure the base infr
 - `/data/identities/admin/au:capability[cid='0']` exists.
 - `/data/actions` exists.
 
-As a second order check we enumerate all capabilities and check the following assertions. These ensure that the tree of all capabilities is consistent:
+As a second check we test that the default set of capabilities (as per the schema above) exist and are in their correct location.
+
+As a third check we enumerate all capabilities and check the following assertions. These ensure that the tree of all capabilities is consistent:
 
 -  Each capability must have a `cid`. 
 -  This `cid` must be unique.
@@ -146,7 +148,7 @@ As a second order check we enumerate all capabilities and check the following as
 - Each capability must have its `cid` listed in the parent `child` fields. If not it is added.
 - Each `child` of each capability must exist. If not the `child` is removed.
 
-As a third check we check that every capability is in an expected location. In other words, the DOM parent of the capability os one of:
+As a fourth check we check that every capability is in an expected location. In other words, the DOM parent of the capability is one of:
 
 - Any of the containers in the first check, or
 - `/data/identities/*`
@@ -154,8 +156,6 @@ As a third check we check that every capability is in an expected location. In o
 - `/data/actions/action`
 
 Capabilities that fail this check are moved into `/data/au:access/au:unusedCapabilities`.
-
-As a final check we test that the default set of capabilities (as per the schema above) exist and are in their correct location.
 
 ## Capability actions on agent changes
 

@@ -86,7 +86,22 @@ class CapabilityConsistency:
             context = self.database.getXPathForElement(context)
         self._status('Non-unique value: %s (context=%s)' % (path, context))
         raise CannotFix
-        
+    
+    def _hasCapability(self, location, **kwargs):
+        expr = location + '/au:capability'
+        for k, v in kwargs.items():
+            subExpr = "[%s='%s']" % (k, v)
+            expr += subExpr
+        allCaps = self.database.getElements(expr, 'get', token=self.token, namespaces=self.namespaces)
+        if len(allCaps) == 0:
+            if self.fix:
+                self._status('Cannot fix yet: Missing standard capability %s' % expr)
+                raise CannotFix
+            else:
+                self._status('Missing standard capability %s' % expr)
+        elif len(allCaps) > 1:
+                self._status('Duplicate standard capability %s' % expr)
+            
     def check(self):
         if VERBOSE:
             self._status('Starting consistency check')
@@ -118,8 +133,28 @@ class CapabilityConsistency:
             self._checkExists('/data/actions')
             self._checkUnique('/data/actions')
             
-            self._checkExists("/data/identities/admin/au:capability[cid='0']", dontfix=True)
+            #
+            # Second set - all the default and important capabilities exist
+            #
+            self._hasCapability('/data/identities/admin', cid='0')
+
+            self._hasCapability('/data/identities', obj='/data/people', get='descendant-or-self')
+
+            self._hasCapability('/data/identities/admin', obj='/data/people', get='descendant-or-self', put='descendant-or-self', post='descendant', delete='descendant')
+            self._hasCapability('/data/identities/admin', obj='/action', get='descendant')
+            self._hasCapability('/data/identities/admin', obj='/internal', get='descendant')
             
+            for userElement in self._getAllElements('/data/identities/*'):
+                userName = userElement.tagName
+                if ':' in userName or '{' in userName or userName == 'admin':
+                    continue # This is not a user but a capability
+                userPath = '/data/identities/'+userName
+                self._hasCapability(userPath, obj=userPath, get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
+                self._hasCapability(userPath, obj='/data/people/'+userName, put='descendant', post='descendant', delete='descendant')
+            
+            self._hasCapability('/data/actions', obj='/plugin', get='descendant')
+            self._hasCapability('/data/actions', obj='/pluginscript', get='descendant')
+            self._hasCapability('/data/actions', obj='/action', get='child')
             #
             # Second set of checks: test that capability tree is indeed a tree
             #

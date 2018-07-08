@@ -1,3 +1,5 @@
+import random
+
 VERBOSE=True
 
 class CannotFix(Exception):
@@ -11,6 +13,7 @@ class CapabilityConsistency:
         self.token = token
         self.extended = extended
         self.status = ''
+        self.nChanges = 0
         
     def _status(self, msg):
         if VERBOSE:
@@ -95,13 +98,38 @@ class CapabilityConsistency:
         allCaps = self.database.getElements(expr, 'get', token=self.token, namespaces=self.namespaces)
         if len(allCaps) == 0:
             if self.fix:
-                self._status('Cannot fix yet: Missing standard capability %s' % expr)
-                raise CannotFix
+                self._createCapability(location, kwargs)
+                self._status('Fixed: Missing standard capability %s' % expr)
             else:
                 self._status('Missing standard capability %s' % expr)
         elif len(allCaps) > 1:
                 self._status('Duplicate standard capability %s' % expr)
             
+    def _createCapability(self, location, content):
+        if not 'cid' in content:
+            content['cid'] = 'c%d' % random.getrandbits(64)
+        if content['cid'] != '0' and not 'parent' in content:
+            content['parent'] = '0'
+        newElement = self.database.elementFromTagAndData('capability', content, namespace=self.namespaces)
+        parentElements = self.database.getElements(location, 'post', token=self.token)
+        if len(parentElements) != 1:
+            print 'xxxjack _createCapabiity parents', parentElements
+            self._status('Cannot create capability: non-singleton destination %s' % location)
+            raise CannotFix
+        parentElement = parentElements[0]
+        parentElement.appendChild(newElement)
+        self.nChanges += 1
+        if content['cid'] == '0':
+            return
+        # Update parent, if needed
+        parentCid = content['parent']
+        parent = self._getAllElements("//au:capability[cid='%s']" % parentCid)
+        if len(parent) != 1:
+            self._status('Cannot update parent capability: Multiple capabilities with cid=%s' % parentCid)
+            raise CannotFix
+        parent = parent[0]
+        parent.appendChild(self.database.elementFromTagAndData('child', content['cid']))
+        
     def check(self):
         if VERBOSE:
             self._status('Starting consistency check')
@@ -203,7 +231,7 @@ class CapabilityConsistency:
             for cap in allCaps:
                 cid = self._getValue('cid', cap)
                 if not cid:
-                    xxxxxxx
+                    continue # Error given earlier already
                 if cid == '0':
                     continue
                 parentCid = self._getValue('child::parent', cap)
@@ -258,6 +286,8 @@ class CapabilityConsistency:
                                 
         except CannotFix:
             self._status('* No further fixes attempted')
+        if self.nChanges:
+            self._status('Number of changes made to database: %d' % self.nChanges)
         self._status('Consistency check finished')
         rv = self.status
         self.status = ''

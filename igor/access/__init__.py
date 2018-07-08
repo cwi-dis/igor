@@ -9,6 +9,7 @@ import urlparse
 from .vars import *
 from .capability import *
 from .checker import *
+from .consistency import *
 
 _igorSelfToken = IgorAccessToken()
 _accessSelfToken = _igorSelfToken
@@ -497,6 +498,11 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def _getExternalTokenOwner(self):
         """Return the location where we store external tokens"""
         return '/data/au:access/au:exportedCapabilities'
+        
+    def consistency(self, token=None, fix=False):
+        checker = CapabilityConsistency(self.database, fix, NAMESPACES, _accessSelfToken)
+        rv = checker.check()
+        return rv
 #
 # Create a singleton Access object
 #   

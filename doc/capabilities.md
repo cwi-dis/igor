@@ -140,7 +140,8 @@ The following checks are needed as a first order check, and ensure the base infr
 
 As a second order check we enumerate all capabilities and check the following assertions. These ensure that the tree of all capabilities is consistent:
 
--  Each capability must have a unique `cid`. 
+-  Each capability must have a `cid`. 
+-  This `cid` must be unique.
 - Each capability (except `cid=0`) must have an existing `parent`, if not the capability is given `parent=0`.
 - Each capability must have its `cid` listed in the parent `child` fields. If not it is added.
 - Each `child` of each capability must exist. If not the `child` is removed.

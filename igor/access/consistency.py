@@ -1,4 +1,4 @@
-VERBOSE=False
+VERBOSE=True
 
 class CannotFix(Exception):
     pass
@@ -67,6 +67,26 @@ class CapabilityConsistency:
             print 'consistency._getAllElements(%s) returns %d items' % (path, len(rv))
         return rv
         
+    def _getValues(self, path, context=None):
+        if type(context) == type(''):
+            contextElements = self.database.getElements(context, 'get', self.token, namespaces=self.namespaces)
+            if len(contextElements) != 1:
+                self._status('Non-singleton context: %s' % context)
+                raise CannotFix
+            context = contextElements[0]
+        return map(lambda x: x[1], self.database.getValues(path, token=self.token, namespaces=self.namespaces, context=context))
+
+    def _getValue(self, path, context=None):
+        values = self._getValues(path, context=context)
+        if len(values) == 0:
+            return None
+        if len(values) == 1:
+            return values[0]
+        if context and type(context) != type(''):
+            context = self.database.getXPathForElement(context)
+        self._status('Non-unique value: %s (context=%s)' % (path, context))
+        raise CannotFix
+        
     def check(self):
         if VERBOSE:
             self._status('Starting consistency check')
@@ -104,7 +124,7 @@ class CapabilityConsistency:
             # Second set of checks: test that capability tree is indeed a tree
             #
             
-            allCapIDs = self.database.getValues('//au:capability/cid', token=self.token, namespaces=self.namespaces)
+            allCapIDs = self._getValues('//au:capability/cid')
             if len(allCapIDs) != len(set(allCapIDs)):
                 for c in set(allCapIDs):
                     allCapIDs.remove(c)
@@ -112,6 +132,95 @@ class CapabilityConsistency:
                     self._status('Non-unique cid: %s' % c)
                 raise CannotFix
             allCaps = self._getAllElements('//au:capability')
+            cid2cap = {}
+            cid2parent = {}
+            # create mapping cid->capability
+            for cap in allCaps:
+                cid = self._getValue('cid', cap)
+                if not cid:
+                    if self.fix:
+                        self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
+                        raise CannotFix
+                    else:
+                        self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
+                cid2cap[cid] = cap
+            # Check parent/child relation for each capability
+            for cap in allCaps:
+                cid = self._getValue('cid', cap)
+                if not cid:
+                    continue # Error given earlier already
+                for childCid in self._getValues('child::child', cap):
+                    if not childCid in cid2cap:
+                        if self.fix:
+                            self._status('Cannot fix yet: non-existent child %s in %s' % (childCid, cid))
+                            raise CannotFix
+                        else:
+                            self._status('Non-existing child %s in %s' % (childCid, cid))
+                    if childCid in cid2parent:
+                        if self.fix:
+                            self._status('Cannot fix yet: Child with multiple parents: %s' % childCid)
+                            raise CannotFix
+                        else:
+                            self._status('Child with multiple parents: %s' % childCid)
+                    else:
+                        cid2parent[childCid] = cid
+            # Check child/parent relation for each capability
+            for cap in allCaps:
+                cid = self._getValue('cid', cap)
+                if not cid:
+                    xxxxxxx
+                if cid == '0':
+                    continue
+                parentCid = self._getValue('child::parent', cap)
+                if not parentCid:
+                    if self.fix:
+                        self._status('Cannot fix yet: capability %s has no parent' % self.database.getXPathForElement(cap))
+                        raise CannotFix
+                    else:
+                        self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
+                if parentCid != cid2parent.get(cid):
+                    if self.fix:
+                        self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent(cid)))
+                        raise CannotFix
+                    else:
+                        self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent(cid)))
+            #
+            # Third set of checks: are capabilities stored in the correct places
+            #
+            expectedLocations = (
+                self._getAllElements('/data/au:access/au:defaultCapabilities') +
+                self._getAllElements('/data/au:access/au:exportedCapabilities') +
+                self._getAllElements('/data/au:access/au:unusedCapabilities') +
+                self._getAllElements('/data/identities') +
+                self._getAllElements('/data/identities/*') +
+                self._getAllElements('/data/actions') +
+                self._getAllElements('/data/actions/action') +
+                self._getAllElements('/data/plugindata/*')
+                )
+            actualLocations = self._getAllElements('//au:capability/..')
+            badLocations = []
+            for loc in actualLocations:
+                if not loc in expectedLocations:
+                    if not loc in badLocations:
+                        badLocations.append(loc)
+            for loc in badLocations:
+                parentPath = self.database.getXPathForElement(loc)
+                cidList = self._getValues('au:capabiity/cid', context=loc)
+                if not cidList:
+                    self._status('Listed as parent of capabilities but cannot find them: %s' % path)
+                    continue
+                for cid in cidList:
+                    if self.fix:
+                        self._status('Cannot fix yet: Capability %s: in unexpected location %s' % (cid, parentPath))
+                        raise CannotFix
+                    else:
+                        self._status('Capability %s: in unexpected location %s' % (cid, parentPath))
+            #
+            # Fourth set: that we have all the expected capabilities
+            #
+                
+                
+                                
         except CannotFix:
             self._status('* No further fixes attempted')
         self._status('Consistency check finished')

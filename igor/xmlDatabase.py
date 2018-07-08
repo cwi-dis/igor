@@ -554,10 +554,12 @@ class DBImpl(DBSerializer):
             raise DBParamError('Not valid xml: %s' % xmltext)
         return newdoc.firstChild
                 
-    def delValues(self, location, token, namespaces=NAMESPACES):
+    def delValues(self, location, token, context=None, namespaces=NAMESPACES):
         """Remove a (possibly empty) set of nodes from the document"""
         with self:
-            nodeList = xpath.find(location, self._doc.documentElement, namespaces=namespaces)
+            if context == None:
+                context = self._doc.documentElement
+            nodeList = xpath.find(location, context, namespaces=namespaces)
             for n in nodeList:
                 self._checkAccess('delete', n, token)
             parentList = []

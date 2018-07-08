@@ -130,6 +130,17 @@ class CapabilityConsistency:
         parent = parent[0]
         parent.appendChild(self.database.elementFromTagAndData('child', content['cid']))
         
+    def _fixParent(self, cap, cid):
+        parentCid = '0'
+        cap.appendChild(self.database.elementFromTagAndData('parent', parentCid))
+        parent = self._getAllElements("//au:capability[cid='%s']" % parentCid)
+        if len(parent) != 1:
+            self._status('Cannot update parent capability: Multiple capabilities with cid=%s' % parentCid)
+            raise CannotFix
+        parent = parent[0]
+        parent.appendChild(self.database.elementFromTagAndData('child', cid))
+        self.nChanges += 1
+        
     def check(self):
         if VERBOSE:
             self._status('Starting consistency check')
@@ -215,11 +226,11 @@ class CapabilityConsistency:
                 for childCid in self._getValues('child::child', cap):
                     if not childCid in cid2cap:
                         if self.fix:
-                            self._status('Cannot fix yet: non-existent child %s in %s' % (childCid, cid))
-                            raise CannotFix
+                            self.database.delValues("child::child[text()='%s']" % childCid, token=self.token, context=cap)
+                            self._status('Removed child %s from %s' % (childCid, cid))
                         else:
                             self._status('Non-existing child %s in %s' % (childCid, cid))
-                    if childCid in cid2parent:
+                    elif childCid in cid2parent:
                         if self.fix:
                             self._status('Cannot fix yet: Child with multiple parents: %s' % childCid)
                             raise CannotFix
@@ -237,8 +248,8 @@ class CapabilityConsistency:
                 parentCid = self._getValue('child::parent', cap)
                 if not parentCid:
                     if self.fix:
-                        self._status('Cannot fix yet: capability %s has no parent' % self.database.getXPathForElement(cap))
-                        raise CannotFix
+                        self._fixParent(cap, cid)
+                        self._status('Orphaned capability %s given parent 0' % cid)
                     else:
                         self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
                 if parentCid != cid2parent.get(cid):

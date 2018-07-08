@@ -230,7 +230,7 @@ class runCommand:
         try:
             rv = method(token=token, **dict(allArgs))
         except TypeError, arg:
-            raise myWebError("400 Error in command method %s parameters: %s" % (command, arg))
+            raise #myWebError("400 Error in command method %s parameters: %s" % (command, arg))
         return rv
 
     def POST(self, command, subcommand=None):

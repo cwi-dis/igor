@@ -500,8 +500,14 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         return '/data/au:access/au:exportedCapabilities'
         
     def consistency(self, token=None, fix=False):
+        if fix:
+            self.COMMAND.save(token)
         checker = CapabilityConsistency(self.database, fix, NAMESPACES, _accessSelfToken)
-        rv = checker.check()
+        nChanges, nErrors, rv = checker.check()
+        if nChanges:
+            self.COMMAND.save(token)
+            rv.append('\nRestarting Igor')
+            self.COMMAND.queue('restart', _accessSelfToken)
         return rv
 #
 # Create a singleton Access object

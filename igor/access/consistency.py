@@ -14,11 +14,14 @@ class CapabilityConsistency:
         self.extended = extended
         self.status = ''
         self.nChanges = 0
+        self.nErrors = 0
         
-    def _status(self, msg):
+    def _status(self, msg, isError=True):
         if VERBOSE:
             print msg
         self.status += msg + '\n'
+        if isError:
+            self.nErrors += 1
         
     def _checkExists(self, path, dontfix=False, context=None):
         if VERBOSE:
@@ -99,7 +102,7 @@ class CapabilityConsistency:
         if len(allCaps) == 0:
             if self.fix:
                 self._createCapability(location, kwargs)
-                self._status('Fixed: Missing standard capability %s' % expr)
+                self._status('Fixed: Missing standard capability %s' % expr, isError=False)
             else:
                 self._status('Missing standard capability %s' % expr)
         elif len(allCaps) > 1:
@@ -113,7 +116,6 @@ class CapabilityConsistency:
         newElement = self.database.elementFromTagAndData('capability', content, namespace=self.namespaces)
         parentElements = self.database.getElements(location, 'post', token=self.token)
         if len(parentElements) != 1:
-            print 'xxxjack _createCapabiity parents', parentElements
             self._status('Cannot create capability: non-singleton destination %s' % location)
             raise CannotFix
         parentElement = parentElements[0]
@@ -143,7 +145,7 @@ class CapabilityConsistency:
         
     def check(self):
         if VERBOSE:
-            self._status('Starting consistency check')
+            self._status('Starting consistency check', isError=False)
         try:
             #
             # First set of checks: determine that the infrastructure needed by the capabilities exists
@@ -227,7 +229,7 @@ class CapabilityConsistency:
                     if not childCid in cid2cap:
                         if self.fix:
                             self.database.delValues("child::child[text()='%s']" % childCid, token=self.token, context=cap)
-                            self._status('Removed child %s from %s' % (childCid, cid))
+                            self._status('Removed child %s from %s' % (childCid, cid), isError=False)
                         else:
                             self._status('Non-existing child %s in %s' % (childCid, cid))
                     elif childCid in cid2parent:
@@ -249,7 +251,7 @@ class CapabilityConsistency:
                 if not parentCid:
                     if self.fix:
                         self._fixParent(cap, cid)
-                        self._status('Orphaned capability %s given parent 0' % cid)
+                        self._status('Orphaned capability %s given parent 0' % cid, isError=False)
                     else:
                         self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
                 if parentCid != cid2parent.get(cid):
@@ -257,7 +259,7 @@ class CapabilityConsistency:
                         self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent(cid)))
                         raise CannotFix
                     else:
-                        self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent(cid)))
+                        self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent[cid]))
             #
             # Third set of checks: are capabilities stored in the correct places
             #
@@ -298,9 +300,11 @@ class CapabilityConsistency:
         except CannotFix:
             self._status('* No further fixes attempted')
         if self.nChanges:
-            self._status('Number of changes made to database: %d' % self.nChanges)
-        self._status('Consistency check finished')
+            self._status('Number of changes made to database: %d' % self.nChanges, isError=False)
+        if self.nErrors:
+            self._status('Number of errors remaining: %d' % self.nErrors, isError=False)
+        self._status('Consistency check finished', isError=False)
         rv = self.status
         self.status = ''
-        return rv
+        return self.nChanges, self.nErrors, rv
         

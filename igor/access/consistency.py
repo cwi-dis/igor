@@ -49,7 +49,7 @@ class CapabilityConsistency:
                     newElement = self.database.elementFromTagAndData(tag, '')
                 parentElement.appendChild(newElement)
                 self.nChanges += 1
-                self._status('Created: %s' % path)
+                self._status('Created: %s' % path, isError=False)
             else:
                 self._status('Missing: %s' % path)
         
@@ -207,6 +207,24 @@ class CapabilityConsistency:
                 if VERBOSE:
                     self._status('Starting capability consistency check', isError=False)
                 #
+                # Very first check: see whether we have the correct namespace declarations
+                #
+                rootElements = self.database.getElements('/data', 'get', token=self.token)
+                if len(rootElements) != 1:
+                    self._status('Multiple /data root elements')
+                    raise CannotFix
+                rootElement = rootElements[0]
+                for nsName, nsUrl in self.namespaces.items():
+                    have = rootElement.getAttribute('xmlns:' + nsName)
+                    if have != nsUrl:
+                        if self.fix:
+                            rootElement.setAttribute('xmlns:' + nsName, nsUrl)
+                            self._status('Added namespace declaration for xmlns:%s=%s' % (nsName, nsUrl), isError=False)
+                            self.nChanges += 1
+                        else:
+                            self._status('Missing namespace declaration xmlns:%s=%s' % (nsName, nsUrl))
+                            raise CannotFix
+                #
                 # First set of checks: determine that the infrastructure needed by the capabilities exists
                 #
 
@@ -357,7 +375,7 @@ class CapabilityConsistency:
                 
                                 
             except CannotFix:
-                self._status('* No further fixes attempted')
+                self._status('* No further fixes attempted', isError=False)
             if self.nChanges:
                 self._status('Number of changes made to database: %d' % self.nChanges, isError=False)
             if self.nErrors:

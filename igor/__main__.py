@@ -116,10 +116,12 @@ class IgorServer:
         # Startup other components
         #
         self.actionHandler = None
-        self.updateActions()
         self.eventSources = None
-        self.updateEventSources()
         self.triggerHandler = None
+        
+    def preRun(self):
+        self.updateActions()
+        self.updateEventSources()
         self.updateTriggers()
         #
         # Disable debug
@@ -414,6 +416,7 @@ def main():
     if args.fix or args.check:
         igorServer.check(args.fix)
     else:
+        igorServer.preRun()
         igorServer.run()
 
 #

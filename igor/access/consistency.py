@@ -36,8 +36,16 @@ class CapabilityConsistency:
         allElements = self.database.getElements(path, 'get', self.token, namespaces=self.namespaces, context=context)
         if len(allElements) == 0:
             if self.fix and not dontfix:
-                self._status('Cannot fix yet: should create %s' % path)
-                raise CannotFix # Net yet implemented
+                parentPath, tag = self.database.splitXPath(path)
+                parentElements = self.database.getElements(parentPath, 'post', self.token)
+                if len(parentElements) != 1:
+                    self._status('Cannot create element: non-singleton parent %s' % parentPath)
+                    raise CannotFix
+                parentElement = parentElements[0]
+                newElement = self.database.elementFromTagAndData(tag, '')
+                parentElement.appendChild(newElement)
+                self.nChanges += 1
+                self._status('Created: %s' % path)
             else:
                 self._status('Missing: %s' % path)
         

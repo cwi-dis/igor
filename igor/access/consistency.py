@@ -1,6 +1,6 @@
 import random
 
-VERBOSE=True
+VERBOSE=False
 
 class CannotFix(Exception):
     pass
@@ -196,164 +196,165 @@ class CapabilityConsistency:
         self._status('Infrastructure consistency check finished', isError=False)
 
     def check(self):
-        try:
-            self.checkInfrastructure()
+        with self.database:
+            try:
+                self.checkInfrastructure()
             
-            if VERBOSE:
-                self._status('Starting capability consistency check', isError=False)
-            #
-            # First set of checks: determine that the infrastructure needed by the capabilities exists
-            #
+                if VERBOSE:
+                    self._status('Starting capability consistency check', isError=False)
+                #
+                # First set of checks: determine that the infrastructure needed by the capabilities exists
+                #
 
-            self._checkSingleton('/data', 'au:access')
-            self._checkSingleton('/data/au:access', 'au:defaultCapabilities')
-            self._checkSingleton('/data/au:access', 'au:exportedCapabilities')
-            self._checkSingleton('/data/au:access', 'au:revokedCapabilities')
-            self._checkSingleton('/data/au:access', 'au:unusedCapabilities')
-            self._checkSingleton('/data/au:access', 'au:sharedKeys')
+                self._checkSingleton('/data', 'au:access')
+                self._checkSingleton('/data/au:access', 'au:defaultCapabilities')
+                self._checkSingleton('/data/au:access', 'au:exportedCapabilities')
+                self._checkSingleton('/data/au:access', 'au:revokedCapabilities')
+                self._checkSingleton('/data/au:access', 'au:unusedCapabilities')
+                self._checkSingleton('/data/au:access', 'au:sharedKeys')
 
         
-            self._checkExists('/data/identities/admin')
-            self._checkUnique('/data/identities/admin')
+                self._checkExists('/data/identities/admin')
+                self._checkUnique('/data/identities/admin')
         
-            for userElement in self._getAllElements('/data/identities/*'):
-                userName = userElement.tagName
-                if ':' in userName or '{' in userName:
-                    continue # This is not a user but a capability
-                self._checkUnique(userName, context='/data/identities', dontfix=True)
+                for userElement in self._getAllElements('/data/identities/*'):
+                    userName = userElement.tagName
+                    if ':' in userName or '{' in userName:
+                        continue # This is not a user but a capability
+                    self._checkUnique(userName, context='/data/identities', dontfix=True)
             
             
-            #
-            # Second set - all the default and important capabilities exist
-            #
-            self._hasCapability('/data/identities/admin', cid='0')
+                #
+                # Second set - all the default and important capabilities exist
+                #
+                self._hasCapability('/data/identities/admin', cid='0')
 
-            self._hasCapability('/data/identities', obj='/data/people', get='descendant-or-self')
+                self._hasCapability('/data/identities', obj='/data/people', get='descendant-or-self')
 
-            self._hasCapability('/data/identities/admin', obj='/data/people', get='descendant-or-self', put='descendant-or-self', post='descendant', delete='descendant')
-            self._hasCapability('/data/identities/admin', obj='/action', get='descendant')
-            self._hasCapability('/data/identities/admin', obj='/internal', get='descendant')
+                self._hasCapability('/data/identities/admin', obj='/data/people', get='descendant-or-self', put='descendant-or-self', post='descendant', delete='descendant')
+                self._hasCapability('/data/identities/admin', obj='/action', get='descendant')
+                self._hasCapability('/data/identities/admin', obj='/internal', get='descendant')
             
-            for userElement in self._getAllElements('/data/identities/*'):
-                userName = userElement.tagName
-                if ':' in userName or '{' in userName or userName == 'admin':
-                    continue # This is not a user but a capability
-                userPath = '/data/identities/'+userName
-                self._hasCapability(userPath, obj=userPath, get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
-                self._hasCapability(userPath, obj='/data/people/'+userName, put='descendant', post='descendant', delete='descendant')
+                for userElement in self._getAllElements('/data/identities/*'):
+                    userName = userElement.tagName
+                    if ':' in userName or '{' in userName or userName == 'admin':
+                        continue # This is not a user but a capability
+                    userPath = '/data/identities/'+userName
+                    self._hasCapability(userPath, obj=userPath, get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
+                    self._hasCapability(userPath, obj='/data/people/'+userName, put='descendant', post='descendant', delete='descendant')
             
-            self._hasCapability('/data/actions', obj='/plugin', get='descendant')
-            self._hasCapability('/data/actions', obj='/pluginscript', get='descendant')
-            self._hasCapability('/data/actions', obj='/action', get='child')
-            #
-            # Second set of checks: test that capability tree is indeed a tree
-            #
+                self._hasCapability('/data/actions', obj='/plugin', get='descendant')
+                self._hasCapability('/data/actions', obj='/pluginscript', get='descendant')
+                self._hasCapability('/data/actions', obj='/action', get='child')
+                #
+                # Second set of checks: test that capability tree is indeed a tree
+                #
             
-            allCapIDs = self._getValues('//au:capability/cid')
-            if len(allCapIDs) != len(set(allCapIDs)):
-                for c in set(allCapIDs):
-                    allCapIDs.remove(c)
-                for c in allCapIDs:
-                    self._status('Non-unique cid: %s' % c)
-                raise CannotFix
-            allCaps = self._getAllElements('//au:capability')
-            cid2cap = {}
-            cid2parent = {}
-            # create mapping cid->capability
-            for cap in allCaps:
-                cid = self._getValue('cid', cap)
-                if not cid:
-                    if self.fix:
-                        self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
-                        raise CannotFix
-                    else:
-                        self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
-                cid2cap[cid] = cap
-            # Check parent/child relation for each capability
-            for cap in allCaps:
-                cid = self._getValue('cid', cap)
-                if not cid:
-                    continue # Error given earlier already
-                for childCid in self._getValues('child::child', cap):
-                    if not childCid in cid2cap:
+                allCapIDs = self._getValues('//au:capability/cid')
+                if len(allCapIDs) != len(set(allCapIDs)):
+                    for c in set(allCapIDs):
+                        allCapIDs.remove(c)
+                    for c in allCapIDs:
+                        self._status('Non-unique cid: %s' % c)
+                    raise CannotFix
+                allCaps = self._getAllElements('//au:capability')
+                cid2cap = {}
+                cid2parent = {}
+                # create mapping cid->capability
+                for cap in allCaps:
+                    cid = self._getValue('cid', cap)
+                    if not cid:
                         if self.fix:
-                            self.database.delValues("child::child[text()='%s']" % childCid, token=self.token, context=cap)
-                            self._status('Removed child %s from %s' % (childCid, cid), isError=False)
-                        else:
-                            self._status('Non-existing child %s in %s' % (childCid, cid))
-                    elif childCid in cid2parent:
-                        if self.fix:
-                            self._status('Cannot fix yet: Child with multiple parents: %s' % childCid)
+                            self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
                             raise CannotFix
                         else:
-                            self._status('Child with multiple parents: %s' % childCid)
-                    else:
-                        cid2parent[childCid] = cid
-            # Check child/parent relation for each capability
-            for cap in allCaps:
-                cid = self._getValue('cid', cap)
-                if not cid:
-                    continue # Error given earlier already
-                if cid == '0':
-                    continue
-                parentCid = self._getValue('child::parent', cap)
-                if not parentCid:
-                    if self.fix:
-                        self._fixParent(cap, cid)
-                        self._status('Orphaned capability %s given parent 0' % cid, isError=False)
-                    else:
-                        self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
-                if parentCid != cid2parent.get(cid):
-                    if self.fix:
-                        self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
-                        raise CannotFix
-                    else:
-                        self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
-            #
-            # Third set of checks: are capabilities stored in the correct places
-            #
-            expectedLocations = (
-                self._getAllElements('/data/au:access/au:defaultCapabilities') +
-                self._getAllElements('/data/au:access/au:exportedCapabilities') +
-                self._getAllElements('/data/au:access/au:unusedCapabilities') +
-                self._getAllElements('/data/identities') +
-                self._getAllElements('/data/identities/*') +
-                self._getAllElements('/data/actions') +
-                self._getAllElements('/data/actions/action') +
-                self._getAllElements('/data/plugindata/*')
-                )
-            actualLocations = self._getAllElements('//au:capability/..')
-            badLocations = []
-            for loc in actualLocations:
-                if not loc in expectedLocations:
-                    if not loc in badLocations:
-                        badLocations.append(loc)
-            for loc in badLocations:
-                parentPath = self.database.getXPathForElement(loc)
-                cidList = self._getValues('au:capabiity/cid', context=loc)
-                if not cidList:
-                    self._status('Listed as parent of capabilities but cannot find them: %s' % path)
-                    continue
-                for cid in cidList:
-                    if self.fix:
-                        self._status('Cannot fix yet: Capability %s: in unexpected location %s' % (cid, parentPath))
-                        raise CannotFix
-                    else:
-                        self._status('Capability %s: in unexpected location %s' % (cid, parentPath))
-            #
-            # Fourth set: that we have all the expected capabilities
-            #
+                            self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
+                    cid2cap[cid] = cap
+                # Check parent/child relation for each capability
+                for cap in allCaps:
+                    cid = self._getValue('cid', cap)
+                    if not cid:
+                        continue # Error given earlier already
+                    for childCid in self._getValues('child::child', cap):
+                        if not childCid in cid2cap:
+                            if self.fix:
+                                self.database.delValues("child::child[text()='%s']" % childCid, token=self.token, context=cap)
+                                self._status('Removed child %s from %s' % (childCid, cid), isError=False)
+                            else:
+                                self._status('Non-existing child %s in %s' % (childCid, cid))
+                        elif childCid in cid2parent:
+                            if self.fix:
+                                self._status('Cannot fix yet: Child with multiple parents: %s' % childCid)
+                                raise CannotFix
+                            else:
+                                self._status('Child with multiple parents: %s' % childCid)
+                        else:
+                            cid2parent[childCid] = cid
+                # Check child/parent relation for each capability
+                for cap in allCaps:
+                    cid = self._getValue('cid', cap)
+                    if not cid:
+                        continue # Error given earlier already
+                    if cid == '0':
+                        continue
+                    parentCid = self._getValue('child::parent', cap)
+                    if not parentCid:
+                        if self.fix:
+                            self._fixParent(cap, cid)
+                            self._status('Orphaned capability %s given parent 0' % cid, isError=False)
+                        else:
+                            self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
+                    if parentCid != cid2parent.get(cid):
+                        if self.fix:
+                            self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
+                            raise CannotFix
+                        else:
+                            self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
+                #
+                # Third set of checks: are capabilities stored in the correct places
+                #
+                expectedLocations = (
+                    self._getAllElements('/data/au:access/au:defaultCapabilities') +
+                    self._getAllElements('/data/au:access/au:exportedCapabilities') +
+                    self._getAllElements('/data/au:access/au:unusedCapabilities') +
+                    self._getAllElements('/data/identities') +
+                    self._getAllElements('/data/identities/*') +
+                    self._getAllElements('/data/actions') +
+                    self._getAllElements('/data/actions/action') +
+                    self._getAllElements('/data/plugindata/*')
+                    )
+                actualLocations = self._getAllElements('//au:capability/..')
+                badLocations = []
+                for loc in actualLocations:
+                    if not loc in expectedLocations:
+                        if not loc in badLocations:
+                            badLocations.append(loc)
+                for loc in badLocations:
+                    parentPath = self.database.getXPathForElement(loc)
+                    cidList = self._getValues('au:capabiity/cid', context=loc)
+                    if not cidList:
+                        self._status('Listed as parent of capabilities but cannot find them: %s' % path)
+                        continue
+                    for cid in cidList:
+                        if self.fix:
+                            self._status('Cannot fix yet: Capability %s: in unexpected location %s' % (cid, parentPath))
+                            raise CannotFix
+                        else:
+                            self._status('Capability %s: in unexpected location %s' % (cid, parentPath))
+                #
+                # Fourth set: that we have all the expected capabilities
+                #
                 
                 
                                 
-        except CannotFix:
-            self._status('* No further fixes attempted')
-        if self.nChanges:
-            self._status('Number of changes made to database: %d' % self.nChanges, isError=False)
-        if self.nErrors:
-            self._status('Number of errors remaining: %d' % self.nErrors, isError=False)
-        self._status('Capability consistency check finished', isError=False)
-        rv = self.status
-        self.status = ''
-        return self.nChanges, self.nErrors, rv
+            except CannotFix:
+                self._status('* No further fixes attempted')
+            if self.nChanges:
+                self._status('Number of changes made to database: %d' % self.nChanges, isError=False)
+            if self.nErrors:
+                self._status('Number of errors remaining: %d' % self.nErrors, isError=False)
+            self._status('Capability consistency check finished', isError=False)
+            rv = self.status
+            self.status = ''
+            return self.nChanges, self.nErrors, rv
         

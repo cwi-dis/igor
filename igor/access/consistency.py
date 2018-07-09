@@ -123,8 +123,8 @@ class CapabilityConsistency:
     def _createCapability(self, location, content):
         if not 'cid' in content:
             content['cid'] = 'c%d' % random.getrandbits(64)
-        if content['cid'] != '0' and not 'parent' in content:
-            content['parent'] = '0'
+        if content['cid'] != 'root' and not 'parent' in content:
+            content['parent'] = 'root'
         newElement = self.database.elementFromTagAndData('capability', content, namespace=self.namespaces)
         parentElements = self.database.getElements(location, 'post', token=self.token, namespaces=self.namespaces)
         if len(parentElements) != 1:
@@ -133,7 +133,7 @@ class CapabilityConsistency:
         parentElement = parentElements[0]
         parentElement.appendChild(newElement)
         self.nChanges += 1
-        if content['cid'] == '0':
+        if content['cid'] == 'root':
             return
         # Update parent, if needed
         parentCid = content['parent']
@@ -145,7 +145,7 @@ class CapabilityConsistency:
         parent.appendChild(self.database.elementFromTagAndData('child', content['cid']))
         
     def _fixParent(self, cap, cid):
-        parentCid = '0'
+        parentCid = 'root'
         cap.appendChild(self.database.elementFromTagAndData('parent', parentCid))
         parent = self._getAllElements("//au:capability[cid='%s']" % parentCid)
         if len(parent) != 1:
@@ -248,13 +248,21 @@ class CapabilityConsistency:
                 #
                 # Second set - all the default and important capabilities exist
                 #
-                self._hasCapability('/data/identities/admin', cid='0')
+                self._hasCapability('/data/identities/admin', cid='root')
+                
+                self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-static', obj='/static', get='child')
+                self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-environment', obj='/data/environment', get='descendant-or-self')
+                self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-status', obj='/data/status', get='descendant-or-self')
+                self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-igor', obj='/data/services/igor', get='descendant-or-self')
+                self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-accessControl', obj='/internal/accessControl', get='child')
 
-                self._hasCapability('/data/identities', obj='/data/people', get='descendant-or-self')
+                self._hasCapability('/data/identities', cid='people-people', obj='/data/people', get='descendant-or-self')
 
-                self._hasCapability('/data/identities/admin', obj='/data/people', get='descendant-or-self', put='descendant-or-self', post='descendant', delete='descendant')
-                self._hasCapability('/data/identities/admin', obj='/action', get='descendant')
-                self._hasCapability('/data/identities/admin', obj='/internal', get='descendant')
+                self._hasCapability('/data/identities/admin', cid='admin-people', obj='/data/people', get='descendant-or-self', put='descendant-or-self', post='descendant', delete='descendant')
+                self._hasCapability('/data/identities/admin', cid='admin-action', obj='/action', get='descendant')
+                self._hasCapability('/data/identities/admin', cid='admin-internal', obj='/internal', get='descendant')
+                self._hasCapability('/data/identities/admin', cid='admin-plugin', obj='/plugin', get='descendant')
+                self._hasCapability('/data/identities/admin', cid='admin-pluginscript', obj='/pluginscript', get='descendant')
             
                 for userElement in self._getAllElements('/data/identities/*'):
                     userName = userElement.tagName
@@ -264,9 +272,9 @@ class CapabilityConsistency:
                     self._hasCapability(userPath, obj=userPath, get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
                     self._hasCapability(userPath, obj='/data/people/'+userName, put='descendant', post='descendant', delete='descendant')
             
-                self._hasCapability('/data/actions', obj='/plugin', get='descendant')
-                self._hasCapability('/data/actions', obj='/pluginscript', get='descendant')
-                self._hasCapability('/data/actions', obj='/action', get='child')
+                self._hasCapability('/data/actions', cid='action-plugin', obj='/plugin', get='descendant')
+                self._hasCapability('/data/actions', cid='action-pluginscript', obj='/pluginscript', get='descendant')
+                self._hasCapability('/data/actions', cid='action-action', obj='/action', get='child')
                 #
                 # Second set of checks: test that capability tree is indeed a tree
                 #
@@ -316,7 +324,7 @@ class CapabilityConsistency:
                     cid = self._getValue('cid', cap)
                     if not cid:
                         continue # Error given earlier already
-                    if cid == '0':
+                    if cid == 'root':
                         continue
                     parentCid = self._getValue('child::parent', cap)
                     expectedParent = cid2parent.get(cid)

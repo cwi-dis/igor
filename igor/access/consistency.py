@@ -143,14 +143,59 @@ class CapabilityConsistency:
         parent.appendChild(self.database.elementFromTagAndData('child', cid))
         self.nChanges += 1
         
-    def check(self):
+    def _checkInfrastructureItem(self, path, item):
+        itemTag = item[0]
+        itemContent = item[1:]
+        itemPath = path + itemTag
+        self._checkExists(itemPath)
+        self._checkUnique(itemPath)
+        for subItem in itemContent:
+            self._checkInfrastructureItem(itemPath, subItem)
+            
+    def checkInfrastructure(self):
+        databaseTemplate = (
+            '/data',
+                ('/environment',
+                    ('/systemHealth',
+                        ('/messages',),
+                    ),
+                    ('/introspection',),
+                ),
+                ('/status',
+                    ('/igor',),
+                    ('/sensors',),
+                    ('/devices',),
+                    ('/services',),
+                ),
+                ('/sensors',),
+                ('/devices',),
+                ('/services',
+                    ('/igor',),
+                ),
+                ('/people',),
+                ('/identities',),
+                ('/actions',),
+                ('/sandbox',),
+                ('/plugindata',),
+            )
         if VERBOSE:
-            self._status('Starting consistency check', isError=False)
+            self._status('Starting infrastructure consistency check', isError=False)
         try:
+            self._checkInfrastructureItem('', databaseTemplate)
+        except CannotFix:
+            self._status('* Infrastructure consistency check failed', isError=False)
+            raise
+        self._status('Infrastructure consistency check finished', isError=False)
+
+    def check(self):
+        try:
+            self.checkInfrastructure()
+            
+            if VERBOSE:
+                self._status('Starting capability consistency check', isError=False)
             #
             # First set of checks: determine that the infrastructure needed by the capabilities exists
             #
-            self._checkExists('/data', dontfix=True)
 
             self._checkSingleton('/data', 'au:access')
             self._checkSingleton('/data/au:access', 'au:defaultCapabilities')
@@ -159,8 +204,6 @@ class CapabilityConsistency:
             self._checkSingleton('/data/au:access', 'au:unusedCapabilities')
             self._checkSingleton('/data/au:access', 'au:sharedKeys')
 
-            self._checkExists('/data/identities')
-            self._checkUnique('/data/identities')
         
             self._checkExists('/data/identities/admin')
             self._checkUnique('/data/identities/admin')
@@ -171,8 +214,6 @@ class CapabilityConsistency:
                     continue # This is not a user but a capability
                 self._checkUnique(userName, context='/data/identities', dontfix=True)
             
-            self._checkExists('/data/actions')
-            self._checkUnique('/data/actions')
             
             #
             # Second set - all the default and important capabilities exist
@@ -303,7 +344,7 @@ class CapabilityConsistency:
             self._status('Number of changes made to database: %d' % self.nChanges, isError=False)
         if self.nErrors:
             self._status('Number of errors remaining: %d' % self.nErrors, isError=False)
-        self._status('Consistency check finished', isError=False)
+        self._status('Capability consistency check finished', isError=False)
         rv = self.status
         self.status = ''
         return self.nChanges, self.nErrors, rv

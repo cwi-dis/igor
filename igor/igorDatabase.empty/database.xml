@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:au="http://jackjansen.nl/igor/authentication">
 	<environment>
 		<night/>
 		<location/>
@@ -12,8 +12,6 @@
 		<systemHealth>
 			<messages/>
 		</systemHealth>
-		<introspection>
-		</introspection>
 	</environment>
 	<status>
 		<igor/>
@@ -28,7 +26,66 @@
 		<igor/>
 	</services>
 	<people/>
-	<identities/>
+	<identities>
+		<admin>
+			<au:capability>
+				<cid>root</cid>
+				<child>default-static</child>
+				<child>default-environment</child>
+				<child>default-status</child>
+				<child>default-igor</child>
+				<child>default-accessControl</child>
+				<child>people-people</child>
+				<child>admin-data</child>
+				<child>admin-action</child>
+				<child>admin-internal</child>
+				<child>admin-plugin</child>
+				<child>admin-pluginscript</child>
+				<child>action-plugin</child>
+				<child>action-pluginscript</child>
+				<child>action-action</child>
+			</au:capability>
+			<au:capability>
+				<obj>/data</obj>
+				<parent>root</parent>
+				<get>descendant-or-self</get>
+				<cid>admin-data</cid>
+				<put>descendant</put>
+				<post>descendant</post>
+				<delete>descendant</delete>	
+			</au:capability>
+			<au:capability>
+				<get>descendant</get>
+				<obj>/action</obj>
+				<parent>root</parent>
+				<cid>admin-action</cid>
+			</au:capability>
+			<au:capability>
+				<get>descendant</get>
+				<obj>/internal</obj>
+				<parent>root</parent>
+				<cid>admin-internal</cid>
+			</au:capability>
+			<au:capability>
+				<get>descendant</get>
+				<obj>/plugin</obj>
+				<parent>root</parent>
+				<cid>admin-plugin</cid>
+			</au:capability>
+			<au:capability>
+				<get>descendant</get>
+				<obj>/pluginscript</obj>
+				<parent>root</parent>
+				<cid>admin-pluginscript</cid>
+			</au:capability>
+		</admin>
+		<au:capability>
+			<get>descendant-or-self</get>
+			<obj>/data/people</obj>
+			<parent>root</parent>
+			<cid>people-people</cid>
+		</au:capability>
+	</identities>
 	<actions>
 	    <action>
 	        <name>start</name>
@@ -95,8 +152,69 @@
 			<data>{number(/data/services/igor/ticker)+1}</data>
 			<notBefore/>
 		</action>
+		<au:capability>
+			<get>descendant</get>
+			<obj>/plugin</obj>
+			<parent>root</parent
+			><cid>action-plugin</cid>
+		</au:capability>
+		<au:capability>
+			<get>descendant</get>
+			<obj>/pluginscript</obj>
+			<parent>root</parent>
+			<cid>action-pluginscript</cid>
+		</au:capability>
+		<au:capability>
+			<get>child</get>
+			<obj>/action</obj>
+			<parent>root</parent>
+			<cid>action-action</cid>
+		</au:capability>
 	</actions>
-	<sandbox/>
-	<eventsources/>
-	<plugindata/>
+	<sandbox>
+	</sandbox>
+	<plugindata>
+	</plugindata>
+	<au:access>
+		<au:defaultCapabilities>
+			<au:capability>
+				<get>child</get>
+				<obj>/static</obj>
+				<parent>root</parent>
+				<cid>default-static</cid>
+			</au:capability>
+			<au:capability>
+				<get>descendant-or-self</get>
+				<obj>/data/environment</obj>
+				<parent>root</parent>
+				<cid>default-environment</cid>
+			</au:capability>
+			<au:capability>
+				<get>descendant-or-self</get>
+				<obj>/data/status</obj>
+				<parent>root</parent>
+				<cid>default-status</cid>
+			</au:capability>
+			<au:capability>
+				<get>descendant-or-self</get>
+				<obj>/data/services/igor</obj>
+				<parent>root</parent>
+				<cid>default-igor</cid>
+			</au:capability>
+			<au:capability>
+				<get>child</get>
+				<obj>/internal/accessControl</obj>
+				<parent>root</parent>
+				<cid>default-accessControl</cid>
+			</au:capability>
+		</au:defaultCapabilities>
+		<au:exportedCapabilities>
+		</au:exportedCapabilities>
+		<au:revokedCapabilities>
+		</au:revokedCapabilities>
+		<au:unusedCapabilities>
+		</au:unusedCapabilities>
+		<au:sharedKeys>
+		</au:sharedKeys>
+	</au:access>
 </data>

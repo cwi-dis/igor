@@ -313,6 +313,8 @@ class DBImpl(DBSerializer):
         newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
         docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
         docToSave.writexml(open(newFilename + '~', 'w'))
+        if os.path.exists(newFilename):
+            os.unlink(newFilename)
         os.link(newFilename + '~', newFilename)
         os.rename(newFilename + '~', self.filename)
         # Remove outdated saves

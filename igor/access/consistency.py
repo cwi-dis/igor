@@ -258,7 +258,7 @@ class CapabilityConsistency:
 
                 self._hasCapability('/data/identities', cid='people-people', obj='/data/people', get='descendant-or-self')
 
-                self._hasCapability('/data/identities/admin', cid='admin-people', obj='/data/people', get='descendant-or-self', put='descendant-or-self', post='descendant', delete='descendant')
+                self._hasCapability('/data/identities/admin', cid='admin-data', obj='/data', get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
                 self._hasCapability('/data/identities/admin', cid='admin-action', obj='/action', get='descendant')
                 self._hasCapability('/data/identities/admin', cid='admin-internal', obj='/internal', get='descendant')
                 self._hasCapability('/data/identities/admin', cid='admin-plugin', obj='/plugin', get='descendant')

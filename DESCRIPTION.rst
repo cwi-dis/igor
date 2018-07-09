@@ -6,7 +6,7 @@ Home Automation server. See <README.md>__ or <https://github.com/cwi-dis/igor> f
 Installation
 ------------
 
-Most of the work is done by running::
+Run:
 	sudo python setup.py install
 	
 This installs the igor package, and command line utilities ``igor`` (the server),
@@ -16,17 +16,19 @@ and ``igorVar`` (database access for shell scripts).
 Database configuration
 ----------------------
 
-Create a database with::
+Create an initial database with:
 	igorSetup initialize
 	
 Then populate it with plugins (with ``igorSetup addstd`` or ``igorSetup add``).
 You will have to do a lot of manual editing of the ``~/.igor/database.xml``
 file, for the time being.
 
-Finally make it run at system boot with ``sudo igorSetup runatboot`` or
-``igorSetup runatlogin`` (OSX only).
-
 Running
 -------
+Run:
+	igor
+and point your browser at <http://localhost:9333> or use ``igorControl``.
 
-Point your browser at <http://localhost:9333> or use ``igorControl``.
+Make it run at system boot with ``sudo igorSetup runatboot`` or
+``igorSetup runatlogin`` (OSX only).
+

@@ -129,7 +129,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'igorServer=igor.__main__',
+            'igorServer=igor.__main__:main',
             'igorVar=igorVar:main',
             'igorControl=igorControl:main',
             'igorSetup=igorSetup:main',

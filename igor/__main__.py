@@ -58,6 +58,7 @@ class IgorServer:
         #
         # Create the database, and tell the web application about it
         #
+        self.advertise = advertise
         self.profile = None
         if profile:
             enable_thread_profiling()
@@ -131,10 +132,10 @@ class IgorServer:
         # Send start action to start any plugins
         #
         self.urlCaller.callURL(dict(method='GET', url='/action/start', token=self.access.tokenForIgor()))
-        if advertise:
-            self.advertise(port)
+        if self.advertise:
+            self.startAdvertising(port)
             
-    def advertise(self, port):
+    def startAdvertising(self, port):
         if sys.platform == 'darwin':
             cmd = ['dns-sd', '-R', 'igor', '_http._tcp', 'local', str(port)]
         elif sys.platform == 'linux2':

@@ -18,9 +18,9 @@ Installation
 Run:
 	sudo python setup.py install
 	
-This installs the igor package, and command line utilities ``igor`` (the server),
-``igorSetup`` (database administration), ``igorControl`` (server administration)
-and ``igorVar`` (database access for shell scripts).
+This installs the igor package, and command line utilities ``igorServer`` (the server),
+``igorSetup`` (database administration), ``igorControl`` (server administration),
+``igorVar`` (database access for shell scripts), and  ``igorCA`` (who knows?)
 
 Database configuration
 ----------------------

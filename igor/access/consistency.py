@@ -36,13 +36,17 @@ class CapabilityConsistency:
         allElements = self.database.getElements(path, 'get', self.token, namespaces=self.namespaces, context=context)
         if len(allElements) == 0:
             if self.fix and not dontfix:
-                parentPath, tag = self.database.splitXPath(path)
-                parentElements = self.database.getElements(parentPath, 'post', self.token)
+                parentPath, tag = self.database.splitXPath(path, allowNamespaces=True)
+                parentElements = self.database.getElements(parentPath, 'post', self.token, namespaces=self.namespaces)
                 if len(parentElements) != 1:
+                    print 'xxxjack', path, parentPath, tag
                     self._status('Cannot create element: non-singleton parent %s' % parentPath)
                     raise CannotFix
                 parentElement = parentElements[0]
-                newElement = self.database.elementFromTagAndData(tag, '')
+                if tag[:3] == 'au:':
+                    newElement = self.database.elementFromTagAndData(tag[3:], '', namespace=self.namespaces)
+                else:
+                    newElement = self.database.elementFromTagAndData(tag, '')
                 parentElement.appendChild(newElement)
                 self.nChanges += 1
                 self._status('Created: %s' % path)
@@ -122,7 +126,7 @@ class CapabilityConsistency:
         if content['cid'] != '0' and not 'parent' in content:
             content['parent'] = '0'
         newElement = self.database.elementFromTagAndData('capability', content, namespace=self.namespaces)
-        parentElements = self.database.getElements(location, 'post', token=self.token)
+        parentElements = self.database.getElements(location, 'post', token=self.token, namespaces=self.namespaces)
         if len(parentElements) != 1:
             self._status('Cannot create capability: non-singleton destination %s' % location)
             raise CannotFix
@@ -298,18 +302,23 @@ class CapabilityConsistency:
                     if cid == '0':
                         continue
                     parentCid = self._getValue('child::parent', cap)
+                    expectedParent = cid2parent.get(cid)
+                    if parentCid != expectedParent:
+                        if self.fix:
+                            if expectedParent:
+                                self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
+                                raise CannotFix
+                            self.database.delValues('child::parent', token=self.token, context=cap)
+                            self.nChanges += 1
+                            parentCid = None
+                        else:
+                            self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
                     if not parentCid:
                         if self.fix:
                             self._fixParent(cap, cid)
                             self._status('Orphaned capability %s given parent 0' % cid, isError=False)
                         else:
                             self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
-                    if parentCid != cid2parent.get(cid):
-                        if self.fix:
-                            self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
-                            raise CannotFix
-                        else:
-                            self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
                 #
                 # Third set of checks: are capabilities stored in the correct places
                 #

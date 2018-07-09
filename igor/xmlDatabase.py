@@ -11,6 +11,7 @@ import datetime
 import dateutil.parser
 
 TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
+TAG_PATTERN_WITH_NS = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9:]*$')
 ILLEGAL_XML_CHARACTERS_PATTERN = re.compile(u'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf\ufffe-\uffff]')
 
 #NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
@@ -388,7 +389,7 @@ class DBImpl(DBSerializer):
             self._checkAccess('get', self._doc.documentElement, token)
             return self._doc.documentElement
         
-    def splitXPath(self, location):
+    def splitXPath(self, location, allowNamespaces=False):
         lastSlashPos = location.rfind('/')
         if lastSlashPos == 0:
             parent = '.'
@@ -400,8 +401,12 @@ class DBImpl(DBSerializer):
             parent = '.'
             child = location
         # Test that child is indeed a tag name
-        if not TAG_PATTERN.match(child):
-            return None, None
+        if allowNamespaces:
+            if not TAG_PATTERN_WITH_NS.match(child):
+                return None, None
+        else:
+            if not TAG_PATTERN.match(child):
+                return None, None
         return parent, child
 
     def getXPathForElement(self, node):

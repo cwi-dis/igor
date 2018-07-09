@@ -3,6 +3,15 @@ Igor
 
 Home Automation server. See <README.md>__ or <https://github.com/cwi-dis/igor> for details.
 
+Prerequisites
+-------------
+
+You need to have Python v2 installed, and that should also have ``setuptools`` installed.
+
+Installing Python's package installation program ``pip`` will also install ``setuptools``.
+
+See also https://packaging.python.org/tutorials/installing-packages/
+
 Installation
 ------------
 

@@ -228,15 +228,15 @@ class UserPasswords:
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""
         # xxxjack this method should not be in the Access element
-        if self.database == None or not username or not password:
-            if DEBUG: print 'access: basic authentication: database, username or password missing'
+        if self.database == None or not username:
+            if DEBUG: print 'access: basic authentication: database or username missing'
             return False
         if '/' in username:
             raise myWebError('401 Illegal username')
         encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
         if not encryptedPassword:
             if DEBUG: print 'access: basic authentication: no encryptedPassword for user', username
-            return False
+            return True
         import passlib.hash
         import passlib.utils.binary
         salt = encryptedPassword.split('$')[3]

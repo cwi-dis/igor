@@ -171,7 +171,6 @@ class CapabilityConsistency:
                     ('/systemHealth',
                         ('/messages',),
                     ),
-                    ('/introspection',),
                 ),
                 ('/status',
                     ('/igor',),

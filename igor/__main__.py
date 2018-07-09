@@ -173,6 +173,10 @@ class IgorServer:
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         self.app.run(port=self.port)
         
+    def check(self, fix=False):
+        rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
+        print rv
+        
     def dump(self, token=None):
         # xxxjack ignoring token for now
         rv = ''
@@ -384,6 +388,8 @@ def main():
     parser.add_argument("--version", action="store_true", help="Print version and exit")
     parser.add_argument("--profile", action="store_true", help="Enable Python profiler (debugging Igor only)")
     parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
+    parser.add_argument('--check', action="store_true", help="Do not run the server, only check the database for consistency")
+    parser.add_argument('--fix', action="store_true", help="Do not run the server, only check the database for consistency and possibly fix it if needed")
     args = parser.parse_args()
     
     myLogger.install(args.logLevel)
@@ -405,7 +411,10 @@ def main():
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]
         sys.exit(1)
-    igorServer.run()
+    if args.fix or args.check:
+        igorServer.check(args.fix)
+    else:
+        igorServer.run()
 
 #
 # We need to hack the import lock. In case we get here via the easy_install igorServer script

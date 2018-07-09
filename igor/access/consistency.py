@@ -256,10 +256,10 @@ class CapabilityConsistency:
                         self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
                 if parentCid != cid2parent.get(cid):
                     if self.fix:
-                        self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent(cid)))
+                        self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
                         raise CannotFix
                     else:
-                        self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent[cid]))
+                        self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, cid2parent.get(cid)))
             #
             # Third set of checks: are capabilities stored in the correct places
             #

@@ -499,15 +499,18 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Return the location where we store external tokens"""
         return '/data/au:access/au:exportedCapabilities'
         
-    def consistency(self, token=None, fix=False):
+    def consistency(self, token=None, fix=False, restart=False):
         if fix:
             self.COMMAND.save(token)
         checker = CapabilityConsistency(self.database, fix, NAMESPACES, _accessSelfToken)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
             self.COMMAND.save(token)
-            rv.append('\nRestarting Igor')
-            self.COMMAND.queue('restart', _accessSelfToken)
+            if restart:
+                rv += '\nRestarting Igor'
+                self.COMMAND.queue('restart', _accessSelfToken)
+            else:
+                rv += '\nRestart Igor to update capability data structures'
         return rv
 #
 # Create a singleton Access object

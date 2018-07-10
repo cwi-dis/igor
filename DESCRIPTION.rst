@@ -6,7 +6,7 @@ Home Automation server. See <README.md>__ or <https://github.com/cwi-dis/igor> f
 Prerequisites
 -------------
 
-You need to have Python v2 installed, and that should also have ``setuptools`` installed.
+You need to have Python v2.7 installed, and that should also have ``setuptools`` installed.
 
 Installing Python's package installation program ``pip`` will also install ``setuptools``.
 

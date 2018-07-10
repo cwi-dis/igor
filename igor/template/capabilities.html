@@ -40,7 +40,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<th>GET<br>PUT<br>POST<br>DELETE</th>
 				<th>Object</th>
 				<th>Comment</th>
-				<th>Rest</th>
+				<th>...</th>
 				<th>Children</th>
 			</tr>
 		
@@ -334,7 +334,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		
 		<p><a href="/capabilities.html">Return to listing</a></p>
 	$elif action == "listKeys":
-		<h1>List shared secret keys issued by this Igor</h1>
+		<h1>Shared secret keys issued by this Igor</h1>
 		
 		$ keys = COMMANDS.accessControl(subcommand='getKeyList', token=token)
 		<table>
@@ -342,28 +342,67 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<th>Issuer</th>
 				<th>Subject</th>
 				<th>Audience</th>
+				<th>...</th>
+				<th>Action:</th>
 			</tr>
-			$for k in keys:
+			$for key in keys:
+				$ iss = key.pop('iss')
+				$ sub = key.pop('sub', '')
+				$ aud = key.pop('aud', '')
 				<tr>
-					<td>${k.get('iss')}</td>
-					<td>${k.get('sub', '')}</td>
-					<td>${k.get('aud', '')}</td>
+					<td>${iss}</td>
+					<td>${sub}</td>
+					<td>${aud}</td>
+					<td>
+						$for k, v in key.items():
+							${k}=${v}
+					</td>
+					<td><a href="capabilities.html?action=deleteKey&iss=${iss}&sub=${sub}&aud=${aud}">delete</a></td>
 				</tr>
 		</table>
-		<p>Not yet implemented</p>
 
-		<p><a href="/capabilities.html">Return to listing</a></p>
+		<p><a href="/capabilities.html?action=addKey">Add a new secret key</a></p>
+		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
+		<p><a href="/capabilities.html">Return to capability listing</a></p>
 	$elif action == "addKey":
 		<h1>Issue new shared key</h1>
-		
-		<p>Not yet implemented</p>
 
-		<p><a href="/capabilities.html">Return to listing</a></p>
+		<p>Createing a secret key here will return the verbatim secret key, this will be done <b>only once</b>, after that the secret
+		key is, well, secret... Copy the key to your subject or audience device and clear your browser history.</p>
+		
+		<form action="/internal/accessControl/createSharedKey">
+			Audience (agent trusting the key, empty for Igor):<input type="url" name="aud"><br>
+			Subject (agent carrying the key, empty for Igor):<input ltype="url" name="sub"><br>
+			<input type="submit" value="Create">
+		</form>		
+
+		<p><a href="/capabilities.html">Return to capability listing</a></p>
+		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
 	$elif action == "deleteKey":
 		<h1>Delete old shared key</h1>
 		
-		<p>Not yet implemented</p>
+		<form action="/internal/accessControl/deleteSharedKey">
+			<input name="returnTo" type="hidden" value="/capabilities.html?action=listKeys">
+			<input type="hidden" name="iss" value="${kwargs.get('iss', '')}">
+			<input type="hidden" name="aud" value="${kwargs.get('aud', '')}">
+			<input type="hidden" name="sub" value="${kwargs.get('sub', '')}">
+			<table>
+				<tr>
+					<th>Item</>
+					<th>Value</>
+				</tr>
+				$for k, v in kwargs.items():
+					<tr>
+						<td>${k}</td>
+						<td>${v}</td>
+					</tr>
+				<tr>
+					<td colspan="2"><input type="submit" value="Delete"></td>
+				</tr>
+			</table>
+		</form>
 
-		<p><a href="/capabilities.html">Return to listing</a></p>
+		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
+		<p><a href="/capabilities.html">Return to capability listing</a></p>
 </body>
 </html>

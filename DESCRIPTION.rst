@@ -20,7 +20,7 @@ Run:
 	
 This installs the igor package, and command line utilities ``igorServer`` (the server),
 ``igorSetup`` (database administration), ``igorControl`` (server administration),
-``igorVar`` (database access for shell scripts), and  ``igorCA`` (who knows?)
+``igorVar`` (database access for shell scripts), and  ``igorCA`` (certificate admin)
 
 Database configuration
 ----------------------

@@ -5,7 +5,7 @@ VERBOSE=False
 class CannotFix(Exception):
     pass
     
-class CapabilityConsistency:
+class StructuralConsistency:
     def __init__(self, database, fix, namespaces, token, extended=False):
         self.database = database
         self.fix = fix
@@ -104,7 +104,52 @@ class CapabilityConsistency:
             context = self.database.getXPathForElement(context)
         self._status('Non-unique value: %s (context=%s)' % (path, context))
         raise CannotFix
-    
+
+    def _checkInfrastructureItem(self, path, item):
+        itemTag = item[0]
+        itemContent = item[1:]
+        itemPath = path + itemTag
+        self._checkExists(itemPath)
+        self._checkUnique(itemPath)
+        for subItem in itemContent:
+            self._checkInfrastructureItem(itemPath, subItem)
+            
+    def check(self):
+        databaseTemplate = (
+            '/data',
+                ('/environment',
+                    ('/systemHealth',
+                        ('/messages',),
+                    ),
+                ),
+                ('/status',
+                    ('/igor',),
+                    ('/sensors',),
+                    ('/devices',),
+                    ('/services',),
+                ),
+                ('/sensors',),
+                ('/devices',),
+                ('/services',
+                    ('/igor',),
+                ),
+                ('/people',),
+                ('/identities',),
+                ('/actions',),
+                ('/sandbox',),
+                ('/plugindata',),
+            )
+        if VERBOSE:
+            self._status('Starting infrastructure consistency check', isError=False)
+        try:
+            self._checkInfrastructureItem('', databaseTemplate)
+        except CannotFix:
+            self._status('* Infrastructure consistency check failed', isError=False)
+            raise
+        self._status('Infrastructure consistency check finished', isError=False)
+
+class CapabilityConsistency(StructuralConsistency):
+
     def _hasCapability(self, location, **kwargs):
         expr = location + '/au:capability'
         for k, v in kwargs.items():
@@ -144,7 +189,7 @@ class CapabilityConsistency:
         parent = parent[0]
         parent.appendChild(self.database.elementFromTagAndData('child', content['cid']))
         
-    def _fixParent(self, cap, cid):
+    def _fixParentCapability(self, cap, cid):
         parentCid = 'root'
         cap.appendChild(self.database.elementFromTagAndData('parent', parentCid))
         parent = self._getAllElements("//au:capability[cid='%s']" % parentCid)
@@ -155,53 +200,11 @@ class CapabilityConsistency:
         parent.appendChild(self.database.elementFromTagAndData('child', cid))
         self.nChanges += 1
         
-    def _checkInfrastructureItem(self, path, item):
-        itemTag = item[0]
-        itemContent = item[1:]
-        itemPath = path + itemTag
-        self._checkExists(itemPath)
-        self._checkUnique(itemPath)
-        for subItem in itemContent:
-            self._checkInfrastructureItem(itemPath, subItem)
-            
-    def checkInfrastructure(self):
-        databaseTemplate = (
-            '/data',
-                ('/environment',
-                    ('/systemHealth',
-                        ('/messages',),
-                    ),
-                ),
-                ('/status',
-                    ('/igor',),
-                    ('/sensors',),
-                    ('/devices',),
-                    ('/services',),
-                ),
-                ('/sensors',),
-                ('/devices',),
-                ('/services',
-                    ('/igor',),
-                ),
-                ('/people',),
-                ('/identities',),
-                ('/actions',),
-                ('/sandbox',),
-                ('/plugindata',),
-            )
-        if VERBOSE:
-            self._status('Starting infrastructure consistency check', isError=False)
-        try:
-            self._checkInfrastructureItem('', databaseTemplate)
-        except CannotFix:
-            self._status('* Infrastructure consistency check failed', isError=False)
-            raise
-        self._status('Infrastructure consistency check finished', isError=False)
 
     def check(self):
         with self.database:
             try:
-                self.checkInfrastructure()
+                StructuralConsistency.check(self)
             
                 if VERBOSE:
                     self._status('Starting capability consistency check', isError=False)
@@ -340,7 +343,7 @@ class CapabilityConsistency:
                             self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
                     if not parentCid:
                         if self.fix:
-                            self._fixParent(cap, cid)
+                            self._fixParentCapability(cap, cid)
                             self._status('Orphaned capability %s given parent 0' % cid, isError=False)
                         else:
                             self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))

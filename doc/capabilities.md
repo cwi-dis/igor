@@ -157,10 +157,37 @@ As a fourth check we check that every capability is in an expected location. In 
 
 Capabilities that fail this check are moved into `/data/au:access/au:unusedCapabilities`.
 
-## Capability actions on agent changes
+## Actions on adding a new user
 
-To be determined what is needed when adding/removing/changing users, plugins and actions. 
+To be refined, but at least:
 
-Also to be determined whether anything needs to be done when adding/removing/changing services, sensors or devices.
+- Create `/data/people` entry.
+- Create `/data/identities` entry,
+	- Fill with capabilities mentioned above
+	- Create password
 
-Clearly the capabilities in the schema section will need to be added when users are added, but there is probably more (such as adding external access capabilities when a new device is added).
+## Actions on deleting a user
+
+- Move any non-standard capabilities to a safe place
+- Delete `/data/people` and `/data/identities` entries
+
+## Actions on adding a new device
+
+- Create SSL key with `igorCA` (or `iotsa/extras/make-igor-signed-cert.sh` or via _/plugin/ca_) and copy the key and certificate to the device.
+- Create a shared secret key with new device as audience, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
+- Create an initial "allow all API actions" capability for the device (TBD) and store it in some users' space.
+	- Igor should automatically pick up the correct secret key and encode the capability with it, when talking to the device.
+
+## Actions on adding a new sensor
+
+- Create a shared secret key with the new sensor as subject, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
+- Create a capability (with audience Igor) for each action the sensor should be able to trigger.
+- Export these capabilities (Igor will pick up the correct secret key based on the subject) and copy them to the sensor. 
+
+## Other actions on agent changes
+
+To be determined what is needed when adding/removing/changing plugins and actions. 
+
+Also to be determined whether anything needs to be done when certificates expire or are revoked.
+
+Also to be determined what to do when secret keys are deleted and re-added.

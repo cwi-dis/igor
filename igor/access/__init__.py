@@ -515,5 +515,16 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
 #
 # Create a singleton Access object
 #   
-singleton = Access()
-capability.singleton = singleton
+singleton = None
+
+def createSingleton(noCapabilities=False):
+    global singleton
+    if singleton: return
+    if noCapabilities:
+        import dummyAccess
+        dummyAccess.createSingleton(noCapabilities)
+        singleton = dummyAccess.singleton
+    else:
+        singleton = Access()
+        capability.singleton = singleton
+    

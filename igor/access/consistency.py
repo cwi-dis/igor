@@ -147,6 +147,7 @@ class StructuralConsistency:
             self._status('* Infrastructure consistency check failed', isError=False)
             raise
         self._status('Infrastructure consistency check finished', isError=False)
+        return self.nChanges, self.nErrors, self.status
 
 class CapabilityConsistency(StructuralConsistency):
 

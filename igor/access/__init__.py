@@ -202,7 +202,7 @@ class IssuerInterface:
         if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
         return externalRepresentation
         
-    def getSubjectList(self):
+    def getSubjectList(self, token=None):
         """Return list of subjects that trust this issuer"""
         # xxxjack this is wrong: it also returns keys shared with other issuers
         subjectValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
@@ -211,14 +211,65 @@ class IssuerInterface:
         subjectValues.sort()
         return subjectValues
 
-    def getAudienceList(self):
+    def getAudienceList(self, token=None):
         """Return list of audiences that trust this issuer"""
         audienceValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
         audienceValues = set(audienceValues)
         audienceValues = list(audienceValues)
         audienceValues.sort()
         return audienceValues
-
+        
+    def getKeyList(self, token=None):
+        """Return list of tuples with (iss, sub, aud) for every key"""
+        keyElements = self.database.getValues('au:access/au:sharedKeys/au:sharedKey', _accessSelfToken, namespaces=NAMESPACES)
+        rv = []
+        for kElement, _ in keyElements:
+            iss = self.database.getValues('iss', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
+            aud = self.database.getValues('aud', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
+            sub = self.database.getValues('sub', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
+            kDict = dict(aud=aud)
+            if iss:
+                kDict['iss'] = iss
+            if sub:
+                kDict['sub'] = sub
+            rv.append(kDict)
+        return rv
+        
+    def createSharedKey(self, sub=None, aud=None, token=None):
+        """Create a secret key that is shared between issues and audience"""
+        iss = self._getSelfIssuer()
+        if aud is None:
+            aud = self._getSelfAudience()
+        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
+        if sub:
+            keyPath += "[sub='%s']" % sub
+        keyElements = self.database.getElements(keyPath, 'get', _accessSelfToken, namespaces=NAMESPACES)
+        if keyElements:
+            raise myWebError('409 Shared key already exists')
+        keyBits = 'k' + str(random.randbits(64))
+        keyData = dict(iss=iss, aud=aud, externalKey=keyBits)
+        if sub:
+            keyData['sub'] = sub
+        parentElement = self.database.getElements('au:access/au:sharedKeys', 'post', _accessSelfToken, namespaces=NAMESPACES)
+        if len(parentElement) != 1:
+            if DEBUG_DELEGATION: print 'access: createSharedKey: no unique destination au:access/au:sharedKeys'
+            raise web.notfound()
+        parentElement = parentElement[0]
+        element = self.database.elementFromTagAndData("sharedKey", tokenData, namespace=NAMESPACES)
+        parentElement.appendChild(element)
+        return keyBits
+        
+    def deleteSharedKey(self, sub=None, aud=None, token=None):
+        """Delete a shared key"""
+        iss = self._getSelfIssuer()
+        if aud is None:
+            aud = self._getSelfAudience()
+        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
+        if sub:
+            keyPath += "[sub='%s']" % sub
+        self.database.delValues(keyPath, _accessSelfToken, namespaces=NAMESPACES)
+        return ''
+        
 class UserPasswords:
     """Implements checking of passwords for users"""
     

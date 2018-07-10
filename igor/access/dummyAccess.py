@@ -57,7 +57,19 @@ class IssuerInterface:
     def getAudienceList(self):
         """Return list of audiences that trust this issuer"""
         return []
-    
+        
+    def getKeyList(self):
+        """Return list of tuples with (iss, sub, aud) for every key"""
+        return []
+                
+     def createSharedKey(self, sub=None, aud=None):
+        """Create a secret key that is shared between issues and audience"""
+        raise myWebError("400 This Igor does not have shared key support")
+        
+    def deleteSharedKey(self, sub=None, aud=None):
+        """Delete a shared key"""
+        raise myWebError("400 This Igor does not have shared key support")
+
 class UserPasswords:
         
     def userAndPasswordCorrect(self, username, password):

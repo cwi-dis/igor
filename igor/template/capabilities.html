@@ -85,6 +85,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		</table>
 		$if cid != None:
 			<p><a href="/capabilities.html">Return to full listing</a></p>
+			<p><a href="/capabilities.html?action=listKeys">View shared key listing</a></p>
 	$elif action == "delegate":
 		<h1>Delegate capability ${cid}</h1>
 		
@@ -332,6 +333,37 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		</form>
 		
 		<p><a href="/capabilities.html">Return to listing</a></p>
+	$elif action == "listKeys":
+		<h1>List shared secret keys issued by this Igor</h1>
+		
+		$ keys = COMMANDS.accessControl(subcommand='getKeyList', token=token)
+		<table>
+			<tr>
+				<th>Issuer</th>
+				<th>Subject</th>
+				<th>Audience</th>
+			</tr>
+			$for k in keys:
+				<tr>
+					<td>${k.get('iss')}</td>
+					<td>${k.get('sub', '')}</td>
+					<td>${k.get('aud', '')}</td>
+				</tr>
+		</table>
+		<p>Not yet implemented</p>
 
+		<p><a href="/capabilities.html">Return to listing</a></p>
+	$elif action == "addKey":
+		<h1>Issue new shared key</h1>
+		
+		<p>Not yet implemented</p>
+
+		<p><a href="/capabilities.html">Return to listing</a></p>
+	$elif action == "deleteKey":
+		<h1>Delete old shared key</h1>
+		
+		<p>Not yet implemented</p>
+
+		<p><a href="/capabilities.html">Return to listing</a></p>
 </body>
 </html>

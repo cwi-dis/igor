@@ -1,5 +1,14 @@
 # Using Igor
 
+## Prerequisites
+-------------
+
+You need to have Python v2.7 installed, and that should also have `setuptools` installed.
+
+Installing Python's package installation program `pip` will also install `setuptools`.
+
+See also https://packaging.python.org/tutorials/installing-packages/
+
 ## Installing the software
 
 Download the source via <https://github.com/cwi-dis/igor>. Then install everything with

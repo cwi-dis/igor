@@ -1,7 +1,6 @@
 # Using Igor
 
 ## Prerequisites
--------------
 
 You need to have Python v2.7 installed, and that should also have `setuptools` installed.
 

@@ -166,23 +166,66 @@ To be refined, but at least:
 	- Fill with capabilities mentioned above
 	- Create password
 
+The API will need at least _name_ and _password_. Because of access control policies it is implied that only the _admin_ user can call this API (or any agent that the _admin_ user has granted the corresponding capabilities to).
+
 ## Actions on deleting a user
 
-- Move any non-standard capabilities to a safe place
-- Delete `/data/people` and `/data/identities` entries
+- Move any non-standard capabilities (really: any capability with `aud` not the current Igor) to a safe place (probably the _admin_ user).
+- Delete `/data/people` and `/data/identities` entries.
+
+The API will need just the user name, and the same access control rules as for adding users will apply.
 
 ## Actions on adding a new device
 
 - Create SSL key with `igorCA` (or `iotsa/extras/make-igor-signed-cert.sh` or via _/plugin/ca_) and copy the key and certificate to the device.
 - Create a shared secret key with new device as audience, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
-- Create an initial "allow all API actions" capability for the device (TBD) and store it in some users' space.
+- Create an initial "allow all API actions" capability for the device (TBD) and store it in some users' space (current user? admin user?)
 	- Igor should automatically pick up the correct secret key and encode the capability with it, when talking to the device.
+- If the device is also a _sensor_, i.e. if it can also trigger actions in Igor, all of the _sensor_ actions must also be done.
 
 ## Actions on adding a new sensor
 
 - Create a shared secret key with the new sensor as subject, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
-- Create a capability (with audience Igor) for each action the sensor should be able to trigger.
-- Export these capabilities (Igor will pick up the correct secret key based on the subject) and copy them to the sensor. 
+- Create a capability (with the sensor as subject and audience Igor) for each action the sensor should be able to trigger.
+- Export these capabilities (Igor will pick up the correct secret key based on the subject) and copy them to the sensor.
+
+## Generalized API for adding a device or sensor
+
+Data to be supplied to this action:
+
+- Name of the device/sensor.
+- Boolean _isSensor_.
+- Boolean _isDevice_.
+- Hostname or IP address of the sensor (defaults to name with _.local_ appended).
+	- if _isDevice_ this will be used as the _audience_ of the first shared key.
+	- If _isSensor_ this will be used as the _subject_ of the second shared key.
+- if _isDevice_: Base URL of the API of this device (such as _https://iotsa.local/api_). Will be the _object_ of the device access capability stored in the users' _identities_ entry.
+- if _isSensor_: List of (_name_, _verb_, _object_) this sensor will contact (or empty for non-sensor devices). If non-empty the sensor shared key (audience Igor, subject the sensor) will be used to sign these.
+
+Data returned:
+
+- if _isDevice_:
+	- SSL key
+	- SSL certificate
+	- shared device key
+- if _isSensor_:
+	- List of (_name_, _verb_, _url_, _signed capability_).
+
+Data saved in Igor database:
+
+- Shared keys (in the hidden area)
+- if _isDevice_: Capability for accessing the device
+- Entry in either `/data/devices` or `/data/sensors`.
+
+It needs to be worked out what the access control rights are that are needed for this API. It seems as though no special rights are needed for devices, and for sensors the caller needs to have capabilities (with `delegate=true`) for each of the verb/object combinations.
+
+It also needs to be worked out whether the user (or other agent) that calls this API gets permissions to the `/data/devices` or `/data/sensors` areas.
+
+## Deleting a device or sensor
+
+- The entries in `/data/devices` and `/data/sensors` should be deleted.
+- The shared keys should be deleted.
+- The SSL certificate should be revoked.
 
 ## Other actions on agent changes
 

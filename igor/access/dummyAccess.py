@@ -109,13 +109,12 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Returns an AccessChecker for an external entrypoint that is not a tree element"""
         return _checker
         
-    def tokenForAction(self, element):
+    def tokenForAction(self, element, token=None):
         """Return token(s) for an <action> element"""
         return _token
         
-    def tokenForPlugin(self, pluginname):
+    def tokenForPlugin(self, pluginname, token=None):
         """Return token(s) for a plugin with the given pluginname"""
-        # xxxjack not yet implemented
         return _token
 
     def tokenForIgor(self):

@@ -368,17 +368,27 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             return DefaultAccessChecker()
         return AccessChecker(entrypoint)
         
-    def tokenForAction(self, element):
+    def tokenForAction(self, element, token=None):
         """Return token(s) for an <action> element"""
-        token =  self._tokenForElement(element)
+        
+        tokenForAction = self._tokenForElement(element)
+        if token is None:
+            token = tokenForAction
+        else:
+            token = _combineTokens(token, tokenForAction)
         tokenForAllActions = self._tokenForElement(element.parentNode)
         token = _combineTokens(token, tokenForAllActions)
         return _combineTokens(token, self._defaultToken())
         
-    def tokenForPlugin(self, pluginname):
+    def tokenForPlugin(self, pluginname, token=None):
         """Return token(s) for a plugin with the given pluginname"""
-        # xxxjack not yet implemented
-        return self.tokenForIgor()
+        # xxxjack should fix this: plugins are allowed to do everything.
+        tokenForPlugin = self.tokenForIgor()
+        if token is None:
+            token = tokenForPlugin
+        else:
+            token = _combineTokens(token, tokenForPlugin)
+        return token
 
     def tokenForIgor(self):
         """Return token for igor itself (use sparingly)"""

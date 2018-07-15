@@ -93,8 +93,10 @@ User that holds the master capabilities, capabilities with fairly unlimited acce
 
 There are at least the following capabilities, of which most other capabilities are descended (through delegation and narrowing the scope):
 
-- get(descendant-or-self)+put(descendant-or-self)+post(descendant)+delete(descendant), /data
+- get(descendant-or-self)+put(descendant)+post(descendant)+delete(descendant), /data
 - get(descendant), /action
+- get(descendant), /plugin
+- get(descendant), /pluginscript
 - get(descendant), /internal
 - an empty capability (no rights, no object) with `cid=root` and no parent. This is the root of the capability tree.
 

@@ -314,7 +314,7 @@ class UserPasswords:
         if len(parentElements) > 1:
             raise myWebError('404 Multiple entries for user %s' % username)
         parentElement = parentElements[0]
-        parentElement.appendChild(elements)
+        parentElement.appendChild(element)
 
 class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
     def __init__(self):
@@ -429,9 +429,13 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def getTokenDescription(self, token, tokenId=None):
         """Returns a list of dictionaries which describe the tokens"""
         if tokenId:
+            originalToken = token
             token = token._getTokenWithIdentifier(tokenId)
             if not token:
-                if DEBUG_DELEGATION: print 'access: getTokenDescription: no such token ID: %s' % tokenId
+                identifiers = originalToken._getIdentifiers()
+                print '\taccess: getTokenDescription: no such token ID: %s. Tokens:' % tokenId
+                for i in identifiers:
+                    print '\t\t%s' % i
                 raise myWebError('404 No such token: %s' % tokenId)
         return token._getTokenDescription()
         
@@ -451,11 +455,15 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # Check that original token exists, and allows this delegation
         #
+        originalToken = token
         token = token._getTokenWithIdentifier(tokenId)
         if newPath == None:
                 newPath = token._getObject()
         if not token:
-            if DEBUG_DELEGATION: print 'access: newToken: no such token ID: %s' % tokenId
+            identifiers = originalToken._getIdentifiers()
+            print '\taccess: newToken: no such token ID: %s. Tokens:' % tokenId
+            for i in identifiers:
+                print '\t\t%s' % i
             raise myWebError('404 No such token: %s' % tokenId)
         if not token._allowsDelegation(newPath, newRights):
             raise myWebError('401 Delegation not allowed')
@@ -494,8 +502,13 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         
     def passToken(self, token, tokenId, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
+        originalToken = token
         tokenToPass = token._getTokenWithIdentifier(tokenId)
         if not tokenToPass:
+            identifiers = originalToken._getIdentifiers()
+            print '\taccess: passToken: no such token ID: %s. Tokens:' % tokenId
+            for i in identifiers:
+                print '\t\t%s' % i
             raise myWebError("401 No such token: %s" % tokenId)
         oldOwner = tokenToPass._getOwner()
         if not oldOwner:
@@ -514,9 +527,16 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Revoke a token"""
         parentToken = token._getTokenWithIdentifier(parentId)
         if not parentToken:
+            identifiers = token._getIdentifiers()
+            print '\taccess: revokeToken: no such token ID: %s. Tokens:' % parentId
+            for i in identifiers:
+                print '\t\t%s' % i
             raise myWebError("404 No such parent token: %s" % parentId)
         childToken = token._getTokenWithIdentifier(tokenId)
         if not childToken:
+            print '\taccess: revokeToken: no such token ID: %s. Tokens:' % tokenId
+            for i in identifiers:
+                print '\t\t%s' % i
             raise myWebError("404 No such token: %s" % tokenId)
         self._addToRevokeList(tokenId, childToken.content.get('nva'))
         childToken._revoke()
@@ -561,6 +581,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def externalRepresentation(self, token, tokenId):
         tokenToExport = token._getTokenWithIdentifier(tokenId)
         if not tokenToExport:
+            identifiers = token._getIdentifiers()
+            print '\taccess: externalRepresentation: no such token ID: %s. Tokens:' % tokenId
+            for i in identifiers:
+                print '\t\t%s' % i
             raise myWebError("401 No such token: %s" % tokenId)
         assert tokenToExport._hasExternalRepresentationFor(self._getSelfAudience())
         externalRepresentation = tokenToExport._getExternalRepresentation()

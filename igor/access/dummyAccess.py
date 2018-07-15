@@ -62,7 +62,7 @@ class IssuerInterface:
         """Return list of tuples with (iss, sub, aud) for every key"""
         return []
                 
-     def createSharedKey(self, sub=None, aud=None):
+    def createSharedKey(self, sub=None, aud=None):
         """Create a secret key that is shared between issues and audience"""
         raise myWebError("400 This Igor does not have shared key support")
         
@@ -75,12 +75,19 @@ class UserPasswords:
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""
         return True
+        
+    def setUserPassword(self, username, password, token):
+        """Change the password for the user"""
+        pass
     
 
 class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
     def __init__(self):
         self.database = None
         self.COMMAND = None
+        
+    def hasCapabilitySupport(self):
+        return False
         
     def setDatabase(self, database):
         """Temporary helper method - Informs the access checker where it can find the database object"""

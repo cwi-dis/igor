@@ -302,6 +302,20 @@ class UserPasswords:
         if DEBUG: print 'access: basic authentication: login for user', username
         return True
 
+    def setUserPassword(self, username, password, token):
+        """Change the password for the user"""
+        import passlib.hash
+        passwordHash = passlib.hash.pbkdf2_sha256.hash(password)
+        element = self.database.elementFromTagAndData('encryptedPassword', passwordHash)
+        self.database.delValues('identities/%s/encryptedPassword' % username, token)
+        parentElements = self.database.getElements('identities/%s' % username, 'post', token)
+        if len(parentElements) == 0:
+            raise myWebError('404 User %s not found' % username)
+        if len(parentElements) > 1:
+            raise myWebError('404 Multiple entries for user %s' % username)
+        parentElement = parentElements[0]
+        parentElement.appendChild(elements)
+
 class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
     def __init__(self):
         OTPHandler.__init__(self)
@@ -318,6 +332,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         if self.COMMAND:
             self.COMMAND.queue('save', _accessSelfToken)
 
+    def hasCapabilitySupport(self):
+        return True
+        
     def setDatabase(self, database):
         """Temporary helper method - Informs the access checker where it can find the database object"""
         self.database = database
@@ -575,6 +592,7 @@ def createSingleton(noCapabilities=False):
     global singleton
     if singleton: return
     if noCapabilities:
+        print 'Warning: capability-base access control disabled'
         import dummyAccess
         dummyAccess.createSingleton(noCapabilities)
         singleton = dummyAccess.singleton

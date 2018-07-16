@@ -1,0 +1,86 @@
+$def with (action=None, username=None, **kwargs)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Users</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+
+	$if action == None or action == 'list':
+		<h1>Igor Users</h1>
+	
+		$if 'user' in SESSION and SESSION.user:
+			<p>
+				You are logged in as $SESSION.user.
+			</p>
+		$else:
+			<p>
+				You are not logged in. This page will probably not render correctly.
+			</p>
+		
+		<table style="width:100%">
+			<tr>
+				<th>Username</th>
+				<th>Identity Entry</th>
+				<th>People Entry</th>
+				<th>Operation</th>
+			</tr>
+		
+			$ userList = DATABASE.getElements('/data/identities/*', 'get', token)
+			$for user in userList:
+				<tr>
+					<td>${user.tagName}</td>
+					<td><a href="/data/identities/${user.tagName}">identities/${user.tagName}</a></td>
+					<td><a href="/data/people/${user.tagName}">people/${user.tagName}</a></td>
+					<td>
+						<a href="/users.html?action=delete&username=${user.tagName}">delete</a><br>
+						<a href="/users.html?action=password&username=${user.tagName}">change password</a>
+					</td>
+				</tr>
+		</table>
+		
+		<h1>Add User</h1>
+		
+		<p>To add a new user:</p>
+		<form action="/plugin/user/add">
+			<input name="returnTo" type="hidden" value="/users.html">
+			Username: <input name="username"><br>
+			Password: <input name="password" type="password"></br>
+			<input type="submit" value="Add">
+		</form>
+		
+	$elif action == "delete":
+		<h1>Delete User</h1>
+		
+		<p>Are you sure you want to delete user <b>${username}</b>? This action cannot be undone.</p>
+		<form action="/plugin/user/delete">
+			<input name="returnTo" type="hidden" value="/users.html">
+			<input type="hidden" name="username" value="${username}"><br>
+			<input type="submit" value="Delete">
+		</form>
+		
+		<p><a href="/users.html">Return to user listing</a></p>
+
+	$elif action == "password":
+		<h1>Change Password</h1>
+		
+		<p>Are you sure you want to change the password for user <b>${username}</b>? This action cannot be undone.</p>
+		<form action="/plugin/user/password">
+			<input name="returnTo" type="hidden" value="/users.html">
+			<input type="hidden" name="username" value="${username}"><br>
+			New password: <input name="password" type="password"></br>
+			<input type="submit" value="Change Password">
+		</form>
+		
+		<p><a href="/users.html">Return to user listing</a></p>
+		
+
+</body>
+</html>

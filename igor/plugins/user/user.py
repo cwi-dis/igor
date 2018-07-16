@@ -22,6 +22,12 @@ class UserPlugin:
         raise web.notfound()
     
     def add(self, token=None, username=None, password=None, returnTo=None):
+        if True:
+                identifiers = token._getIdentifiers()
+                print '\tuser: add: Tokens:'
+                for i in identifiers:
+                    print '\t\t%s' % i
+
         if not NAME_RE.match(username):
             raise myWebError('400 Illegal name for user')
         if DATABASE_ACCESS.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
@@ -56,6 +62,11 @@ class UserPlugin:
         return ''
         
     def delete(self, token=None, username=None, returnTo=None):
+        if True:
+                identifiers = token._getIdentifiers()
+                print '\tuser: delete: Tokens:'
+                for i in identifiers:
+                    print '\t\t%s' % i
         if not NAME_RE.match(username):
             raise myWebError('400 Illegal name for user')
         if not DATABASE_ACCESS.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):

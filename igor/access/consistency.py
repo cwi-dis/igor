@@ -39,7 +39,6 @@ class StructuralConsistency:
                 parentPath, tag = self.database.splitXPath(path, allowNamespaces=True)
                 parentElements = self.database.getElements(parentPath, 'post', self.token, namespaces=self.namespaces)
                 if len(parentElements) != 1:
-                    print 'xxxjack', path, parentPath, tag
                     self._status('Cannot create element: non-singleton parent %s' % parentPath)
                     raise CannotFix
                 parentElement = parentElements[0]
@@ -335,17 +334,26 @@ class CapabilityConsistency(StructuralConsistency):
                     if parentCid != expectedParent:
                         if self.fix:
                             if expectedParent:
-                                self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
-                                raise CannotFix
+                                if parentCid:
+                                    self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
+                                    raise CannotFix
+                                else:
+                                    self._status('Cannot fix yet: %s has no parent, but is listed as child of %s' % (cid, expectedParent))
+                                    raise CannotFix
                             self.database.delValues('child::parent', token=self.token, context=cap)
                             self.nChanges += 1
                             parentCid = None
                         else:
-                            self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
+                            if expectedParent and not parentCid:
+                                self._status('Capability %s has no parent but listed by %s as child' % (cid, expectedParent))
+                            elif parentCid and not expectedParent:
+                                self._status('Parent for %s is %s but not listed there as child' % (cid, parentCid))
+                            else:
+                                self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
                     if not parentCid:
                         if self.fix:
                             self._fixParentCapability(cap, cid)
-                            self._status('Orphaned capability %s given parent 0' % cid, isError=False)
+                            self._status('Orphaned capability %s given parent root' % cid, isError=False)
                         else:
                             self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
                 #

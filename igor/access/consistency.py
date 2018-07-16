@@ -311,6 +311,7 @@ class CapabilityConsistency(StructuralConsistency):
                         if not childCid in cid2cap:
                             if self.fix:
                                 self.database.delValues("child::child[text()='%s']" % childCid, token=self.token, context=cap)
+                                self.nChanges += 1
                                 self._status('Removed child %s from %s' % (childCid, cid), isError=False)
                             else:
                                 self._status('Non-existing child %s in %s' % (childCid, cid))

@@ -35,21 +35,40 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		
 		<table style="width:100%">
 			<tr>
-				<th>OP</th>
 				<th>ID</th>
-				<th>GET<br>PUT<br>POST<br>DELETE</th>
 				<th>Object</th>
-				<th>Comment</th>
-				<th>...</th>
+				<th>GET<br>PUT<br>POST<br>DELETE</th>
+				<th>Parent</th>
 				<th>Children</th>
+				<th>OP</th>
+				<th>...</th>
 			</tr>
 		
 			$ capList = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)
 			$for cap in capList:
 				$ cid = cap.pop('cid', '')
+				$ comment = cap.pop('comment', '')
 				$ childIDs = cap.pop('child', [])
 				$ if type(childIDs) != type([]): childIDs = [childIDs]
 				<tr>
+					<td>${cid}
+					$if comment:
+						<br><i>(${comment}</i>)
+					</td>
+					<td>${cap.pop('obj', '')}</td>
+					<td align="center">
+						${cap.pop('get', '-')}<br>
+						${cap.pop('put', '-')}<br>
+						${cap.pop('post', '-')}<br>
+						${cap.pop('delete', '-')}
+					</td>
+					<td>${cap.pop('parent', '')}</td>
+					<td>
+						$for c in childIDs:
+							<a href="/capabilities.html?action=list&cid=${c}">${c}</a>
+							<a href="/capabilities.html?action=revoke&cid=${cid}&childCid=${c}">(revoke)</a>
+							<br>
+					</td>
 					<td>
 						$if cap.pop('owner', ''):
 							<a href="/capabilities.html?action=transfer&cid=${cid}">transfer</a>
@@ -62,24 +81,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 							<br>
 							<a href="/internal/accessControl/externalRepresentation?tokenId=${cid}">external repr</a>
 					</td>
-					<td>${cid}</td>
-					<td align="center">
-						${cap.pop('get', '-')}<br>
-						${cap.pop('put', '-')}<br>
-						${cap.pop('post', '-')}<br>
-						${cap.pop('delete', '-')}
-					</td>
-					<td>${cap.pop('obj', '')}</td>
-					<td>${cap.pop('comment', '')}</td>
 					<td>
 						$for k,v in cap.items():
 							${k}=${v}<br>
-					</td>
-					<td>
-						$for c in childIDs:
-							<a href="/capabilities.html?action=list&cid=${c}">${c}</a>
-							<a href="/capabilities.html?action=revoke&cid=${cid}&childCid=${c}">(revoke)</a>
-							<br>
 					</td>
 				</tr>
 		</table>

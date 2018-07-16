@@ -488,10 +488,12 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # Construct the data for the new token.
         #
-        newId = 'token-%d' % random.getrandbits(64)
+        newId = 'c%d' % random.getrandbits(64)
         token._addChild(newId)
         tokenData = dict(cid=newId, obj=newPath, parent=tokenId)
         moreData = token._getExternalContent()
+        if 'cid' in moreData:
+            del moreData['cid']
         tokenData.update(moreData)
         tokenData.update(newRights)
         tokenData.update(content)

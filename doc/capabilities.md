@@ -137,7 +137,7 @@ The following checks are needed as a first order check, and ensure the base infr
 - `/data/au:access/au:sharedKeys` exists.
 - `/data/identities` exists.
 - `/data/identities/admin` exists.
-- `/data/identities/admin/au:capability[cid='0']` exists.
+- `/data/identities/admin/au:capability[cid='root']` exists.
 - `/data/actions` exists.
 
 As a second check we test that the default set of capabilities (as per the schema above) exist and are in their correct location.
@@ -146,7 +146,7 @@ As a third check we enumerate all capabilities and check the following assertion
 
 -  Each capability must have a `cid`. 
 -  This `cid` must be unique.
-- Each capability (except `cid=0`) must have an existing `parent`, if not the capability is given `parent=0`.
+- Each capability (except `cid=root`) must have an existing `parent`, if not the capability is given `parent=root`.
 - Each capability must have its `cid` listed in the parent `child` fields. If not it is added.
 - Each `child` of each capability must exist. If not the `child` is removed.
 

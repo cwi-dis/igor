@@ -492,9 +492,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         token._addChild(newId)
         tokenData = dict(cid=newId, obj=newPath, parent=tokenId)
         moreData = token._getExternalContent()
-        if 'cid' in moreData:
-            del moreData['cid']
-        tokenData.update(moreData)
+        for k, v in moreData.items():
+            if not k in tokenData:
+                tokenData[k] = v
         tokenData.update(newRights)
         tokenData.update(content)
 

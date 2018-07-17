@@ -201,7 +201,7 @@ Data to be supplied to this action:
 - Hostname or IP address of the sensor (defaults to name with _.local_ appended).
 	- if _isDevice_ this will be used as the _audience_ of the first shared key.
 	- If _isSensor_ this will be used as the _subject_ of the second shared key.
-- if _isDevice_: Base URL of the API of this device (such as _https://iotsa.local/api_). Will be the _object_ of the device access capability stored in the users' _identities_ entry.
+- if _isDevice_: Partial URL of the API of this device (such as _/api_). Will be the _object_ of the device access capability stored in the users' _identities_ entry.
 - if _isSensor_: List of (_name_, _verb_, _object_) this sensor will contact (or empty for non-sensor devices). If non-empty the sensor shared key (audience Igor, subject the sensor) will be used to sign these.
 
 Data returned:

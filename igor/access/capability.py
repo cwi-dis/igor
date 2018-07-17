@@ -1,5 +1,6 @@
 from .vars import *
 import base64
+import urlparse
 
 class BaseAccessToken:
     """An access token (or set of tokens) that can be carried by a request"""
@@ -135,7 +136,16 @@ class AccessToken(BaseAccessToken):
         return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
         
     def _hasExternalRepresentationFor(self, url):
-        return 'iss' in self.content and 'aud' in self.content and url.startswith(self.content['aud'])
+        if not 'iss' in self.content:
+            return False
+        if not 'aud' in self.content:
+            return False
+        if url.startswith(self.content['aud']):
+            return True
+        p = urlparse.urlparse(url)
+        if p.netloc == self.content['aud']:
+            return True
+        return False
 
     def _getExternalContent(self):
         rv = dict(cid=self.identifier)

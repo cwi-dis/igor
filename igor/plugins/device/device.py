@@ -67,7 +67,7 @@ class DevicePlugin:
             rv['sharedKey'] = deviceKey
             deviceTokenId = COMMANDS.accessControl('newToken',
                 token=token,
-                tokenId='root',
+                tokenId='external',
                 newOwner='identities/admin',
                 newPath=description.get('obj', '/'),
                 get='descendant-or-self',

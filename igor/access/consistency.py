@@ -252,6 +252,7 @@ class CapabilityConsistency(StructuralConsistency):
                 # Second set - all the default and important capabilities exist
                 #
                 self._hasCapability('/data/identities/admin', cid='root')
+                self._hasCapability('/data/identities/admin', cid='external', delegate='external')
                 
                 self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-static', obj='/static', get='child')
                 self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-environment', obj='/data/environment', get='descendant-or-self')
@@ -261,11 +262,11 @@ class CapabilityConsistency(StructuralConsistency):
 
                 self._hasCapability('/data/identities', cid='people-people', obj='/data/people', get='descendant-or-self')
 
-                self._hasCapability('/data/identities/admin', cid='admin-data', obj='/data', get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
-                self._hasCapability('/data/identities/admin', cid='admin-action', obj='/action', get='descendant')
-                self._hasCapability('/data/identities/admin', cid='admin-internal', obj='/internal', get='descendant')
-                self._hasCapability('/data/identities/admin', cid='admin-plugin', obj='/plugin', get='descendant')
-                self._hasCapability('/data/identities/admin', cid='admin-pluginscript', obj='/pluginscript', get='descendant')
+                self._hasCapability('/data/identities/admin', cid='admin-data', obj='/data', get='descendant-or-self', put='descendant', post='descendant', delete='descendant', delegate='true')
+                self._hasCapability('/data/identities/admin', cid='admin-action', obj='/action', get='descendant', delegate='true')
+                self._hasCapability('/data/identities/admin', cid='admin-internal', obj='/internal', get='descendant', delegate='true')
+                self._hasCapability('/data/identities/admin', cid='admin-plugin', obj='/plugin', get='descendant', delegate='true')
+                self._hasCapability('/data/identities/admin', cid='admin-pluginscript', obj='/pluginscript', get='descendant', delegate='true')
             
                 for userElement in self._getAllElements('/data/identities/*'):
                     userName = userElement.tagName

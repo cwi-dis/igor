@@ -12,7 +12,7 @@ A capability is stored in an `au:capability` element.
 * `cid` unique ID of this capability.
 * `child` one entry for each child (delegated) capability of this capability.
 * `parent` parent of this capability.
-* `delegate` boolean, if `true` this capability can be delegated.
+* `delegate` boolean, if `true` this capability can be delegated. If the value is the string `external` this capability can be the parent of any capability as long as that new capability has an `aud` field.
 * `obj` an xpath referencing a single element (or a nonexisting element with a single existing parent element) to which this capability refers. Rights on that object and its descendants are governed by a number of other fields:
 	* `get` Together with `obj` defines on which elements this capability grants `GET` rights:
 		* empty (or non-existent): none.

@@ -207,13 +207,13 @@ class AccessToken(BaseAccessToken):
         # Check whether this is the external-supertoken and whether we want to create a new external token
         print 'xxxjack allowsDelegation', self, 'canDelegate', canDelegate, 'aud', aud
         if canDelegate == 'external':
-            if aud:
+            if aud and aud != singleton._getSelfAudience():
                 # xxxjack no further checks for external tokens. This may need refining.
                 return True
             else:
                 return False
         else:
-            if aud:
+            if aud and aud != singleton._getSelfAudience():
                 return False
         # Check whether the path is contained in our path
         path = self.content.get('obj')
@@ -238,7 +238,7 @@ class AccessToken(BaseAccessToken):
                 return False
             if newIsSelf:
                 if not newCascadingRule in CASCADING_RULES_IMPLIED.get(oldCascadingRule, {}):
-                    if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
+                    if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
                     return False
             elif newIsChild:
                 # xxxjack for now only allow if original rule includes all descendants

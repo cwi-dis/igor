@@ -177,19 +177,23 @@ class IssuerInterface:
             raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
         return externalKey
 
-    def _decodeIncomingData(self):
+    def _decodeIncomingData(self, data):
         sharedKey = self._getSharedKey()
         try:
             content = jwt.decode(data, sharedKey, issuer=singleton._getSelfIssuer(), audience=singleton._getSelfAudience(), algorithm='RS256')
         except jwt.DecodeError:
-            print 'access: ERROR: incorrect signature on bearer token %s' % content
+            print 'access: ERROR: incorrect signature on bearer token %s' % data
+            print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
             raise myWebError('400 Incorrect signature on key')
         except jwt.InvalidIssuerError:
-            print 'access: ERROR: incorrect issuer on bearer token %s' % content
+            print 'access: ERROR: incorrect issuer on bearer token %s' % data
+            print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
             raise myWebError('400 Incorrect issuer on key')
         except jwt.InvalidAudienceError:
-            print 'access: ERROR: incorrect audience on bearer token %s' % content
+            print 'access: ERROR: incorrect audience on bearer token %s' % data
+            print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
             raise myWebError('400 Incorrect audience on key')
+        return content
 
     def _encodeOutgoingData(self, tokenContent):
         iss = tokenContent.get('iss')
@@ -427,7 +431,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         
     def _externalAccessToken(self, data):
         """Internal method - Create a token from the given "Authorization: bearer" data"""
-        content = self._decodeIncomingToken(data)
+        content = self._decodeIncomingData(data)
         cid = content.get('cid')
         if not cid:
             print 'access: ERROR: no cid on bearer token %s' % content

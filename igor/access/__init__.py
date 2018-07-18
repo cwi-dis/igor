@@ -179,6 +179,9 @@ class IssuerInterface:
 
     def _decodeIncomingData(self, data):
         sharedKey = self._getSharedKey()
+        if DEBUG: 
+            print 'access._decodeIncomingData: %s: externalRepresentation %s' % (self, data)
+            print 'access._decodeIncomingData: %s: externalKey %s' % (self, sharedKey)
         try:
             content = jwt.decode(data, sharedKey, issuer=singleton._getSelfIssuer(), audience=singleton._getSelfAudience(), algorithm='RS256')
         except jwt.DecodeError:
@@ -193,6 +196,8 @@ class IssuerInterface:
             print 'access: ERROR: incorrect audience on bearer token %s' % data
             print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
             raise myWebError('400 Incorrect audience on key')
+        if DEBUG: 
+            print 'access._decodeIncomingData: %s: tokenContent %s' % (self, content)
         return content
 
     def _encodeOutgoingData(self, tokenContent):
@@ -204,7 +209,10 @@ class IssuerInterface:
             raise myWebError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
         externalKey = singleton._getSharedKey(iss, aud)
         externalRepresentation = jwt.encode(tokenContent, externalKey, algorithm='HS256')
-        if DEBUG: print 'access: %s: externalRepresentation %s' % (self, externalRepresentation)
+        if DEBUG: 
+            print 'access._encodeOutgoingData: %s: tokenContent %s' % (self, tokenContent)
+            print 'access._encodeOutgoingData: %s: externalKey %s' % (self, externalKey)
+            print 'access._encodeOutgoingData: %s: externalRepresentation %s' % (self, externalRepresentation)
         return externalRepresentation
         
     def getSubjectList(self, token=None):

@@ -149,10 +149,9 @@ class AccessToken(BaseAccessToken):
 
     def _getExternalContent(self):
         rv = dict(cid=self.identifier)
-        if 'obj' in self.content: rv['obj'] = self.content['obj']
-        if 'iss' in self.content: rv['iss'] = self.content['iss']
-        if 'aud' in self.content: rv['aud'] = self.content['aud']
-        if 'subj' in self.content: rv['subj'] = self.content['subj']
+        for key in ['obj', 'iss', 'aud', 'sub', 'nvb', 'nva', 'get', 'put', 'post', 'delete']:
+            if key in self.content:
+                rv[key] = self.content[key]
         return rv
         
     def _getExternalRepresentation(self):

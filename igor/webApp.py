@@ -381,7 +381,7 @@ class runPlugin:
         try:
             rv = method(**dict(allArgs))
         except ValueError, arg:
-            raise myWebError("400 Error in plugin method %s parameters: %s" % (command, arg))
+            raise myWebError("400 Error in plugin method %s/%s parameters: %s" % (pluginName, methodName, arg))
         if rv == None:
             rv = ''
         if not isinstance(rv, basestring):

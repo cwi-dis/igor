@@ -345,7 +345,7 @@ class runPlugin:
 
         # xxxjack need to check that the incoming action is allowed on this plugin
         # Get the token for the plugin itself
-        pluginToken = access.singleton.tokenForPlugin(pluginName)
+        pluginToken = access.singleton.tokenForPlugin(pluginName, token=token)
         allArgs['token'] = pluginToken
         
         # Find plugindata and per-user plugindata

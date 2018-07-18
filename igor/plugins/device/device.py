@@ -59,11 +59,7 @@ class DevicePlugin:
         rv = {}
         
         if isDevice:
-            sslKey, sslCrt = self._genSSL(hostname, key=description.get('sslKey', None))
-            if sslKey:
-                rv['sslKey'] = sslKey
-            rv['sslCertificate'] = sslCrt
-            deviceKey = self._genSecretKey(aud=hostname)
+            deviceKey = self._genSecretKey(aud=hostname, token=token)
             rv['sharedKey'] = deviceKey
             deviceTokenId = COMMANDS.accessControl('newToken',
                 token=token,
@@ -94,19 +90,8 @@ class DevicePlugin:
             raise web.seeother(returnTo)
         return json.dumps(rv)
 
-    def _genSSL(self, hostname, key=None):
-        if key:
-            rvKey = None
-        else:
-            rvKey = key = 'newGeneratedKey'
-        rv = 'certificate-for-%s-key-%s' % (hostname, key)
-        print 'xxxjack should generate', rv
-        return rvKey, rv
-        
-    def _genSecretKey(self, aud=None, sub=None):
-        rv = 'secretkey-aud-%s-sub-%s' % (aud, sub)
-        print 'xxxjack should create', rv
-        return rv
+    def _genSecretKey(self, token=None, aud=None, sub=None):
+        return COMMANDS.accessControl('createSharedKey', token=token, aud=aud, sub=sub)
                 
     def addAction(self, token=None, subject=None, verb='get', obj=None, returnTo=None):
         rv = self._addAction(token, subject, verb, obj)
@@ -147,8 +132,8 @@ class DevicePlugin:
             raise myWebError('400 Illegal name for user')
         if not hostname:
             hostname = name + '.local'
-        self._delSecretKey(aud=hostname)
-        self._delSecretKey(sub=hostname)
+        self._delSecretKey(aud=hostname, token=token)
+        self._delSecretKey(sub=hostname, token=token)
         isDevice = not not DATABASE_ACCESS.get_key('devices/%s' % name, 'application/x-python-object', 'multi', token)
         isSensor = not not DATABASE_ACCESS.get_key('sensors/%s' % name, 'application/x-python-object', 'multi', token)
         if not isDevice and not isSensor:
@@ -160,8 +145,8 @@ class DevicePlugin:
             raise web.seeother(returnTo)
         return ''
         
-    def _delSecretKey(self, aud=None, sub=None):
-        print 'xxxjack should delete secretkey-aud-%s-sub-%s' % (aud, sub)
+    def _delSecretKey(self, token=None, aud=None, sub=None):
+        COMMANDS.accessControl('deleteSharedKey', token=token, aud=aud, sub=sub)
         
 def igorPlugin(pluginName, pluginData):
     return DevicePlugin()

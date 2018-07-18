@@ -31,7 +31,7 @@ class BaseAccessToken:
         if DEBUG: print 'access: %s %s: no access at all allowed by %s' % (operation, accessChecker.destination, self)
         return False
         
-    def _allowsDelegation(self, path, rights):
+    def _allowsDelegation(self, path, rights, aud=None):
         """Internal method - return True if the given path/rights are a subset of this token, and if this token can be delegated"""
         return False
         
@@ -96,9 +96,9 @@ class IgorAccessToken(BaseAccessToken):
         if DEBUG: print 'access: %s %s: allowed by supertoken' % (operation, accessChecker.destination)
         return True
 
-    def _allowsDelegation(self, path, rights):
+    def _allowsDelegation(self, path, rights, aud=None):
         """Internal method - return True, the supertoken is the root of all tokens"""
-        return True
+        return False
 
 class AccessToken(BaseAccessToken):
     """An access token (or set of tokens) that can be carried by a request"""
@@ -197,12 +197,24 @@ class AccessToken(BaseAccessToken):
         if DEBUG: print 'access: %s %s: allowed by AccessToken %s' % (operation, accessChecker.destination, self)
         return True
 
-    def _allowsDelegation(self, newPath, newRights):
+    def _allowsDelegation(self, newPath, newRights, aud=None):
         """Internal method - return True if the given path/rights are a subset of this token, and if this token can be delegated"""
         # Check whether this token can be delegated
-        if not self.content.get('delegate'):
+        canDelegate = self.content.get('delegate')
+        if not canDelegate:
             if DEBUG_DELEGATION: print 'access: delegate %s: no delegation right on AccessToken %s' % (newPath, self)
             return False
+        # Check whether this is the external-supertoken and whether we want to create a new external token
+        print 'xxxjack allowsDelegation', self, 'canDelegate', canDelegate, 'aud', aud
+        if canDelegate == 'external':
+            if aud:
+                # xxxjack no further checks for external tokens. This may need refining.
+                return True
+            else:
+                return False
+        else:
+            if aud:
+                return False
         # Check whether the path is contained in our path
         path = self.content.get('obj')
         if not path:

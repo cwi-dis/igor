@@ -475,7 +475,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             for i in identifiers:
                 print '\t\t%s' % i
             raise myWebError('404 No such token: %s' % tokenId)
-        if not token._allowsDelegation(newPath, newRights):
+        if not token._allowsDelegation(newPath, newRights, content.get('aud')):
             raise myWebError('401 Delegation not allowed')
         #
         # Check the new parent exists

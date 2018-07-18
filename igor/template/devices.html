@@ -1,0 +1,87 @@
+$def with (action=None, device=None, **kwargs)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Users</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+
+	$if action == None or action == 'list':
+		<h1>Igor Devices and Sensors</h1>
+	
+		$if 'user' in SESSION and SESSION.user:
+			<p>
+				You are logged in as $SESSION.user.
+				$if SESSION.user != 'admin':
+					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
+			</p>
+		$else:
+			<p>
+				You are not logged in. This page will probably not render correctly.
+			</p>
+		
+		<h2>Igor Devices</h2>
+		
+		<p>In Igor terms, a <i>device</i> is something that Igor may send commands to. It exports some sort of service (for example
+		using <i>http</i> or <i>https</i>) that Igor can contact. If something is a device as well as a <i>sensor</i> it will be listed
+		amongst the devices here.
+		</p>
+		
+		<table style="width:100%">
+			<tr>
+				<th>Device</th>
+				<th>Device Entry</th>
+				<th>Sensor Entry</th>
+				<th>Status Entry</th>
+				<th>Secret Shared key?</th>
+				<th>Actions</th>
+				<th>OP</th>
+			</tr>
+			$ deviceList = DATABASE.getElements('/data/devices/*', 'get', token) + DATABASE.getElements('/data/sensors/*', 'get', token)
+			$ deviceList = list(set([x.tagName for x in deviceList]))
+			$ deviceList.sort()
+			$for device in deviceList:
+				$if not ':' in device:
+					<tr>
+						<td>${device}</td>
+						<td>...</td>
+						<td>...</td>
+						<td>...</td>
+						<td>...</td>
+						<td>...</td>
+						<td>...</td>
+					</tr>
+		</table>
+		
+		<h1>Add Device</h1>
+		
+		<p>To be provided</p>
+		
+	$elif action == "addAction":
+		<h1>Add action for device</h1>
+		
+		<p>To be provided</p>
+		
+	$elif action == "delete":
+		<h1>Delete Device</h1>
+		
+$#		<p>Are you sure you want to delete user <b>${username}</b>? This action cannot be undone.</p>
+$#		<form action="/plugin/user/delete">
+$#			<input name="returnTo" type="hidden" value="/users.html">
+$#			<input type="hidden" name="username" value="${username}"><br>
+$#			<input type="submit" value="Delete">
+$#		</form>
+		
+		<p><a href="/devices.html">Return to device listing</a></p>
+
+		
+
+</body>
+</html>

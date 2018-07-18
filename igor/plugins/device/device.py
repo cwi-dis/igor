@@ -31,7 +31,9 @@ class DevicePlugin:
 
         if not NAME_RE.match(name):
             raise myWebError('400 Illegal name for device')
-        if type(description) != type({}):
+        if not description:
+            description = {}
+        elif type(description) != type({}):
             description = json.loads(description)
         if type(description) != type({}):
             raise myWebError('400 description must be dictionary or json object')
@@ -41,7 +43,7 @@ class DevicePlugin:
 
         if not hostname:
             raise myWebError('400 hostname must be set')
-                if isDevice:
+        if isDevice:
             databaseEntry = 'devices/%s' % name
         elif isSensor:
             databaseEntry = 'sensors/%s' % name
@@ -57,7 +59,10 @@ class DevicePlugin:
         rv = {}
         
         if isDevice:
-            # xxxx create ssl stuff
+            sslKey, sslCrt = self._genSSL(hostname, key=description.get('sslKey', None))
+            if sslKey:
+                rv['sslKey'] = sslKey
+            rv['sslCertificate'] = sslCrt
             deviceKey = self._genSecretKey(aud=hostname)
             rv['sharedKey'] = deviceKey
             deviceTokenId = COMMANDS.accessControl('newToken',
@@ -89,8 +94,19 @@ class DevicePlugin:
             raise web.seeother(returnTo)
         return json.dumps(rv)
 
+    def _genSSL(self, hostname, key=None):
+        if key:
+            rvKey = None
+        else:
+            rvKey = key = 'newGeneratedKey'
+        rv = 'certificate-for-%s-key-%s' % (hostname, key)
+        print 'xxxjack should generate', rv
+        return rvKey, rv
+        
     def _genSecretKey(self, aud=None, sub=None):
-        assert 0
+        rv = 'secretkey-aud-%s-sub-%s' % (aud, sub)
+        print 'xxxjack should create', rv
+        return rv
                 
     def addAction(self, token=None, subject=None, verb='get', obj='/', returnTo=None):
         rv = self._addAction(token, verb, obj)
@@ -117,21 +133,24 @@ class DevicePlugin:
             )
         return dict(verb=verb, obj=obj, token=newTokenRepresentation)
         
-    def delete(self, token=None, name, hostname, returnTo=None):
+    def delete(self, name, hostname, token=None, returnTo=None):
         self._delSecretKey(aud=hostname)
         self._delSecretKey(sub=hostname)
         if not NAME_RE.match(name):
             raise myWebError('400 Illegal name for user')
-        if not DATABASE_ACCESS.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
-            raise myWebError('404 user %s does not exist' % username)
-        DATABASE_ACCESS.delete_key('people/%s' % username, token)
-        # delete or save all capabilities
-        # xxxjack to be implemented...
-        DATABASE_ACCESS.delete_key('identities/%s' % username, token)
+        isDevice = not not DATABASE_ACCESS.get_key('devices/%s' % name, 'application/x-python-object', 'multi', token)
+        isSensor = not not DATABASE_ACCESS.get_key('sensors/%s' % name, 'application/x-python-object', 'multi', token)
+        if not isDevice and not isSensor:
+            raise myWebError('404 %s does not exist' % name)
+        DATABASE_ACCESS.delete_key('devices/%s' % name, token)
+        DATABASE_ACCESS.delete_key('sensors/%s' % name, token)
         COMMANDS.save(token)
         if returnTo:
             raise web.seeother(returnTo)
         return ''
+        
+    def _delSecretKey(self, aud=None, sub=None):
+        print 'xxxjack should delete secretkey-aud-%s-sub-%s' % (aud, sub)
         
 def igorPlugin(pluginName, pluginData):
     return DevicePlugin()

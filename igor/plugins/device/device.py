@@ -108,8 +108,8 @@ class DevicePlugin:
         print 'xxxjack should create', rv
         return rv
                 
-    def addAction(self, token=None, subject=None, verb='get', obj='/', returnTo=None):
-        rv = self._addAction(token, verb, obj)
+    def addAction(self, token=None, subject=None, verb='get', obj=None, returnTo=None):
+        rv = self._addAction(token, subject, verb, obj)
         if returnTo:
             queryString = urllib.urlencode(rv)
             if '?' in returnTo:
@@ -119,11 +119,20 @@ class DevicePlugin:
             raise web.seeother(returnTo)
         return json.dumps(rv)
 
-    def _addAction(self, token=None, subject=None, verb='get', obj='/'):
+    def _addAction(self, token=None, subject=None, verb='get', obj=None):
+        if not obj:
+            raise myWebError('400 missing obj for action')
+        if obj.startswith('/action/'):
+            parentTokenId = 'admin-action'
+        else:
+            raise myWebError('400 bad action %s' % obj)
+        print 'xxxjack obj', obj
         newTokenId = actionTokenId = COMMANDS.accessControl('newToken',
             token=token,
-            tokenId='root',
+            tokenId=parentTokenId,
             newOwner='identities/admin',
+            newPath=obj,
+            delegate=True,
             **{verb : 'self'}
             )
         newTokenRepresentation = COMMANDS.accessControl('exportToken',
@@ -133,11 +142,13 @@ class DevicePlugin:
             )
         return dict(verb=verb, obj=obj, token=newTokenRepresentation)
         
-    def delete(self, name, hostname, token=None, returnTo=None):
-        self._delSecretKey(aud=hostname)
-        self._delSecretKey(sub=hostname)
+    def delete(self, name, hostname=None, token=None, returnTo=None):
         if not NAME_RE.match(name):
             raise myWebError('400 Illegal name for user')
+        if not hostname:
+            hostname = name + '.local'
+        self._delSecretKey(aud=hostname)
+        self._delSecretKey(sub=hostname)
         isDevice = not not DATABASE_ACCESS.get_key('devices/%s' % name, 'application/x-python-object', 'multi', token)
         isSensor = not not DATABASE_ACCESS.get_key('sensors/%s' % name, 'application/x-python-object', 'multi', token)
         if not isDevice and not isSensor:

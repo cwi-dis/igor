@@ -5,6 +5,7 @@ import base64
 import random
 import time
 import urlparse
+import jwt
 
 from .vars import *
 from .capability import *
@@ -578,10 +579,17 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         newTokenId = self.newToken(token, tokenId, self._getExternalTokenOwner(), **kwargs)
         tokenToExport = token._getTokenWithIdentifier(newTokenId)
-        
+        if not tokenToExport:
+            # The new token is a grandchild of our token, so we may not be able to get it directly.
+            # Try harder.
+            parentToken = token._getTokenWithIdentifier(tokenId)
+            tokenToExport = parentToken._getTokenWithIdentifier(newTokenId)
+        if not tokenToExport:
+            raise myWebError('500 created token %s but it does not exist' % newTokenId)
         #
         # Create the external representation
         #
+        assert tokenToExport
         assert tokenToExport._hasExternalRepresentationFor(self._getSelfAudience())
         externalRepresentation = tokenToExport._getExternalRepresentation()
         #

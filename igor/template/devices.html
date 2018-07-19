@@ -51,9 +51,24 @@ $def with (action=None, device=None, **kwargs)
 				$if not ':' in device:
 					<tr>
 						<td>${device}</td>
-						<td>...</td>
-						<td>...</td>
-						<td>...</td>
+						<td>
+							$ path = 'devices/' + device
+							$if DATABASE.getElements(path, 'get', token):
+								<a href="/data/${path}">${path}</a>
+						</td>
+						<td>
+							$ path = 'sensors/' + device
+							$if DATABASE.getElements(path, 'get', token):
+								<a href="/data/${path}">${path}</a>
+						</td>
+						<td>
+							$ path = 'status/devices' + device
+							$if DATABASE.getElements(path, 'get', token):
+								<a href="/data/${path}">${path}</a><br>
+							$ path = 'status/sensors' + device
+							$if DATABASE.getElements(path, 'get', token):
+								<a href="/data/${path}">${path}</a><br>
+						</td>
 						<td>...</td>
 						<td>...</td>
 						<td>...</td>

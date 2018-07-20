@@ -167,7 +167,7 @@ class DevicePlugin:
             if DATABASE.getElements('sensors/' + name, 'get', token):
                 descr['isSensor'] = True
                 hostname = None
-                representing = 'services/' + name
+                representing = 'sensors/' + name
             if hostname:
                 descr['hostname'] = hostname
                 

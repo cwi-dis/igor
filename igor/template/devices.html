@@ -1,4 +1,49 @@
 $def with (action=None, device=None, **kwargs)
+$code:
+    def doList(token):
+        allNames = _getNames('devices/*', token) + _getNames('sensors/*', token) + _getNames('status/sensors/*', token) + _getNames('status/devices/*', token)
+        allNames = list(set(allNames))
+        allNames.sort()
+        rv = []
+        for name in allNames:
+            descr = dict(name=name)
+            hostname = None
+            representing = None
+            if DATABASE.getElements('devices/' + name, 'get', token):
+                descr['isDevice'] = True
+                hostname = DATABASE.getValue('devices/%s/hostname' % name, token)
+                representing = 'devices/' + name
+            if DATABASE.getElements('sensors/' + name, 'get', token):
+                descr['isSensor'] = True
+                hostname = None
+                representing = 'sensors/' + name
+            if hostname:
+                descr['hostname'] = hostname
+                
+            if DATABASE.getElements('status/devices/' + name, 'get', token):
+                descr['status'] = '/data/status/devices/' + name
+            elif DATABASE.getElements('status/sensors/' + name, 'get', token):
+                descr['status'] = '/data/status/sensors/' + name
+            
+            if representing:
+                actionElements = DATABASE.getElements("actions/action[representing='%s']" % representing, 'get', token)
+                actionPaths = []
+                for e in actionElements:
+                    actionPaths.append(DATABASE.getXPathForElement(e))
+                if actionPaths:
+                    descr['actions'] = actionPaths
+            rv.append(descr)
+        return rv
+
+    def _getNames(path, token):
+        allElements = DATABASE.getElements(path, 'get', token)
+        rv = []
+        for e in allElements:
+            name = e.tagName
+            if ':' in name: continue
+            rv.append(name)
+        return rv
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,43 +81,48 @@ $def with (action=None, device=None, **kwargs)
 		
 		<table style="width:100%">
 			<tr>
-				<th>Device</th>
-				<th>Device Entry</th>
-				<th>Sensor Entry</th>
+				<th>Name</th>
+				<th>Device?</th>
+				<th>Sensor?</th>
+				<th>Hostname</th>
+				<th>Entry</th>
 				<th>Status Entry</th>
 				<th>Secret Shared key?</th>
 				<th>Actions</th>
 				<th>OP</th>
 			</tr>
-			$ deviceList = DATABASE.getElements('/data/devices/*', 'get', token) + DATABASE.getElements('/data/sensors/*', 'get', token)
-			$ deviceList = list(set([x.tagName for x in deviceList]))
-			$ deviceList.sort()
+			$ deviceList = doList(token)
 			$for device in deviceList:
-				$if not ':' in device:
-					<tr>
-						<td>${device}</td>
-						<td>
-							$ path = 'devices/' + device
-							$if DATABASE.getElements(path, 'get', token):
-								<a href="/data/${path}">${path}</a>
-						</td>
-						<td>
-							$ path = 'sensors/' + device
-							$if DATABASE.getElements(path, 'get', token):
-								<a href="/data/${path}">${path}</a>
-						</td>
-						<td>
-							$ path = 'status/devices' + device
-							$if DATABASE.getElements(path, 'get', token):
-								<a href="/data/${path}">${path}</a><br>
-							$ path = 'status/sensors' + device
-							$if DATABASE.getElements(path, 'get', token):
-								<a href="/data/${path}">${path}</a><br>
-						</td>
-						<td>...</td>
-						<td>...</td>
-						<td>...</td>
-					</tr>
+				$ name=device.get('name')
+				<tr>
+					<td>${name}</td>
+					<td>${device.get('hostname')}
+					<td>
+						$if device.get('isDevice'):
+							Yes
+					</td>
+					<td>
+						$if device.get('isSensor'):
+							Yes
+					</td>
+					<td>
+						$if device.get('isDevice'):
+							<a href="/data/devices/${name}">devices/${name}</a>
+						$elif device.get('isSensor'):
+							<a href="/data/sensors/${name}">sensors/${name}</a>
+					</td>
+					<td>
+						$ statusEntry = device.get('status')
+						$if statusEntry:
+							<a href="${statusEntry}">${statusEntry}</a>
+					</td>
+					<td>...</td>
+					<td>
+						$for action in device.get('actions', []):
+							<a href=${action}>${action}</a><br>
+					</td>
+					<td>...</td>
+				</tr>
 		</table>
 		
 		<h1>Add Device</h1>

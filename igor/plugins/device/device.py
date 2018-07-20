@@ -140,6 +140,8 @@ class DevicePlugin:
             raise myWebError('404 %s does not exist' % name)
         DATABASE_ACCESS.delete_key('devices/%s' % name, token)
         DATABASE_ACCESS.delete_key('sensors/%s' % name, token)
+        DATABASE_ACCESS.delete_key('status/devices/%s' % name, token)
+        DATABASE_ACCESS.delete_key('status/sensors/%s' % name, token)
         COMMANDS.save(token)
         if returnTo:
             raise web.seeother(returnTo)
@@ -147,6 +149,51 @@ class DevicePlugin:
         
     def _delSecretKey(self, token=None, aud=None, sub=None):
         COMMANDS.accessControl('deleteSharedKey', token=token, aud=aud, sub=sub)
+        
+    def list(self, token=None):
+        allNames = self._getNames('devices/*', token) + self._getNames('sensors/*', token) + self._getNames('status/sensors/*', token) + self._getNames('status/devices/*', token)
+        allNames = list(set(allNames))
+        allNames.sort()
+        print 'xxxjack allnames', allNames
+        rv = []
+        for name in allNames:
+            descr = dict(name=name)
+            hostname = None
+            representing = None
+            if DATABASE.getElements('devices/' + name, 'get', token):
+                descr['isDevice'] = True
+                hostname = DATABASE.getValue('devices/%s/hostname' % name, token)
+                representing = 'devices/' + name
+            if DATABASE.getElements('sensors/' + name, 'get', token):
+                descr['isSensor'] = True
+                hostname = None
+                representing = 'services/' + name
+            if hostname:
+                descr['hostname'] = hostname
+                
+            if DATABASE.getElements('status/devices/' + name, 'get', token):
+                descr['status'] = '/data/status/devices/' + name
+            elif DATABASE.getElements('status/sensors/' + name, 'get', token):
+                descr['status'] = '/data/status/sensors/' + name
+            
+            if representing:
+                actionElements = DATABASE.getElements('actions/action[representing="%s"]' % representing, 'get', token)
+                actionPaths = []
+                for e in actionElements:
+                    actionPaths.append(DATABASE.getXPathForElement(e))
+                if actionPaths:
+                    descr['actions'] = actionPaths
+            rv.append(descr)
+        return json.dumps(rv)
+            
+    def _getNames(self, path, token):
+        allElements = DATABASE.getElements(path, 'get', token)
+        rv = []
+        for e in allElements:
+            name = e.tagName
+            if ':' in name: continue
+            rv.append(name)
+        return rv
         
 def igorPlugin(pluginName, pluginData):
     return DevicePlugin()

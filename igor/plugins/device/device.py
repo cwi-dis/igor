@@ -136,8 +136,6 @@ class DevicePlugin:
         self._delSecretKey(sub=hostname, token=token)
         isDevice = not not DATABASE_ACCESS.get_key('devices/%s' % name, 'application/x-python-object', 'multi', token)
         isSensor = not not DATABASE_ACCESS.get_key('sensors/%s' % name, 'application/x-python-object', 'multi', token)
-        if not isDevice and not isSensor:
-            raise myWebError('404 %s does not exist' % name)
         DATABASE_ACCESS.delete_key('devices/%s' % name, token)
         DATABASE_ACCESS.delete_key('sensors/%s' % name, token)
         DATABASE_ACCESS.delete_key('status/devices/%s' % name, token)

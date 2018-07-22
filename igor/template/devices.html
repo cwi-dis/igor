@@ -32,6 +32,7 @@ $code:
                     actionPaths.append(DATABASE.getXPathForElement(e))
                 if actionPaths:
                     descr['actions'] = actionPaths
+                descr['representing'] = representing
             rv.append(descr)
         return rv
 
@@ -48,7 +49,7 @@ $code:
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title>Igor Users</title>
+	<title>Igor Devices and Sensors</title>
 	<style>
 	table, th, td {
 		border: 1px solid black;
@@ -82,21 +83,28 @@ $code:
 		<table style="width:100%">
 			<tr>
 				<th>Name</th>
+				<th>Hostname</th>
 				<th>Device?</th>
 				<th>Sensor?</th>
-				<th>Hostname</th>
 				<th>Entry</th>
 				<th>Status Entry</th>
 				<th>Secret Shared key?</th>
 				<th>Actions</th>
 				<th>OP</th>
 			</tr>
+			$ allKeys = COMMANDS.accessControl(subcommand='getKeyList', token=token)
+			$ allKeysAsTuples = [(k.get('iss', ''), k.get('aud', ''), k.get('sub', '')) for k in allKeys]
+			$ allKeysAsTuples.sort()
+			$ allKeyAudiences = set([k.get('aud') for k in allKeys])
 			$ deviceList = doList(token)
 			$for device in deviceList:
 				$ name=device.get('name')
+				$ defaultHostname = ('(%s.local)' % name) if device.get('isDevice') else ''
+				$ hostName = device.get('hostname', defaultHostname)
+				$ hasSecretKey = hostName in allKeyAudiences or ('http://%s' % hostName) in allKeyAudiences or ('https://%s' % hostName) in allKeyAudiences
 				<tr>
 					<td>${name}</td>
-					<td>${device.get('hostname')}
+					<td>${hostName}</td>
 					<td>
 						$if device.get('isDevice'):
 							Yes
@@ -116,33 +124,108 @@ $code:
 						$if statusEntry:
 							<a href="${statusEntry}">${statusEntry}</a>
 					</td>
-					<td>...</td>
+					<td>
+						$if hasSecretKey:
+							Yes
+					</td>
 					<td>
 						$for action in device.get('actions', []):
 							<a href=${action}>${action}</a><br>
 					</td>
-					<td>...</td>
+					<td>
+						$if device.get('isDevice') and not hasSecretKey:
+							<form action="/devices.html">
+							<input type="hidden" name="action" value="addKey">
+							<input type="hidden" name="hostName" value="${hostName}">
+							<input type="submit" value="Create Key">
+							</form><br>
+						$if device.get('isSensor'):
+							<form action="/devices.html">
+								<input type="hidden" name="action" value="addAction">
+								<input type="hidden" name="name" value="${name}">
+								<input type="hidden" name="hostname" value="${hostName}">
+								<input type="hidden" name="representing" value="${device.get('representing')}">
+								<input type="submit" value="Add Action">
+							</form><br>
+						<form action="/devices.html">
+							<input type="hidden" name="action" value="deleteDevice">
+							<input type="hidden" name="name" value="${name}">
+							<input type="hidden" name="hostname" value="${hostName}">
+							<input type="submit" value="Delete Device">
+						</form><br>
+					</td>
 				</tr>
 		</table>
 		
-		<h1>Add Device</h1>
+		<h2>Add Device</h2>
 		
 		<p>To be provided</p>
+		
+		<h2>Secret Shared Keys</h2>
+		
+		<p>A device that wants to contact Igor needs a shared secret key with itself (the device) as <i>subject</i> and Igor as the <i>audience</i>. This key is used by the device to sign the capability, and ensures to igor that the device is the right one.</p>
+		
+		<p>A device to which Igor needs to send requests needs a shared key with the device as <i>audience</i> and either no <i>subject</i> or Igor itself as
+		the subject. Igor will sign capabilities with this key, and the device can confirm that the request actually comes from Igor.</p>
+		
+		<p>Igor has the following shared secret keys:</p>
+		<table style="width:100%">
+			<tr>
+				<th>Issuer</th>
+				<th>Audience</th>
+				<th>Subject</th>
+				<th>OP</th>
+			</tr>
+			$for iss, aud, sub in allKeysAsTuples:
+				<tr>
+					<td>${iss}</td>
+					<td>${aud}</td>
+					<td>${sub}</td>
+					<td>
+						<form action="/devices.html">
+						<input type="hidden" name="action" value="deleteKey">
+						<input type="hidden" name="iss" value="${iss}">
+						<input type="hidden" name="aud" value="${aud}">
+						<input type="hidden" name="sub" value="${sub}">
+						<input type="submit" value="Delete Key">
+						</form>
+					</td>
+				</tr>
+			
+		</table>
 		
 	$elif action == "addAction":
 		<h1>Add action for device</h1>
 		
 		<p>To be provided</p>
 		
-	$elif action == "delete":
+	$elif action == "deleteKey":
+		<h1>Delete Secret Shared Key</h1>
+		
+		<p>
+		Are you sure you want to delete the secret key that allows subject <em>"${kwargs['sub']}"</em> to contact audience <em>"${kwargs['aud']}"</em> signed by
+		issuer <em>"${kwargs['iss']}"</em>? This action cannot be undone.
+		</p>
+		
+		<form action="/internal/accessControl/deleteSharedKey">
+			<input type="hidden" name="iss" value="${kwargs['iss']}">
+			<input type="hidden" name="aud" value="${kwargs['aud']}">
+			<input type="hidden" name="sub" value="${kwargs['sub']}">
+			<input type="hidden" name="returnTo" value="/devices.html">
+			<input type="submit" value="Delete Secret Shared Key">
+		</form>
+		
+		<p><a href="/devices.html">Return to device listing</a>.</p>
+	$elif action == "deleteDevice":
 		<h1>Delete Device</h1>
 		
-$#		<p>Are you sure you want to delete user <b>${username}</b>? This action cannot be undone.</p>
-$#		<form action="/plugin/user/delete">
-$#			<input name="returnTo" type="hidden" value="/users.html">
-$#			<input type="hidden" name="username" value="${username}"><br>
-$#			<input type="submit" value="Delete">
-$#		</form>
+		<p>Are you sure you want to delete device <em>${kwargs['name']}</em> completely? This action cannot be undone.</p>
+		<form action="/plugin/device/delete">
+			<input name="returnTo" type="hidden" value="/devices.html">
+			<input type="hidden" name="name" value="${kwargs['name']}"><br>
+			<input type="hidden" name="hostname" value="${kwargs['hostname']}"><br>
+			<input type="submit" value="Delete Device">
+		</form>
 		
 		<p><a href="/devices.html">Return to device listing</a></p>
 

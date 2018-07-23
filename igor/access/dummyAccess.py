@@ -50,31 +50,31 @@ class RevokeList:
     
 class IssuerInterface:
 
-    def getSelfAudience(self):
+    def getSelfAudience(self, token=None):
         """Return an audience identifier that refers to us"""
         return '/data'
 
-    def getSelfIssuer(self):
+    def getSelfIssuer(self, token=None):
         """Return URL for ourselves as an issuer"""
         return '/issuer'
 
-    def getSubjectList(self):
+    def getSubjectList(self, token=None):
         """Return list of subjects that trust this issuer"""
         return []
 
-    def getAudienceList(self):
+    def getAudienceList(self, token=None):
         """Return list of audiences that trust this issuer"""
         return []
         
-    def getKeyList(self):
+    def getKeyList(self, token=None):
         """Return list of tuples with (iss, sub, aud) for every key"""
         return []
                 
-    def createSharedKey(self, sub=None, aud=None):
+    def createSharedKey(self, sub=None, aud=None, token=None):
         """Create a secret key that is shared between issues and audience"""
         raise myWebError("400 This Igor does not have shared key support")
         
-    def deleteSharedKey(self, sub=None, aud=None):
+    def deleteSharedKey(self, sub=None, aud=None, token=None):
         """Delete a shared key"""
         raise myWebError("400 This Igor does not have shared key support")
 

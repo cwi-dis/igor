@@ -15,6 +15,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 
 	$if action == None or action == 'list':
 		<h1>Igor Capabilities</h1>
+
+		$if not COMMANDS.accessControl('hasCapabilitySupport'):
+			<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
 	
 		$if 'user' in SESSION and SESSION.user:
 			<p>

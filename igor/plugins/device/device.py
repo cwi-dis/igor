@@ -18,18 +18,12 @@ def myWebError(msg):
 
 class DevicePlugin:
     def __init__(self):
-        pass
+        self.hasCapabilities = COMMANDS.accessControl('hasCapabilitySupport')
     
     def index(self, token=None):
         raise web.notfound()
     
     def add(self, token=None, name=None, description=None, returnTo=None, **kwargs):
-        if True:
-                identifiers = token._getIdentifiers()
-                print '\tdevice: add: Tokens:'
-                for i in identifiers:
-                    print '\t\t%s' % i
-
         if not NAME_RE.match(name):
             raise myWebError('400 Illegal name for device')
         if not description:
@@ -66,7 +60,7 @@ class DevicePlugin:
 
         rv = dict(name=name, isDevice=isDevice, isSensor=isSensor, hostname=hostname)
         
-        if isDevice:
+        if isDevice and self.hasCapabilities:
             deviceKey = self._genSecretKey(aud=hostname, token=token)
             rv['audSharedKeyId'] = deviceKey
             deviceTokenId = COMMANDS.accessControl('newToken',
@@ -82,7 +76,7 @@ class DevicePlugin:
                 aud=hostname
                 )
             rv['deviceTokenId'] = deviceTokenId
-        if isSensor:
+        if isSensor and self.hasCapabilities:
             deviceKey = self._genSecretKey(sub=hostname, token=token)
             rv['subSharedKeyId'] = deviceKey
             actions = description.get('actions', {})
@@ -116,6 +110,8 @@ class DevicePlugin:
         return json.dumps(rv)
 
     def _addAction(self, token=None, subject=None, verb='get', obj=None):
+        if not self.hasCapabilities:
+            return{}
         if not obj:
             raise myWebError('400 missing obj for action')
         if obj.startswith('/action/'):
@@ -143,8 +139,9 @@ class DevicePlugin:
             raise myWebError('400 Illegal name for user')
         if not hostname:
             hostname = name + '.local'
-        self._delSecretKey(aud=hostname, token=token)
-        self._delSecretKey(sub=hostname, token=token)
+        if self.hasCapabilities:
+            self._delSecretKey(aud=hostname, token=token)
+            self._delSecretKey(sub=hostname, token=token)
         isDevice = not not DATABASE_ACCESS.get_key('devices/%s' % name, 'application/x-python-object', 'multi', token)
         isSensor = not not DATABASE_ACCESS.get_key('sensors/%s' % name, 'application/x-python-object', 'multi', token)
         DATABASE_ACCESS.delete_key('devices/%s' % name, token)
@@ -163,7 +160,6 @@ class DevicePlugin:
         allNames = self._getNames('devices/*', token) + self._getNames('sensors/*', token) + self._getNames('status/sensors/*', token) + self._getNames('status/devices/*', token)
         allNames = list(set(allNames))
         allNames.sort()
-        print 'xxxjack allnames', allNames
         rv = []
         for name in allNames:
             descr = dict(name=name)

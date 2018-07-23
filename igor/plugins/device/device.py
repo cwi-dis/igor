@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import json
+import urllib
 
 NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
@@ -22,7 +23,7 @@ class DevicePlugin:
     def index(self, token=None):
         raise web.notfound()
     
-    def add(self, token=None, name=None, description=None, returnTo=None):
+    def add(self, token=None, name=None, description=None, returnTo=None, **kwargs):
         if True:
                 identifiers = token._getIdentifiers()
                 print '\tdevice: add: Tokens:'
@@ -32,14 +33,16 @@ class DevicePlugin:
         if not NAME_RE.match(name):
             raise myWebError('400 Illegal name for device')
         if not description:
-            description = {}
+            description = kwargs
         elif type(description) != type({}):
             description = json.loads(description)
         if type(description) != type({}):
             raise myWebError('400 description must be dictionary or json object')
         isDevice = description.get('isDevice', False)
         isSensor = description.get('isSensor', False)
-        hostname = description.get('hostname', name + '.local')
+        hostname = description.get('hostname')
+        if not hostname:
+            hostname = name + '.local'
 
         if not hostname:
             raise myWebError('400 hostname must be set')
@@ -54,7 +57,12 @@ class DevicePlugin:
             raise myWebError('400 %s already exists' % name)
             
         # Create item
-        DATABASE_ACCESS.put_key(databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
+        entryValues = {}
+        if hostname != name + ".local":
+            entryValues['hostname'] = hostname
+        DATABASE_ACCESS.put_key(databaseEntry, 'text/plain', 'ref', entryValues, 'application/x-python-object', token, replace=True)
+        # Create status item
+        DATABASE_ACCESS.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
 
         rv = {}
         

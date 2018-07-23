@@ -125,7 +125,7 @@ class AccessToken(BaseAccessToken):
         #
         if 'aud' in content:
             audience = content['aud']
-            ourUrl = singleton._getSelfAudience()
+            ourUrl = singleton.getSelfAudience()
             self.validForSelf = (audience == ourUrl)
             if DEBUG: print 'access: <aud> matches: %s' % self.validForSelf
         else:
@@ -206,13 +206,13 @@ class AccessToken(BaseAccessToken):
         # Check whether this is the external-supertoken and whether we want to create a new external token
         print 'xxxjack allowsDelegation', self, 'canDelegate', canDelegate, 'aud', aud
         if canDelegate == 'external':
-            if aud and aud != singleton._getSelfAudience():
+            if aud and aud != singleton.getSelfAudience():
                 # xxxjack no further checks for external tokens. This may need refining.
                 return True
             else:
                 return False
         else:
-            if aud and aud != singleton._getSelfAudience():
+            if aud and aud != singleton.getSelfAudience():
                 return False
         # Check whether the path is contained in our path
         path = self.content.get('obj')

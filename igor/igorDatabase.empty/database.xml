@@ -44,6 +44,8 @@
 				<child>action-pluginscript</child>
 				<child>action-action</child>
 			    <child>external</child>
+			    <child>action-internal</child>
+			    <child>action-environment</child>
 			</au:capability>
 			<au:capability>
 				<obj>/data</obj>
@@ -152,16 +154,6 @@
 			<data>{count(/data/people/*[home='true'])}</data>
 			<notBefore/>
 		</action>
-		<action>
-			<name>updateIgor</name>
-			<interval>60</interval>
-			<url>/data/services/igor/ticker</url>
-			<representing>igor/core</representing>
-			<method>PUT</method>
-			<mimetype>text/plain</mimetype>
-			<data>{number(/data/services/igor/ticker)+1}</data>
-			<notBefore/>
-		</action>
 		<au:capability>
 			<get>descendant</get>
 			<obj>/plugin</obj>
@@ -180,7 +172,22 @@
 			<parent>root</parent>
 			<cid>action-action</cid>
 		</au:capability>
-	</actions>
+        <au:capability>
+            <get>descendant</get>
+            <obj>/internal</obj>
+            <parent>root</parent>
+            <cid>action-internal</cid>
+        </au:capability>
+        <au:capability>
+            <obj>/data/environment</obj>
+            <parent>root</parent>
+            <get>descendant</get>
+            <cid>action-environment</cid>
+            <put>descendant</put>
+            <post>descendant</post>
+            <delete>descendant</delete>
+        </au:capability>
+    </actions>
 	<sandbox>
 	</sandbox>
 	<plugindata>

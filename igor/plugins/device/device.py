@@ -78,6 +78,7 @@ class DevicePlugin:
                 put='descendant-or-self',
                 post='descendant',
                 delete='descendant',
+                delegate=True,
                 aud=hostname
                 )
             rv['deviceTokenId'] = deviceTokenId

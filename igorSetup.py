@@ -306,10 +306,10 @@ def installplugin(database, src, pluginname, cpfunc):
     dst = os.path.join(database, 'plugins', pluginname)
     if os.path.exists(dst):
         print >>sys.stderr, "%s: already exists: %s" % (sys.argv[0], dst)
-        return
+        return []
     if not os.path.exists(src):
         print >>sys.stderr, "%s: does not exist: %s" % (sys.argv[0], src)
-        return
+        return []
     cpfunc(src, dst)
     xmlfrag = os.path.join(dst, 'database-fragment.xml')
     if os.path.exists(xmlfrag):

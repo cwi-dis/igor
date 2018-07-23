@@ -11,6 +11,7 @@ import datetime
 import dateutil.parser
 
 TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
+TAG_PATTERN_WITH_NS = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9:]*$')
 ILLEGAL_XML_CHARACTERS_PATTERN = re.compile(u'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf\ufffe-\uffff]')
 
 #NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
@@ -313,6 +314,8 @@ class DBImpl(DBSerializer):
         newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
         docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
         docToSave.writexml(open(newFilename + '~', 'w'))
+        if os.path.exists(newFilename):
+            os.unlink(newFilename)
         os.link(newFilename + '~', newFilename)
         os.rename(newFilename + '~', self.filename)
         # Remove outdated saves
@@ -386,7 +389,7 @@ class DBImpl(DBSerializer):
             self._checkAccess('get', self._doc.documentElement, token)
             return self._doc.documentElement
         
-    def splitXPath(self, location):
+    def splitXPath(self, location, allowNamespaces=False):
         lastSlashPos = location.rfind('/')
         if lastSlashPos == 0:
             parent = '.'
@@ -398,8 +401,12 @@ class DBImpl(DBSerializer):
             parent = '.'
             child = location
         # Test that child is indeed a tag name
-        if not TAG_PATTERN.match(child):
-            return None, None
+        if allowNamespaces:
+            if not TAG_PATTERN_WITH_NS.match(child):
+                return None, None
+        else:
+            if not TAG_PATTERN.match(child):
+                return None, None
         return parent, child
 
     def getXPathForElement(self, node):
@@ -425,14 +432,57 @@ class DBImpl(DBSerializer):
             index = ''
         return self.getXPathForElement(node.parentNode) + "/" + node.tagName + index
 
-    def tagAndDictFromElement(self, element):
+    def xmlFromElement(self, element, stripHidden=False):
+        """Return XML representation, possibly after stripping namespaced elements and attributes"""
+        if not stripHidden:
+            return element.toxml()
+        if element.namespaceURI:
+            return ''
+            
+        def _hasNS(e):
+            """Helper method to check whether anything is namespaced in the subtree"""
+            if e.namespaceURI:
+                return True
+            c = e.firstChild
+            while c:
+                if c.namespaceURI:
+                    return True
+                if _hasNS(c):
+                    return True
+                c = c.nextSibling
+        if not _hasNS(element):
+            return element.toxml()
+
+        copied = element.cloneNode(True)
+        def _stripNS(e):
+            """Helper method to strip all namespaced items from a subtree"""
+            assert not e.namespaceURI
+            toRemove = []
+            for c in e.childNodes:
+                if c.namespaceURI:
+                    toRemove.append(c)
+            for c in toRemove:
+                e.removeChild(c)
+            for c in e.childNodes:
+                _stripNS(c)
+        _stripNS(copied)
+        rv = copied.toxml()
+        copied.unlink()
+        return rv
+        
+    def tagAndDictFromElement(self, element, stripHidden=False):
+        if stripHidden and element.namespaceURI:
+            return '', {}
         t = self._getElementTagWithEscaping(element)
         v = {}
         texts = []
         child = element.firstChild
         while child:
+            if stripHidden and child.namespaceURI:
+                child = child.nextSibling
+                continue
             if child.nodeType == child.ELEMENT_NODE:
-                newt, newv = self.tagAndDictFromElement(child)
+                newt, newv = self.tagAndDictFromElement(child, stripHidden)
                 # If the element already exists we turn it into a list (if not done before)
                 if newt in v:
                     if type(v[newt]) != type([]):
@@ -511,10 +561,12 @@ class DBImpl(DBSerializer):
             raise DBParamError('Not valid xml: %s' % xmltext)
         return newdoc.firstChild
                 
-    def delValues(self, location, token, namespaces=NAMESPACES):
+    def delValues(self, location, token, context=None, namespaces=NAMESPACES):
         """Remove a (possibly empty) set of nodes from the document"""
         with self:
-            nodeList = xpath.find(location, self._doc.documentElement, namespaces=namespaces)
+            if context == None:
+                context = self._doc.documentElement
+            nodeList = xpath.find(location, context, namespaces=namespaces)
             for n in nodeList:
                 self._checkAccess('delete', n, token)
             parentList = []

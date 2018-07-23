@@ -92,7 +92,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=["igor"],
+    packages=["igor", "igor.access"],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -129,7 +129,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'igorServer=igor.__main__',
+            'igorServer=igor.__main__:main',
             'igorVar=igorVar:main',
             'igorControl=igorControl:main',
             'igorSetup=igorSetup:main',

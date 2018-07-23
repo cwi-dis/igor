@@ -63,7 +63,11 @@ class CAInterface:
     def ca_list(self):
         """Return list of all signatures signed"""
         indexFile = os.path.join(self.caDatabase, 'intermediate', 'index.txt')
-        return open(indexFile).read()
+        try:
+            rv = open(indexFile).read()
+        except IOError:
+            rv = ''
+        return rv            
 
     def ca_signCSR(self, csr):
         #

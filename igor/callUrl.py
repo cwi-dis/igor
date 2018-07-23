@@ -59,7 +59,7 @@ class URLCallRunner(threading.Thread):
                         resultData = resultStatus
                 else:
                     # Remote.
-                    token.addToHeaders(headers)
+                    token.addToHeadersFor(headers, url)
                     if headers == {}: headers = None
                     r = requests.request(method, url, data=data, headers=headers)
                     resultStatus = str(r.status_code)

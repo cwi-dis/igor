@@ -177,13 +177,17 @@ class Action:
             assert expression[0] == '{'
             assert expression[-1] == '}'
             expression = expression[1:-1]
-            replacement = self.hoster.database.getValue(expression, token=self.token, context=node)
-            if replacement is None: replacement = ''
-            if type(replacement) == type(True):
-                replacement = 'true' if replacement else ''
-            replacement = str(replacement)
-            if urlencode:
-                replacement = urllib.quote_plus(replacement)
+            if expression[0] == '{':
+                # Escaped { and }. Unfortunately both must be escaped...
+                replacement = expression
+            else:
+                replacement = self.hoster.database.getValue(expression, token=self.token, context=node)
+                if replacement is None: replacement = ''
+                if type(replacement) == type(True):
+                    replacement = 'true' if replacement else ''
+                replacement = str(replacement)
+                if urlencode:
+                    replacement = urllib.quote_plus(replacement)
             newtext = newtext + text[:match.start()] + replacement
             text = text[match.end():]
         return newtext

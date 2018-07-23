@@ -1,5 +1,6 @@
 # Access control
 import web
+from .consistency import StructuralConsistency
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
@@ -30,10 +31,8 @@ class AccessChecker:
         
 _checker = AccessChecker()
 
-class Access:
-    def __init__(self):
-        pass
-        
+class OTPHandler:
+
     def produceOTPForToken(self, token):
         """Produce a one-time-password form of this token, for use internally or for passing to a plugin script (to be used once)"""
         return ":"
@@ -42,13 +41,73 @@ class Access:
         """Invalidate an OTP, if it still exists. Used when a plugin script exits, in case it has not used its OTP"""
         pass
             
+    
+class TokenStorage:
+    pass
+    
+class RevokeList:
+    pass
+    
+class IssuerInterface:
+
+    def getSelfAudience(self):
+        """Return an audience identifier that refers to us"""
+        return '/data'
+
+    def getSelfIssuer(self):
+        """Return URL for ourselves as an issuer"""
+        return '/issuer'
+
+    def getSubjectList(self):
+        """Return list of subjects that trust this issuer"""
+        return []
+
+    def getAudienceList(self):
+        """Return list of audiences that trust this issuer"""
+        return []
+        
+    def getKeyList(self):
+        """Return list of tuples with (iss, sub, aud) for every key"""
+        return []
+                
+    def createSharedKey(self, sub=None, aud=None):
+        """Create a secret key that is shared between issues and audience"""
+        raise myWebError("400 This Igor does not have shared key support")
+        
+    def deleteSharedKey(self, sub=None, aud=None):
+        """Delete a shared key"""
+        raise myWebError("400 This Igor does not have shared key support")
+
+class UserPasswords:
+        
+    def userAndPasswordCorrect(self, username, password):
+        """Return True if username/password combination is valid"""
+        return True
+        
+    def setUserPassword(self, username, password, token):
+        """Change the password for the user"""
+        pass
+    
+
+class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
+    def __init__(self):
+        self.database = None
+        self.COMMAND = None
+        
+    def hasCapabilitySupport(self):
+        return False
+        
     def setDatabase(self, database):
         """Temporary helper method - Informs the access checker where it can find the database object"""
-        pass
+        self.database = database
         
     def setSession(self, session):
         """Temporary helper method - Informs the access checker where sessions are stored"""
         pass
+
+    def setCommand(self, command):
+        """Temporary helper method - Set command processor so access can save the database"""
+        self.COMMAND = command
         
     def checkerForElement(self, element):
         """Returns an AccessChecker for an XML element"""
@@ -58,13 +117,12 @@ class Access:
         """Returns an AccessChecker for an external entrypoint that is not a tree element"""
         return _checker
         
-    def tokenForAction(self, element):
+    def tokenForAction(self, element, token=None):
         """Return token(s) for an <action> element"""
         return _token
         
-    def tokenForPlugin(self, pluginname):
+    def tokenForPlugin(self, pluginname, token=None):
         """Return token(s) for a plugin with the given pluginname"""
-        # xxxjack not yet implemented
         return _token
 
     def tokenForIgor(self):
@@ -94,19 +152,29 @@ class Access:
     def exportToken(self, token, tokenId, subject=None, lifetime=None, **kwargs):
         """Create an external representation of this token, destined for the given subject"""
         raise myWebError("400 This Igor does not have token support")
-        
-    def getSubjectList(self):
-        """Return list of subjects that trust this issuer"""
-        return []
 
-    def getAudienceList(self):
-        """Return list of audiences that trust this issuer"""
-        return []
+    def externalRepresentation(self, token, tokenId):
+        raise myWebError("400 This Igor does not have token support")
 
-    def userAndPasswordCorrect(self, username, password):
-        """Return True if username/password combination is valid"""
-        return True
+    def consistency(self, token=None, fix=False, restart=False):
+        if fix:
+            self.COMMAND.save(token)
+        checker = StructuralConsistency(self.database, fix, None, _token)
+        nChanges, nErrors, rv = checker.check()
+        if nChanges:
+            self.COMMAND.save(token)
+            if restart:
+                rv += '\nRestarting Igor'
+                self.COMMAND.queue('restart', _token)
+            else:
+                rv += '\nRestart Igor to update capability data structures'
+        return rv
 #
 # Create a singleton Access object
 #   
-singleton = Access()
+singleton = None
+
+def createSingleton(noCapabilities=False):
+    global singleton
+    if singleton: return
+    singleton = Access()

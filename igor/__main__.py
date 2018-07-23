@@ -58,6 +58,7 @@ class IgorServer:
         #
         # Create the database, and tell the web application about it
         #
+        self.advertise = advertise
         self.profile = None
         if profile:
             enable_thread_profiling()
@@ -99,8 +100,10 @@ class IgorServer:
         #
         # Create the access control handler
         #
+        access.createSingleton() # Has probably been done in main() already
         self.access = access.singleton
         self.access.setSession(self.session)
+        self.access.setCommand(self)
         #
         # Create and start the asynchronous URL accessor
         #
@@ -115,10 +118,12 @@ class IgorServer:
         # Startup other components
         #
         self.actionHandler = None
-        self.updateActions()
         self.eventSources = None
-        self.updateEventSources()
         self.triggerHandler = None
+        
+    def preRun(self):
+        self.updateActions()
+        self.updateEventSources()
         self.updateTriggers()
         #
         # Disable debug
@@ -128,10 +133,10 @@ class IgorServer:
         # Send start action to start any plugins
         #
         self.urlCaller.callURL(dict(method='GET', url='/action/start', token=self.access.tokenForIgor()))
-        if advertise:
-            self.advertise(port)
+        if self.advertise:
+            self.startAdvertising(port)
             
-    def advertise(self, port):
+    def startAdvertising(self, port):
         if sys.platform == 'darwin':
             cmd = ['dns-sd', '-R', 'igor', '_http._tcp', 'local', str(port)]
         elif sys.platform == 'linux2':
@@ -171,6 +176,10 @@ class IgorServer:
             CherryPyWSGIServer.ssl_certificate = self.certificateFile
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         self.app.run(port=self.port)
+        
+    def check(self, fix=False):
+        rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
+        print rv
         
     def dump(self, token=None):
         # xxxjack ignoring token for now
@@ -234,13 +243,16 @@ class IgorServer:
             _ = dbAccess.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
         return ''
         
-    def accessControl(self, subcommand=None, **kwargs):
+    def accessControl(self, subcommand=None, returnTo=None, **kwargs):
         if not subcommand:
             raise web.notfound()
         method = getattr(self.access, subcommand, None)
-        if not subcommand:
+        if not method:
             raise web.notfound()
-        return method(**kwargs)
+        rv = method(**kwargs)
+        if returnTo and not rv:
+            raise web.seeother(returnTo)
+        return rv
         
     def updateActions(self):
         """Create any (periodic) event handlers defined in the database"""
@@ -375,17 +387,22 @@ def main():
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
     parser.add_argument("-s", "--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
+    parser.add_argument("--noCapabilities", action="store_true", help="Disable access control via capabilities (allowing all access)")
     parser.add_argument("--debug", metavar="MODULE", help="Enable debug output for MODULE (all for all modules)")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
     parser.add_argument("--profile", action="store_true", help="Enable Python profiler (debugging Igor only)")
     parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
+    parser.add_argument('--check', action="store_true", help="Do not run the server, only check the database for consistency")
+    parser.add_argument('--fix', action="store_true", help="Do not run the server, only check the database for consistency and possibly fix it if needed")
     args = parser.parse_args()
     
     myLogger.install(args.logLevel)
     if args.version:
         print VERSION
         sys.exit(0)
+    
+    access.createSingleton(args.noCapabilities)
     if args.debug:
         if args.debug in ('callUrl', 'all'): callUrl.DEBUG = True
         if args.debug in ('sseListener', 'all'): sseListener.DEBUG = True
@@ -401,19 +418,12 @@ def main():
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]
         sys.exit(1)
-    igorServer.run()
+    if args.fix or args.check:
+        igorServer.check(args.fix)
+    else:
+        igorServer.preRun()
+        igorServer.run()
 
-#
-# We need to hack the import lock. In case we get here via the easy_install igorServer script
-# we are inside an __import__(), and we hold the lock. This means other threads cannot import
-# and we hang once a web request comes in. We "work around" this by releasing the lock.
-#    
-hasImportLock = imp.lock_held()
-if hasImportLock:
-    imp.release_lock()
-main()
-if hasImportLock:
-    imp.acquire_lock()
-    
-
+if __name__ == '__main__':
+    main()
     

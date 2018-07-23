@@ -64,11 +64,11 @@ class DevicePlugin:
         # Create status item
         DATABASE_ACCESS.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
 
-        rv = {}
+        rv = dict(name=name, isDevice=isDevice, isSensor=isSensor, hostname=hostname)
         
         if isDevice:
             deviceKey = self._genSecretKey(aud=hostname, token=token)
-            rv['sharedKey'] = deviceKey
+            rv['sharedKeyId'] = deviceKey
             deviceTokenId = COMMANDS.accessControl('newToken',
                 token=token,
                 tokenId='external',

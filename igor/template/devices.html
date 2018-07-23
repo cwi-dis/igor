@@ -85,7 +85,7 @@ $code:
 				<th>Name</th>
 				<th>Hostname</th>
 				<th>Device?</th>
-				<th>Sensor?</th>
+				<th>Sensor Only?</th>
 				<th>Entry</th>
 				<th>Status Entry</th>
 				<th>Secret Shared key?</th>
@@ -139,13 +139,13 @@ $code:
 							<input type="hidden" name="hostName" value="${hostName}">
 							<input type="submit" value="Create Key">
 							</form>
-						$if device.get('isSensor'):
+						$if device.get('isSensor') or device.get('isDevice'):
 							<form action="/devices.html">
-								<input type="hidden" name="action" value="addAction">
+								<input type="hidden" name="action" value="addActionCap">
 								<input type="hidden" name="name" value="${name}">
 								<input type="hidden" name="hostname" value="${hostName}">
 								<input type="hidden" name="representing" value="${device.get('representing')}">
-								<input type="submit" value="Add Action">
+								<input type="submit" value="Add Action Capability">
 							</form>
 						<form action="/devices.html">
 							<input type="hidden" name="action" value="deleteDevice">
@@ -243,14 +243,69 @@ $code:
 					<td>${k}</td>
 					<td>${v}</td>
 				</tr>
-		</table>		
+		</table>
+		$if kwargs.get('deviceTokenId'):
+			<p>If the device is accessed over <i>https://${kwargs.get('hostname')}</i>	you may still need to create a certificate
+			using the <a href="/plugin/ca">CA plugin</a>. </p>
+			
 		<p><a href="/devices.html">Return to device listing</a>.</p>
 		
-	$elif action == "addAction":
-		<h1>Add action for device</h1>
+	$elif action == "addActionCap":
+		<h1>Add action capability for sensor</h1>
 		
-		<p>To be provided</p>
-		
+		<p>
+		If device <i>${kwargs['name']}</i> 
+		$if 'hostname' in kwargs:
+			(hostname <i>${kwargs['hostname']}</i>)
+		needs a capability to emit http(s) GET requests to trigger an Igor action use this form:
+		</p>
+
+		<form action="/plugin/device/addAction">
+			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
+			<input type="hidden" name="subject" value="/${kwargs['hostname']}">
+			Action: <select name="obj">
+				$for _, actionName in DATABASE.getValues('actions/action/name', token=token):
+					<option value="/action/${actionName}">${actionName}</option>
+			</select>
+			<input type="submit" value="Add Action">
+		</form>
+
+		<p>
+		If device <i>${kwargs['name']}</i> 
+		$if 'hostname' in kwargs:
+			(hostname <i>${kwargs['hostname']}</i>)
+		needs a capability to emit other http(s) requests to Igor action use this form:
+		</p>
+
+		<form action="/plugin/device/addAction">
+			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
+			<input type="hidden" name="subject" value="/${kwargs['hostname']}">
+			Verb: <select name="verb">
+				<option value="get">get</option>
+				<option value="put">put</option>
+				<option value="post">post</option>
+				<option value="delete">delete</option>
+			</select>
+			Object path: <input name="obj" type="text" value="/data/">
+			<input type="submit" value="Add Action">
+		</form>
+
+		<p><a href="/devices.html">Return to device listing</a>.</p>
+	$elif action == "addActionResult":
+		<h1>New Action</h1>
+
+		<table>
+			<tr>
+				<th>Key</th>
+				<th>Value</th>
+			</tr>
+			$for k, v in kwargs.items():
+				<tr>
+					<td>${k}</td>
+					<td>${v}</td>
+				</tr>
+		</table>		
+		<p><a href="/devices.html">Return to device listing</a>.</p>
 	$elif action == "deleteKey":
 		<h1>Delete Secret Shared Key</h1>
 		

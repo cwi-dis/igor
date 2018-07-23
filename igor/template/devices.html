@@ -130,7 +130,10 @@ $code:
 					</td>
 					<td>
 						$for action in device.get('actions', []):
-							<a href=${action}>${action}</a><br>
+							$ actionName = DATABASE.getValues(action+'/name', token=token)
+							$ if actionName: actionName = actionName[0][1]
+							$ if not actionName: actionName = actionName.split('/')[-1]
+							<a href=${action}>${actionName}</a><br>
 					</td>
 					<td>
 						$if device.get('isDevice') and not hasSecretKey:
@@ -247,6 +250,13 @@ $code:
 		$if kwargs.get('deviceTokenId'):
 			<p>If the device is accessed over <i>https://${kwargs.get('hostname')}</i>	you may still need to create a certificate
 			using the <a href="/plugin/ca">CA plugin</a>. </p>
+			
+		$if kwargs.get('isSensor'):
+			<p>You may want to add actions triggered by this sensor. No GUI for that yet.</p>
+			
+			$ representing = ('devices/%s' % kwargs['name']) if kwargs.get('isDevice') else 'sensors/%s' % kwargs['name']
+			
+			<p>You may want to <a href="/devices.html?action=addActionCap&name=${kwargs['name']}&hostname=${kwargs['hostname']}&representing=${representing}">add an action capability</a> if this sensors triggers actions that are already in the database.</p>
 			
 		<p><a href="/devices.html">Return to device listing</a>.</p>
 		

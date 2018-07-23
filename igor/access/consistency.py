@@ -157,6 +157,12 @@ class CapabilityConsistency(StructuralConsistency):
             expr += subExpr
         allCaps = self.database.getElements(expr, 'get', token=self.token, namespaces=self.namespaces)
         if len(allCaps) == 0:
+            # If this is a standard capability check whether it exists with incorrect settings
+            if 'cid' in kwargs:
+                allCaps = self.database.getElements("//au:capability[cid='%s']" % kwargs['cid'], 'get', token=self.token, namespaces=self.namespaces)
+                if len(allCaps):
+                    self._status('Standard capability %s is in wrong place or has wrong content' % expr)
+                    raise CannotFix
             if self.fix:
                 self._createCapability(location, kwargs)
                 self._status('Fixed: Missing standard capability %s' % expr, isError=False)
@@ -279,6 +285,8 @@ class CapabilityConsistency(StructuralConsistency):
                 self._hasCapability('/data/actions', cid='action-plugin', obj='/plugin', get='descendant')
                 self._hasCapability('/data/actions', cid='action-pluginscript', obj='/pluginscript', get='descendant')
                 self._hasCapability('/data/actions', cid='action-action', obj='/action', get='child')
+                self._hasCapability('/data/actions', cid='action-internal', obj='/internal', get='descendant')
+                self._hasCapability('/data/actions', cid='action-environment', obj='/data/environment', get='descendant', put='descendant', post='descendant', delete='descendant')
                 #
                 # Second set of checks: test that capability tree is indeed a tree
                 #

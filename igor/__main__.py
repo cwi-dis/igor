@@ -387,7 +387,7 @@ def main():
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
     parser.add_argument("-s", "--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
-    parser.add_argument("--noCapabilities", action="store_true", help="Disable access control via capabilities (allowing all access)")
+#    parser.add_argument("--noCapabilities", action="store_true", help="Disable access control via capabilities (allowing all access)")
     parser.add_argument("--debug", metavar="MODULE", help="Enable debug output for MODULE (all for all modules)")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
@@ -402,7 +402,8 @@ def main():
         print VERSION
         sys.exit(0)
     
-    access.createSingleton(args.noCapabilities)
+#    access.createSingleton(args.noCapabilities)
+    access.createSingleton(True)
     if args.debug:
         if args.debug in ('callUrl', 'all'): callUrl.DEBUG = True
         if args.debug in ('sseListener', 'all'): sseListener.DEBUG = True

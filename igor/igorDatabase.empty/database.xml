@@ -1,5 +1,4 @@
-<?xml version="1.0" ?>
-<data xmlns:au="http://jackjansen.nl/igor/authentication">
+<?xml version="1.0" ?><data xmlns:au="http://jackjansen.nl/igor/authentication">
 	<environment>
 		<night/>
 		<location/>
@@ -44,6 +43,7 @@
 				<child>action-plugin</child>
 				<child>action-pluginscript</child>
 				<child>action-action</child>
+			    <child>external</child>
 			</au:capability>
 			<au:capability>
 				<obj>/data</obj>
@@ -53,30 +53,40 @@
 				<put>descendant</put>
 				<post>descendant</post>
 				<delete>descendant</delete>	
+				<delegate>true</delegate>
 			</au:capability>
 			<au:capability>
 				<get>descendant</get>
 				<obj>/action</obj>
 				<parent>root</parent>
 				<cid>admin-action</cid>
+				<delegate>true</delegate>
 			</au:capability>
 			<au:capability>
 				<get>descendant</get>
 				<obj>/internal</obj>
 				<parent>root</parent>
 				<cid>admin-internal</cid>
+				<delegate>true</delegate>
 			</au:capability>
 			<au:capability>
 				<get>descendant</get>
 				<obj>/plugin</obj>
 				<parent>root</parent>
 				<cid>admin-plugin</cid>
+				<delegate>true</delegate>
 			</au:capability>
 			<au:capability>
 				<get>descendant</get>
 				<obj>/pluginscript</obj>
 				<parent>root</parent>
 				<cid>admin-pluginscript</cid>
+				<delegate>true</delegate>
+			</au:capability>
+            <au:capability>
+                <delegate>external</delegate>
+                <parent>root</parent>
+                <cid>external</cid>
 			</au:capability>
 		</admin>
 		<au:capability>
@@ -155,8 +165,8 @@
 		<au:capability>
 			<get>descendant</get>
 			<obj>/plugin</obj>
-			<parent>root</parent
-			><cid>action-plugin</cid>
+			<parent>root</parent>
+			<cid>action-plugin</cid>
 		</au:capability>
 		<au:capability>
 			<get>descendant</get>

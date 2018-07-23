@@ -12,6 +12,9 @@ class AccessToken:
     def addToHeaders(self, headers):
         pass
 
+    def addToHeadersFor(self, headers, url):
+        pass
+
     def addToHeadersAsOTP(self, headers):
         pass
         

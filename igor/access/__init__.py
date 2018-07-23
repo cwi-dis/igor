@@ -154,22 +154,22 @@ class IssuerInterface:
         self._self_audience = None
         self.database = None
 
-    def _getSelfAudience(self):
+    def getSelfAudience(self):
         """Return an audience identifier that refers to us"""
         if not self._self_audience:
             self._self_audience = self.database.getValue('services/igor/url', _accessSelfToken)
         return self._self_audience
 
-    def _getSelfIssuer(self):
+    def getSelfIssuer(self):
         """Return URL for ourselves as an issuer"""
-        return urlparse.urljoin(self._getSelfAudience(),  '/issuer')
+        return urlparse.urljoin(self.getSelfAudience(),  '/issuer')
 
     def _getSharedKey(self, iss=None, aud=None):
         """Get secret key shared between issuer and audience"""
         if iss is None:
-            iss = self._getSelfIssuer()
+            iss = self.getSelfIssuer()
         if aud is None:
-            aud = self._getSelfAudience()
+            aud = self.getSelfAudience()
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
         externalKey = self.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         if not externalKey:
@@ -183,7 +183,7 @@ class IssuerInterface:
             print 'access._decodeIncomingData: %s: externalRepresentation %s' % (self, data)
             print 'access._decodeIncomingData: %s: externalKey %s' % (self, sharedKey)
         try:
-            content = jwt.decode(data, sharedKey, issuer=singleton._getSelfIssuer(), audience=singleton._getSelfAudience(), algorithm='RS256')
+            content = jwt.decode(data, sharedKey, issuer=singleton.getSelfIssuer(), audience=singleton.getSelfAudience(), algorithm='RS256')
         except jwt.DecodeError:
             print 'access: ERROR: incorrect signature on bearer token %s' % data
             print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
@@ -250,9 +250,9 @@ class IssuerInterface:
         
     def createSharedKey(self, sub=None, aud=None, token=None):
         """Create a secret key that is shared between issues and audience"""
-        iss = self._getSelfIssuer()
+        iss = self.getSelfIssuer()
         if not aud:
-            aud = self._getSelfAudience()
+            aud = self.getSelfAudience()
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
         if sub:
             keyPath += "[sub='%s']" % sub
@@ -276,9 +276,9 @@ class IssuerInterface:
     def deleteSharedKey(self, iss=None, sub=None, aud=None, token=None):
         """Delete a shared key"""
         if not iss:
-            iss = self._getSelfIssuer()
+            iss = self.getSelfIssuer()
         if not aud:
-            aud = self._getSelfAudience()
+            aud = self.getSelfAudience()
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
         if sub:
             keyPath += "[sub='%s']" % sub
@@ -584,8 +584,8 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         kwargs['nvb'] = str(int(time.time())-1)
         kwargs['nva'] = str(int(time.time()) + lifetime)
         if not 'aud' in kwargs:
-            kwargs['aud'] = self._getSelfAudience()
-        kwargs['iss'] = self._getSelfIssuer()
+            kwargs['aud'] = self.getSelfAudience()
+        kwargs['iss'] = self.getSelfIssuer()
         #
         # Create the new token
         #
@@ -602,7 +602,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         # Create the external representation
         #
         assert tokenToExport
-        assert tokenToExport._hasExternalRepresentationFor(self._getSelfAudience())
+        assert tokenToExport._hasExternalRepresentationFor(self.getSelfAudience())
         externalRepresentation = tokenToExport._getExternalRepresentation()
         #
         # Save
@@ -618,7 +618,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             for i in identifiers:
                 print '\t\t%s' % i
             raise myWebError("401 No such token: %s" % tokenId)
-        assert tokenToExport._hasExternalRepresentationFor(self._getSelfAudience())
+        assert tokenToExport._hasExternalRepresentationFor(self.getSelfAudience())
         externalRepresentation = tokenToExport._getExternalRepresentation()
         return externalRepresentation
         

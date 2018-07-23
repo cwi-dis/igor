@@ -50,6 +50,14 @@ class RevokeList:
     
 class IssuerInterface:
 
+    def getSelfAudience(self):
+        """Return an audience identifier that refers to us"""
+        return '/data'
+
+    def getSelfIssuer(self):
+        """Return URL for ourselves as an issuer"""
+        return '/issuer'
+
     def getSubjectList(self):
         """Return list of subjects that trust this issuer"""
         return []

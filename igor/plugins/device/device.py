@@ -68,7 +68,7 @@ class DevicePlugin:
         
         if isDevice:
             deviceKey = self._genSecretKey(aud=hostname, token=token)
-            rv['sharedKeyId'] = deviceKey
+            rv['audSharedKeyId'] = deviceKey
             deviceTokenId = COMMANDS.accessControl('newToken',
                 token=token,
                 tokenId='external',
@@ -82,6 +82,8 @@ class DevicePlugin:
                 )
             rv['deviceTokenId'] = deviceTokenId
         if isSensor:
+            deviceKey = self._genSecretKey(sub=hostname, token=token)
+            rv['subSharedKeyId'] = deviceKey
             actions = description.get('actions', {})
             if actions:
                 actionResults = {}

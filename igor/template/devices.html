@@ -96,12 +96,14 @@ $code:
 			$ allKeysAsTuples = [(k.get('iss', ''), k.get('aud', ''), k.get('sub', '')) for k in allKeys]
 			$ allKeysAsTuples.sort()
 			$ allKeyAudiences = set([k.get('aud') for k in allKeys])
+			$ allKeySubjects = set([k.get('sub') for k in allKeys])
 			$ deviceList = doList(token)
 			$for device in deviceList:
 				$ name=device.get('name')
-				$ defaultHostname = ('%s.local' % name) if device.get('isDevice') else ''
+				$ defaultHostname = ('%s.local' % name) if (device.get('isDevice') or device.get('isSensor')) else ''
 				$ hostName = device.get('hostname', defaultHostname)
-				$ hasSecretKey = hostName in allKeyAudiences or ('http://%s' % hostName) in allKeyAudiences or ('https://%s' % hostName) in allKeyAudiences
+				$ hasAudSecretKey = hostName in allKeyAudiences or ('http://%s' % hostName) in allKeyAudiences or ('https://%s' % hostName) in allKeyAudiences
+				$ hasSubSecretKey = hostName in allKeySubjects
 				<tr>
 					<td>${name}</td>
 					<td>${hostName}</td>
@@ -125,8 +127,10 @@ $code:
 							<a href="${statusEntry}">${statusEntry}</a>
 					</td>
 					<td>
-						$if hasSecretKey:
-							Yes
+						$if hasAudSecretKey:
+							aud=${hostName}<br>
+						$if hasSubSecretKey:
+							sub=${hostName}<br>
 					</td>
 					<td>
 						$for action in device.get('actions', []):
@@ -136,11 +140,17 @@ $code:
 							<a href=${action}>${actionName}</a><br>
 					</td>
 					<td>
-						$if device.get('isDevice') and not hasSecretKey:
+						$if device.get('isDevice') and not hasAudSecretKey:
 							<form action="/devices.html">
 							<input type="hidden" name="action" value="addKey">
-							<input type="hidden" name="hostName" value="${hostName}">
-							<input type="submit" value="Create Key">
+							<input type="hidden" name="aud" value="${hostName}">
+							<input type="submit" value="Create Audience Key">
+							</form>
+						$if (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey:
+							<form action="/devices.html">
+							<input type="hidden" name="action" value="addKey">
+							<input type="hidden" name="sub" value="${hostName}">
+							<input type="submit" value="Create Subject Key">
 							</form>
 						$if device.get('isSensor') or device.get('isDevice'):
 							<form action="/devices.html">
@@ -316,6 +326,24 @@ $code:
 				</tr>
 		</table>		
 		<p><a href="/devices.html">Return to device listing</a>.</p>
+	$elif action == "addKey":
+		<h1>Add Secret Shared Key</h1>
+		
+		<p>Do you want to add a shared secret key for signing capabilities with subject (source)
+		<i>${kwargs.get('sub', 'Igor itself')}</i> and audience (destination) <i>${kwargs.get('aud', 'Igor itself')}</i>?
+		</p>
+		
+		<form action="/internal/accessControl/createSharedKey">
+			$if kwargs.get('aud'):
+				<input type="hidden" name="aud" value="${kwargs['aud']}">
+			$if kwargs.get('sub'):
+				<input type="hidden" name="sub" value="${kwargs['sub']}">
+			<input type="hidden" name="returnTo" value="/devices.html">
+			<input type="submit" value="Create Secret Shared Key">
+		</form>
+		
+		<p><a href="/devices.html">Return to device listing</a>.</p>		
+		
 	$elif action == "deleteKey":
 		<h1>Delete Secret Shared Key</h1>
 		

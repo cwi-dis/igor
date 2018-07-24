@@ -32,10 +32,22 @@ igorSetup initialize
 Now you need to add the standard plugins you need with
 
 ```
-igorSetup addstd lan systemHealth
+igorSetup addstd lan systemHealth ca user device
 ```
 
-(these are the two standard plugins used by the default database, which by default does little more than checking the health of your internet connection. You can ignore the message about editing your database at this time).
+(these are the standard plugins used by the default database, which by default does little more than checking the health of your internet connection. You can ignore the message about editing your database at this time).
+
+At any time the server is not running you can check the consistency of the database, with
+
+```
+igorServer --check
+```
+
+or alternatively you can try to autmatically fix it with
+
+```
+igorServer --fix
+```
 
 At this point you should be able to run the server with
 
@@ -72,7 +84,25 @@ And restart Igor. Igor will detect that it has a certificate and start up in sec
 
 Now connect your browser to <https://localhost:9333>. You will get a number of warnings about an untrusted website (because you used a self-signed certificate), read these and select all the answers that indicate you trust this website. This needs to be done only once (per browser).
 
-### configuration
+#### Capability-based access control
+
+Igor has support for experimental fine grained access control, using capabilities. On top of that there is user-based (login) access control.
+
+This feature is incomplete, especially the documentation is lacking, therefore it is not enabled by default. If you want to experiment you can use first
+
+```
+igorServer --capabilities --fix
+```
+
+to add the required set of minimal capabilities to your database, and then run
+
+```
+igorServer --capabilities
+```
+
+to run your server in capability-based acess control mode. You will probably need various visits to the _/users.html_, _/devices.html_ and _/capabilities.html_ administrative interfaces to get anything to work.
+
+### Igor configuration
 
 You will need to configure your Igor to do something useful. See [../igor/plugins/readmd.md](../igor/plugins/readme.md) for a list of useful plugins, and [schema.md](schema.md) for how to add useful actions to your database.
 

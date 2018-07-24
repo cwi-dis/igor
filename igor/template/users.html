@@ -16,10 +16,11 @@ $def with (action=None, username=None, **kwargs)
 	$if action == None or action == 'list':
 		<h1>Igor Users</h1>
 	
-		$if 'user' in SESSION and SESSION.user:
+		$ currentUser = SESSION.user if 'user' in SESSION else ''
+		$if currentUser:
 			<p>
-				You are logged in as $SESSION.user.
-				$if SESSION.user != 'admin':
+				You are logged in as $currentUser.
+				$if currentUser != 'admin':
 					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
 			</p>
 		$else:
@@ -44,7 +45,7 @@ $def with (action=None, username=None, **kwargs)
 						<td><a href="/data/identities/${username}">identities/${username}</a></td>
 						<td><a href="/data/people/${username}">people/${username}</a></td>
 						<td>
-							$if username != 'admin' and username != SESSION.user:
+							$if username != 'admin' and username != currentUser:
 								<a href="/users.html?action=delete&username=${username}">delete</a><br>
 							<a href="/users.html?action=password&username=${username}">change password</a>
 						</td>

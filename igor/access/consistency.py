@@ -133,7 +133,9 @@ class StructuralConsistency:
                     ('/igor',),
                 ),
                 ('/people',),
-                ('/identities',),
+                ('/identities',
+                    ('/admin',)
+                ),
                 ('/actions',),
                 ('/sandbox',),
                 ('/plugindata',),

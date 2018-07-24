@@ -276,6 +276,7 @@ class IgorCA:
             if not name.startswith('cmd_'): continue
             handler = getattr(self, name)
             print '%-10s\t%s' % (name[4:], handler.__doc__)
+        return True
     
     def cmd_initialize(self):
         """create CA infrastructure, root key and certificate and intermediate key and certificate"""
@@ -410,6 +411,7 @@ class IgorCA:
         dnData = self.ca.get_distinguishedNameForCA()
         json.dump(dnData, sys.stdout)
         sys.stdout.write('\n')
+        return True
         
     def do_dn(self):
         dnData = self.ca.get_distinguishedNameForCA()

@@ -321,6 +321,10 @@ class IgorSetup:
             return [runcmd]
         return []
     
-if __name__ == '__main__':
+def main():
     m = IgorSetup()
     m.main()
+
+if __name__ == '__main__':
+    main()
+    

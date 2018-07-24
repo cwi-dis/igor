@@ -109,213 +109,218 @@ nsComment           = "OpenSSL Generated Certificate"
 
 %s
 """
-def main():
-    # Find username even when sudoed
-    username = os.environ.get("SUDO_USER", getpass.getuser())
-    # Igor package source directory
-    igorDir = os.path.dirname(igor.__file__)
-    # Default database directory
-    database = os.path.join(os.path.expanduser('~'+username), '.igor')
-    
-    if len(sys.argv) < 2 or sys.argv[1] in ('help', '--help'):
-        print >>sys.stderr, USAGE % sys.argv[0]
-        sys.exit(1)
+class IgorSetup:
+    def __init__(self):
+        pass
         
-    if sys.argv[1] == 'initialize':
-        src = os.path.join(igorDir, 'igorDatabase.empty')
-        if os.path.exists(database):
-            print >>sys.stderr, '%s: %s already exists!' % (sys.argv[0], database)
+    def main(self):
+        # Find username even when sudoed
+        self.username = os.environ.get("SUDO_USER", getpass.getuser())
+        # Igor package source directory
+        self.igorDir = os.path.dirname(igor.__file__)
+        # Default database directory
+        self.database = os.path.join(os.path.expanduser('~'+self.username), '.igor')
+        self.plugindir = os.path.join(self.database, 'plugins')
+        self.runcmds = []
+    
+        if len(sys.argv) < 2 or sys.argv[1] in ('help', '--help'):
+            print >>sys.stderr, USAGE % sys.argv[0]
             sys.exit(1)
-        shutil.copytree(src, database)
+        
+        if sys.argv[1] == 'initialize':
+            src = os.path.join(self.igorDir, 'igorDatabase.empty')
+            if os.path.exists(self.database):
+                print >>sys.stderr, '%s: %s already exists!' % (sys.argv[0], self.database)
+                sys.exit(1)
+            shutil.copytree(src, self.database)
+            sys.exit(0)
+    
+        # For the rest of the commands the Igor database should already exist.
+        if not os.path.exists(self.database):
+            print >>sys.stderr, "%s: No Igor database at %s" % (sys.argv[0], self.database)
+            sys.exit(1)
+    
+    
+        if sys.argv[1] == 'list':
+            names = os.listdir(self.plugindir)
+            names.sort()
+            for name in names:
+                if name[0] == '.' or name == 'readme.txt': continue
+                filename = os.path.join(self.plugindir, name)
+                if not os.path.isdir(filename):
+                    print filename, '(error: does not exist, or not a directory)'
+                elif os.path.islink(filename):
+                    print filename, '(symlinked)'
+                else:
+                    print filename
+        elif sys.argv[1] == 'add':
+            if len(sys.argv) < 3:
+                print >>sys.stderr, "%s: add requires a pathname" % sys.argv[0]
+                sys.exit(1)
+            for pluginpath in sys.argv[2:]:
+                basedir, pluginname = os.path.split(pluginpath)
+                if not pluginname:
+                    basedir, pluginname = os.path.split(pluginpath)
+                self.runcmds += self.installplugin(self.database, pluginpath, pluginname, shutil.cptree) 
+        elif sys.argv[1] == 'addstd':
+            if len(sys.argv) < 3:
+                print >>sys.stderr, "%s: addstd requires a plugin name" % sys.argv[0]
+                sys.exit(1)
+            for pluginname in sys.argv[2:]:
+                pluginsrcpath = os.path.join(self.igorDir, 'plugins', pluginname)
+                self.runcmds += self.installplugin(self.database, pluginsrcpath, pluginname, os.symlink)
+        elif sys.argv[1] == 'updatestd':
+            names = os.listdir(self.plugindir)
+            names.sort()
+            for name in names:
+                if name[0] == '.' or name == 'readme.txt': continue
+                pluginpath = os.path.join(self.plugindir, name)
+                if  os.path.islink(pluginpath):
+                    print 'Updating', pluginpath
+                    os.unlink(pluginpath)
+                    pluginsrcpath = os.path.join(self.igorDir, 'plugins', name)
+                    self.runcmds += self.installplugin(self.database, pluginsrcpath, name, os.symlink)
+        elif sys.argv[1] == 'remove':
+            if len(sys.argv) < 3:
+                print >>sys.stderr, "%s: remove requires a plugin name" % sys.argv[0]
+                sys.exit(1)
+            for pluginname in sys.argv[2:]:
+                pluginpath = os.path.join(self.plugindir, pluginname)
+                if os.path.islink(pluginpath):
+                    os.unlink(pluginpath)
+                elif os.path.isdir(pluginpath):
+                    shutil.rmtree(pluginpath)
+                else:
+                    print >> sys.stderr, "%s: not symlink or directory: %s" % (sys.argv[0], pluginpath)
+                    sys.exit(1)
+        elif sys.argv[1] == 'liststd':
+            stdplugindir = os.path.join(self.igorDir, 'plugins')
+            names = os.listdir(stdplugindir)
+            names.sort()
+            for name in names:
+                if name[0] == '.' or name == 'readme.txt': continue
+                print name
+        elif sys.argv[1] == 'certificate':
+            hostnames = sys.argv[2:]
+            if not hostnames:
+                print >> sys.stderr, "%s: certificate requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % sys.argv[0]
+                sys.exit(1)
+            self.runcmds += [
+                "igorCA initialize # Unless done before",
+                "igorCA self "+" ".join(hostnames)
+            ]
+        elif sys.argv[1] == 'certificateSelfSigned':
+            hostnames = sys.argv[2:]
+            if not hostnames:
+                print >> sys.stderr, "%s: certificateSelfSigned requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % sys.argv[0]
+                sys.exit(1)
+            altnames = map(lambda (i, n): "DNS.%d = %s" % (i+1, n), zip(range(len(hostnames)), hostnames))
+            altnames = '\n'.join(altnames)
+            confData = OPENSSL_CONF % altnames
+        
+            confFilename = os.path.join(self.database, 'igor.sslconf')
+            keyFilename = os.path.join(self.database, 'igor.key')
+            certFilename = os.path.join(self.database, 'igor.crt')
+        
+            open(confFilename, 'wb').write(confData)
+            sslCommand = OPENSSL_COMMAND % (confFilename, keyFilename, certFilename)
+            self.runcmds += [sslCommand]
+
+        elif sys.argv[1] in ('runatboot', 'runatlogin'):
+            args = dict(
+                user=self.username,
+                igorDir=self.igorDir,
+                database=self.database
+                )
+            if sys.platform == 'darwin' and sys.argv[1] == 'runatboot':
+                template = os.path.join(self.igorDir, 'bootScripts', 'nl.cwi.dis.igor.plist')
+                dest = '/Library/LaunchDaemons/nl.cwi.dis.igor.plist'
+                self.runcmds += [
+                    "sudo launchctl load %s" % dest,
+                    ]
+            elif sys.platform == 'darwin' and sys.argv[1] == 'runatlogin':
+                template = os.path.join(self.igorDir, 'bootScripts', 'nl.cwi.dis.igor.plist')
+                dest = os.path.join(os.path.expanduser('~'), 'Library/LaunchAgents/nl.cwi.dis.igor.plist')
+                self.runcmds += [
+                    "launchctl load %s" % dest,
+                    ]
+            elif sys.platform == 'linux2' and sys.argv[1] == 'runatboot':
+                template = os.path.join(self.igorDir, 'bootScripts', 'initscript-igor')
+                dest = '/etc/init.d/igor'
+                self.runcmds += [
+                    "sudo update-rc.d igor defaults",
+                    "sudo service igor start"
+                    ]
+            else:
+                print >>sys.stderr, "%s: don't know how to enable Igor %s for platform %s" % (sys.argv[0], sys.argv[1], sys.platform)
+                sys.exit(1)
+            if os.path.exists(dest):
+                print >> sys.stderr, "%s: already exists: %s" % (sys.argv[0], dest)
+                sys.exit(1)
+            templateData = open(template).read()
+            bootData = templateData % args
+            open(dest, 'w').write(bootData)
+            if sys.platform == 'linux2':
+                os.chmod(dest, 0755)
+        elif sys.argv[1] in ('start', 'stop', 'rebuild', 'edit', 'rebuildedit'):
+            if sys.platform == 'darwin':
+                daemonFile = '/Library/LaunchDaemons/nl.cwi.dis.igor.plist'
+                if not os.path.exists(daemonFile):
+                    daemonFile = os.path.join(os.path.expanduser('~'), 'Library/LaunchAgents/nl.cwi.dis.igor.plist')
+            elif sys.platform == 'linux2':
+                daemonFile = '/etc/init.d/igor'
+            else:
+                print >>sys.stderr, "%s: don't know about daemon mode on platform %s" % (sys.argv[0], sys.platform)
+                sys.exit(1)
+            if not os.path.exists(daemonFile):
+                print >>sys.stderr, "%s: it seems igor is not configured for runatboot or runatlogin" % sys.argv[0]
+                sys.exit(1)
+            if sys.argv[1] in ('stop', 'rebuild', 'edit', 'rebuildedit'):
+                self.runcmds += ["igorControl save"]
+                if sys.platform == 'darwin':
+                    self.runcmds += ["sudo launchctl unload %s" % daemonFile]
+                else:
+                    self.runcmds += ["sudo service igor stop"]
+            if sys.argv[1] in ('edit', 'rebuildedit'):
+                xmlDatabase = os.path.join(self.database, 'database.xml')
+                self.runcmds += ["$EDITOR %s" % xmlDatabase]
+            if sys.argv[1] in ('rebuild', 'rebuildedit'):
+                if not os.path.exists("setup.py"):
+                    print >> sys.stderr, "%s: use 'rebuild' option only in an Igor source directory" % sys.argv[0]
+                self.runcmds += [
+                    "python setup.py build",
+                    "sudo python setup.py install"
+                    ]
+            if sys.argv[1] in ('rebuild', 'edit', 'rebuildedit', 'start'):
+                if sys.platform == 'darwin':
+                    self.runcmds += ["sudo launchctl load %s" % daemonFile]
+                else:
+                    self.runcmds += ["sudo service igor start"]
+        else:
+            print >>sys.stderr, '%s: unknown command: %s. Use --help for help.' % (sys.argv[0], sys.argv[1])
+            sys.exit(1)
+        if self.runcmds:
+            print '# Run the following commands:'
+            print '('
+            for cmd in self.runcmds: print '\t', cmd
+            print ')'
         sys.exit(0)
     
-    # For the rest of the commands the Igor database should already exist.
-    if not os.path.exists(database):
-        print >>sys.stderr, "%s: No Igor database at %s" % (sys.argv[0], database)
-        sys.exit(1)
-    plugindir = os.path.join(database, 'plugins')
-    
-    runcmds = []
-    
-    if sys.argv[1] == 'list':
-        names = os.listdir(plugindir)
-        names.sort()
-        for name in names:
-            if name[0] == '.' or name == 'readme.txt': continue
-            filename = os.path.join(plugindir, name)
-            if not os.path.isdir(filename):
-                print filename, '(error: does not exist, or not a directory)'
-            elif os.path.islink(filename):
-                print filename, '(symlinked)'
-            else:
-                print filename
-    elif sys.argv[1] == 'add':
-        if len(sys.argv) < 3:
-            print >>sys.stderr, "%s: add requires a pathname" % sys.argv[0]
-            sys.exit(1)
-        for pluginpath in sys.argv[2:]:
-            basedir, pluginname = os.path.split(pluginpath)
-            if not pluginname:
-                basedir, pluginname = os.path.split(pluginpath)
-            runcmds += installplugin(database, pluginpath, pluginname, shutil.cptree) 
-    elif sys.argv[1] == 'addstd':
-        if len(sys.argv) < 3:
-            print >>sys.stderr, "%s: addstd requires a plugin name" % sys.argv[0]
-            sys.exit(1)
-        for pluginname in sys.argv[2:]:
-            pluginsrcpath = os.path.join(igorDir, 'plugins', pluginname)
-            runcmds += installplugin(database, pluginsrcpath, pluginname, os.symlink)
-    elif sys.argv[1] == 'updatestd':
-        names = os.listdir(plugindir)
-        names.sort()
-        for name in names:
-            if name[0] == '.' or name == 'readme.txt': continue
-            pluginpath = os.path.join(plugindir, name)
-            if  os.path.islink(pluginpath):
-                print 'Updating', pluginpath
-                os.unlink(pluginpath)
-                pluginsrcpath = os.path.join(igorDir, 'plugins', name)
-                runcmds += installplugin(database, pluginsrcpath, name, os.symlink)
-    elif sys.argv[1] == 'remove':
-        if len(sys.argv) < 3:
-            print >>sys.stderr, "%s: remove requires a plugin name" % sys.argv[0]
-            sys.exit(1)
-        for pluginname in sys.argv[2:]:
-            pluginpath = os.path.join(plugindir, pluginname)
-            if os.path.islink(pluginpath):
-                os.unlink(pluginpath)
-            elif os.path.isdir(pluginpath):
-                shutil.rmtree(pluginpath)
-            else:
-                print >> sys.stderr, "%s: not symlink or directory: %s" % (sys.argv[0], pluginpath)
-                sys.exit(1)
-    elif sys.argv[1] == 'liststd':
-        stdplugindir = os.path.join(igorDir, 'plugins')
-        names = os.listdir(stdplugindir)
-        names.sort()
-        for name in names:
-            if name[0] == '.' or name == 'readme.txt': continue
-            print name
-    elif sys.argv[1] == 'certificate':
-        hostnames = sys.argv[2:]
-        if not hostnames:
-            print >> sys.stderr, "%s: certificate requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % sys.argv[0]
-            sys.exit(1)
-        runcmds += [
-            "igorCA initialize # Unless done before",
-            "igorCA self "+" ".join(hostnames)
-        ]
-    elif sys.argv[1] == 'certificateSelfSigned':
-        hostnames = sys.argv[2:]
-        if not hostnames:
-            print >> sys.stderr, "%s: certificateSelfSigned requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % sys.argv[0]
-            sys.exit(1)
-        altnames = map(lambda (i, n): "DNS.%d = %s" % (i+1, n), zip(range(len(hostnames)), hostnames))
-        altnames = '\n'.join(altnames)
-        confData = OPENSSL_CONF % altnames
-        
-        confFilename = os.path.join(database, 'igor.sslconf')
-        keyFilename = os.path.join(database, 'igor.key')
-        certFilename = os.path.join(database, 'igor.crt')
-        
-        open(confFilename, 'wb').write(confData)
-        sslCommand = OPENSSL_COMMAND % (confFilename, keyFilename, certFilename)
-        runcmds += [sslCommand]
-
-    elif sys.argv[1] in ('runatboot', 'runatlogin'):
-        args = dict(
-            user=username,
-            igorDir=igorDir,
-            database=database
-            )
-        if sys.platform == 'darwin' and sys.argv[1] == 'runatboot':
-            template = os.path.join(igorDir, 'bootScripts', 'nl.cwi.dis.igor.plist')
-            dest = '/Library/LaunchDaemons/nl.cwi.dis.igor.plist'
-            runcmds += [
-                "sudo launchctl load %s" % dest,
-                ]
-        elif sys.platform == 'darwin' and sys.argv[1] == 'runatlogin':
-            template = os.path.join(igorDir, 'bootScripts', 'nl.cwi.dis.igor.plist')
-            dest = os.path.join(os.path.expanduser('~'), 'Library/LaunchAgents/nl.cwi.dis.igor.plist')
-            runcmds += [
-                "launchctl load %s" % dest,
-                ]
-        elif sys.platform == 'linux2' and sys.argv[1] == 'runatboot':
-            template = os.path.join(igorDir, 'bootScripts', 'initscript-igor')
-            dest = '/etc/init.d/igor'
-            runcmds += [
-                "sudo update-rc.d igor defaults",
-                "sudo service igor start"
-                ]
-        else:
-            print >>sys.stderr, "%s: don't know how to enable Igor %s for platform %s" % (sys.argv[0], sys.argv[1], sys.platform)
-            sys.exit(1)
-        if os.path.exists(dest):
-            print >> sys.stderr, "%s: already exists: %s" % (sys.argv[0], dest)
-            sys.exit(1)
-        templateData = open(template).read()
-        bootData = templateData % args
-        open(dest, 'w').write(bootData)
-        if sys.platform == 'linux2':
-            os.chmod(dest, 0755)
-    elif sys.argv[1] in ('start', 'stop', 'rebuild', 'edit', 'rebuildedit'):
-        if sys.platform == 'darwin':
-            daemonFile = '/Library/LaunchDaemons/nl.cwi.dis.igor.plist'
-            if not os.path.exists(daemonFile):
-                daemonFile = os.path.join(os.path.expanduser('~'), 'Library/LaunchAgents/nl.cwi.dis.igor.plist')
-        elif sys.platform == 'linux2':
-            daemonFile = '/etc/init.d/igor'
-        else:
-            print >>sys.stderr, "%s: don't know about daemon mode on platform %s" % (sys.argv[0], sys.platform)
-            sys.exit(1)
-        if not os.path.exists(daemonFile):
-            print >>sys.stderr, "%s: it seems igor is not configured for runatboot or runatlogin" % sys.argv[0]
-            sys.exit(1)
-        if sys.argv[1] in ('stop', 'rebuild', 'edit', 'rebuildedit'):
-            runcmds += ["igorControl save"]
-            if sys.platform == 'darwin':
-                runcmds += ["sudo launchctl unload %s" % daemonFile]
-            else:
-                runcmds += ["sudo service igor stop"]
-        if sys.argv[1] in ('edit', 'rebuildedit'):
-            xmlDatabase = os.path.join(database, 'database.xml')
-            runcmds += ["$EDITOR %s" % xmlDatabase]
-        if sys.argv[1] in ('rebuild', 'rebuildedit'):
-            if not os.path.exists("setup.py"):
-                print >> sys.stderr, "%s: use 'rebuild' option only in an Igor source directory" % sys.argv[0]
-            runcmds += [
-                "python setup.py build",
-                "sudo python setup.py install"
-                ]
-        if sys.argv[1] in ('rebuild', 'edit', 'rebuildedit', 'start'):
-            if sys.platform == 'darwin':
-                runcmds += ["sudo launchctl load %s" % daemonFile]
-            else:
-                runcmds += ["sudo service igor start"]
-    else:
-        print >>sys.stderr, '%s: unknown command: %s. Use --help for help.' % (sys.argv[0], sys.argv[1])
-        sys.exit(1)
-    if runcmds:
-        print '# Run the following commands:'
-        print '('
-        for cmd in runcmds: print '\t', cmd
-        print ')'
-    sys.exit(0)
-    
-def installplugin(database, src, pluginname, cpfunc):
-    dst = os.path.join(database, 'plugins', pluginname)
-    if os.path.exists(dst):
-        print >>sys.stderr, "%s: already exists: %s" % (sys.argv[0], dst)
+    def installplugin(self, database, src, pluginname, cpfunc):
+        dst = os.path.join(database, 'plugins', pluginname)
+        if os.path.exists(dst):
+            print >>sys.stderr, "%s: already exists: %s" % (sys.argv[0], dst)
+            return []
+        if not os.path.exists(src):
+            print >>sys.stderr, "%s: does not exist: %s" % (sys.argv[0], src)
+            return []
+        cpfunc(src, dst)
+        xmlfrag = os.path.join(dst, 'database-fragment.xml')
+        if os.path.exists(xmlfrag):
+            runcmd = '"%s" "%s" "%s"' % (os.environ.get("EDITOR", "edit"), xmlfrag, os.path.join(database, 'database.xml'))
+            return [runcmd]
         return []
-    if not os.path.exists(src):
-        print >>sys.stderr, "%s: does not exist: %s" % (sys.argv[0], src)
-        return []
-    cpfunc(src, dst)
-    xmlfrag = os.path.join(dst, 'database-fragment.xml')
-    if os.path.exists(xmlfrag):
-        runcmd = '"%s" "%s" "%s"' % (os.environ.get("EDITOR", "edit"), xmlfrag, os.path.join(database, 'database.xml'))
-        return [runcmd]
-    return []
     
 if __name__ == '__main__':
-    main()
+    m = IgorSetup()
+    m.main()

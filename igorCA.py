@@ -150,7 +150,7 @@ class CARemoteInterface:
         return configFile
         
 class IgorCA:
-    def __init__(self, argv0, igorServer=None, keysize=None):
+    def __init__(self, argv0, igorServer=None, keysize=None, database=None):
         self.argv0 = argv0
         self.keysize = keysize
         # Find username even when sudoed
@@ -160,7 +160,12 @@ class IgorCA:
         #
         # Default self.database directory, CA directory and key/cert for signing.
         #
-        self.database = os.path.join(os.path.expanduser('~'+username), '.igor')
+        if database:
+            self.database = database
+        elif 'IGORSERVER_DIR' in os.environ:
+            self.database = os.environ['IGORSERVER_DIR']
+        else:
+            self.database = os.path.join(os.path.expanduser('~'+username), '.igor')
         if igorServer:
             self.ca = CARemoteInterface(self, igorServer)
         else:
@@ -212,7 +217,7 @@ class IgorCA:
             sys.exit(0)
 
         if not os.path.exists(self.database):
-            print >>sys.stderr, "%s: No Igor self.database at %s" % (self.argv0, self.database)
+            print >>sys.stderr, "%s: No Igor database at %s" % (self.argv0, self.database)
             sys.exit(1)
         
         if command == 'initialize':
@@ -615,6 +620,7 @@ def main():
     parser = argparse.ArgumentParser(description="Igor Certificate and Key utility")
     parser.add_argument("-s", "--keysize", metavar="BITS", help="Override key size (default: 2048)")
     parser.add_argument("-r", "--remote", action="store_true", help="Use CA on remote Igor (default is on the local filesystem)")
+    parser.add_argument("-d", "--database", metavar="DIR", help="(local only) Database and scripts are stored in DIR (default: ~/.igor, environment IGORSERVER_DIR)")
     parser.add_argument("-u", "--url", help="(remote only) Base URL of the server (default: %s, environment IGORSERVER_URL)" % igorVar.CONFIG.get('igor', 'url'), default=igorVar.CONFIG.get('igor', 'url'))
     parser.add_argument("--bearer", metavar="TOKEN", help="(remote only) Add Authorization: Bearer TOKEN header line", default=igorVar.CONFIG.get('igor', 'bearer'))
     parser.add_argument("--access", metavar="TOKEN", help="(remote only) Add access_token=TOKEN query argument", default=igorVar.CONFIG.get('igor', 'access'))
@@ -627,7 +633,7 @@ def main():
     igorServer = None
     if args.remote:
         igorServer = igorVar.IgorServer(args.url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
-    m = IgorCA(sys.argv[0], igorServer, keysize=args.keysize)
+    m = IgorCA(sys.argv[0], igorServer, keysize=args.keysize, database=args.database)
     if not args.action:
         return m.main('help', [])
     return m.main(args.action, args.arguments)

@@ -13,6 +13,15 @@ This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS 
 
 **Please note:** Igor is not a finished product yet, important functionality may be missing and/or faulty. Specifically, there is no security and privacy mechanism in place yet, so any data stored in Igor is readable by anyone who can access port 9333.
 
+## Prerequisites
+
+You need to have Python v2.7 installed, and that should also have _setuptools_ installed.
+
+Installing Python's package installation program _pip_ will also install _setuptools_.
+
+See also <https://packaging.python.org/tutorials/installing-packages/>.
+
+
 ## Technical description
 
 Igor is basically a hierarchical data store, think of an XML file or a JSON 

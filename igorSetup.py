@@ -7,6 +7,7 @@ import shutil
 import getpass
 import tempfile
 import argparse
+import subprocess
 
 USAGE="""
 Usage: %(prog)s [options] command [command-args]
@@ -131,13 +132,22 @@ class IgorSetup:
             ok = handler(*args)
         if not ok:
             return False
-        if self.runcmds:
-            print '# Run the following commands:'
-            print '('
-            for cmd in self.runcmds: print '\t', cmd
-            print ')'
         return True
-
+        
+    def postprocess(self, run=False, verbose=False):
+        if self.runcmds:
+            if run:
+                for cmd in self.runcmds:
+                    if verbose:
+                        print >> sys.stderr, '+', cmd
+                    subprocess.check_call(cmd, shell=True)
+            else:
+                print '# Run the following commands:'
+                print '('
+                for cmd in self.runcmds: print '\t', cmd
+                print ')'
+        self.runcmds = []
+        
     def cmd_help(self):
         """help - this message"""
         print >>sys.stderr, USAGE % dict(prog=self.progname)
@@ -385,12 +395,14 @@ class IgorSetup:
 def main():
     parser = argparse.ArgumentParser(usage=USAGE)
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: ~/.igor, environment IGORSERVER_DIR)")
+    parser.add_argument("-r", "--run", action="store_true", help="Run any needed shell commands (default is to print them only)")
     parser.add_argument("action", help="Action to perform: help, initialize, ...", default="help")
     parser.add_argument("arguments", help="Arguments to the action", nargs="*")
     args = parser.parse_args()
     m = IgorSetup(database=args.database, progname=sys.argv[0])
     if not m.main(args.action, args.arguments):
         sys.exit(1)
+    m.postprocess(args.run, verbose=True)
 
 if __name__ == '__main__':
     main()

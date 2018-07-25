@@ -21,40 +21,14 @@ OPENSSL_CONF="""
 [ req ]
 default_bits        = 2048
 default_keyfile     = server-key.pem
-distinguished_name  = subject
 req_extensions      = req_ext
 x509_extensions     = x509_ext
 string_mask         = utf8only
+prompt              = no
+distinghuished_name = subject
 
-# The Subject DN can be formed using X501 or RFC 4514 (see RFC 4519 for a description).
-#   Its sort of a mashup. For example, RFC 4514 does not provide emailAddress.
 [ subject ]
-countryName         = Country Name (2 letter code)
-countryName_default     = NL
-
-#stateOrProvinceName     = State or Province Name (full name)
-#stateOrProvinceName_default = NY
-
-localityName            = Locality Name (eg, city)
-localityName_default        = Amsterdam
-
-organizationName         = Organization Name (eg, company)
-organizationName_default    = 
-
-OU = Organizational Unit
-OU_default = igor
-
-
-# Use a friendly name here because its presented to the user. The server's DNS
-#   names are placed in Subject Alternate Names. Plus, DNS names here is deprecated
-#   by both IETF and CA/Browser Forums. If you place a DNS name here, then you 
-#   must include the DNS name in the SAN too (otherwise, Chrome and others that
-#   strictly follow the CA/Browser Baseline Requirements will fail).
-commonName          = Common Name (e.g. server FQDN or YOUR name)
-commonName_default      = 
-
-emailAddress            = Email Address
-emailAddress_default        = 
+xxxxxxx
 
 # Section x509_ext is used when generating a self-signed certificate. I.e., openssl req -x509 ...
 [ x509_ext ]
@@ -93,6 +67,7 @@ nsComment           = "OpenSSL Generated Certificate"
 
 %s
 """
+
 class IgorSetup:
     def __init__(self, database=None, progname='igorSetup'):
         self.progname = progname
@@ -257,14 +232,14 @@ class IgorSetup:
         ok = ca.cmd_self(hostnames)
         return ok
 
-    def cmd_certificateSelfsigned(self, *hostnames):
-        """certificateSelfSigned hostname [...] - create self-signed https certificate for Igor (deprecated)"""
-        if not hostnames:
-            print >> sys.stderr, "%s: certificateSelfSigned requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % self.progname
+    def cmd_certificateSelfsigned(self, subject, *hostnames):
+        """certificateSelfSigned subject hostname [...] - create self-signed https certificate for Igor (deprecated)"""
+        if not len(hostnames):
+            print >> sys.stderr, "%s: certificateSelfSigned requires DN and all hostnames for igor, for example /C=NL/O=igor/CN=igor.local igor.local localhost 127.0.0.1 ::1" % self.progname
             return False
         altnames = map(lambda (i, n): "DNS.%d = %s" % (i+1, n), zip(range(len(hostnames)), hostnames))
         altnames = '\n'.join(altnames)
-        confData = OPENSSL_CONF % altnames
+        confData = OPENSSL_CONF % (subject, altnames)
     
         confFilename = os.path.join(self.database, 'igor.sslconf')
         keyFilename = os.path.join(self.database, 'igor.key')

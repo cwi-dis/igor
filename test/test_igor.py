@@ -41,7 +41,7 @@ class IgorTest(unittest.TestCase):
         
         if cls.igorProtocol == 'https':
             if DEBUG_TEST: print 'IgorTest: setup self-signed signature'
-            ok = setup.cmd_certificateSelfsigned('localhost')
+            ok = setup.cmd_certificateSelfsigned('localhost', '127.0.0.1', '::1')
             assert ok
             setup.postprocess(run=True)
             cls.igorVarArgs['certificate'] = os.path.join(cls.igorDir, 'igor.crt')

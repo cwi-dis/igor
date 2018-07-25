@@ -3,3 +3,5 @@
 build
 dist
 *.egg-info
+test/fixtures/testIgor
+test/fixtures/testIgorHttps

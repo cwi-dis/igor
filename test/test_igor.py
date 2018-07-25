@@ -111,6 +111,68 @@ class IgorTest(unittest.TestCase):
         self.assertIsInstance(root, dict)
         self.assertEqual(root.keys(), ["systemHealth"])
         
+    def test21_put_xml(self):
+        p = self._igorVar()
+        data = '<test21>21</test21>'
+        p.put('sandbox/test21', data, datatype='application/xml')
+        result = p.get('sandbox/test21', format='application/xml')
+        self.assertEqual(data.strip(), result.strip())
+        result2 = p.get('sandbox/test21', format='text/plain')
+        self.assertEqual('21', result2.strip())
+        result3 = p.get('sandbox/test21', format='application/json')
+        result3dict = json.loads(result3)
+        self.assertEqual({"test21" : 21}, result3dict)
+        
+    def test22_put_text(self):
+        p = self._igorVar()
+        data = 'twenty two'
+        p.put('sandbox/test22', data, datatype='text/plain')
+        result = p.get('sandbox/test22', format='text/plain')
+        self.assertEqual(data.strip(), result.strip())
+        result2 = p.get('sandbox/test22', format='application/xml')
+        self.assertEqual('<test22>twenty two</test22>', result2.strip())
+        result3 = p.get('sandbox/test22', format='application/json')
+        result3dict = json.loads(result3)
+        self.assertEqual({'test22':'twenty two'}, result3dict)
+        
+    def test23_put_json(self):
+        p = self._igorVar()
+        data = json.dumps({"test23" : 23})
+        p.put('sandbox/test23', data, datatype='application/json')
+        result = p.get('sandbox/test23', format='application/json')
+        resultDict = json.loads(result)
+        self.assertEqual({"test23" : 23}, resultDict)
+        result2 = p.get('sandbox/test23', format='application/xml')
+        self.assertEqual("<test23>23</test23>", result2.strip())
+        
+    def test24_put_multi(self):
+        p = self._igorVar()
+        data = '<test24>24</test24>'
+        p.put('sandbox/test24', data, datatype='application/xml')
+        result = p.get('sandbox/test24', format='application/xml')
+        self.assertEqual(data.strip(), result.strip())
+        data = '<test24>twentyfour</test24>'
+        p.put('sandbox/test24', data, datatype='application/xml')
+        result = p.get('sandbox/test24', format='application/xml')
+        self.assertEqual(data.strip(), result.strip())
+        
+    def test31_post_text(self):
+        p = self._igorVar()
+        p.put('sandbox/test31', '', datatype='text/plain')
+        p.post('sandbox/test31/item', 'thirty', datatype='text/plain')
+        p.post('sandbox/test31/item', 'one', datatype='text/plain')
+        result = p.get('sandbox/test31/item', format='text/plain')
+        self.assertEqual('thirtyone', result.translate(None, ' \n'))
+        result2 = p.get('sandbox/test31/item', format='application/xml', variant='multi')
+        self.assertIn('thirty', result2)
+        self.assertIn('one', result2)
+        result3 = p.get('sandbox/test31/item', format='application/json')
+        result3list = json.loads(result3)
+        self.assertEqual(len(result3list), 2)
+        self.assertIsInstance(result3list, list)
+        self.assertEqual(result3list[0]['item'], 'thirty')
+        self.assertEqual(result3list[1]['item'], 'one')
+        
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorLogFile = os.path.join(FIXTURES, 'testIgorHttps.log')

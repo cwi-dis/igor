@@ -25,10 +25,10 @@ req_extensions      = req_ext
 x509_extensions     = x509_ext
 string_mask         = utf8only
 prompt              = no
-distinghuished_name = subject
+distinguished_name = subject
 
 [ subject ]
-xxxxxxx
+%s
 
 # Section x509_ext is used when generating a self-signed certificate. I.e., openssl req -x509 ...
 [ x509_ext ]
@@ -239,6 +239,7 @@ class IgorSetup:
             return False
         altnames = map(lambda (i, n): "DNS.%d = %s" % (i+1, n), zip(range(len(hostnames)), hostnames))
         altnames = '\n'.join(altnames)
+        subject = subject.replace('/','\n')
         confData = OPENSSL_CONF % (subject, altnames)
     
         confFilename = os.path.join(self.database, 'igor.sslconf')

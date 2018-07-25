@@ -56,30 +56,34 @@ class IgorServer:
         self.noverify = not not noverify
         self.printmessages = printmessages or VERBOSE
         
-    def get(self, item, variant=None, format=None, query={}):
+    def get(self, item, variant=None, format=None, query=None):
         if format == None:
             format = 'application/xml'
         return self._action("GET", item, variant, format=format, query=query)
         
-    def delete(self, item, variant=None, format=None, query={}):
+    def delete(self, item, variant=None, format=None, query=None):
         if variant == None:
             variant = "ref"
         if format == None:
             format = "text/plain"
         return self._action("DELETE", item, variant, format=format, query=query)
         
-    def put(self, item, data, datatype, variant=None, format=None, query={}):
+    def put(self, item, data, datatype, variant=None, format=None, query=None):
         if format == None:
             format = 'text/plain'
         return self._action("PUT", item, variant, format=format, data=data, datatype=datatype, query=query)
         
-    def post(self, item, data, datatype, variant=None, format=None, query={}):
+    def post(self, item, data, datatype, variant=None, format=None, query=None):
         if format == None:
             format = 'text/plain'
         return self._action("POST", item, variant, format, data=data, datatype=datatype)
         
-    def _action(self, method, item, variant, format=None, data=None, datatype=None, query={}):
+    def _action(self, method, item, variant, format=None, data=None, datatype=None, query=None):
         url = urlparse.urljoin(self.url, item)
+        if query is None:
+            query = {}
+        else:
+            query = dict(query)
         if variant:
             query['.VARIANT'] = variant
         if self.access_token:

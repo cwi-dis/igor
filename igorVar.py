@@ -12,7 +12,11 @@ import pprint
 import xml.etree.ElementTree
 import socket
 import ConfigParser
+import exceptions
 
+class IgorError(EnvironmentError):
+    pass
+    
 CONFIG = ConfigParser.ConfigParser(
     dict(
         url="http://igor.local:9333/data",
@@ -38,7 +42,7 @@ for k, _ in CONFIG.items('igor'):
 VERBOSE=False
 
 class IgorServer:
-    def __init__(self, url, bearer_token=None, access_token=None, credentials=None, certificate=None, noverify=False):
+    def __init__(self, url, bearer_token=None, access_token=None, credentials=None, certificate=None, noverify=False, printmessages=False):
         self.baseUrl = url
         if url[-1] != '/':
             url = url + '/'
@@ -50,6 +54,7 @@ class IgorServer:
             certificate = os.path.join(os.path.expanduser('~/.igor'), certificate)
         self.certificate = certificate
         self.noverify = not not noverify
+        self.printmessages = printmessages or VERBOSE
         
     def get(self, item, variant=None, format=None, query={}):
         if format == None:
@@ -88,8 +93,7 @@ class IgorServer:
         if datatype:
             headers['Content-Type'] = datatype
         if self.bearer_token and self.credentials:
-            print >> sys.stderr, "%s: both bearer token and credentials specified" % sys.argv[0]
-            sys.exit(1)
+            raise IgorError("both bearer token and credentials specified")
         if self.bearer_token:
             headers['Authorization'] = 'Bearer %s' % self.bearer_token
         if self.credentials:
@@ -110,26 +114,24 @@ class IgorServer:
                 argstr = e.args[1]
             else:
                 e = repr(e)
-            print >>sys.stderr, "%s: %s: %s" % (sys.argv[0], url, argstr)
-            sys.exit(1)
+            raise IgorError("%s: %s" % (url, argstr))
         except socket.gaierror:
-            print >>sys.stderr, "%s: %s: unknown host" % (sys.argv[0], url)
-            sys.exit(1)
+            raise IgorError("%s: unknown host" %  url)
+        except httplib2.ServerNotFoundError, e:
+            raise IgorError(*e.args)
         except socket.timeout:
-            print >>sys.stderr, "%s: %s: timeout during connect" % (sys.argv[0], url)
-            sys.exit(1)
+            raise IgorError("%s: timeout during connect" % url)
         if VERBOSE:
             print >>sys.stderr, "<<< Headers", reply
             print >>sys.stderr, "...", repr(content)
         if not 'status' in reply or reply['status'] != '200':
-            msg = "%s: Error %s for %s" % (sys.argv[0], reply['status'], url)
-            contentLines = content.splitlines()
-            if len(contentLines) == 1:
-                print >>sys.stderr, msg + ':' + contentLines[0]
-            else:
-                print >>sys.stderr, msg
-                print >>sys.stderr, content
-            sys.exit(1)
+            msg = "Error %s for %s" % (reply['status'], url)
+            if self.printmessages:
+                contentLines = content.splitlines()
+                if len(contentLines) > 1:
+                    print >>sys.stderr, sys.argv[0] + ': ' + msg
+                    print >>sys.stderr, content
+            raise IgorError(msg)
         return content
         
 def main():
@@ -169,57 +171,60 @@ def main():
     server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
     if args.python:
         args.mimetype = 'application/json'
-    if args.delete:
-        result = server.delete(args.var)
-    elif args.create:
-        result = server.put(args.var, '{}', 'application/json', variant=args.variant, format=args.mimetype)
-    elif args.put:
-        data = args.data
-        if data is None:
-            data = sys.stdin.read()
-        if args.checkdata or args.checknonempty:
-            # Check that data is valid JSON or XML.
-            # If no data is read at all only exit with nonzero status, assume the previous
-            # part of the pipeline has already issues an error.
-            if not data and args.checknonempty:
-                sys.exit(1)
-            if args.put == 'application/json':
-                try:
-                    decodedData = json.loads(data)
-                    data = json.dumps(decodedData)
-                except ValueError:
-                    print >>sys.stderr, "%s: no valid JSON data read from stdin" % sys.argv[0]
-                    print >>sys.stderr, data
+    try:
+        if args.delete:
+            result = server.delete(args.var)
+        elif args.create:
+            result = server.put(args.var, '{}', 'application/json', variant=args.variant, format=args.mimetype)
+        elif args.put:
+            data = args.data
+            if data is None:
+                data = sys.stdin.read()
+            if args.checkdata or args.checknonempty:
+                # Check that data is valid JSON or XML.
+                # If no data is read at all only exit with nonzero status, assume the previous
+                # part of the pipeline has already issues an error.
+                if not data and args.checknonempty:
                     sys.exit(1)
-            elif args.put == 'application/xml':
-                try:
-                    decodedData = xml.etree.ElementTree.fromstring(data)
-                except xml.etree.ElementTree.ParseError:
-                    print >> sys.stderr, "%s: no valid XML data read from stdin" % sys.argv[0]
-                    print >>sys.stderr, data
+                if args.put == 'application/json':
+                    try:
+                        decodedData = json.loads(data)
+                        data = json.dumps(decodedData)
+                    except ValueError:
+                        print >>sys.stderr, "%s: no valid JSON data read from stdin" % sys.argv[0]
+                        print >>sys.stderr, data
+                        sys.exit(1)
+                elif args.put == 'application/xml':
+                    try:
+                        decodedData = xml.etree.ElementTree.fromstring(data)
+                    except xml.etree.ElementTree.ParseError:
+                        print >> sys.stderr, "%s: no valid XML data read from stdin" % sys.argv[0]
+                        print >>sys.stderr, data
+                        sys.exit(1)
+                elif args.checkdata:
+                    print >>sys.stderr, "%s: --checkdata only allowed for JSON and XML data"
                     sys.exit(1)
-            elif args.checkdata:
-                print >>sys.stderr, "%s: --checkdata only allowed for JSON and XML data"
+            elif not data and not args.allow_empty:
+                print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]
                 sys.exit(1)
-        elif not data and not args.allow_empty:
-            print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]
-            sys.exit(1)
-        result = server.put(args.var, data, args.put, variant=args.variant, format=args.mimetype)
-    elif args.post:
-        data = args.data
-        if not data:
-            data = sys.stdin.read()
-        result = server.post(args.var, data, args.post, variant=args.variant, format=args.mimetype)
-    else:
-        result = server.get(args.var, variant=args.variant, format=args.mimetype)
-    if args.python:
-        result = json.loads(result)
-        if args.pretty:
-            pp = pprint.PrettyPrinter()
-            result = pp.pformat(result)
+            result = server.put(args.var, data, args.put, variant=args.variant, format=args.mimetype)
+        elif args.post:
+            data = args.data
+            if not data:
+                data = sys.stdin.read()
+            result = server.post(args.var, data, args.post, variant=args.variant, format=args.mimetype)
         else:
-            result = repr(result)
-    print result.strip()
+            result = server.get(args.var, variant=args.variant, format=args.mimetype)
+        if args.python:
+            result = json.loads(result)
+            if args.pretty:
+                pp = pprint.PrettyPrinter()
+                result = pp.pformat(result)
+            else:
+                result = repr(result)
+        print result.strip()
+    except IgorError, e:
+        print >>sys.stderr, "%s: %s" % (sys.argv[0], e.args[0])
     
 if __name__ == '__main__':
     main()

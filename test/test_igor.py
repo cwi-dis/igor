@@ -163,10 +163,14 @@ class IgorTest(unittest.TestCase):
         p.post('sandbox/test31/item', 'one', datatype='text/plain')
         result = p.get('sandbox/test31/item', format='text/plain')
         self.assertEqual('thirtyone', result.translate(None, ' \n'))
+        
+        self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test31/item', format='application/xml')
+        
         result2 = p.get('sandbox/test31/item', format='application/xml', variant='multi')
         self.assertIn('thirty', result2)
         self.assertIn('one', result2)
-        result3 = p.get('sandbox/test31/item', format='application/json')
+        
+        result3 = p.get('sandbox/test31/item', format='application/json', variant='multi')
         result3list = json.loads(result3)
         self.assertEqual(len(result3list), 2)
         self.assertIsInstance(result3list, list)

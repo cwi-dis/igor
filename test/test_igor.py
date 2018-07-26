@@ -20,6 +20,8 @@ FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 class IgorTest(unittest.TestCase):
     igorDir = os.path.join(FIXTURES, 'testIgor')
     igorLogFile = os.path.join(FIXTURES, 'testIgor.log')
+    igorHostname=socket.gethostname()
+    igorHostname2='localhost'
     igorPort = 19333
     igorProtocol = "http"
     igorVarArgs = {}
@@ -33,7 +35,7 @@ class IgorTest(unittest.TestCase):
         if os.path.exists(cls.igorLogFile):
             os.unlink(cls.igorLogFile)
         
-        cls.igorUrl = "%s://localhost:%d/data/" % (cls.igorProtocol, cls.igorPort)
+        cls.igorUrl = "%s://%s:%d/data/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort)
         
         if DEBUG_TEST: print 'IgorTest: Setup database'
         setup = igorSetup.IgorSetup(database=cls.igorDir)
@@ -43,14 +45,16 @@ class IgorTest(unittest.TestCase):
         
         if cls.igorProtocol == 'https':
             if DEBUG_TEST: print 'IgorTest: setup self-signed signature'
-            ok = setup.cmd_certificateSelfsigned('/C=NL/O=igor/CN=localhost', 'localhost', socket.gethostname(), '127.0.0.1', '::1')
+            ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname)
+#            ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname, cls.igorHostname2, '127.0.0.1', '::1')
             assert ok
             setup.postprocess(run=True)
             certFile = os.path.join(cls.igorDir, 'igor.crt')
             cls.igorVarArgs['certificate'] = certFile
-            cls.igorVarArgs['noverify'] = True
+#            cls.igorVarArgs['noverify'] = True
             os.putenv('SSL_CERT_FILE', certFile)
-            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
+            os.putenv('REQUESTS_CA_BUNDLE', certFile)
+#            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
         if DEBUG_TEST: print 'IgorTest: Check database consistency'
         subprocess.check_call([sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)], stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)

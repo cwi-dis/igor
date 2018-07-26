@@ -4,6 +4,7 @@ import Queue
 import urlparse
 import time
 import sys
+import os
 import traceback
 import json
 
@@ -61,7 +62,10 @@ class URLCallRunner(threading.Thread):
                     # Remote.
                     token.addToHeadersFor(headers, url)
                     if headers == {}: headers = None
-                    r = requests.request(method, url, data=data, headers=headers)
+                    kwargs = {}
+                    if os.environ.get('IGOR_TEST_NO_SSL_VERIFY'):
+                        kwargs['verify'] = False
+                    r = requests.request(method, url, data=data, headers=headers, **kwargs)
                     resultStatus = str(r.status_code)
                     resultData = r.text
                     # Stop-gap to get more info in the log, if possible

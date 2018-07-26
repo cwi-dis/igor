@@ -5,3 +5,4 @@ dist
 *.egg-info
 test/fixtures/testIgor
 test/fixtures/testIgorHttps
+test/fixtures/testIgorCaps

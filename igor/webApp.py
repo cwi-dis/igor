@@ -568,6 +568,7 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
     def put_key(self, key, mimetype, variant, data, datamimetype, token, replace=True):
+        print 'xxxjack token=', token
         try:
             if not key:
                 raise myWebError("400 cannot PUT or POST whole document")
@@ -593,6 +594,8 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     # NOTE: we get the parent node using the magic allow-everything Igor token.
                     # This is safe, because the previous getElements call has checked that this request actually
                     # has the required PUT or POST access.
+                    # NOTE NOTE: this comment is untrue (as shown by test_igor): if the element does not exist yet
+                    # that test is incomplete. To be fixed.
                     parentElements = self.db.getElements(parentPath, 'post', access.singleton.tokenForIgor())
                     if not parentElements:
                         raise web.notfound("404 Parent not found: %s" % parentPath)

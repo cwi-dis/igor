@@ -212,6 +212,23 @@ class IgorTest(unittest.TestCase):
         wantedContent = {'test42':{'src':'42c', 'sink':['42a','42b','42c']}}
         self.assertEqual(resultDict, wantedContent)
         
+    def test43_action_indirect(self):
+        p = self._igorVar()
+        content = {'test43':{'src':'', 'sink':''}}
+        action1 = {'action':dict(name='test43first', url='/action/test43second', xpath='/data/sandbox/test43/src')}
+        action2 = {'action':dict(name='test43second', url='/data/sandbox/test43/sink', method='PUT', data='copy-{/data/sandbox/test43/src}-copy')}
+        p.put('sandbox/test43', json.dumps(content), datatype='application/json')
+        p.post('actions/action', json.dumps(action1), datatype='application/json')
+        p.post('actions/action', json.dumps(action2), datatype='application/json')
+        p.put('sandbox/test43/src', 'forty-three', datatype='text/plain')
+        
+        time.sleep(1)
+        
+        result = p.get('sandbox/test43', format='application/json')
+        resultDict = json.loads(result)
+        wantedContent = {'test43':{'src':'forty-three', 'sink':'copy-forty-three-copy'}}
+        self.assertEqual(resultDict, wantedContent)
+        
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorLogFile = os.path.join(FIXTURES, 'testIgorHttps.log')

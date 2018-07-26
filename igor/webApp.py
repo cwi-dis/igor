@@ -568,7 +568,6 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
             raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
     def put_key(self, key, mimetype, variant, data, datamimetype, token, replace=True):
-        print 'xxxjack token=', token
         try:
             if not key:
                 raise myWebError("400 cannot PUT or POST whole document")

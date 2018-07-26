@@ -80,7 +80,7 @@ class Action:
         # Run for each node (or once, if no node present because we were not triggered by an xpath)        
         if not nodelist:
             nodelist = [None]
-        if DEBUG: print '%s.callback(%s)' % (repr(self), repr(nodelist))
+        if DEBUG: print 'Action%s.callback(%s)' % (repr(self), repr(nodelist))
         for node in nodelist:
             # Test whether we are allowed to run according to our condition
             if self.condition:
@@ -137,21 +137,21 @@ class Action:
         earliestNextRun = int(time.time())
         if self.minInterval:
             earliestNextRun += self.minInterval
-        if DEBUG: print 'Action._willRunNow', earliestNextRun
+        #if DEBUG: print 'Action%s._willRunNow, t=%d' % (self, earliestNextRun)
         nbElements = self.element.getElementsByTagName("notBefore")
         if nbElements:
             nbElement = nbElements[0]
         else:
-            if DEBUG: print 'Action._willRunNow create notBefore element'
+            #if DEBUG: print 'Action._willRunNow create notBefore element'
             doc = self.element.ownerDocument
             nbElement = doc.createElement("notBefore")
             self.element.appendChild(nbElement)
         nbText = nbElement.firstChild
         if nbText:
-            if DEBUG: print 'Action._willRunNow replace text data'
+            #if DEBUG: print 'Action._willRunNow replace notBefore text data'
             nbText.data = unicode(earliestNextRun)
         else:
-            if DEBUG: print 'Action._willRunNow create text node'
+            #if DEBUG: print 'Action._willRunNow create notBefore text node'
             doc = self.element.ownerDocument
             nbText = doc.createTextNode(unicode(earliestNextRun))
             nbElement.appendChild(nbText)
@@ -203,7 +203,8 @@ class ActionCollection(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self.actions = []
-        self.actionsChanged = threading.Event()
+        self.lock = threading.RLock()
+        self.actionsChanged = threading.Condition(self.lock)
         self.database = database
         self.scheduleCallback = scheduleCallback
         self.access = access
@@ -219,49 +220,56 @@ class ActionCollection(threading.Thread):
         
     def run(self):
         """Thread that triggers timed actions as they become elegible"""
-        while not self.stopping:
-            #
-            # Run all actions that have a scheduled time now (or in the past)
-            # and remember the earliest future action time
-            #
-            nothingBefore = NEVER
-            for a in self.actions:
-                if a.nextTime <= time.time():
-                    a.callback()
-                if a.nextTime < nothingBefore:
-                    nothingBefore = a.nextTime
-            # Repeat the loop if the earliest future time is in the past, by now.
-            if nothingBefore < time.time():
-                continue
-            if nothingBefore == NEVER:
-                waitTime = None
-            else:
-                waitTime = nothingBefore - time.time()
-            self.actionsChanged.wait(waitTime)
-            self.actionsChanged.clear()
+        with self.lock:
+            while not self.stopping:
+                #
+                # Run all actions that have a scheduled time now (or in the past)
+                # and remember the earliest future action time
+                #
+                if DEBUG: print 'ActionCollection.run(t=%d)' % time.time()
+                nothingBefore = NEVER
+                for a in self.actions:
+                    if a.nextTime <= time.time():
+                        a.callback()
+                    if a.nextTime < nothingBefore:
+                        nothingBefore = a.nextTime
+                # Repeat the loop if the earliest future time is in the past, by now.
+                if nothingBefore < time.time():
+                    continue
+                if nothingBefore == NEVER:
+                    waitTime = None
+                else:
+                    waitTime = nothingBefore - time.time()
+                self.actionsChanged.wait(waitTime)
         
     def actionTimeChanged(self, action):
         """Called by an Action when its nextTime has changed"""
-        self.actionsChanged.set()
+        with self.lock:
+            self.actionsChanged.notify()
         
     def updateActions(self, node):
         """Called by upper layers when something has changed in the actions in the database"""
+        if DEBUG: print 'ActionCollection.updateActions(t=%d)' % time.time()
         assert node.tagName == 'actions'
-        # Clear out old queue
-        self.actions = []
-        # Fill the queue with the new actions
-        # Now create new triggers
-        child = node.firstChild
-        while child:
-            if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
-                action = Action(self, child)
-                self.actions.append(action)
-            child = child.nextSibling
-        # Signal the runner thread
-        self.actionsChanged.set()
+        with self.lock:
+            # Clear out old queue
+            for a in self.actions:
+                a.delete()
+            self.actions = []
+            # Fill the queue with the new actions
+            # Now create new triggers
+            child = node.firstChild
+            while child:
+                if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
+                    action = Action(self, child)
+                    self.actions.append(action)
+                child = child.nextSibling
+            # Signal the runner thread
+            self.actionsChanged.notify()
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""
+        if DEBUG: print 'ActionCollection.triggerAction(%s)' % node        
         for a in self.actions:
             if a.element == node:
                 a.callback()
@@ -269,7 +277,8 @@ class ActionCollection(threading.Thread):
         print 'ERROR: triggerAction called for unknown element', repr(node)
             
     def stop(self):
-        self.stopping = True
-        self.actionsChanged.set()
+        with self.lock:
+            self.stopping = True
+            self.actionsChanged.notify()
         self.join()
         

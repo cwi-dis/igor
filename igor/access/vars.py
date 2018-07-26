@@ -14,7 +14,7 @@ CASCADING_RULES_IMPLIED = {
     'child' : {'child'}
 }
 
-DEBUG=False
+DEBUG=[]    # False, but trick in __main__ can make it true even though imported as * by other modules
 DEBUG_DELEGATION=True
 
 # For the time being: define this to have the default token checker allow everything

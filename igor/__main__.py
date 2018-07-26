@@ -410,11 +410,14 @@ def main():
     access.createSingleton(not useCapabilities)
     if args.debug:
         if args.debug in ('callUrl', 'all'): callUrl.DEBUG = True
-        if args.debug in ('sseListener', 'all'): sseListener.DEBUG = True
-        if args.debug in ('actions', 'all'): actions.DEBUG = True
-        if args.debug in ('xmlDatabase', 'all'): xmlDatabase.DEBUG = True
-        if args.debug in ('webApp', 'all'): webApp.DEBUG = True
-        if args.debug in ('access', 'all'): access.DEBUG = True
+        elif args.debug in ('sseListener', 'all'): sseListener.DEBUG = True
+        elif args.debug in ('actions', 'all'): actions.DEBUG = True
+        elif args.debug in ('xmlDatabase', 'all'): xmlDatabase.DEBUG = True
+        elif args.debug in ('webApp', 'all'): webApp.DEBUG = True
+        elif args.debug in ('access', 'all'): access.DEBUG.append(True)
+        else:
+            print >>sys.stderr, "%s: --debug argument should be modulename or 'all'" % sysargv[0]
+            sys.eit(1)
     datadir = args.database
     print >>sys.stderr, 'igorServer %s running from %s' % (VERSION, sys.argv[0])
     try:

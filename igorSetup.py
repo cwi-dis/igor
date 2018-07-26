@@ -33,16 +33,16 @@ distinguished_name = subject
 # Section x509_ext is used when generating a self-signed certificate. I.e., openssl req -x509 ...
 [ x509_ext ]
 
-subjectKeyIdentifier        = hash
-authorityKeyIdentifier  = keyid,issuer
+##subjectKeyIdentifier        = hash
+##authorityKeyIdentifier  = keyid,issuer
 
 # You only need digitalSignature below. *If* you don't allow
 #   RSA Key transport (i.e., you use ephemeral cipher suites), then
 #   omit keyEncipherment because that's key transport.
-basicConstraints        = CA:FALSE
-keyUsage            = digitalSignature, keyEncipherment
+##basicConstraints        = CA:FALSE
+##keyUsage            = digitalSignature, keyEncipherment
 subjectAltName          = @alternate_names
-nsComment           = "OpenSSL Generated Certificate"
+##nsComment           = "OpenSSL Generated Certificate"
 
 # RFC 5280, Section 4.2.1.12 makes EKU optional
 #   CA/Browser Baseline Requirements, Appendix (B)(3)(G) makes me confused

@@ -267,6 +267,7 @@ class CapabilityConsistency(StructuralConsistency):
                 self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-status', obj='/data/status', get='descendant-or-self')
                 self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-igor', obj='/data/services/igor', get='descendant-or-self')
                 self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-accessControl', obj='/internal/accessControl', get='child')
+                self._hasCapability('/data/au:access/au:defaultCapabilities', cid='default-sandbox', obj='/data/sandbox', get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
 
                 self._hasCapability('/data/identities', cid='people-people', obj='/data/people', get='descendant-or-self')
 

@@ -55,6 +55,7 @@ These capabilities should be here:
 - get(descendant-or-self), /data/services/igor
 - get(child), /static
 - get(child), /internal/accessControl
+- get(descendant-or-self)/put(descendant)/post(descendant)/delete(descendant), /data/sandbox
 
 ### /data/au:access/au:exportedCapabilities
 

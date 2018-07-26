@@ -34,6 +34,7 @@
 				<child>default-status</child>
 				<child>default-igor</child>
 				<child>default-accessControl</child>
+				<child>default-sandbox</child>
 				<child>people-people</child>
 				<child>admin-data</child>
 				<child>admin-action</child>
@@ -223,6 +224,15 @@
 				<obj>/internal/accessControl</obj>
 				<parent>root</parent>
 				<cid>default-accessControl</cid>
+			</au:capability>
+			<au:capability>
+				<get>descendant-or-self</get>
+				<put>descendant</put>
+				<post>descendant</post>
+				<delete>descendant</delete>
+				<obj>/data/sandbox</obj>
+				<parent>root</parent>
+				<cid>default-sandbox</cid>
 			</au:capability>
 		</au:defaultCapabilities>
 		<au:exportedCapabilities>

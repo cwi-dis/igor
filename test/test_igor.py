@@ -25,6 +25,7 @@ class IgorTest(unittest.TestCase):
     igorPort = 19333
     igorProtocol = "http"
     igorVarArgs = {}
+    igorServerArgs = []
     
     @classmethod
     def setUpClass(cls):
@@ -57,10 +58,10 @@ class IgorTest(unittest.TestCase):
 #            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
         if DEBUG_TEST: print 'IgorTest: Check database consistency'
-        subprocess.check_call([sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)], stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
+        subprocess.check_call([sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
 
         if DEBUG_TEST: print 'IgorTest: Start server'
-        cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)], stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
+        cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
         time.sleep(2)
     
     @classmethod
@@ -94,11 +95,9 @@ class IgorTest(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual(result[0], "<")
         
-    def notyet_test01_get_static_nonexistent(self):
+    def test02_get_static_nonexistent(self):
         p = self._igorVar()
-        result = p.get('/nonexistent.html')
-        self.assertTrue(result)
-        self.assertEqual(result[0], "<")
+        self.assertRaises(igorVar.IgorError, p.get, '/nonexistent.html')
         
     def test11_get_xml(self):
         p = self._igorVar()
@@ -186,6 +185,14 @@ class IgorTest(unittest.TestCase):
         self.assertEqual(result3list[0]['item'], 'thirty')
         self.assertEqual(result3list[1]['item'], 'one')
         
+    def test32_delete(self):
+        p = self._igorVar()
+        p.put('sandbox/test32', 'thirtytwo', datatype='text/plain')
+        result = p.get('sandbox/test32', format='text/plain')
+        self.assertEqual(result.strip(), 'thirtytwo')
+        p.delete('sandbox/test32')
+        self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
+
     def test41_action(self):
         p = self._igorVar()
         content = {'test41':{'src':'', 'sink':''}}
@@ -229,6 +236,7 @@ class IgorTest(unittest.TestCase):
         p.put('sandbox/test43', json.dumps(content), datatype='application/json')
         p.post('actions/action', json.dumps(action1), datatype='application/json')
         p.post('actions/action', json.dumps(action2), datatype='application/json')
+        time.sleep(1)
         p.put('sandbox/test43/src', 'forty-three', datatype='text/plain')
         
         time.sleep(1)
@@ -246,9 +254,10 @@ class IgorTest(unittest.TestCase):
         p.put('sandbox/test44', json.dumps(content), datatype='application/json')
         p.post('actions/action', json.dumps(action1), datatype='application/json')
         p.post('actions/action', json.dumps(action2), datatype='application/json')
+        time.sleep(1)
         p.put('sandbox/test44/src', 'forty-four', datatype='text/plain')
         
-        time.sleep(2)
+        time.sleep(4)
         
         result = p.get('sandbox/test44', format='application/json')
         resultDict = json.loads(result)
@@ -261,6 +270,28 @@ class IgorTestHttps(IgorTest):
     igorPort = 29333
     igorProtocol = "https"
     
+class IgorTestCaps(IgorTestHttps):
+    igorDir = os.path.join(FIXTURES, 'testIgorCaps')
+    igorLogFile = os.path.join(FIXTURES, 'testIgorCaps.log')
+    igorPort = 39333
+    igorServerArgs = ["--capabilities"]
+
+    def test19_get_disallowed(self):
+        p = self._igorVar()
+        self.assertRaises(igorVar.IgorError, p.get, 'identities', format='application/xml')
+        
+    def test29_put_disallowed(self):
+        p = self._igorVar()
+        self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
+        
+    def test29_put_disallowed(self):
+        p = self._igorVar()
+        self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
+
+    def test39_delete_disallowed(self):
+        p = self._igorVar()
+        self.assertRaises(igorVar.IgorError, p.delete, 'environment/systemHealth')
+
 if __name__ == '__main__':
     unittest.main()
     

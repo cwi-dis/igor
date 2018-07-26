@@ -5,6 +5,7 @@ import sys
 import time
 import subprocess
 import json
+import socket
 import xml.etree.ElementTree as ET
 import igorVar
 import igorSetup
@@ -29,7 +30,8 @@ class IgorTest(unittest.TestCase):
 
         if DEBUG_TEST: print 'IgorTest: Delete old database and logfile'
         shutil.rmtree(cls.igorDir, True)
-        shutil.rmtree(cls.igorLogFile, True)
+        if os.path.exists(cls.igorLogFile):
+            os.unlink(cls.igorLogFile)
         
         cls.igorUrl = "%s://localhost:%d/data/" % (cls.igorProtocol, cls.igorPort)
         
@@ -41,11 +43,14 @@ class IgorTest(unittest.TestCase):
         
         if cls.igorProtocol == 'https':
             if DEBUG_TEST: print 'IgorTest: setup self-signed signature'
-            ok = setup.cmd_certificateSelfsigned('/C=NL/O=igor/CN=localhost', 'localhost', '127.0.0.1', '::1')
+            ok = setup.cmd_certificateSelfsigned('/C=NL/O=igor/CN=localhost', 'localhost', socket.gethostname(), '127.0.0.1', '::1')
             assert ok
             setup.postprocess(run=True)
-            cls.igorVarArgs['certificate'] = os.path.join(cls.igorDir, 'igor.crt')
+            certFile = os.path.join(cls.igorDir, 'igor.crt')
+            cls.igorVarArgs['certificate'] = certFile
             cls.igorVarArgs['noverify'] = True
+            os.putenv('SSL_CERT_FILE', certFile)
+            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
         if DEBUG_TEST: print 'IgorTest: Check database consistency'
         subprocess.check_call([sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)], stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
@@ -227,6 +232,23 @@ class IgorTest(unittest.TestCase):
         result = p.get('sandbox/test43', format='application/json')
         resultDict = json.loads(result)
         wantedContent = {'test43':{'src':'forty-three', 'sink':'copy-forty-three-copy'}}
+        self.assertEqual(resultDict, wantedContent)
+
+    def test44_action_external(self):
+        p = self._igorVar()
+        content = {'test44':{'src':'', 'sink':''}}
+        action1 = {'action':dict(name='test44first', url='{/data/services/igor/protocol}://{/data/services/igor/host}:{/data/services/igor/port}/action/test44second', xpath='/data/sandbox/test44/src')}
+        action2 = {'action':dict(name='test44second', url='/data/sandbox/test44/sink', method='PUT', data='copy-{/data/sandbox/test44/src}-copy')}
+        p.put('sandbox/test44', json.dumps(content), datatype='application/json')
+        p.post('actions/action', json.dumps(action1), datatype='application/json')
+        p.post('actions/action', json.dumps(action2), datatype='application/json')
+        p.put('sandbox/test44/src', 'forty-four', datatype='text/plain')
+        
+        time.sleep(2)
+        
+        result = p.get('sandbox/test44', format='application/json')
+        resultDict = json.loads(result)
+        wantedContent = {'test44':{'src':'forty-four', 'sink':'copy-forty-four-copy'}}
         self.assertEqual(resultDict, wantedContent)
         
 class IgorTestHttps(IgorTest):

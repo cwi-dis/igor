@@ -51,7 +51,7 @@ class IgorTest(unittest.TestCase):
         subprocess.check_call([sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)], stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
 
         if DEBUG_TEST: print 'IgorTest: Start server'
-        cls.igorProcess = subprocess.Popen([sys.executable, "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)], stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
+        cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)], stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
         time.sleep(2)
     
     @classmethod
@@ -185,24 +185,27 @@ class IgorTest(unittest.TestCase):
         p.post('actions/action', json.dumps(action), datatype='application/json')
         p.put('sandbox/test41/src', 'forty-one', datatype='text/plain')
         
-        time.sleep(2)
+        time.sleep(1)
         
         result = p.get('sandbox/test41', format='application/json')
         resultDict = json.loads(result)
         wantedContent = {'test41':{'src':'forty-one', 'sink':'copy-forty-one-copy'}}
         self.assertEqual(resultDict, wantedContent)
         
-    def test42_action(self):
+    def test42_action_post(self):
         p = self._igorVar()
         content = {'test42':{'src':''}}
         action = {'action':dict(name='test42action', url='/data/sandbox/test42/sink', xpath='/data/sandbox/test42/src', method='POST', data='{.}')}
         p.put('sandbox/test42', json.dumps(content), datatype='application/json')
         p.post('actions/action', json.dumps(action), datatype='application/json')
+        time.sleep(1)
         p.put('sandbox/test42/src', '42a', datatype='text/plain')
+        time.sleep(1)
         p.put('sandbox/test42/src', '42b', datatype='text/plain')
+        time.sleep(1)
         p.put('sandbox/test42/src', '42c', datatype='text/plain')
         
-        time.sleep(2)
+        time.sleep(1)
         
         result = p.get('sandbox/test42', format='application/json')
         resultDict = json.loads(result)

@@ -50,7 +50,6 @@ def enable_thread_profiling():
             PROFILER_STATS.add(self._prof)
 
     threading.Thread.run = profile_run
-    print 'xxxjack inserted profiler'
     
 
 class IgorServer:
@@ -75,7 +74,7 @@ class IgorServer:
         self.ssl = not nossl
         keyFile = os.path.join(self.datadir, 'igor.key')
         if self.ssl and not os.path.exists(keyFile):
-            print 'Warning: Using http in stead of https: no private key file', keyFile
+            print >>sys.stderr, 'Warning: Using http in stead of https: no private key file', keyFile
             self.ssl = False
         if self.ssl:
             self.privateKeyFile = keyFile
@@ -177,7 +176,7 @@ class IgorServer:
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         self.app.run(port=self.port)
         
-    def check(self, fix=False):
+    def check(self, fix=False, token=None):
         rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
         print rv
         
@@ -254,7 +253,7 @@ class IgorServer:
             raise web.seeother(returnTo)
         return rv
         
-    def updateActions(self):
+    def updateActions(self, token=None):
         """Create any (periodic) event handlers defined in the database"""
         startupActions = self.database.getElements('actions', 'get', self.access.tokenForIgor())
         if len(startupActions):
@@ -267,7 +266,7 @@ class IgorServer:
             self.actionHandler.updateActions([])
         return 'OK'
 
-    def updateEventSources(self):
+    def updateEventSources(self, token=None):
         """Create any SSE event sources that are defined in the database"""
         eventSources = self.database.getElements('eventSources', 'get', self.access.tokenForIgor())
         if len(eventSources):
@@ -280,7 +279,7 @@ class IgorServer:
             self.eventSources.updateEventSources([])
         return 'OK'
 
-    def updateTriggers(self):
+    def updateTriggers(self, token=None):
         pass
         
     def runAction(self, actionname, token):
@@ -400,7 +399,7 @@ def main():
     
     myLogger.install(args.logLevel)
     if args.version:
-        print VERSION
+        print >>sys.stderr, VERSION
         sys.exit(0)
     
     useCapabilities = False # Default if neither --capabilities nor --noCapabilities has been specified
@@ -417,7 +416,7 @@ def main():
         if args.debug in ('webApp', 'all'): webApp.DEBUG = True
         if args.debug in ('access', 'all'): access.DEBUG = True
     datadir = args.database
-    print 'igorServer %s running from %s' % (VERSION, sys.argv[0])
+    print >>sys.stderr, 'igorServer %s running from %s' % (VERSION, sys.argv[0])
     try:
         igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl)
     except IOError, arg:

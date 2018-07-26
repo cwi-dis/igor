@@ -110,7 +110,7 @@ class EventSource(SSEListener):
 
     def log(self, message):
         datetime = time.strftime('%d/%b/%Y %H:%M:%S')
-        print '- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message)
+        print >>sys.stderr, '- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message)
     
 class EventSourceCollection:
     def __init__(self, database, scheduleCallback):

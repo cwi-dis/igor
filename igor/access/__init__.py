@@ -6,6 +6,7 @@ import random
 import time
 import urlparse
 import jwt
+import sys
 
 from .vars import *
 from .capability import *
@@ -648,7 +649,7 @@ def createSingleton(noCapabilities=False):
     global singleton
     if singleton: return
     if noCapabilities:
-        print 'Warning: capability-base access control disabled'
+        print >>sys.stderr, 'Warning: capability-base access control disabled'
         import dummyAccess
         dummyAccess.createSingleton(noCapabilities)
         singleton = dummyAccess.singleton

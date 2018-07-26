@@ -74,9 +74,10 @@ class URLCallRunner(threading.Thread):
             except:
                 resultStatus = '502 URLCaller: exception while calling URL %s' % url
                 print resultStatus
+                sys.stdout.flush()
                 errorMessage = resultStatus
                 traceback.print_exc(file=sys.stdout)
-            print '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
+            print >>sys.stderr, '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
             alive = resultStatus[:3] == '200'
             if not alive or DEBUG:
                 if resultData and resultData.strip() != resultStatus.strip():
@@ -84,6 +85,7 @@ class URLCallRunner(threading.Thread):
                     resultLines = resultData.splitlines()
                     for line in resultLines:
                         print '\t'+line
+                    sys.stdout.flush()
             representing = tocall.get('representing')
             if representing:
                 if not alive and not resultData:

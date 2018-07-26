@@ -177,6 +177,38 @@ class IgorTest(unittest.TestCase):
         self.assertEqual(result3list[0]['item'], 'thirty')
         self.assertEqual(result3list[1]['item'], 'one')
         
+    def test41_action(self):
+        p = self._igorVar()
+        content = {'test41':{'src':'', 'sink':''}}
+        action = {'action':dict(name='test41action', url='/data/sandbox/test41/sink', xpath='/data/sandbox/test41/src', method='PUT', data='copy-{.}-copy')}
+        p.put('sandbox/test41', json.dumps(content), datatype='application/json')
+        p.post('actions/action', json.dumps(action), datatype='application/json')
+        p.put('sandbox/test41/src', 'forty-one', datatype='text/plain')
+        
+        time.sleep(2)
+        
+        result = p.get('sandbox/test41', format='application/json')
+        resultDict = json.loads(result)
+        wantedContent = {'test41':{'src':'forty-one', 'sink':'copy-forty-one-copy'}}
+        self.assertEqual(resultDict, wantedContent)
+        
+    def test42_action(self):
+        p = self._igorVar()
+        content = {'test42':{'src':''}}
+        action = {'action':dict(name='test42action', url='/data/sandbox/test42/sink', xpath='/data/sandbox/test42/src', method='POST', data='{.}')}
+        p.put('sandbox/test42', json.dumps(content), datatype='application/json')
+        p.post('actions/action', json.dumps(action), datatype='application/json')
+        p.put('sandbox/test42/src', '42a', datatype='text/plain')
+        p.put('sandbox/test42/src', '42b', datatype='text/plain')
+        p.put('sandbox/test42/src', '42c', datatype='text/plain')
+        
+        time.sleep(2)
+        
+        result = p.get('sandbox/test42', format='application/json')
+        resultDict = json.loads(result)
+        wantedContent = {'test42':{'src':'42c', 'sink':['42a','42b','42c']}}
+        self.assertEqual(resultDict, wantedContent)
+        
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorLogFile = os.path.join(FIXTURES, 'testIgorHttps.log')

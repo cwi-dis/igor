@@ -86,8 +86,10 @@ class IgorTest(unittest.TestCase):
         super(IgorTest, cls).tearDownClass()
         pass
         
-    def _igorVar(self):
-        return igorVar.IgorServer(self.igorUrl, **self.igorVarArgs)
+    def _igorVar(self, **kwargs):
+        kwargs = dict(kwargs)
+        kwargs.update(self.igorVarArgs)
+        return igorVar.IgorServer(self.igorUrl, **kwargs)
         
     def test01_get_static(self):
         p = self._igorVar()
@@ -193,75 +195,75 @@ class IgorTest(unittest.TestCase):
         p.delete('sandbox/test32')
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
 
-    def test41_action(self):
+    def test71_action(self):
         p = self._igorVar()
-        content = {'test41':{'src':'', 'sink':''}}
-        action = {'action':dict(name='test41action', url='/data/sandbox/test41/sink', xpath='/data/sandbox/test41/src', method='PUT', data='copy-{.}-copy')}
-        p.put('sandbox/test41', json.dumps(content), datatype='application/json')
+        content = {'test71':{'src':'', 'sink':''}}
+        action = {'action':dict(name='test71action', url='/data/sandbox/test71/sink', xpath='/data/sandbox/test71/src', method='PUT', data='copy-{.}-copy')}
+        p.put('sandbox/test71', json.dumps(content), datatype='application/json')
         p.post('actions/action', json.dumps(action), datatype='application/json')
-        p.put('sandbox/test41/src', 'forty-one', datatype='text/plain')
+        p.put('sandbox/test71/src', 'seventy-one', datatype='text/plain')
         
         time.sleep(1)
         
-        result = p.get('sandbox/test41', format='application/json')
+        result = p.get('sandbox/test71', format='application/json')
         resultDict = json.loads(result)
-        wantedContent = {'test41':{'src':'forty-one', 'sink':'copy-forty-one-copy'}}
+        wantedContent = {'test71':{'src':'seventy-one', 'sink':'copy-seventy-one-copy'}}
         self.assertEqual(resultDict, wantedContent)
         
-    def test42_action_post(self):
+    def test72_action_post(self):
         p = self._igorVar()
-        content = {'test42':{'src':''}}
-        action = {'action':dict(name='test42action', url='/data/sandbox/test42/sink', xpath='/data/sandbox/test42/src', method='POST', data='{.}')}
-        p.put('sandbox/test42', json.dumps(content), datatype='application/json')
+        content = {'test72':{'src':''}}
+        action = {'action':dict(name='test72action', url='/data/sandbox/test72/sink', xpath='/data/sandbox/test72/src', method='POST', data='{.}')}
+        p.put('sandbox/test72', json.dumps(content), datatype='application/json')
         p.post('actions/action', json.dumps(action), datatype='application/json')
         time.sleep(1)
-        p.put('sandbox/test42/src', '42a', datatype='text/plain')
+        p.put('sandbox/test72/src', '72a', datatype='text/plain')
         time.sleep(1)
-        p.put('sandbox/test42/src', '42b', datatype='text/plain')
+        p.put('sandbox/test72/src', '72b', datatype='text/plain')
         time.sleep(1)
-        p.put('sandbox/test42/src', '42c', datatype='text/plain')
+        p.put('sandbox/test72/src', '72c', datatype='text/plain')
         
         time.sleep(1)
         
-        result = p.get('sandbox/test42', format='application/json')
+        result = p.get('sandbox/test72', format='application/json')
         resultDict = json.loads(result)
-        wantedContent = {'test42':{'src':'42c', 'sink':['42a','42b','42c']}}
+        wantedContent = {'test72':{'src':'72c', 'sink':['72a','72b','72c']}}
         self.assertEqual(resultDict, wantedContent)
         
-    def test43_action_indirect(self):
+    def test73_action_indirect(self):
         p = self._igorVar()
-        content = {'test43':{'src':'', 'sink':''}}
-        action1 = {'action':dict(name='test43first', url='/action/test43second', xpath='/data/sandbox/test43/src')}
-        action2 = {'action':dict(name='test43second', url='/data/sandbox/test43/sink', method='PUT', data='copy-{/data/sandbox/test43/src}-copy')}
-        p.put('sandbox/test43', json.dumps(content), datatype='application/json')
+        content = {'test73':{'src':'', 'sink':''}}
+        action1 = {'action':dict(name='test73first', url='/action/test73second', xpath='/data/sandbox/test73/src')}
+        action2 = {'action':dict(name='test73second', url='/data/sandbox/test73/sink', method='PUT', data='copy-{/data/sandbox/test73/src}-copy')}
+        p.put('sandbox/test73', json.dumps(content), datatype='application/json')
         p.post('actions/action', json.dumps(action1), datatype='application/json')
         p.post('actions/action', json.dumps(action2), datatype='application/json')
         time.sleep(1)
-        p.put('sandbox/test43/src', 'forty-three', datatype='text/plain')
+        p.put('sandbox/test73/src', 'seventy-three', datatype='text/plain')
         
         time.sleep(1)
         
-        result = p.get('sandbox/test43', format='application/json')
+        result = p.get('sandbox/test73', format='application/json')
         resultDict = json.loads(result)
-        wantedContent = {'test43':{'src':'forty-three', 'sink':'copy-forty-three-copy'}}
+        wantedContent = {'test73':{'src':'seventy-three', 'sink':'copy-seventy-three-copy'}}
         self.assertEqual(resultDict, wantedContent)
 
-    def test44_action_external(self):
+    def test74_action_external(self):
         p = self._igorVar()
-        content = {'test44':{'src':'', 'sink':''}}
-        action1 = {'action':dict(name='test44first', url='{/data/services/igor/protocol}://{/data/services/igor/host}:{/data/services/igor/port}/action/test44second', xpath='/data/sandbox/test44/src')}
-        action2 = {'action':dict(name='test44second', url='/data/sandbox/test44/sink', method='PUT', data='copy-{/data/sandbox/test44/src}-copy')}
-        p.put('sandbox/test44', json.dumps(content), datatype='application/json')
+        content = {'test74':{'src':'', 'sink':''}}
+        action1 = {'action':dict(name='test74first', url='{/data/services/igor/protocol}://{/data/services/igor/host}:{/data/services/igor/port}/action/test74second', xpath='/data/sandbox/test74/src')}
+        action2 = {'action':dict(name='test74second', url='/data/sandbox/test74/sink', method='PUT', data='copy-{/data/sandbox/test74/src}-copy')}
+        p.put('sandbox/test74', json.dumps(content), datatype='application/json')
         p.post('actions/action', json.dumps(action1), datatype='application/json')
         p.post('actions/action', json.dumps(action2), datatype='application/json')
         time.sleep(1)
-        p.put('sandbox/test44/src', 'forty-four', datatype='text/plain')
+        p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
         
         time.sleep(4)
         
-        result = p.get('sandbox/test44', format='application/json')
+        result = p.get('sandbox/test74', format='application/json')
         resultDict = json.loads(result)
-        wantedContent = {'test44':{'src':'forty-four', 'sink':'copy-forty-four-copy'}}
+        wantedContent = {'test74':{'src':'seventy-four', 'sink':'copy-seventy-four-copy'}}
         self.assertEqual(resultDict, wantedContent)
         
 class IgorTestHttps(IgorTest):
@@ -291,6 +293,16 @@ class IgorTestCaps(IgorTestHttps):
     def test39_delete_disallowed(self):
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.delete, 'environment/systemHealth')
+        
+    def test40_newcap(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        pAdmin.put('environment/test40', '', datatype='text/plain')
+        pAdmin.get('/internal/accessControl/newToken?tokenId=admin-data&newOwner=/data/au:access/au:defaultCapabilities&newPath=/data/environment/test40&get=self&put=self')
+        p = self._igorVar()
+        p.put('environment/test40', 'forty', datatype='text/plain')
+        result = p.get('environment/test40', format='text/plain')
+        self.assertEqual(result.strip(), 'forty')
+        
 
 if __name__ == '__main__':
     unittest.main()

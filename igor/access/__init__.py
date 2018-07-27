@@ -374,6 +374,13 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             print 'access: ERROR: attempt to get checkerForElement(%s) with unexpected XPath: %s' % (repr(element), path)
             return DefaultAccessChecker()
         return AccessChecker(path)
+        
+    def checkerForNewElement(self, path):
+        """Returns an AccessChecker for an element that does not exist yet (specified by XPath)"""
+        if not path.startswith('/data'):
+            print 'access: ERROR: attempt to get checkerForNewElement() with unexpected XPath: %s' %  path
+            return DefaultAccessChecker()
+        return AccessChecker(path)
             
     def checkerForEntrypoint(self, entrypoint):
         """Returns an AccessChecker for an external entrypoint that is not a tree element"""

@@ -590,12 +590,9 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                     #
                     # Find parent
                     #
-                    # NOTE: we get the parent node using the magic allow-everything Igor token.
-                    # This is safe, because the previous getElements call has checked that this request actually
-                    # has the required PUT or POST access.
-                    # NOTE NOTE: this comment is untrue (as shown by test_igor): if the element does not exist yet
-                    # that test is incomplete. To be fixed.
-                    parentElements = self.db.getElements(parentPath, 'post', access.singleton.tokenForIgor())
+                    # NOTE: we pass the tagname for the child element. This is so put rights on a
+                    # child that does not exist yet can be checked.
+                    parentElements = self.db.getElements(parentPath, 'post', token, postChild=tag)
                     if not parentElements:
                         raise web.notfound("404 Parent not found: %s" % parentPath)
                     if len(parentElements) > 1:

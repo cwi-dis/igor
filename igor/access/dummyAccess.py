@@ -116,6 +116,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Returns an AccessChecker for an XML element"""
         return _checker
             
+    def checkerForNewElement(self, path):
+        """Returns an AccessChecker for an element that does not exist yet (specified by XPath)"""
+        return _checker
+            
     def checkerForEntrypoint(self, entrypoint):
         """Returns an AccessChecker for an external entrypoint that is not a tree element"""
         return _checker

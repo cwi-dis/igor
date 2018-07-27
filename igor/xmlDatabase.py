@@ -293,13 +293,18 @@ class DBImpl(DBSerializer):
         self.filename = filename
         self.initialize(filename=filename)
         
-    def _checkAccess(self, operation, element, token):
+    def _checkAccess(self, operation, element, token, postChild=None):
         assert token
         if not self.access:
             return
         ac = self.access.checkerForElement(element)
         if ac.allowed(operation, token):
             return
+        if operation == 'post' and postChild:
+            path = self.getXPathForElement(element) + '/' + postChild
+            ac = self.access.checkerForNewElement(path)
+            if ac.allowed('put', token):
+                return
         raise DBAccessError
 
     def filterAfterLoad(self, nodeOrDoc, token):
@@ -604,7 +609,7 @@ class DBImpl(DBSerializer):
                 self._checkAccess('get', n, token)
             return self._getValueList(nodeList)
         
-    def getElements(self, location, operation, token, context=None, namespaces=NAMESPACES):
+    def getElements(self, location, operation, token, context=None, namespaces=NAMESPACES, postChild=None):
         """Return a list of DOM nodes (elements only, for now) that match the location"""
         with self:
             if context is None:
@@ -612,7 +617,7 @@ class DBImpl(DBSerializer):
             nodeList = xpath.find(location, context, originalContext=[context], namespaces=namespaces)
             # Check we have access to all those nodes
             for n in nodeList:
-                self._checkAccess(operation, n, token)
+                self._checkAccess(operation, n, token, postChild)
             return nodeList
         
     def _getValueList(self, nodelist):

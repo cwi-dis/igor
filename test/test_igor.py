@@ -6,6 +6,7 @@ import time
 import subprocess
 import json
 import socket
+import urllib
 import xml.etree.ElementTree as ET
 import igorVar
 import igorSetup
@@ -70,7 +71,7 @@ class IgorTest(unittest.TestCase):
         if DEBUG_TEST: print 'IgorTest: Request server to stop'
         try:
             p = igorVar.IgorServer(cls.igorUrl, **cls.igorVarArgs)
-            result = p.get('/internal/stop')
+            result = p.get('/internal/stop', credentials='admin:')
         except:
             if DEBUG_TEST: print 'IgorTest: Ignoring exception during stop request'        
         time.sleep(2)
@@ -294,14 +295,51 @@ class IgorTestCaps(IgorTestHttps):
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.delete, 'environment/systemHealth')
         
+    def _new_capability(self, pAdmin, **kwargs):
+        argStr = urllib.urlencode(kwargs)
+        rv = pAdmin.get('/internal/accessControl/newToken?' + argStr)
+        return rv.strip()
+        
     def test40_newcap(self):
         pAdmin = self._igorVar(credentials='admin:')
         pAdmin.put('environment/test40', '', datatype='text/plain')
-        pAdmin.get('/internal/accessControl/newToken?tokenId=admin-data&newOwner=/data/au:access/au:defaultCapabilities&newPath=/data/environment/test40&get=self&put=self')
+        _ = self._new_capability(pAdmin, 
+            tokenId='admin-data', 
+            newOwner='/data/au:access/au:defaultCapabilities', 
+            newPath='/data/environment/test40',
+            get='self',
+            put='self'
+            )
         p = self._igorVar()
         p.put('environment/test40', 'forty', datatype='text/plain')
         result = p.get('environment/test40', format='text/plain')
         self.assertEqual(result.strip(), 'forty')
+
+    def _new_sharedkey(self, pAdmin, **kwargs):
+        argStr = urllib.urlencode(kwargs)
+        try:
+            rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
+        except igorVar.IgorError:
+            print '(shared key already exists for %s)' % repr(**kwargs)
+        
+    def test41_newcap_external(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        pAdmin.put('environment/test41', '', datatype='text/plain')
+        newCapID = self._new_capability(pAdmin, 
+            tokenId='admin-data', 
+            newOwner='/data/au:access/au:defaultCapabilities', 
+            newPath='/data/environment/test41',
+            get='self',
+            put='self',
+            delegate='1'
+            )
+        self._new_sharedkey(pAdmin, sub='localhost')
+        bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
+        
+        p = self._igorVar(bearer_token=bearerToken)
+        p.put('environment/test41', 'fortyone', datatype='text/plain')
+        result = p.get('environment/test41', format='text/plain')
+        self.assertEqual(result.strip(), 'fortyone')
         
 
 if __name__ == '__main__':

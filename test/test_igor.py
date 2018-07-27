@@ -197,11 +197,12 @@ class IgorTest(unittest.TestCase):
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
 
     def test71_action(self):
+        pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test71':{'src':'', 'sink':''}}
         action = {'action':dict(name='test71action', url='/data/sandbox/test71/sink', xpath='/data/sandbox/test71/src', method='PUT', data='copy-{.}-copy')}
         p.put('sandbox/test71', json.dumps(content), datatype='application/json')
-        p.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
         p.put('sandbox/test71/src', 'seventy-one', datatype='text/plain')
         
         time.sleep(1)
@@ -212,11 +213,12 @@ class IgorTest(unittest.TestCase):
         self.assertEqual(resultDict, wantedContent)
         
     def test72_action_post(self):
+        pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test72':{'src':''}}
         action = {'action':dict(name='test72action', url='/data/sandbox/test72/sink', xpath='/data/sandbox/test72/src', method='POST', data='{.}')}
         p.put('sandbox/test72', json.dumps(content), datatype='application/json')
-        p.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
         time.sleep(1)
         p.put('sandbox/test72/src', '72a', datatype='text/plain')
         time.sleep(1)
@@ -232,13 +234,14 @@ class IgorTest(unittest.TestCase):
         self.assertEqual(resultDict, wantedContent)
         
     def test73_action_indirect(self):
+        pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test73':{'src':'', 'sink':''}}
         action1 = {'action':dict(name='test73first', url='/action/test73second', xpath='/data/sandbox/test73/src')}
         action2 = {'action':dict(name='test73second', url='/data/sandbox/test73/sink', method='PUT', data='copy-{/data/sandbox/test73/src}-copy')}
         p.put('sandbox/test73', json.dumps(content), datatype='application/json')
-        p.post('actions/action', json.dumps(action1), datatype='application/json')
-        p.post('actions/action', json.dumps(action2), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
         time.sleep(1)
         p.put('sandbox/test73/src', 'seventy-three', datatype='text/plain')
         
@@ -249,14 +252,20 @@ class IgorTest(unittest.TestCase):
         wantedContent = {'test73':{'src':'seventy-three', 'sink':'copy-seventy-three-copy'}}
         self.assertEqual(resultDict, wantedContent)
 
+    def _create_caps_for_action(self, pAdmin, caller, callee):
+        pass
+        
     def test74_action_external(self):
+        pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test74':{'src':'', 'sink':''}}
         action1 = {'action':dict(name='test74first', url='{/data/services/igor/protocol}://{/data/services/igor/host}:{/data/services/igor/port}/action/test74second', xpath='/data/sandbox/test74/src')}
         action2 = {'action':dict(name='test74second', url='/data/sandbox/test74/sink', method='PUT', data='copy-{/data/sandbox/test74/src}-copy')}
         p.put('sandbox/test74', json.dumps(content), datatype='application/json')
-        p.post('actions/action', json.dumps(action1), datatype='application/json')
-        p.post('actions/action', json.dumps(action2), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
+        self._create_caps_for_action(pAdmin, 'test74first', 'test74second')
+        
         time.sleep(1)
         p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
         
@@ -327,7 +336,7 @@ class IgorTestCaps(IgorTestHttps):
         pAdmin.put('environment/test41', '', datatype='text/plain')
         newCapID = self._new_capability(pAdmin, 
             tokenId='admin-data', 
-            newOwner='/data/au:access/au:defaultCapabilities', 
+            newOwner='/data/identities/admin', 
             newPath='/data/environment/test41',
             get='self',
             put='self',
@@ -340,6 +349,17 @@ class IgorTestCaps(IgorTestHttps):
         p.put('environment/test41', 'fortyone', datatype='text/plain')
         result = p.get('environment/test41', format='text/plain')
         self.assertEqual(result.strip(), 'fortyone')
+        
+    def _create_caps_for_action(self, pAdmin, caller, callee):
+        self._new_sharedkey(pAdmin, aud='%s://%s:%d/' % (self.igorProtocol, self.igorHostname, self.igorPort))
+        newCapID = self._new_capability(pAdmin, 
+            tokenId='external', 
+            newOwner="/data/actions/action[name='%s']" % caller, 
+            newPath='/action/%s' % callee,
+            get='self',
+            aud='%s://%s:%d/' % (self.igorProtocol, self.igorHostname, self.igorPort),
+            delegate='1'
+            )
         
 
 if __name__ == '__main__':

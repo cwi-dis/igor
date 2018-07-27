@@ -69,6 +69,10 @@ class TokenStorage:
         self._tokenCache = {}
         self._defaultTokenInstance = None
 
+    def _clearTokenCaches(self):
+        self._tokenCache = {}
+        self._defaultTokenInstance = None
+        
     def _registerTokenWithIdentifier(self, identifier, token):
         self._tokenCache[identifier] = token
         
@@ -527,6 +531,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # Save
         #
+        self._clearTokenCaches()
         self._save()
         #
         # Return the ID
@@ -554,6 +559,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # Save
         #
+        self._clearTokenCaches()
         self._save()
         
     def revokeToken(self, token, parentId, tokenId):
@@ -577,6 +583,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # Save
         #
+        self._clearTokenCaches()
         self._save()
         
     def exportToken(self, token, tokenId, subject=None, lifetime=None, **kwargs):

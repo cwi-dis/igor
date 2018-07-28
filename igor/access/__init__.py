@@ -536,6 +536,11 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         self._clearTokenCaches()
         self._save()
         #
+        # If the new token may affect actions we should update the actions
+        #
+        if newOwner.startswith('/data/actions') or newOwner.startswith('actions'):
+            self.COMMAND.queue('updateActions', _accessSelfToken)
+        #
         # Return the ID
         #
         return newId

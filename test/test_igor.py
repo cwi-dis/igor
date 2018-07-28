@@ -329,7 +329,7 @@ class IgorTestCaps(IgorTestHttps):
         try:
             rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
         except igorVar.IgorError:
-            print '(shared key already exists for %s)' % repr(**kwargs)
+            if DEBUG_TEST: print '(shared key already exists for %s)' % repr(kwargs)
         
     def test41_newcap_external(self):
         pAdmin = self._igorVar(credentials='admin:')
@@ -351,13 +351,16 @@ class IgorTestCaps(IgorTestHttps):
         self.assertEqual(result.strip(), 'fortyone')
         
     def _create_caps_for_action(self, pAdmin, caller, callee):
-        self._new_sharedkey(pAdmin, aud='%s://%s:%d/' % (self.igorProtocol, self.igorHostname, self.igorPort))
+        igorIssuer = pAdmin.get('/internal/accessControl/getSelfIssuer')
+        igorAudience = pAdmin.get('/internal/accessControl/getSelfAudience')
+        self._new_sharedkey(pAdmin, aud=igorAudience)
         newCapID = self._new_capability(pAdmin, 
             tokenId='external', 
             newOwner="/data/actions/action[name='%s']" % caller, 
             newPath='/action/%s' % callee,
             get='self',
-            aud='%s://%s:%d/' % (self.igorProtocol, self.igorHostname, self.igorPort),
+            aud=igorAudience,
+            iss=igorIssuer,
             delegate='1'
             )
         

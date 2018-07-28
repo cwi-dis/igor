@@ -7,6 +7,7 @@ import time
 import urlparse
 import jwt
 import sys
+import urllib
 
 from .vars import *
 from .capability import *
@@ -159,13 +160,14 @@ class IssuerInterface:
         self._self_audience = None
         self.database = None
 
-    def getSelfAudience(self):
+    def getSelfAudience(self, token=None):
         """Return an audience identifier that refers to us"""
         if not self._self_audience:
-            self._self_audience = self.database.getValue('services/igor/url', _accessSelfToken)
+            baseUrl = self.database.getValue('services/igor/url', _accessSelfToken)
+            self._self_audience = urlparse.urljoin(baseUrl, '/')
         return self._self_audience
 
-    def getSelfIssuer(self):
+    def getSelfIssuer(self, token=None):
         """Return URL for ourselves as an issuer"""
         return urlparse.urljoin(self.getSelfAudience(),  '/issuer')
 

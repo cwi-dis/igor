@@ -9,7 +9,7 @@ class BaseAccessToken:
         self.identifier = None
 
     def __repr__(self):
-        return "%s(0x%x)" % (self.__class__.__name__, id(self))
+        return "%s(0x%x, cids:%s)" % (self.__class__.__name__, id(self), '/'.join(self._getIdentifiers()))
         
     def _getIdentifiers(self):
         """Internal method - Returns a list of all token IDs of this token (and any subtokens it contains)"""
@@ -141,9 +141,11 @@ class AccessToken(BaseAccessToken):
         if not 'aud' in self.content:
             return False
         if url.startswith(self.content['aud']):
+            if DEBUG: print 'access: capability %s matches url %s' % (self, url)
             return True
         p = urlparse.urlparse(url)
         if p.netloc == self.content['aud']:
+            if DEBUG: print 'access: capability %s matches hostname in %s' % (self, url)
             return True
         return False
 
@@ -204,9 +206,9 @@ class AccessToken(BaseAccessToken):
             if DEBUG_DELEGATION: print 'access: delegate %s: no delegation right on AccessToken %s' % (newPath, self)
             return False
         # Check whether this is the external-supertoken and whether we want to create a new external token
-        print 'xxxjack allowsDelegation', self, 'canDelegate', canDelegate, 'aud', aud
         if canDelegate == 'external':
-            if aud and aud != singleton.getSelfAudience():
+            if aud:
+                # Was: if aud and aud != singleton.getSelfAudience():
                 # xxxjack no further checks for external tokens. This may need refining.
                 return True
             else:
@@ -242,12 +244,12 @@ class AccessToken(BaseAccessToken):
             elif newIsChild:
                 # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
-                    if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
+                    if 1 or DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
                     return False
             else:
                 # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
-                    if DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowd by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
+                    if 1 or DEBUG_DELEGATION: print 'access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self)
                     return False
         # Everything seems to be fine.
         return True       
@@ -275,6 +277,7 @@ class AccessToken(BaseAccessToken):
         
     def addToHeadersFor(self, headers, url):
         # xxxjack assume checking has been done
+        if DEBUG: print 'access: add token %s to headers for request to %s' % (self, url)
         externalRepresentation = self._getExternalRepresentation()
         if not externalRepresentation:
             return
@@ -382,8 +385,10 @@ class MultiAccessToken(BaseAccessToken):
             return not not self.externalTokenCache[url]
         for t in self.tokens:
             if t._hasExternalRepresentationFor(url):
+                if DEBUG: print 'access: capability %s has child matching url %s' % (self, url)
                 self.externalTokenCache[url] = t
                 return True
+        if DEBUG: print 'access: capability %s has no children matching url %s' % (self, url)
         self.externalTokenCache[url] = False
         return False
         
@@ -413,6 +418,8 @@ class MultiAccessToken(BaseAccessToken):
             t = self.externalTokenCache[url]
             # xxxjack should cache
             t.addToHeadersFor(headers, url)
+        else:
+            if DEBUG: print 'access: %s has no token for %s' % (self, url)
 
     def _removeToken(self, tokenId):
         """Remove token tokenId from this set"""

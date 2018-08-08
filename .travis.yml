@@ -4,6 +4,6 @@ python:
 install:
     - python setup.py -q install
 script:
-    - python -m unittest discover test
+    - python -m unittest discover --verbose test
     
     

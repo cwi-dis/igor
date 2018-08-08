@@ -317,7 +317,7 @@ class IgorServer:
         self.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
         return 'OK'
         
-    def stop(self, token):
+    def stop(self, token=None, save=True):
         """Exits igorServer after saving"""
         global PROFILER_STATS
         if self.actionHandler:
@@ -332,7 +332,10 @@ class IgorServer:
         if self.urlCaller:
             self.urlCaller.stop()
             self.urlCaller = None
-        self.save(token)
+        if save:
+            self.save(token)
+        self.app.stop()
+        self.app = None
         if self.profile:
             self.profile.disable()
             if PROFILER_STATS is None:
@@ -428,6 +431,7 @@ def main():
         sys.exit(1)
     if args.fix or args.check:
         igorServer.check(args.fix)
+        igorServer.stop(save=False)
     else:
         igorServer.preRun()
         igorServer.run()

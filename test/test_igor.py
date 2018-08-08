@@ -18,6 +18,9 @@ if DEBUG_TEST:
 
 FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 
+MAX_FLUSH_DURATION=2            # How long we wait for internal actions to be completed
+MAX_EXTERNAL_FLUSH_DURATION=6   # How long we wait for external actions to be completed
+
 class IgorTest(unittest.TestCase):
     igorDir = os.path.join(FIXTURES, 'testIgor')
     igorLogFile = os.path.join(FIXTURES, 'testIgor.log')
@@ -97,6 +100,12 @@ class IgorTest(unittest.TestCase):
         kwargs.update(self.igorVarArgs)
         return igorVar.IgorServer(self.igorUrl, **kwargs)
         
+    def _flush(self, pIgor, maxDuration):
+        if True:
+            time.sleep(maxDuration)
+        else:
+            pIgor.get('/internal/flush?max=%d' % maxDuration)
+            
     def test01_get_static(self):
         p = self._igorVar()
         result = p.get('/')
@@ -210,7 +219,7 @@ class IgorTest(unittest.TestCase):
         pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
         p.put('sandbox/test71/src', 'seventy-one', datatype='text/plain')
         
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         
         result = p.get('sandbox/test71', format='application/json')
         resultDict = json.loads(result)
@@ -224,14 +233,14 @@ class IgorTest(unittest.TestCase):
         action = {'action':dict(name='test72action', url='/data/sandbox/test72/sink', xpath='/data/sandbox/test72/src', method='POST', data='{.}')}
         p.put('sandbox/test72', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         p.put('sandbox/test72/src', '72a', datatype='text/plain')
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         p.put('sandbox/test72/src', '72b', datatype='text/plain')
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         p.put('sandbox/test72/src', '72c', datatype='text/plain')
         
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         
         result = p.get('sandbox/test72', format='application/json')
         resultDict = json.loads(result)
@@ -247,10 +256,10 @@ class IgorTest(unittest.TestCase):
         p.put('sandbox/test73', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         p.put('sandbox/test73/src', 'seventy-three', datatype='text/plain')
         
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         
         result = p.get('sandbox/test73', format='application/json')
         resultDict = json.loads(result)
@@ -271,10 +280,10 @@ class IgorTest(unittest.TestCase):
         pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
         self._create_caps_for_action(pAdmin, 'test74first', 'test74second')
         
-        time.sleep(1)
+        self._flush(p, MAX_FLUSH_DURATION)
         p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
         
-        time.sleep(4)
+        self._flush(p, MAX_EXTERNAL_FLUSH_DURATION)
         
         result = p.get('sandbox/test74', format='application/json')
         resultDict = json.loads(result)

@@ -59,8 +59,13 @@ class IgorTest(unittest.TestCase):
 #            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
         if DEBUG_TEST: print 'IgorTest: Check database consistency'
-        subprocess.check_call([sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
-
+        cmd = [sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
+        sts = subprocess.call(cmd + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
+        if sts:
+            print 'IgorTest: status=%s returned by command %s' % (str(sts), ' '.join(cmd))
+            print 'IgorTest: logfile %s:' % cls.igorLogFile
+            sys.stdout.write(open(cls.igorLogFile).read())
+            assert 0
         if DEBUG_TEST: print 'IgorTest: Start server'
         cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
         time.sleep(2)

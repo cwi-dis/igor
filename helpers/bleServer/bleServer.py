@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import blescan
-import web
+import igorServlet
 import copy
 import json
 import threading
@@ -24,6 +24,7 @@ class BleScanServer(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self.initScanner()
+        self.initServer()
         self.devices = {}
         self.lock = threading.RLock()
         self.significantChange = False
@@ -47,8 +48,22 @@ class BleScanServer(threading.Thread):
         self.stopScanning()
         self.scanner = None
 
+    def initServer(self):
+        self.server = igorServlet.IgorServlet()
+        self.server.addEndpoint('/ble', get=self.GET_bleData)
+
+    def startServer(self):
+        self.server.start()
+        
+    def stopServer(self):
+        self.server.stop()
+        
+    def uninitServer(self):
+        self.server = None
+        
     def run(self):
         #print 'run in', repr(self)
+        self.startServer()
         try:
             while True:
                 evt = self.scanner.parse_advertisement()
@@ -62,6 +77,8 @@ class BleScanServer(threading.Thread):
         finally:
             #print 'run loop exiting'
             self.uninitScanner()
+            self.stopServer()
+            self.uninitServer()
             #sys.exit(1)
             
     def processEvent(self, bdaddr=None, **args):
@@ -111,6 +128,21 @@ class BleScanServer(threading.Thread):
             self.significantChange = False
             return copy.deepcopy(self.devices)
 
+    def GET_bleData(self, all=True):
+        devices = self.getDevices()
+        devList = []
+        for address, values in devices.items():
+            item = {'address':address}
+            if all:
+                item.update(values)
+            else:
+                for k in KEYS:
+                    if k in values:
+                        item[k] = values[k]
+            devList.append(item)
+        rv = {'bleDevice':devList, 'lastActivity' : time.time()}
+        return rv
+        
 # Module may get imported twice (see http://webpy.org/cookbook/session_with_reloader)
 # so use a trick to make sure we have only one ble scanner
 if web.config.get('_bleScanner') is None:
@@ -122,21 +154,12 @@ else:
             
 class getBLEdata:
     def GET(self, all=True):
-        devices = bleScanner.getDevices()
-        devList = []
-        for address, values in devices.items():
-            item = {'address':address}
-            if all:
-                item.update(values)
-            else:
-                for k in KEYS:
-                    if k in values:
-                        item[k] = values[k]
-            devList.append(item)
-        web.header('Content-Type', 'application/json')
-        rv = json.dumps({'bleDevice':devList, 'lastActivity' : time.time()})
-        return rv
+
         
+def main():
+    bleScanner = BleScanServer()
+    bleScanner.run()
+    
 if __name__ == '__main__':
-    app.run()
-    print 'stopping...'
+    main()
+    print 'stopped.'

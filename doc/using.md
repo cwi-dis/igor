@@ -21,6 +21,16 @@ This will install the main binary `igorServer` as well as the utilties `igorVar`
 
 You may also want to install some of the helper utilities from the `helpers` subdirectory.
 
+## Testing the software
+
+There is a unittest-based test suite in the `test` subdirectory. The easiest way to run the tests is to first install the software (as per the instructions above) and then run
+
+```
+python -m unittest discover test
+```
+
+This will run all tests in various configurations (with and without https support, with and without capability support, etc).
+
 ## Setup the database
 
 Your default database will be stored in `~/.igor`. You can create an initial empty database with
@@ -146,6 +156,18 @@ The _igorVar_ utility can also be used to communicate with other services that h
 ### igorCA
 
 Certificate Authority command line tool. Call `igorCA help` for a list of commands. More detail (a little more:-) can be found in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md).
+
+## Supporting modules
+
+The command line tools listed above also do double duty as importable Python modules, enabling accessing Igor from other applications without having to code all the REST code yourself.
+
+The following modules are available:
+
+- `igorVar` allows issuing standard REST methods to the Igor server.
+- `igorControl` builds on that to allow starting, stopping and introspection of your Igor server.
+- `igorSetup` allows programmatic installation and cofiguration of your Igor server.
+- `igorCA` allows programmatic creation of certificates.
+- `igorServlet` allows easy creation of REST services that can be _used_ by Igor, with all the handling of SSL and capability checking and such done automatically for you.
 
 ## ~/.igor directory structure
 

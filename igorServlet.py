@@ -3,7 +3,7 @@ import threading
 import time
 import json
 
-print 'xxxjack module imported'
+DEBUG=False
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
@@ -13,7 +13,7 @@ class IgorServlet(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
-        print 'xxxjack IgorServlet.__init__ called for', self
+        if DEBUG: print 'igorServlet: IgorServlet.__init__ called for', self
         self.app = web.application((), globals(), autoreload=False)
         
     def run(self):
@@ -27,16 +27,9 @@ class IgorServlet(threading.Thread):
         self.endpoints[path] = dict(mimetype=mimetype, get=get, put=put, post=post, delete=delete)
         self.app.add_mapping(path, 'ForwardingClass' )
 
-class HelloClass:
-    def __init__(self):
-        print 'xxxjack Hello.__init__ called for', self
-
-    def get_hello(self):
-        return 'Hello World from test'
-        
 class ForwardingClass:
     def __init__(self):
-        print 'xxxjack ForwardingClass.__init__ called for', self
+       if DEBUG: print 'igorServlet: ForwardingClass.__init__ called for', self
 
     def GET(self):
         path = web.ctx.path
@@ -68,18 +61,53 @@ class ForwardingClass:
         return rv
         
 def main():
-    print 'xxxjack main called'
+    global DEBUG
+    DEBUG = True
+    if DEBUG: print 'igorServlet: main called'
+    
+    class HelloClass:
+        def __init__(self):
+            if DEBUG: print 'HelloClass.__init__ called for', self
+
+        def get_hello(self):
+            return 'Hello World from test'
+        
+    class CounterClass(threading.Thread):
+        def __init__(self):
+            threading.Thread.__init__(self)
+            if DEBUG: print 'CounterClass.__init__ called for', self
+            self.counter = 0
+            self.stopped = False
+            
+        def run(self):
+            while not self.stopped:
+                time.sleep(1)
+                self.counter += 1
+                
+        def stop(self):
+            self.stopped = 1
+            self.join()
+            
+        def get_count(self):
+            return {'counter':self.counter}
+            
     s = IgorServlet()
     helloObject = HelloClass()
-    s.addEndpoint('/hello', get=helloObject.get_hello, mimetype='application/json')
+    counterObject = CounterClass()
+    counterObject.start()
+    s.addEndpoint('/hello', get=helloObject.get_hello, mimetype='text/plain')
+    s.addEndpoint('/helloJSON', get=helloObject.get_hello, mimetype='application/json')
+    s.addEndpoint('/count', get=counterObject.get_count, mimetype='text/plain')
+    s.addEndpoint('/countJSON', get=counterObject.get_count, mimetype='application/json')
     s.start()
     try:
         while True:
             time.sleep(10)
-            print '... time passing and still serving...'
+            if DEBUG: print 'IgorServlet: time passing and still serving...'
     except KeyboardInterrupt:
         pass
-    print 'xxxjack stopping server'
+    if DEBUG: print 'IgorServlet: stopping server'
+    counterObject.stop()
     s.stop()
     s = None
     

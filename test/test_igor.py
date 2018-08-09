@@ -19,7 +19,7 @@ if DEBUG_TEST:
 FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 
 MAX_FLUSH_DURATION=10            # How long we wait for internal actions to be completed
-MAX_EXTERNAL_FLUSH_DURATION=10   # How long we wait for external actions to be completed
+MAX_EXTERNAL_FLUSH_DURATION=0   # How long we wait for external actions to be completed
 
 class IgorTest(unittest.TestCase):
     igorDir = os.path.join(FIXTURES, 'testIgor')
@@ -280,6 +280,7 @@ class IgorTest(unittest.TestCase):
         self._flush(pAdmin, MAX_FLUSH_DURATION)
         p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
         
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
         self._flush(pAdmin, MAX_EXTERNAL_FLUSH_DURATION)
         
         result = p.get('sandbox/test74', format='application/json')

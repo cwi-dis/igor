@@ -27,7 +27,7 @@ class ServletHelper:
         self.timerStart = None
         self.duration = None
         self.value = 0
-        self.server = igorServlet.IgorServlet(port=port, nolog=True, nossl=(protocol != 'https'), capabilities=capabilities, noCapabilities=(not capabilities))
+        self.server = igorServlet.IgorServlet(port=port, nolog=True, nossl=(protocol != 'https'), capabilities=capabilities, noCapabilities=(not capabilities), database=database)
         self.server.addEndpoint('/api/get', get=self.get)
         self.server.addEndpoint('/api/set', put=self.set, get=self.set)
         self.server.start()
@@ -259,6 +259,29 @@ class IgorTest(unittest.TestCase):
         p.delete('sandbox/test32')
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
 
+    def test61_call_action(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        optBearerToken = self._create_cap_for_call(pAdmin, 'test61action')
+        p = self._igorVar(**optBearerToken)
+        content = {'test61':{'data' : '0'}}
+        action = {'action':dict(name='test61action', url='/data/sandbox/test61/data', method='PUT', data='{/data/sandbox/test61/data + 1}')}
+        pAdmin.put('sandbox/test61', json.dumps(content), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+
+        p.get('/action/test61action')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        p.get('/action/test61action')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        p.get('/action/test61action')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        
+        result = pAdmin.get('sandbox/test61/data', format='text/plain')
+        resultNumber = float(result.strip())
+        self.assertEqual(resultNumber, 3)
+        
+    def _create_cap_for_call(self, pAdmin, action):
+        return {}
+        
     def test71_action(self):
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
@@ -449,6 +472,18 @@ class IgorTestCaps(IgorTestHttps):
         p.put('environment/test41', 'fortyone', datatype='text/plain')
         result = p.get('environment/test41', format='text/plain')
         self.assertEqual(result.strip(), 'fortyone')
+        
+    def _create_cap_for_call(self, pAdmin, callee):
+        newCapID = self._new_capability(pAdmin, 
+            tokenId='admin-action', 
+            newOwner='/data/identities/admin', 
+            newPath='/action/%s' % callee,
+            get='self',
+            delegate='1'
+            )
+        self._new_sharedkey(pAdmin, sub='localhost')
+        bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
+        return {'bearer_token' : bearerToken }
         
     def _create_caps_for_action(self, pAdmin, caller, callee):
         igorIssuer = pAdmin.get('/internal/accessControl/getSelfIssuer')

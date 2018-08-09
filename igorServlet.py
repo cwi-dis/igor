@@ -55,7 +55,7 @@ class IgorServlet(threading.Thread):
         parser.add_argument("--capabilities", action="store_true", help="Enable access control via capabilities")
         return parser
         
-    def __init__(self, port=8080, name='igorServlet', nossl=False, capabilities=None, noCapabilities=None, database=".", sslname=None, nolog=False, **kwargs):
+    def __init__(self, port=8080, name='igorServlet', nossl=False, capabilities=None, noCapabilities=None, database=".", sslname='igor', nolog=False, **kwargs):
         threading.Thread.__init__(self)
         self.port = port
         self.name = name

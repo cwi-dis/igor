@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 import igorVar
 import igorSetup
 import igorCA
+import igorServlet
 
 DEBUG_TEST=False
 if DEBUG_TEST:
@@ -21,6 +22,51 @@ FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 MAX_FLUSH_DURATION=10            # How long we wait for internal actions to be completed
 MAX_EXTERNAL_FLUSH_DURATION=0   # How long we wait for external actions to be completed
 
+class ServletHelper:
+    def __init__(self, port, protocol, capabilities, database):
+        self.timerStart = None
+        self.duration = None
+        self.value = 0
+        self.server = igorServlet.IgorServlet(port=port, nossl=(protocol != 'https'), capabilities=capabilities, noCapabilities=(not capabilities))
+        self.server.addEndpoint('/api/get', get=self.get)
+        self.server.addEndpoint('/api/set', put=self.set, get=self.set)
+        self.server.start()
+        
+    def stop(self):
+        self.server.stop()
+        self.server = None
+        
+    def get(self):
+        if self.timerStart:
+            self.duration = time.time() - self.timerStart
+            self.timerStart = None
+        return self.value
+        
+    def set(self, value=None, data=None):
+        if value is None:
+            value = data
+        if self.timerStart:
+            self.duration = time.time() - self.timerStart
+            self.timerStart = None
+        self.value = value
+        
+    def startTimer(self):
+        self.timerStart = time.time()
+        
+    def getDuration(self):
+        rv = self.duration
+        self.duration = None
+        return rv
+        
+    def waitDuration(self):
+        count = 0
+        while count < 10:
+            rv = self.getDuration()
+            if rv != None:
+                return rv
+            time.sleep(1)
+            count += 1
+    
 class IgorTest(unittest.TestCase):
     igorDir = os.path.join(FIXTURES, 'testIgor')
     igorLogFile = os.path.join(FIXTURES, 'testIgor.log')
@@ -30,6 +76,7 @@ class IgorTest(unittest.TestCase):
     igorProtocol = "http"
     igorVarArgs = {}
     igorServerArgs = []
+    igorUseCapabilities = False
     
     @classmethod
     def setUpClass(cls):
@@ -41,6 +88,7 @@ class IgorTest(unittest.TestCase):
             os.unlink(cls.igorLogFile)
         
         cls.igorUrl = "%s://%s:%d/data/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort)
+        cls.servletUrl = "%s://%s:%d/api/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort+1)
         
         if DEBUG_TEST: print 'IgorTest: Setup database'
         setup = igorSetup.IgorSetup(database=cls.igorDir)
@@ -71,10 +119,15 @@ class IgorTest(unittest.TestCase):
             assert 0
         if DEBUG_TEST: print 'IgorTest: Start server'
         cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
+        if DEBUG_TEST: print 'IgorTest: Start servlet'
+        cls.servlet = ServletHelper(port=cls.igorPort+1, protocol=cls.igorProtocol, capabilities=cls.igorUseCapabilities, database=cls.igorDir)
         time.sleep(2)
     
     @classmethod
     def tearDownClass(cls):
+        # Stop servlet
+        if DEBUG_TEST: print 'IgorTest: Stop servlet'
+        cls.servlet.stop()
         # Gracefully stop server
         if DEBUG_TEST: print 'IgorTest: Request server to stop'
         try:
@@ -93,7 +146,6 @@ class IgorTest(unittest.TestCase):
         assert sts != None
 
         super(IgorTest, cls).tearDownClass()
-        pass
         
     def _igorVar(self, **kwargs):
         kwargs = dict(kwargs)
@@ -266,27 +318,62 @@ class IgorTest(unittest.TestCase):
     def _create_caps_for_action(self, pAdmin, caller, callee):
         pass
         
-    def test74_action_external(self):
+    def test74_action_external_get(self):
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test74':{'src':'', 'sink':''}}
-        action1 = {'action':dict(name='test74first', url='{/data/services/igor/protocol}://{/data/services/igor/host}:{/data/services/igor/port}/action/test74second', xpath='/data/sandbox/test74/src')}
-        action2 = {'action':dict(name='test74second', url='/data/sandbox/test74/sink', method='PUT', data='copy-{/data/sandbox/test74/src}-copy')}
+        action1 = {'action':dict(name='test74first', url=self.servletUrl+'get', xpath='/data/sandbox/test74/src')}
+#        action2 = {'action':dict(name='test74second', url='/data/sandbox/test74/sink', method='PUT', data='copy-{/data/sandbox/test74/src}-copy')}
         p.put('sandbox/test74', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
-        self._create_caps_for_action(pAdmin, 'test74first', 'test74second')
+#        pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
+#        self._create_caps_for_action(pAdmin, 'test74first', 'test74second')
         
         self._flush(pAdmin, MAX_FLUSH_DURATION)
+        self.servlet.startTimer()
         p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
         
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        self._flush(pAdmin, MAX_EXTERNAL_FLUSH_DURATION)
+        duration = self.servlet.waitDuration()
+        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
+        self.assertNotEqual(duration, None)
         
-        result = p.get('sandbox/test74', format='application/json')
-        resultDict = json.loads(result)
-        wantedContent = {'test74':{'src':'seventy-four', 'sink':'copy-seventy-four-copy'}}
-        self.assertEqual(resultDict, wantedContent)
+    def test75_action_external_get_arg(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        p = self._igorVar()
+        content = {'test75':{'src':''}}
+        action1 = {'action':dict(name='test75first', url=self.servletUrl+'set?value={.}', method='GET', xpath='/data/sandbox/test75/src')}
+        p.put('sandbox/test75', json.dumps(content), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+        
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+
+        self.servlet.startTimer()
+        p.put('sandbox/test75/src', 'seventy-five', datatype='text/plain')
+        
+        duration = self.servlet.waitDuration()
+        self.assertNotEqual(duration, None)
+        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
+        result = self.servlet.get()
+        self.assertEqual(result, 'seventy-five')
+        
+    def test76_action_external_put(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        p = self._igorVar()
+        content = {'test76':{'src':''}}
+        action1 = {'action':dict(name='test76first', url=self.servletUrl+'set', method='PUT', mimetype='text/plain', data='{.}', xpath='/data/sandbox/test76/src')}
+        p.put('sandbox/test76', json.dumps(content), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+        
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+
+        self.servlet.startTimer()
+        p.put('sandbox/test76/src', 'seventy-six', datatype='text/plain')
+        
+        duration = self.servlet.waitDuration()
+        self.assertNotEqual(duration, None)
+        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
+        result = self.servlet.get()
+        self.assertEqual(result, 'seventy-six')
         
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
@@ -299,6 +386,7 @@ class IgorTestCaps(IgorTestHttps):
     igorLogFile = os.path.join(FIXTURES, 'testIgorCaps.log')
     igorPort = 39333
     igorServerArgs = ["--capabilities"]
+    igorUseCapabilities = True
 
     def test19_get_disallowed(self):
         p = self._igorVar()

@@ -16,6 +16,15 @@ class MyApplication(web.application):
         func = self.wsgifunc(*middleware)
         return web.httpserver.runsimple(func, ('0.0.0.0', port))
 
+class NoLog:
+    def __init__(self, application):
+        self.app = application
+        self.nullfile = open('/dev/null', 'w')
+        
+    def __call__(self, environ, start_response):
+        environ['wsgi.errors'] = self.nullfile
+        return self.app(environ, start_response)
+            
 class IgorServlet(threading.Thread):
     # The following class variables are actually also used by ForwardingClass, below
     endpoints = {}
@@ -41,14 +50,18 @@ class IgorServlet(threading.Thread):
         parser.add_argument("--sslname", metavar="NAME", help="Program name to look up SSL certificate and key in database dir (default: igor)", default="igor")
         parser.add_argument("--port", metavar="PORT", type=int, help="Port to serve on (default: %d)" % port, default=port)
         parser.add_argument("--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
+        parser.add_argument("--nolog", action="store_true", help="Disable http server logging to stdout")
         parser.add_argument("--noCapabilities", action="store_true", help="Disable access control via capabilities (allowing all access)")
         parser.add_argument("--capabilities", action="store_true", help="Enable access control via capabilities")
         return parser
         
-    def __init__(self, port=8080, name='igorServlet', nossl=False, capabilities=None, noCapabilities=None, database=".", sslname=None, **kwargs):
+    def __init__(self, port=8080, name='igorServlet', nossl=False, capabilities=None, noCapabilities=None, database=".", sslname=None, nolog=False, **kwargs):
         threading.Thread.__init__(self)
         self.port = port
         self.name = name
+        self.middleware = ()
+        if nolog:
+            self.middleware = (NoLog,)
         self.sslname = sslname
         if not self.sslname:
             self.sslname = self.name
@@ -78,7 +91,7 @@ class IgorServlet(threading.Thread):
             from web.wsgiserver import CherryPyWSGIServer
             CherryPyWSGIServer.ssl_certificate = self.certificateFile
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
-        self.app.run(self.port)
+        self.app.run(self.port, *self.middleware)
         
     def stop(self):
         self.app.stop()

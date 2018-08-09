@@ -27,7 +27,7 @@ class ServletHelper:
         self.timerStart = None
         self.duration = None
         self.value = 0
-        self.server = igorServlet.IgorServlet(port=port, nossl=(protocol != 'https'), capabilities=capabilities, noCapabilities=(not capabilities))
+        self.server = igorServlet.IgorServlet(port=port, nolog=True, nossl=(protocol != 'https'), capabilities=capabilities, noCapabilities=(not capabilities))
         self.server.addEndpoint('/api/get', get=self.get)
         self.server.addEndpoint('/api/set', put=self.set, get=self.set)
         self.server.start()

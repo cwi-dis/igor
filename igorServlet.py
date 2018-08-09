@@ -93,11 +93,23 @@ class ForwardingClass:
        if DEBUG: print 'igorServlet: ForwardingClass.__init__ called for', self
 
     def GET(self):
+        return self._method('get')
+        
+    def PUT(self):
+        return self._method('put')
+        
+    def POST(self):
+        return self._method('post')
+        
+    def DELETE(self):
+        return self._method('delete')
+        
+    def _method(self, method):
         path = web.ctx.path
         endpoint = IgorServlet.endpoints.get(path)
         if not path:
             raise web.notfound()
-        entry = endpoint['get']
+        entry = endpoint[method]
         if not entry:
             raise web.notfound()
         # xxxjack check path and capability
@@ -108,7 +120,10 @@ class ForwardingClass:
         else:
             data = web.data()
             if data:
-                methodArgs = dict(data)
+                try:
+                    methodArgs = json.loads(data)
+                except ValueError:
+                    methodArgs = {'data' : data}
         try:
             rv = entry(**methodArgs)
         except TypeError, arg:

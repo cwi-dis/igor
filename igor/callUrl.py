@@ -31,6 +31,10 @@ class URLCallRunner(threading.Thread):
         while not self.stopping:
             tocall = self.queue.get()
             if tocall == None: continue # To implement stop
+            if callable(tocall):
+                # To implement flushing
+                tocall()
+                continue
             method = tocall['method']
             url = tocall['url']
             token = tocall['token']
@@ -106,12 +110,13 @@ class URLCallRunner(threading.Thread):
         
     def callURL(self, tocall):
         if DEBUG: print 'URLCaller.callURL(%s)' % repr(tocall)
-        assert 'token' in tocall
-        if tocall.get('aggregate'):
-            # We should aggregate this action, so don't insert if already in the queue
-            if tocall in self.queue:
-                if DEBUG: print '(skipped because aggregate is true)'
-                return
+        if not callable(tocall):
+            assert 'token' in tocall
+            if tocall.get('aggregate'):
+                # We should aggregate this action, so don't insert if already in the queue
+                if tocall in self.queue:
+                    if DEBUG: print '(skipped because aggregate is true)'
+                    return
         self.queue.put(tocall)
 
     def stop(self):
@@ -124,6 +129,8 @@ class URLCallRunner(threading.Thread):
         
 class URLCaller:
     def __init__(self, app):
+        self.lock = threading.Lock()
+        self.flushedCV = threading.Condition(self.lock)
         self.dataRunner = URLCallRunner(app, 'internal actions')
         self.extRunner = URLCallRunner(app, 'network actions')
         self.otherRunner = URLCallRunner(app, 'scripting and plugin actions')
@@ -154,3 +161,16 @@ class URLCaller:
         else:
             self.otherRunner.callURL(tocall)
         
+    def _runnerIsFlushed(self):
+        with self.lock:
+            self.flushedCV.notify()
+            
+    def flush(self, timeout=None):
+        with self.lock:
+            # xxxjack we only wait for internal actions: the other two seem to cause deadlocks...
+            self.dataRunner.callURL(self._runnerIsFlushed)
+            #self.extRunner.callURL(self._runnerIsFlushed)
+            #self.otherRunner.callURL(self._runnerIsFlushed)
+            self.flushedCV.wait(timeout)
+            #self.flushedCV.wait(timeout)
+            #self.flushedCV.wait(timeout)

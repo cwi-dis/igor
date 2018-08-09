@@ -317,6 +317,13 @@ class IgorServer:
         self.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
         return 'OK'
         
+    def flush(self, token=None, timeout=None):
+        """Wait until all currently queued urlCaller events have been completed"""
+        if timeout:
+            timeout = float(timeout)
+        self.urlCaller.flush(timeout)
+        return 'OK'
+        
     def stop(self, token=None, save=True):
         """Exits igorServer after saving"""
         global PROFILER_STATS

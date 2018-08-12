@@ -10,10 +10,11 @@ from setupAndControl import *
 
 FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 
-#MAX_FLUSH_DURATION=10            # How long we wait for internal actions to be completed
+MAX_FLUSH_DURATION=10            # How long we wait for internal actions to be completed
 #MAX_EXTERNAL_FLUSH_DURATION=0   # How long we wait for external actions to be completed
 
-MEASUREMENT_DURATION=3
+MEASUREMENT_MIN_DURATION=10
+MEASUREMENT_MIN_COUNT=100
             
 class IgorPerf(IgorSetupAndControl):
     igorDir = os.path.join(FIXTURES, 'perfIgor')
@@ -60,12 +61,13 @@ class IgorPerf(IgorSetupAndControl):
         assert self.startMeasurement == None
         self.startMeasurement = time.time()
         
-    def _measurementStop(self):
+    def _measurementStop(self, duration = None):
         assert self.startMeasurement
-        duration = time.time() - self.startMeasurement
+        if duration is None:
+            duration = time.time() - self.startMeasurement
         self.startMeasurement = None
         self.measurements.append(duration)
-        return time.time() - self.startTime > MEASUREMENT_DURATION
+        return (time.time() - self.startTime >= MEASUREMENT_MIN_DURATION) and (len(self.measurements) >= MEASUREMENT_MIN_COUNT)
         
     def perf01_get_static(self):
         p = self._igorVar()
@@ -156,7 +158,7 @@ class IgorPerf(IgorSetupAndControl):
             if self._measurementStop():
                 break
         
-    def test61_call_action(self):
+    def perf61_call_action(self):
         pAdmin = self._igorVar(credentials='admin:')
         optBearerToken = self._create_cap_for_call(pAdmin, 'test61action')
         p = self._igorVar(**optBearerToken)
@@ -164,57 +166,17 @@ class IgorPerf(IgorSetupAndControl):
         action = {'action':dict(name='test61action', url='/data/sandbox/test61/data', method='PUT', data='{/data/sandbox/test61/data + 1}')}
         pAdmin.put('sandbox/test61', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
 
-        p.get('/action/test61action')
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        p.get('/action/test61action')
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        p.get('/action/test61action')
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        
-        result = pAdmin.get('sandbox/test61/data', format='text/plain')
-        resultNumber = float(result.strip())
-        self.assertEqual(resultNumber, 3)
+        self._perfStart()
+        while True:
+            self._measurementStart()
+            result = p.get('/action/test61action')
+            if self._measurementStop():
+                break
         
     def _create_cap_for_call(self, pAdmin, action):
         return {}
-        
-    def test71_action(self):
-        pAdmin = self._igorVar(credentials='admin:')
-        p = self._igorVar()
-        content = {'test71':{'src':'', 'sink':''}}
-        action = {'action':dict(name='test71action', url='/data/sandbox/test71/sink', xpath='/data/sandbox/test71/src', method='PUT', data='copy-{.}-copy')}
-        p.put('sandbox/test71', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
-        p.put('sandbox/test71/src', 'seventy-one', datatype='text/plain')
-        
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        
-        result = p.get('sandbox/test71', format='application/json')
-        resultDict = json.loads(result)
-        wantedContent = {'test71':{'src':'seventy-one', 'sink':'copy-seventy-one-copy'}}
-        self.assertEqual(resultDict, wantedContent)
-        
-    def test72_action_post(self):
-        pAdmin = self._igorVar(credentials='admin:')
-        p = self._igorVar()
-        content = {'test72':{'src':''}}
-        action = {'action':dict(name='test72action', url='/data/sandbox/test72/sink', xpath='/data/sandbox/test72/src', method='POST', data='{.}')}
-        p.put('sandbox/test72', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        p.put('sandbox/test72/src', '72a', datatype='text/plain')
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        p.put('sandbox/test72/src', '72b', datatype='text/plain')
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        p.put('sandbox/test72/src', '72c', datatype='text/plain')
-        
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        
-        result = p.get('sandbox/test72', format='application/json')
-        resultDict = json.loads(result)
-        wantedContent = {'test72':{'src':'72c', 'sink':['72a','72b','72c']}}
-        self.assertEqual(resultDict, wantedContent)
         
     def test73_action_indirect(self):
         pAdmin = self._igorVar(credentials='admin:')
@@ -312,21 +274,41 @@ class IgorPerfCaps(IgorPerfHttps):
     igorServerArgs = ["--capabilities"]
     igorUseCapabilities = True
 
-    def test19_get_disallowed(self):
+    def perf19_get_disallowed(self):
         p = self._igorVar()
-        self.assertRaises(igorVar.IgorError, p.get, 'identities', format='application/xml')
+        self._perfStart()
+        while True:
+            self._measurementStart()
+            try:
+                result = p.get('identities', format='application/xml')
+            except igorVar.IgorError:
+                pass
+            if self._measurementStop():
+                break
         
-    def test29_put_disallowed(self):
+    def perf29_put_disallowed(self):
         p = self._igorVar()
-        self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
+        self._perfStart()
+        while True:
+            self._measurementStart()
+            try:
+                result = p.put('environment/systemHealth/test29', 'twentynine', datatype='text/plain')
+            except igorVar.IgorError:
+                pass
+            if self._measurementStop():
+                break
         
-    def test29_put_disallowed(self):
+    def perf39_delete_disallowed(self):
         p = self._igorVar()
-        self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
-
-    def test39_delete_disallowed(self):
-        p = self._igorVar()
-        self.assertRaises(igorVar.IgorError, p.delete, 'environment/systemHealth')
+        self._perfStart()
+        while True:
+            self._measurementStart()
+            try:
+                result = p.delete('environment/systemHealth/test29')
+            except igorVar.IgorError:
+                pass
+            if self._measurementStop():
+                break
         
     def _new_capability(self, pAdmin, **kwargs):
         argStr = urllib.urlencode(kwargs)

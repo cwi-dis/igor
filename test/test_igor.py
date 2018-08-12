@@ -16,6 +16,7 @@ import igorServlet
 DEBUG_TEST=False
 if DEBUG_TEST:
     igorVar.VERBOSE=True
+    igorServlet.DEBUG=True
 
 FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 
@@ -23,11 +24,18 @@ MAX_FLUSH_DURATION=10            # How long we wait for internal actions to be c
 MAX_EXTERNAL_FLUSH_DURATION=0   # How long we wait for external actions to be completed
 
 class ServletHelper:
-    def __init__(self, port, protocol, capabilities, database):
+    def __init__(self, port, protocol, capabilities, database, audience):
         self.timerStart = None
         self.duration = None
         self.value = 0
-        self.server = igorServlet.IgorServlet(port=port, nolog=True, nossl=(protocol != 'https'), capabilities=capabilities, noCapabilities=(not capabilities), database=database)
+        self.server = igorServlet.IgorServlet(
+            port=port, 
+            nolog=True, 
+            nossl=(protocol != 'https'), 
+            capabilities=capabilities, noCapabilities=(not capabilities), 
+            database=database,
+            audience=audience
+            )
         self.server.addEndpoint('/api/get', get=self.get)
         self.server.addEndpoint('/api/set', put=self.set, get=self.set)
         self.server.start()
@@ -66,6 +74,12 @@ class ServletHelper:
                 return rv
             time.sleep(1)
             count += 1
+            
+    def hasIssuer(self):
+        return self.server.hasIssuer()
+        
+    def setIssuer(self, issuer, sharedKey):
+        return self.server.setIssuer(issuer, sharedKey)
     
 class IgorTest(unittest.TestCase):
     igorDir = os.path.join(FIXTURES, 'testIgor')
@@ -88,7 +102,7 @@ class IgorTest(unittest.TestCase):
             os.unlink(cls.igorLogFile)
         
         cls.igorUrl = "%s://%s:%d/data/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort)
-        cls.servletUrl = "%s://%s:%d/api/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort+1)
+        cls.servletUrl = "%s://%s:%d" % (cls.igorProtocol, cls.igorHostname, cls.igorPort+1)
         
         if DEBUG_TEST: print 'IgorTest: Setup database'
         setup = igorSetup.IgorSetup(database=cls.igorDir)
@@ -120,7 +134,13 @@ class IgorTest(unittest.TestCase):
         if DEBUG_TEST: print 'IgorTest: Start server'
         cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
         if DEBUG_TEST: print 'IgorTest: Start servlet'
-        cls.servlet = ServletHelper(port=cls.igorPort+1, protocol=cls.igorProtocol, capabilities=cls.igorUseCapabilities, database=cls.igorDir)
+        cls.servlet = ServletHelper(
+                port=cls.igorPort+1, 
+                protocol=cls.igorProtocol, 
+                capabilities=cls.igorUseCapabilities, 
+                database=cls.igorDir,
+                audience=cls.servletUrl
+                )
         time.sleep(2)
     
     @classmethod
@@ -338,21 +358,21 @@ class IgorTest(unittest.TestCase):
         wantedContent = {'test73':{'src':'seventy-three', 'sink':'copy-seventy-three-copy'}}
         self.assertEqual(resultDict, wantedContent)
 
-    def _create_caps_for_action(self, pAdmin, caller, callee):
+    def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
         pass
         
     def test74_action_external_get(self):
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test74':{'src':'', 'sink':''}}
-        action1 = {'action':dict(name='test74first', url=self.servletUrl+'get', xpath='/data/sandbox/test74/src')}
-#        action2 = {'action':dict(name='test74second', url='/data/sandbox/test74/sink', method='PUT', data='copy-{/data/sandbox/test74/src}-copy')}
+        action1 = {'action':dict(name='test74first', url=self.servletUrl+'/api/get', xpath='/data/sandbox/test74/src')}
         p.put('sandbox/test74', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
-#        pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
-#        self._create_caps_for_action(pAdmin, 'test74first', 'test74second')
+
+        self._create_caps_for_action(pAdmin, 'test74first', obj='/api/get', get='self')
         
         self._flush(pAdmin, MAX_FLUSH_DURATION)
+        
         self.servlet.startTimer()
         p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
         
@@ -364,9 +384,11 @@ class IgorTest(unittest.TestCase):
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test75':{'src':''}}
-        action1 = {'action':dict(name='test75first', url=self.servletUrl+'set?value={.}', method='GET', xpath='/data/sandbox/test75/src')}
+        action1 = {'action':dict(name='test75first', url=self.servletUrl+'/api/set?value={.}', method='GET', xpath='/data/sandbox/test75/src')}
         p.put('sandbox/test75', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+
+        self._create_caps_for_action(pAdmin, 'test75first', obj='/api/set', get='self')
         
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
@@ -383,9 +405,11 @@ class IgorTest(unittest.TestCase):
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test76':{'src':''}}
-        action1 = {'action':dict(name='test76first', url=self.servletUrl+'set', method='PUT', mimetype='text/plain', data='{.}', xpath='/data/sandbox/test76/src')}
+        action1 = {'action':dict(name='test76first', url=self.servletUrl+'/api/set', method='PUT', mimetype='text/plain', data='{.}', xpath='/data/sandbox/test76/src')}
         p.put('sandbox/test76', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+
+        self._create_caps_for_action(pAdmin, 'test76first', obj='/api/set', put='self')
         
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
@@ -451,8 +475,10 @@ class IgorTestCaps(IgorTestHttps):
         argStr = urllib.urlencode(kwargs)
         try:
             rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
+            return rv.strip()
         except igorVar.IgorError:
             if DEBUG_TEST: print '(shared key already exists for %s)' % repr(kwargs)
+        return None
         
     def test41_newcap_external(self):
         pAdmin = self._igorVar(credentials='admin:')
@@ -485,18 +511,20 @@ class IgorTestCaps(IgorTestHttps):
         bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
         return {'bearer_token' : bearerToken }
         
-    def _create_caps_for_action(self, pAdmin, caller, callee):
+    def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
         igorIssuer = pAdmin.get('/internal/accessControl/getSelfIssuer')
-        igorAudience = pAdmin.get('/internal/accessControl/getSelfAudience')
-        self._new_sharedkey(pAdmin, aud=igorAudience)
+        audience = self.servletUrl
+        if not self.servlet.hasIssuer():
+            newKey = self._new_sharedkey(pAdmin, aud=audience)
+            self.servlet.setIssuer(igorIssuer, newKey)
         newCapID = self._new_capability(pAdmin, 
             tokenId='external', 
             newOwner="/data/actions/action[name='%s']" % caller, 
-            newPath='/action/%s' % callee,
-            get='self',
-            aud=igorAudience,
+            newPath=obj,
+            aud=audience,
             iss=igorIssuer,
-            delegate='1'
+            delegate='1',
+            **kwargs
             )
         
 

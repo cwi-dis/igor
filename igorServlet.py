@@ -5,6 +5,7 @@ import json
 import argparse
 import os
 import sys
+import jwt
 
 DEBUG=False
 
@@ -29,6 +30,9 @@ class IgorServlet(threading.Thread):
     # The following class variables are actually also used by ForwardingClass, below
     endpoints = {}
     useCapabilities = False # Default-default
+    issuer = None
+    issuerSharedKey = None
+    audience = None
     
     @staticmethod
     def argumentParser(parser=None, description=None, port=None, name=None):
@@ -53,9 +57,12 @@ class IgorServlet(threading.Thread):
         parser.add_argument("--nolog", action="store_true", help="Disable http server logging to stdout")
         parser.add_argument("--noCapabilities", action="store_true", help="Disable access control via capabilities (allowing all access)")
         parser.add_argument("--capabilities", action="store_true", help="Enable access control via capabilities")
+        parser.add_argument("--audience", metavar="URL", help="Audience string for this servlet (for checking capabilities and their signature)")
+        parser.add_argument("--issuer", metavar="URL", help="Issuer string for this servlet (for checking capabilities and their signature)")
+        parser.add_argument("--sharedKey", metavar="B64STRING", help="Secret key shared with issuer (for checking capabilities and their signature)")
         return parser
         
-    def __init__(self, port=8080, name='igorServlet', nossl=False, capabilities=None, noCapabilities=None, database=".", sslname='igor', nolog=False, **kwargs):
+    def __init__(self, port=8080, name='igorServlet', nossl=False, capabilities=None, noCapabilities=None, database=".", sslname='igor', nolog=False, audience=None, issuer=None, issuerSharedKey=None, **kwargs):
         threading.Thread.__init__(self)
         self.port = port
         self.name = name
@@ -83,6 +90,10 @@ class IgorServlet(threading.Thread):
             IgorServlet.useCapabilities = capabilities
         elif noCapabilities != None:
             IgorServlet.useCapabilities = not noCapabilities
+        IgorServlet.audience = audience
+        IgorServlet.issuer = issuer
+        IgorServlet.issuerSharedKey = issuerSharedKey
+        
         if DEBUG: print 'igorServlet: IgorServlet.__init__ called for', self
         self.app = MyApplication((), globals(), autoreload=False)
         
@@ -99,8 +110,15 @@ class IgorServlet(threading.Thread):
         
     def addEndpoint(self, path, mimetype='application/json', get=None, put=None, post=None, delete=None):
         self.endpoints[path] = dict(mimetype=mimetype, get=get, put=put, post=post, delete=delete)
-        self.app.add_mapping(path, 'ForwardingClass' )
+        self.app.add_mapping(path, 'ForwardingClass')
+        
+    def setIssuer(self, issuer, issuerSharedKey):
+        IgorServlet.issuer = issuer
+        IgorServlet.issuerSharedKey = issuerSharedKey
 
+    def hasIssuer(self):
+        return not not IgorServlet.issuer and not not IgorServlet.issuerSharedKey
+        
 class ForwardingClass:
     def __init__(self):
        if DEBUG: print 'igorServlet: ForwardingClass.__init__ called for', self
@@ -125,7 +143,11 @@ class ForwardingClass:
         entry = endpoint[method]
         if not entry:
             raise web.notfound()
-        # xxxjack check path and capability
+        if IgorServlet.useCapabilities:
+            # We are using capability-based access control Check that the caller has the correct
+            # rights.
+            if not self._checkRights(method, path):
+                raise MyWebError('401 Unauthorized')
         methodArgs = {}
         optArgs = web.input()
         if optArgs:
@@ -148,6 +170,84 @@ class ForwardingClass:
         else:
             assert 0, 'Unsupported mimetype %s' % endpoint['mimetype']
         return rv
+        
+    def _checkRights(self, method, path):
+        if DEBUG:  print 'IgorServlet: check access for method %s on %s' % (method, path)
+        if not IgorServlet.issuer: 
+            if DEBUG: print 'IgorServlet: issuer not set, cannot check access'
+            return False
+        if not IgorServlet.issuerSharedKey: 
+            if DEBUG: print 'IgorServlet: issuerSharedKey not set, cannot check access'
+            return False
+        # Get capability from headers
+        headers = web.ctx.env
+        authHeader = headers.get('HTTP_AUTHORIZATION')
+        if not authHeader:
+            if DEBUG: print 'IgorServlet: no Authorization: header'
+            return False
+        authFields = authHeader.split()
+        if authFields[0].lower() != 'bearer':
+            if DEBUG: print 'IgorServlet: no Authorization: bearer header'
+            return False
+        encoded = authFields[1] # base64.b64decode(authFields[1])
+        if DEBUG: print 'IgorServlet: got bearer token data %s' % encoded
+        decoded = self._decodeBearerToken(encoded)
+        if not decoded:
+            # _decodeBearerToken will return None if the key is not from the right issuer or the signature doesn't match.
+            return False
+        capPath = decoded.get('obj')
+        capModifier = decoded.get(method)
+        if not capPath:
+            if DEBUG: print 'IgorServlet: capability does not contain obj field'
+            return False
+        if not capModifier:
+            if DEBUG: print 'IgorServlet: capability does not have %s right' % method
+            return False
+        pathHead = path[:len(capPath)]
+        pathTail = path[len(capPath):]
+        if pathHead != capPath or (pathTail and pathTail[0] != '/'):
+            if DEBUG: print 'IgorServlet: capability path %s does not match %s' % (capPath, path)
+            return False
+        if capModifier == 'self':
+            if capPath != path:
+                if DEBUG: print 'IgorServlet: capability path %s does not match self for %s' % (capPath, path)
+                return False
+        elif capModifier == 'child':
+            if pathTail.count('/') != 1:
+                if DEBUG: print 'IgorServlet: capability path %s does not match direct child for %s' % (capPath, path)
+                return False
+        elif capModifier == 'descendant':
+            if not pathTail.count:
+                if DEBUG: print 'IgorServlet: capability path %s does not match descendant for %s' % (capPath, path)
+                return False
+        elif capModifier == 'descendant-or-self':
+            pass
+        else:
+            if DEBUG: print 'IgorServlet: capability has unkown modifier %s for right %s' % (capModifier, method)
+            return False
+        if DEBUG:
+            print 'IgorServlet: Capability matches'
+        return True
+        
+    def _decodeBearerToken(self, data):
+        try:
+            content = jwt.decode(data, IgorServlet.issuerSharedKey, issuer=IgorServlet.issuer, audience=IgorServlet.audience, algorithm='RS256')
+        except jwt.DecodeError:
+            if DEBUG:
+                print 'IgorServlet: incorrect signature on bearer token %s' % data
+                print 'IgorServlet: content: %s' % jwt.decode(data, verify=False)
+            raise myWebError('401 Unauthorized, Incorrect signature on key')
+        except jwt.InvalidIssuerError:
+            if DEBUG:
+                print 'IgorServlet: incorrect issuer on bearer token %s' % data
+                print 'IgorServlet: content: %s' % jwt.decode(data, verify=False)
+            raise myWebError('401 Unauthorized, incorrect issuer on key')
+        except jwt.InvalidAudienceError:
+            if DEBUG:
+                print 'IgorServlet: incorrect audience on bearer token %s' % data
+                print 'IgorServlet: content: %s' % jwt.decode(data, verify=False)
+            raise myWebError('401 Unauthorized, incorrect audience on key')
+        return content
         
 def main():
     global DEBUG

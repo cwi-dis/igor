@@ -31,6 +31,14 @@ python -m unittest discover test
 
 This will run all tests in various configurations (with and without https support, with and without capability support, etc).
 
+It is also possible to test the performance of Igor (again with the various configurations):
+
+```
+python test/perf_igor.py
+```
+
+will run a set of actions similar to the unittests (for a minimum number of calls and a minimum duration) and report number of calls, average runtime per call and standard deviation of the runtimes.
+
 ## Setup the database
 
 Your default database will be stored in `~/.igor`. You can create an initial empty database with

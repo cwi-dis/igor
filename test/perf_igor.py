@@ -3,6 +3,7 @@ import json
 import socket
 import urllib
 import math
+import argparse
 import xml.etree.ElementTree as ET
 import igorVar
 import igorCA
@@ -363,6 +364,15 @@ class IgorPerfCaps(IgorPerfHttps):
         return {'bearer_token' : bearerToken }
         
 def main():
+    global MEASUREMENT_MIN_COUNT
+    global MEASUREMENT_MIN_DURATION
+    parser = argparse.ArgumentParser(description="Performance test of Igor server")
+    parser.add_argument("--count", metavar="MIN", type=int, help="Run each test at least MIN times (default: %d)" % MEASUREMENT_MIN_COUNT, default=MEASUREMENT_MIN_COUNT)
+    parser.add_argument("--dur", metavar="MIN", type=int, help="Run each test at least MIN seconds (default: %d)" % MEASUREMENT_MIN_DURATION, default=MEASUREMENT_MIN_DURATION)
+#    parser.add_argument("test", help="Run this test only (can be classname or classname.methodname)")
+    args = parser.parse_args()
+    MEASUREMENT_MIN_COUNT = args.count
+    MEASUREMENT_MIN_DURATION = args.dur
     for cls in [IgorPerf, IgorPerfHttps, IgorPerfCaps]:
         try:
             print '%s:' % cls.__name__

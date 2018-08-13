@@ -177,6 +177,23 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         """Create capability required to GET an action from extern"""
         return {}
         
+    def test62_call_external(self):
+        """GET an action on the external servlet directly"""
+        pAdmin = self._igorVar(credentials='admin:')
+        newCapID = self._create_caps_for_action(pAdmin, None, obj='/api/get', get='self', delegate='external')
+        optBearerToken = self._export_cap_for_servlet(pAdmin, newCapID)
+        p = self._igorVar(server=self.servletUrl, **optBearerToken)
+        self.servlet.set('sixtytwo')
+        self.servlet.startTimer()
+        value = p.get('/api/get')
+        duration = self.servlet.waitDuration()
+        self.assertEqual(value, '"sixtytwo"')
+        self.assertNotEqual(duration, None)
+        
+    def _export_cap_for_servlet(self, pAdmin, newCapID):
+        """Export a capability for the servlet audience"""
+        return {}
+        
     def test71_action(self):
         """Check that a PUT action runs when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')
@@ -397,23 +414,36 @@ class IgorTestCaps(IgorTestHttps):
         bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
         return {'bearer_token' : bearerToken }
         
-    def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
+    def _create_caps_for_action(self, pAdmin, caller, obj, delegate='1', **kwargs):
         """Create capability so that action caller can GET an external action"""
         igorIssuer = pAdmin.get('/internal/accessControl/getSelfIssuer')
         audience = self.servletUrl
         if not self.servlet.hasIssuer():
             newKey = self._new_sharedkey(pAdmin, aud=audience)
             self.servlet.setIssuer(igorIssuer, newKey)
+        if caller:
+            newOwner = "/data/actions/action[name='%s']" % caller
+        else:
+            newOwner = "/data/identities/admin"
         newCapID = self._new_capability(pAdmin, 
             tokenId='external', 
-            newOwner="/data/actions/action[name='%s']" % caller, 
+            newOwner=newOwner, 
             newPath=obj,
             aud=audience,
             iss=igorIssuer,
-            delegate='1',
+            delegate=delegate,
             **kwargs
             )
+        return newCapID
         
+    def _export_cap_for_servlet(self, pAdmin, newCapID):
+        """Export a capability for a given audience/subject"""
+        audience = self.servletUrl
+        if not self.servlet.hasIssuer():
+            newKey = self._new_sharedkey(pAdmin, aud=audience)
+            self.servlet.setIssuer(igorIssuer, newKey)
+        bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost&aud=%s' % (newCapID, audience))
+        return {'bearer_token' : bearerToken }
 
 if __name__ == '__main__':
     unittest.main()

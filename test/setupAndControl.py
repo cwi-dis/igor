@@ -168,10 +168,12 @@ class IgorSetupAndControl(object):
         assert sts != None
 
         
-    def _igorVar(self, **kwargs):
+    def _igorVar(self, server=None, **kwargs):
         kwargs = dict(kwargs)
         kwargs.update(self.igorVarArgs)
-        return igorVar.IgorServer(self.igorUrl, **kwargs)
+        if server is None:
+            server = self.igorUrl
+        return igorVar.IgorServer(server, **kwargs)
         
     def _flush(self, pIgor, maxDuration):
         pIgor.get('/internal/flush?timeout=%d' % maxDuration)

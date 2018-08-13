@@ -143,7 +143,7 @@ class IgorSetupAndControl(object):
                 database=cls.igorDir,
                 audience=cls.servletUrl
                 )
-        time.sleep(2)
+        time.sleep(10)
     
     @classmethod
     def tearDownIgor(cls):

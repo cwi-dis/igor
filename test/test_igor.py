@@ -190,6 +190,26 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(value, '"sixtytwo"')
         self.assertNotEqual(duration, None)
         
+    def test63_call_action_external(self):
+        """GET an action that does a GET on the external servlet"""
+        pAdmin = self._igorVar(credentials='admin:')
+
+        action = {'action':dict(name='test63action', url=self.servletUrl+'/api/get')}
+        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+
+        self._create_caps_for_action(pAdmin, 'test63action', obj='/api/get', get='self', delegate='external')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+
+        optBearerToken = self._create_cap_for_call(pAdmin, 'test63action')
+        p = self._igorVar(**optBearerToken)
+        
+        self.servlet.startTimer()
+        p.get('/action/test63action')
+
+        duration = self.servlet.waitDuration()
+        self.assertNotEqual(duration, None)
+        
     def _export_cap_for_servlet(self, pAdmin, newCapID):
         """Export a capability for the servlet audience"""
         return {}

@@ -421,6 +421,28 @@ class IgorTestCaps(IgorTestHttps):
         result = p.get('environment/test41', format='text/plain')
         self.assertEqual(result.strip(), 'fortyone')
         
+    def test68_call_external_disallowed(self):
+        """Check that a call to the external servlet without a correct capability fails"""
+        p = self._igorVar(server=self.servletUrl)
+        self.servlet.set('sixtytwo')
+        self.assertRaises(igorVar.IgorError, p.get, '/api/get')
+
+    def test69_call_action_external_disallowed(self):        
+        pAdmin = self._igorVar(credentials='admin:')
+
+        action = {'action':dict(name='test69action', url=self.servletUrl+'/api/get')}
+        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+
+        optBearerToken = self._create_cap_for_call(pAdmin, 'test69action')
+        p = self._igorVar(**optBearerToken)
+        
+        self.servlet.startTimer()
+        p.get('/action/test69action')
+
+        duration = self.servlet.waitDuration()
+        self.assertEqual(duration, None)
+
     def _create_cap_for_call(self, pAdmin, callee):
         """Create capability required to GET an action from extern"""
         newCapID = self._new_capability(pAdmin, 

@@ -259,6 +259,8 @@ class IgorPerfCaps(IgorPerfHttps):
                 result = p.get('identities', format='application/xml')
             except igorVar.IgorError:
                 pass
+            else:
+                assert 0, 'disallowed access did not raise an IgorError exception'
             if self._measurementStop():
                 break
         
@@ -271,41 +273,32 @@ class IgorPerfCaps(IgorPerfHttps):
                 result = p.put('environment/systemHealth/test29', 'twentynine', datatype='text/plain')
             except igorVar.IgorError:
                 pass
+            else:
+                assert 0, 'disallowed access did not raise an IgorError exception'
             if self._measurementStop():
                 break
         
-    def perf39_delete_disallowed(self):
-        p = self._igorVar()
+    def perf68_call_external_disallowed(self):
+        """Check that a call to the external servlet without a correct capability fails"""
+        p = self._igorVar(server=self.servletUrl)
+        self.servlet.set('sixtytwo')
         self._perfStart()
         while True:
             self._measurementStart()
             try:
-                result = p.delete('environment/systemHealth/test29')
+                p.get('/api/get')
             except igorVar.IgorError:
                 pass
+            else:
+                assert 0, 'disallowed access did not raise an IgorError exception'
             if self._measurementStop():
                 break
-        
+
     def _new_capability(self, pAdmin, **kwargs):
         argStr = urllib.urlencode(kwargs)
         rv = pAdmin.get('/internal/accessControl/newToken?' + argStr)
         return rv.strip()
         
-    def test40_newcap(self):
-        pAdmin = self._igorVar(credentials='admin:')
-        pAdmin.put('environment/test40', '', datatype='text/plain')
-        _ = self._new_capability(pAdmin, 
-            tokenId='admin-data', 
-            newOwner='/data/au:access/au:defaultCapabilities', 
-            newPath='/data/environment/test40',
-            get='self',
-            put='self'
-            )
-        p = self._igorVar()
-        p.put('environment/test40', 'forty', datatype='text/plain')
-        result = p.get('environment/test40', format='text/plain')
-        self.assertEqual(result.strip(), 'forty')
-
     def _new_sharedkey(self, pAdmin, **kwargs):
         argStr = urllib.urlencode(kwargs)
         try:
@@ -314,25 +307,6 @@ class IgorPerfCaps(IgorPerfHttps):
         except igorVar.IgorError:
             if DEBUG_TEST: print '(shared key already exists for %s)' % repr(kwargs)
         return None
-        
-    def test41_newcap_external(self):
-        pAdmin = self._igorVar(credentials='admin:')
-        pAdmin.put('environment/test41', '', datatype='text/plain')
-        newCapID = self._new_capability(pAdmin, 
-            tokenId='admin-data', 
-            newOwner='/data/identities/admin', 
-            newPath='/data/environment/test41',
-            get='self',
-            put='self',
-            delegate='1'
-            )
-        self._new_sharedkey(pAdmin, sub='localhost')
-        bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
-        
-        p = self._igorVar(bearer_token=bearerToken)
-        p.put('environment/test41', 'fortyone', datatype='text/plain')
-        result = p.get('environment/test41', format='text/plain')
-        self.assertEqual(result.strip(), 'fortyone')
         
     def _create_cap_for_call(self, pAdmin, callee):
         """Create capability required to GET an action from extern"""

@@ -83,7 +83,7 @@ class IgorPerf(IgorSetupAndControl):
         self._perfStart()
         while True:
             self._measurementStart()
-            result = p.get('/')
+            result = p.get('/apple-touch-icon.png')
             if self._measurementStop():
                 break
         
@@ -97,6 +97,8 @@ class IgorPerf(IgorSetupAndControl):
                 result = p.get('/nonexistent.html')
             except igorVar.IgorError:
                 pass
+            else:
+                assert 0, 'accessing nonexistent.html did not raise an IgorError exception'
             if self._measurementStop():
                 break
         

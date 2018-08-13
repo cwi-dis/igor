@@ -6,3 +6,6 @@ dist
 test/fixtures/testIgor
 test/fixtures/testIgorHttps
 test/fixtures/testIgorCaps
+test/fixtures/perfIgor
+test/fixtures/perfIgorHttps
+test/fixtures/perfIgorCaps

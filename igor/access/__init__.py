@@ -605,7 +605,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         lifetime = int(lifetime)
         kwargs['nvb'] = str(int(time.time())-1)
         kwargs['nva'] = str(int(time.time()) + lifetime)
-        if not 'aud' in kwargs:
+        if 'aud' in kwargs:
+            audience = kwargs['aud']
+        else:
+            audience = self.getSelfAudience()
             kwargs['aud'] = self.getSelfAudience()
         kwargs['iss'] = self.getSelfIssuer()
         #
@@ -624,7 +627,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         # Create the external representation
         #
         assert tokenToExport
-        assert tokenToExport._hasExternalRepresentationFor(self.getSelfAudience())
+        assert tokenToExport._hasExternalRepresentationFor(audience)
         externalRepresentation = tokenToExport._getExternalRepresentation()
         #
         # Save

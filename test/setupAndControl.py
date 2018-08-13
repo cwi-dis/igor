@@ -6,6 +6,7 @@ import subprocess
 import igorVar
 import igorSetup
 import igorServlet
+import threading
 
 DEBUG_TEST=False
 if DEBUG_TEST:
@@ -14,6 +15,8 @@ if DEBUG_TEST:
 
 class ServletHelper:
     def __init__(self, port, protocol, capabilities, database, audience):
+        self.lock = threading.Lock()
+        self.requestReceived = threading.Condition(self.lock)
         self.timerStart = None
         self.duration = None
         self.value = 0
@@ -34,35 +37,40 @@ class ServletHelper:
         self.server = None
         
     def get(self):
-        if self.timerStart:
-            self.duration = time.time() - self.timerStart
-            self.timerStart = None
+        with self.lock:
+            if self.timerStart:
+                self.duration = time.time() - self.timerStart
+                self.timerStart = None
+                self.requestReceived.notify()
         return self.value
         
     def set(self, value=None, data=None):
         if value is None:
             value = data
-        if self.timerStart:
-            self.duration = time.time() - self.timerStart
-            self.timerStart = None
+        with self.lock:
+            if self.timerStart:
+                self.duration = time.time() - self.timerStart
+                self.timerStart = None
+                self.requestReceived.notify()
         self.value = value
         
     def startTimer(self):
-        self.timerStart = time.time()
+        with self.lock:
+            self.timerStart = time.time()
         
     def getDuration(self):
-        rv = self.duration
-        self.duration = None
+        with self.lock:
+            rv = self.duration
+            self.duration = None
         return rv
         
     def waitDuration(self):
-        count = 0
-        while count < 10:
-            rv = self.getDuration()
-            if rv != None:
-                return rv
-            time.sleep(1)
-            count += 1
+        with self.lock:
+            if self.duration is None:
+                self.requestReceived.wait(10)
+            rv = self.duration
+            self.duration = None
+        return rv
             
     def hasIssuer(self):
         return self.server.hasIssuer()

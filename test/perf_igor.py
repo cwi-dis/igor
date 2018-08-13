@@ -2,6 +2,7 @@ import os
 import json
 import socket
 import urllib
+import math
 import xml.etree.ElementTree as ET
 import igorVar
 import igorCA
@@ -15,6 +16,12 @@ MAX_FLUSH_DURATION=10            # How long we wait for internal actions to be c
 
 MEASUREMENT_MIN_DURATION=2
 MEASUREMENT_MIN_COUNT=10
+
+def _meanAndSigma(measurements):
+    mean = sum(measurements)/len(measurements)
+    sumSquares = sum(map(lambda x: (x-mean)**2, measurements))
+    sigma = math.sqrt(sumSquares/(len(measurements)-1))
+    return mean, sigma
             
 class IgorPerf(IgorSetupAndControl):
     igorDir = os.path.join(FIXTURES, 'perfIgor')
@@ -54,7 +61,8 @@ class IgorPerf(IgorSetupAndControl):
         self.measurements = []
         
     def _perfStop(self, name):
-        print '%-50s %5d %6.3f' % (self.__class__.__name__ + '.' + name, len(self.measurements), sum(self.measurements)/len(self.measurements))
+        mean, sigma = _meanAndSigma(self.measurements)
+        print '%-50s %5d %6.3f %6.3f' % (self.__class__.__name__ + '.' + name, len(self.measurements), mean, sigma)
         self.startTime = None
         
     def _measurementStart(self):

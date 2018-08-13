@@ -67,6 +67,7 @@ class IgorServlet(threading.Thread):
         self.port = port
         self.name = name
         self.middleware = ()
+        self.nolog = nolog
         if nolog:
             self.middleware = (NoLog,)
         self.sslname = sslname
@@ -102,7 +103,11 @@ class IgorServlet(threading.Thread):
             from web.wsgiserver import CherryPyWSGIServer
             CherryPyWSGIServer.ssl_certificate = self.certificateFile
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
+        keepStdout = sys.stdout
+        if self.nolog:
+            sys.stdout = open('/dev/null', 'w')
         self.app.run(self.port, *self.middleware)
+        sys.stdout = keepStdout
         
     def stop(self):
         self.app.stop()

@@ -102,7 +102,7 @@ class IgorSetupAndControl(object):
         shutil.rmtree(cls.igorDir, True)
         if os.path.exists(cls.igorLogFile):
             os.unlink(cls.igorLogFile)
-        
+        logFile = open(cls.igorLogFile, 'a')
         cls.igorUrl = "%s://%s:%d/data/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort)
         cls.servletUrl = "%s://%s:%d" % (cls.igorProtocol, cls.igorHostname, cls.igorPort+1)
         
@@ -117,7 +117,7 @@ class IgorSetupAndControl(object):
             ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname)
 #            ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname, cls.igorHostname2, '127.0.0.1', '::1')
             assert ok
-            setup.postprocess(run=True)
+            setup.postprocess(run=True, subprocessArgs=dict(stdout=logFile, stderr=subprocess.STDOUT))
             certFile = os.path.join(cls.igorDir, 'igor.crt')
             cls.igorVarArgs['certificate'] = certFile
 #            cls.igorVarArgs['noverify'] = True
@@ -127,14 +127,14 @@ class IgorSetupAndControl(object):
 
         if DEBUG_TEST: print 'IgorTest: Check database consistency'
         cmd = [sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
-        sts = subprocess.call(cmd + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
+        sts = subprocess.call(cmd + cls.igorServerArgs, stdout=logFile, stderr=subprocess.STDOUT)
         if sts:
             print 'IgorTest: status=%s returned by command %s' % (str(sts), ' '.join(cmd))
             print 'IgorTest: logfile %s:' % cls.igorLogFile
             sys.stdout.write(open(cls.igorLogFile).read())
             assert 0
         if DEBUG_TEST: print 'IgorTest: Start server'
-        cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=open(cls.igorLogFile, 'a'), stderr=subprocess.STDOUT)
+        cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=logFile, stderr=subprocess.STDOUT)
         if DEBUG_TEST: print 'IgorTest: Start servlet'
         cls.servlet = ServletHelper(
                 port=cls.igorPort+1, 

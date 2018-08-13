@@ -109,13 +109,13 @@ class IgorSetup:
             return False
         return True
         
-    def postprocess(self, run=False, verbose=False):
+    def postprocess(self, run=False, verbose=False, subprocessArgs={}):
         if self.runcmds:
             if run:
                 for cmd in self.runcmds:
                     if verbose:
                         print >> sys.stderr, '+', cmd
-                    subprocess.check_call(cmd, shell=True)
+                    subprocess.check_call(cmd, shell=True, **subprocessArgs)
             else:
                 print '# Run the following commands:'
                 print '('

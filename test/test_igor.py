@@ -190,6 +190,10 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(value, '"sixtytwo"')
         self.assertNotEqual(duration, None)
         
+    def _export_cap_for_servlet(self, pAdmin, newCapID):
+        """Export a capability for the servlet audience"""
+        return {}
+        
     def test63_call_action_external(self):
         """GET an action that does a GET on the external servlet"""
         pAdmin = self._igorVar(credentials='admin:')
@@ -209,10 +213,6 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
 
         duration = self.servlet.waitDuration()
         self.assertNotEqual(duration, None)
-        
-    def _export_cap_for_servlet(self, pAdmin, newCapID):
-        """Export a capability for the servlet audience"""
-        return {}
         
     def test71_action(self):
         """Check that a PUT action runs when the trigger variable is updated"""

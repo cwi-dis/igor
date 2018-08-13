@@ -13,8 +13,8 @@ FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 MAX_FLUSH_DURATION=10            # How long we wait for internal actions to be completed
 #MAX_EXTERNAL_FLUSH_DURATION=0   # How long we wait for external actions to be completed
 
-MEASUREMENT_MIN_DURATION=10
-MEASUREMENT_MIN_COUNT=100
+MEASUREMENT_MIN_DURATION=2
+MEASUREMENT_MIN_COUNT=10
             
 class IgorPerf(IgorSetupAndControl):
     igorDir = os.path.join(FIXTURES, 'perfIgor')
@@ -189,88 +189,53 @@ class IgorPerf(IgorSetupAndControl):
         """Create capability required to GET an action from extern"""
         return {}
         
-    def test73_action_indirect(self):
+    def perf62_call_external(self):
+        """GET an action on the external servlet directly"""
         pAdmin = self._igorVar(credentials='admin:')
-        p = self._igorVar()
-        content = {'test73':{'src':'', 'sink':''}}
-        action1 = {'action':dict(name='test73first', url='/action/test73second', xpath='/data/sandbox/test73/src')}
-        action2 = {'action':dict(name='test73second', url='/data/sandbox/test73/sink', method='PUT', data='copy-{/data/sandbox/test73/src}-copy')}
-        p.put('sandbox/test73', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        p.put('sandbox/test73/src', 'seventy-three', datatype='text/plain')
+        newCapID = self._create_caps_for_action(pAdmin, None, obj='/api/get', get='self', delegate='external')
+        optBearerToken = self._export_cap_for_servlet(pAdmin, newCapID)
+        p = self._igorVar(server=self.servletUrl, **optBearerToken)
+        self.servlet.set('sixtytwo')
         
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        self._perfStart()
+        while True:
+            self._measurementStart()
+            self.servlet.startTimer()
+            p.get('/api/get')
+            duration = self.servlet.waitDuration()
+            if self._measurementStop(duration=duration):
+                break
         
-        result = p.get('sandbox/test73', format='application/json')
-        resultDict = json.loads(result)
-        wantedContent = {'test73':{'src':'seventy-three', 'sink':'copy-seventy-three-copy'}}
-        self.assertEqual(resultDict, wantedContent)
+    def _export_cap_for_servlet(self, pAdmin, newCapID):
+        """Export a capability for the servlet audience"""
+        return {}
+        
+    def perf63_call_action_external(self):
+        """GET an action that does a GET on the external servlet"""
+        pAdmin = self._igorVar(credentials='admin:')
+
+        action = {'action':dict(name='test63action', url=self.servletUrl+'/api/get')}
+        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+
+        self._create_caps_for_action(pAdmin, 'test63action', obj='/api/get', get='self', delegate='external')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+
+        optBearerToken = self._create_cap_for_call(pAdmin, 'test63action')
+        p = self._igorVar(**optBearerToken)
+
+        self._perfStart()
+        while True:
+            self._measurementStart()        
+            self.servlet.startTimer()
+            p.get('/action/test63action')
+            duration = self.servlet.waitDuration()
+            if self._measurementStop(duration=duration):
+                break
 
     def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
+        """Create capability so that action caller can GET an external action"""
         pass
-        
-    def test74_action_external_get(self):
-        pAdmin = self._igorVar(credentials='admin:')
-        p = self._igorVar()
-        content = {'test74':{'src':'', 'sink':''}}
-        action1 = {'action':dict(name='test74first', url=self.servletUrl+'/api/get', xpath='/data/sandbox/test74/src')}
-        p.put('sandbox/test74', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
-
-        self._create_caps_for_action(pAdmin, 'test74first', obj='/api/get', get='self')
-        
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        
-        self.servlet.startTimer()
-        p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
-        
-        duration = self.servlet.waitDuration()
-        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
-        self.assertNotEqual(duration, None)
-        
-    def test75_action_external_get_arg(self):
-        pAdmin = self._igorVar(credentials='admin:')
-        p = self._igorVar()
-        content = {'test75':{'src':''}}
-        action1 = {'action':dict(name='test75first', url=self.servletUrl+'/api/set?value={.}', method='GET', xpath='/data/sandbox/test75/src')}
-        p.put('sandbox/test75', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
-
-        self._create_caps_for_action(pAdmin, 'test75first', obj='/api/set', get='self')
-        
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-
-        self.servlet.startTimer()
-        p.put('sandbox/test75/src', 'seventy-five', datatype='text/plain')
-        
-        duration = self.servlet.waitDuration()
-        self.assertNotEqual(duration, None)
-        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
-        result = self.servlet.get()
-        self.assertEqual(result, 'seventy-five')
-        
-    def test76_action_external_put(self):
-        pAdmin = self._igorVar(credentials='admin:')
-        p = self._igorVar()
-        content = {'test76':{'src':''}}
-        action1 = {'action':dict(name='test76first', url=self.servletUrl+'/api/set', method='PUT', mimetype='text/plain', data='{.}', xpath='/data/sandbox/test76/src')}
-        p.put('sandbox/test76', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
-
-        self._create_caps_for_action(pAdmin, 'test76first', obj='/api/set', put='self')
-        
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-
-        self.servlet.startTimer()
-        p.put('sandbox/test76/src', 'seventy-six', datatype='text/plain')
-        
-        duration = self.servlet.waitDuration()
-        self.assertNotEqual(duration, None)
-        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
-        result = self.servlet.get()
-        self.assertEqual(result, 'seventy-six')
         
 class IgorPerfHttps(IgorPerf):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
@@ -382,21 +347,36 @@ class IgorPerfCaps(IgorPerfHttps):
         bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
         return {'bearer_token' : bearerToken }
         
-    def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
+    def _create_caps_for_action(self, pAdmin, caller, obj, delegate='1', **kwargs):
+        """Create capability so that action caller can GET an external action"""
         igorIssuer = pAdmin.get('/internal/accessControl/getSelfIssuer')
         audience = self.servletUrl
         if not self.servlet.hasIssuer():
             newKey = self._new_sharedkey(pAdmin, aud=audience)
             self.servlet.setIssuer(igorIssuer, newKey)
+        if caller:
+            newOwner = "/data/actions/action[name='%s']" % caller
+        else:
+            newOwner = "/data/identities/admin"
         newCapID = self._new_capability(pAdmin, 
             tokenId='external', 
-            newOwner="/data/actions/action[name='%s']" % caller, 
+            newOwner=newOwner, 
             newPath=obj,
             aud=audience,
             iss=igorIssuer,
-            delegate='1',
+            delegate=delegate,
             **kwargs
             )
+        return newCapID
+        
+    def _export_cap_for_servlet(self, pAdmin, newCapID):
+        """Export a capability for a given audience/subject"""
+        audience = self.servletUrl
+        if not self.servlet.hasIssuer():
+            newKey = self._new_sharedkey(pAdmin, aud=audience)
+            self.servlet.setIssuer(igorIssuer, newKey)
+        bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost&aud=%s' % (newCapID, audience))
+        return {'bearer_token' : bearerToken }
         
 def main():
     for cls in [IgorPerf, IgorPerfHttps, IgorPerfCaps]:

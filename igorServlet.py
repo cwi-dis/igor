@@ -104,10 +104,7 @@ class IgorServlet(threading.Thread):
             CherryPyWSGIServer.ssl_certificate = self.certificateFile
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
         keepStdout = sys.stdout
-        if self.nolog:
-            sys.stdout = open('/dev/null', 'w')
         self.app.run(self.port, *self.middleware)
-        sys.stdout = keepStdout
         
     def stop(self):
         self.app.stop()

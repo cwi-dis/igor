@@ -70,6 +70,7 @@ class IgorPerf(IgorSetupAndControl):
         return (time.time() - self.startTime >= MEASUREMENT_MIN_DURATION) and (len(self.measurements) >= MEASUREMENT_MIN_COUNT)
         
     def perf01_get_static(self):
+        """GET a static HTML page"""
         p = self._igorVar()
         self._perfStart()
         while True:
@@ -79,6 +80,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf02_get_static_nonexistent(self):
+        """GET a nonexistent static HTML page"""
         p = self._igorVar()
         self._perfStart()
         while True:
@@ -91,6 +93,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf11_get_xml(self):
+        """GET a database variable as XML"""
         p = self._igorVar()
         self._perfStart()
         while True:
@@ -100,6 +103,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf12_get_text(self):
+        """GET a database variable as plaintext"""
         p = self._igorVar()
         self._perfStart()
         while True:
@@ -109,6 +113,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf13_get_json(self):
+        """GET a database variable as JSON"""
         p = self._igorVar()
         self._perfStart()
         while True:
@@ -118,6 +123,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf21_put_xml(self):
+        """PUT a database variable as XML"""
         p = self._igorVar()
         data = '<test21>21</test21>'
         self._perfStart()
@@ -128,6 +134,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf22_put_text(self):
+        """PUT a database variable as plaintext"""
         p = self._igorVar()
         data = 'twenty two'
         self._perfStart()
@@ -138,6 +145,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf23_put_json(self):
+        """PUT a database variable as JSON"""
         p = self._igorVar()
         data = json.dumps({"test23" : 23})
         self._perfStart()
@@ -148,6 +156,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf31_post_text(self):
+        """POST a database variable"""
         p = self._igorVar()
         p.put('sandbox/test31', '', datatype='text/plain')
         data = 'twenty two'
@@ -159,6 +168,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def perf61_call_action(self):
+        """GET an action from external"""
         pAdmin = self._igorVar(credentials='admin:')
         optBearerToken = self._create_cap_for_call(pAdmin, 'test61action')
         p = self._igorVar(**optBearerToken)
@@ -176,6 +186,7 @@ class IgorPerf(IgorSetupAndControl):
                 break
         
     def _create_cap_for_call(self, pAdmin, action):
+        """Create capability required to GET an action from extern"""
         return {}
         
     def test73_action_indirect(self):
@@ -359,6 +370,7 @@ class IgorPerfCaps(IgorPerfHttps):
         self.assertEqual(result.strip(), 'fortyone')
         
     def _create_cap_for_call(self, pAdmin, callee):
+        """Create capability required to GET an action from extern"""
         newCapID = self._new_capability(pAdmin, 
             tokenId='admin-action', 
             newOwner='/data/identities/admin', 

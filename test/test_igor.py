@@ -38,16 +38,19 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         super(IgorTest, cls).tearDownClass()
        
     def test01_get_static(self):
+        """GET a static HTML page"""
         p = self._igorVar()
         result = p.get('/')
         self.assertTrue(result)
         self.assertEqual(result[0], "<")
         
     def test02_get_static_nonexistent(self):
+        """GET a nonexistent static HTML page"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.get, '/nonexistent.html')
         
     def test11_get_xml(self):
+        """GET a database variable as XML"""
         p = self._igorVar()
         result = p.get('environment/systemHealth', format='application/xml')
         self.assertTrue(result)
@@ -55,11 +58,13 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(root.tag, "systemHealth")
         
     def test12_get_text(self):
+        """GET a database variable as plaintext"""
         p = self._igorVar()
         result = p.get('environment/systemHealth', format='text/plain')
         self.assertTrue(result)
         
     def test13_get_json(self):
+        """GET a database variable as JSON"""
         p = self._igorVar()
         result = p.get('environment/systemHealth', format='application/json')
         self.assertTrue(result)
@@ -68,6 +73,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(root.keys(), ["systemHealth"])
         
     def test21_put_xml(self):
+        """PUT a database variable as XML"""
         p = self._igorVar()
         data = '<test21>21</test21>'
         p.put('sandbox/test21', data, datatype='application/xml')
@@ -80,6 +86,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual({"test21" : 21}, result3dict)
         
     def test22_put_text(self):
+        """PUT a database variable as plaintext"""
         p = self._igorVar()
         data = 'twenty two'
         p.put('sandbox/test22', data, datatype='text/plain')
@@ -92,6 +99,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual({'test22':'twenty two'}, result3dict)
         
     def test23_put_json(self):
+        """PUT a database variable as JSON"""
         p = self._igorVar()
         data = json.dumps({"test23" : 23})
         p.put('sandbox/test23', data, datatype='application/json')
@@ -102,6 +110,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual("<test23>23</test23>", result2.strip())
         
     def test24_put_multi(self):
+        """PUT a database variable twice and check that it has changed"""
         p = self._igorVar()
         data = '<test24>24</test24>'
         p.put('sandbox/test24', data, datatype='application/xml')
@@ -113,6 +122,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(data.strip(), result.strip())
         
     def test31_post_text(self):
+        """POST a database variable twice and check that both get through"""
         p = self._igorVar()
         p.put('sandbox/test31', '', datatype='text/plain')
         p.post('sandbox/test31/item', 'thirty', datatype='text/plain')
@@ -134,6 +144,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(result3list[1]['item'], 'one')
         
     def test32_delete(self):
+        """DELETE a database variable"""
         p = self._igorVar()
         p.put('sandbox/test32', 'thirtytwo', datatype='text/plain')
         result = p.get('sandbox/test32', format='text/plain')
@@ -142,6 +153,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
 
     def test61_call_action(self):
+        """GET an action from external and check that it is executed"""
         pAdmin = self._igorVar(credentials='admin:')
         optBearerToken = self._create_cap_for_call(pAdmin, 'test61action')
         p = self._igorVar(**optBearerToken)
@@ -162,9 +174,11 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(resultNumber, 3)
         
     def _create_cap_for_call(self, pAdmin, action):
+        """Create capability required to GET an action from extern"""
         return {}
         
     def test71_action(self):
+        """Check that a PUT action runs when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test71':{'src':'', 'sink':''}}
@@ -181,6 +195,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(resultDict, wantedContent)
         
     def test72_action_post(self):
+        """Check that a POST action runs when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test72':{'src':''}}
@@ -202,6 +217,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(resultDict, wantedContent)
         
     def test73_action_indirect(self):
+        """Check that an action can run another action when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test73':{'src':'', 'sink':''}}
@@ -220,10 +236,8 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         wantedContent = {'test73':{'src':'seventy-three', 'sink':'copy-seventy-three-copy'}}
         self.assertEqual(resultDict, wantedContent)
 
-    def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
-        pass
-        
     def test74_action_external_get(self):
+        """Check that triggering an action that GETs an external action works"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test74':{'src':'', 'sink':''}}
@@ -241,8 +255,13 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         duration = self.servlet.waitDuration()
         if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
         self.assertNotEqual(duration, None)
-        
+
+    def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
+        """Create capability so that action caller can GET an external action"""
+        pass
+                
     def test75_action_external_get_arg(self):
+        """Check that triggering an action that GETs an external action with a variable works"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test75':{'src':''}}
@@ -264,6 +283,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(result, 'seventy-five')
         
     def test76_action_external_put(self):
+        """Check that triggering an action that PUTs an external action with a variable works"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
         content = {'test76':{'src':''}}
@@ -298,27 +318,28 @@ class IgorTestCaps(IgorTestHttps):
     igorUseCapabilities = True
 
     def test19_get_disallowed(self):
+        """Check that GET on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.get, 'identities', format='application/xml')
         
     def test29_put_disallowed(self):
+        """Check that PUT on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
         
-    def test29_put_disallowed(self):
-        p = self._igorVar()
-        self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
-
     def test39_delete_disallowed(self):
+        """Check that DELETE on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.delete, 'environment/systemHealth')
         
     def _new_capability(self, pAdmin, **kwargs):
+        """Create a new capability and return its cid"""
         argStr = urllib.urlencode(kwargs)
         rv = pAdmin.get('/internal/accessControl/newToken?' + argStr)
         return rv.strip()
         
     def test40_newcap(self):
+        """Create a new capability in the default set and check that a PUT now works"""
         pAdmin = self._igorVar(credentials='admin:')
         pAdmin.put('environment/test40', '', datatype='text/plain')
         _ = self._new_capability(pAdmin, 
@@ -334,6 +355,7 @@ class IgorTestCaps(IgorTestHttps):
         self.assertEqual(result.strip(), 'forty')
 
     def _new_sharedkey(self, pAdmin, **kwargs):
+        """Create a new secret shared key between the issuer and an audience or subject"""
         argStr = urllib.urlencode(kwargs)
         try:
             rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
@@ -343,6 +365,7 @@ class IgorTestCaps(IgorTestHttps):
         return None
         
     def test41_newcap_external(self):
+        """Create a new capability, export it, carry it in a request and check that the request is allowed"""
         pAdmin = self._igorVar(credentials='admin:')
         pAdmin.put('environment/test41', '', datatype='text/plain')
         newCapID = self._new_capability(pAdmin, 
@@ -362,6 +385,7 @@ class IgorTestCaps(IgorTestHttps):
         self.assertEqual(result.strip(), 'fortyone')
         
     def _create_cap_for_call(self, pAdmin, callee):
+        """Create capability required to GET an action from extern"""
         newCapID = self._new_capability(pAdmin, 
             tokenId='admin-action', 
             newOwner='/data/identities/admin', 
@@ -374,6 +398,7 @@ class IgorTestCaps(IgorTestHttps):
         return {'bearer_token' : bearerToken }
         
     def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
+        """Create capability so that action caller can GET an external action"""
         igorIssuer = pAdmin.get('/internal/accessControl/getSelfIssuer')
         audience = self.servletUrl
         if not self.servlet.hasIssuer():

@@ -133,13 +133,17 @@ class IgorServer:
         #
         self.urlCaller.callURL(dict(method='GET', url='/action/start', token=self.access.tokenForIgor()))
         if self.advertise:
-            self.startAdvertising(port)
+            self.startAdvertising(self.port)
             
     def startAdvertising(self, port):
+        if self.ssl:
+            proto = '_https._tcp'
+        else:
+            proto = '_http._tcp'
         if sys.platform == 'darwin':
-            cmd = ['dns-sd', '-R', 'igor', '_http._tcp', 'local', str(port)]
+            cmd = ['dns-sd', '-R', 'igor', proto, 'local', str(port)]
         elif sys.platform == 'linux2':
-            cmd = ['avahi-publish', '-s', 'igor', '_http._tcp', str(port)]
+            cmd = ['avahi-publish', '-s', 'igor', proto, str(port)]
         else:
             print >> sys.stderr, "Cannot do mdns-advertise on platform", sys.platform
             return

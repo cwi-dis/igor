@@ -161,11 +161,14 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         action = {'action':dict(name='test61action', url='/data/sandbox/test61/data', method='PUT', data='{/data/sandbox/test61/data + 1}')}
         pAdmin.put('sandbox/test61', json.dumps(content), datatype='application/json')
         pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         p.get('/action/test61action')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
+
         p.get('/action/test61action')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
+
         p.get('/action/test61action')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
         

@@ -14,7 +14,7 @@
 NAME=bleServer
 # Daemon name, where is the actual executable
 DAEMON=/home/jack/src/dis-git/igor/helpers/bleServer/bleServer.py
-DAEMON_ARGS=8081
+DAEMON_ARGS="--port 8081"
 
 # If the daemon is not there, then exit.
 test -x $DAEMON || exit 5

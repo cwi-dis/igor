@@ -253,11 +253,11 @@ class IgorSetup:
 
     def cmd_runatboot(self):
         """runatboot - make igorServer run at system boot (Linux or OSX, requires sudo permission)"""
-        return self._runat('boot')
+        return self._runat('runatboot')
         
     def cmd_runatlogin(self):
         """runatlogin - make igorServer run at user login (OSX only)"""
-        return self._runat('login')
+        return self._runat('runatlogin')
         
     def _runat(self, when):
         args = dict(

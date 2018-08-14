@@ -6,6 +6,8 @@ import json
 import threading
 import sys
 import time
+import web
+import argparse
 
 AVAILABLE_TIMEOUT=30   # A device is marked unavailable if it hasn't been seen for 30 seconds
 DELETE_TIMEOUT=120     # A device is removed if it hasn't been seen for 2 minutes
@@ -16,15 +18,13 @@ urls=(
     '/ble', 'getBLEdata',
     )
 
-app = web.application(urls, globals())
-
 class BleScanServer(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, **servletArgs):
         threading.Thread.__init__(self)
         self.daemon = True
         self.initScanner()
-        self.initServer()
+        self.initServer(servletArgs)
         self.devices = {}
         self.lock = threading.RLock()
         self.significantChange = False
@@ -48,8 +48,8 @@ class BleScanServer(threading.Thread):
         self.stopScanning()
         self.scanner = None
 
-    def initServer(self):
-        self.server = igorServlet.IgorServlet()
+    def initServer(self, servletArgs):
+        self.server = igorServlet.IgorServlet(**servletArgs)
         self.server.addEndpoint('/ble', get=self.GET_bleData)
 
     def startServer(self):
@@ -142,22 +142,11 @@ class BleScanServer(threading.Thread):
             devList.append(item)
         rv = {'bleDevice':devList, 'lastActivity' : time.time()}
         return rv
-        
-# Module may get imported twice (see http://webpy.org/cookbook/session_with_reloader)
-# so use a trick to make sure we have only one ble scanner
-if web.config.get('_bleScanner') is None:
-    bleScanner = BleScanServer()
-    bleScanner.start()
-    web.config._bleScanner = bleScanner
-else:
-    bleScanner = web.config.get('_bleScanner')
-            
-class getBLEdata:
-    def GET(self, all=True):
-
-        
+                    
 def main():
-    bleScanner = BleScanServer()
+    parser = igorServlet.IgorServlet.argumentParser()
+    args = parser.parse_args()
+    bleScanner = BleScanServer(**vars(args))
     bleScanner.run()
     
 if __name__ == '__main__':

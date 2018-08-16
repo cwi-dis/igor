@@ -102,6 +102,7 @@
 	<actions>
 	    <action>
 	        <name>start</name>
+			<representing>igor/start</representing>
 	        <url>/internal/started</url>
 	    </action>
 		<action>
@@ -116,12 +117,14 @@
         <action>
             <name>cleanup</name>
             <method>DELETE</method>
+			<representing>igor/std</representing>
             <url>/data/environment/messages/message[position()&lt;last()]</url>
 			<notBefore/>
         </action>
 		<action>
 			<name>updateActions</name>
 			<xpath>/data/actions/*</xpath>
+			<representing>igor/core</representing>
 			<url>/internal/updateActions</url>
 			<notBefore/>
 		</action>
@@ -132,6 +135,7 @@
 			<url>/data/environment/night</url>
 			<mimetype>text/plain</mimetype>
 			<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
+			<representing>igor/std</representing>
 			<notBefore/>
 		</action>
 		<action>
@@ -143,6 +147,7 @@
 			<mimetype>text/plain</mimetype>
 			<data>{.}</data>
 			<multiple>true</multiple>
+			<representing>igor/std</representing>
 			<notBefore/>
 		</action>
 		<action>
@@ -153,6 +158,7 @@
 			<url>/data/environment/people/count</url>
 			<mimetype>text/plain</mimetype>
 			<data>{count(/data/people/*[home='true'])}</data>
+			<representing>igor/std</representing>
 			<notBefore/>
 		</action>
 		<au:capability>

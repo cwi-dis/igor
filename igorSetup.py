@@ -305,7 +305,7 @@ class IgorSetup:
         """stop - stop service (using normal OSX or Linux commands)"""
         return self._startstop('stop')
    
-    def cmd_srebuild(self):
+    def cmd_rebuild(self):
         """rebuild - stop, rebuild and start the service (must be run in source directory)"""
         return self._startstop('rebuild')
    

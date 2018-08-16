@@ -251,13 +251,13 @@ class IgorPerf(IgorSetupAndControl):
 class IgorPerfHttps(IgorPerf):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorLogFile = os.path.join(FIXTURES, 'testIgorHttps.log')
-    igorPort = 29333
+    igorPort = 29433
     igorProtocol = "https"
     
 class IgorPerfCaps(IgorPerfHttps):
     igorDir = os.path.join(FIXTURES, 'testIgorCaps')
     igorLogFile = os.path.join(FIXTURES, 'testIgorCaps.log')
-    igorPort = 39333
+    igorPort = 39433
     igorServerArgs = ["--capabilities"]
     igorUseCapabilities = True
 

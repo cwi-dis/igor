@@ -38,7 +38,7 @@ class FitbitPlugin:
     def _refresh(self, tokenData):
         if DEBUG: print 'xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
         DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', self.token, replace=True)
-        COMMANDS.queue('save')
+        COMMANDS.queue('save', self.token)
         if DEBUG: print 'xxxjack queued save call'
     
     def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
@@ -117,8 +117,8 @@ class FitbitPlugin:
 
         fb = Fitbit(state=state, redirect_uri=step2url, **oauthSettings)
 
-        token = fb.client.fetch_access_token(code)
-        self._refresh(token)
+        fbToken = fb.client.fetch_access_token(code)
+        self._refresh(fbToken)
         return 'ok\n'
 
 def igorPlugin(pluginName, pluginData):

@@ -149,7 +149,7 @@ class ForwardingClass:
             # We are using capability-based access control Check that the caller has the correct
             # rights.
             if not self._checkRights(method, path):
-                raise MyWebError('401 Unauthorized')
+                raise myWebError('401 Unauthorized')
         methodArgs = {}
         optArgs = web.input()
         if optArgs:

@@ -6,7 +6,7 @@
 	<actions>
 		<action>
 			<interval>60</interval>
-			<url>/pluginscripts/dhcp/pull</url>
+			<url>/pluginscript/dhcp/pull</url>
 			<representing>sensors/dhcp</representing>
 			<aggregate>true</aggregate>
 		</action>

@@ -6,7 +6,7 @@
 	<actions>
 		<action>
 			<interval>300</interval>
-			<url>/pluginscripts/buienradar/pull</url>
+			<url>/pluginscript/buienradar/pull</url>
 			<aggregate>true</aggregate>
 		</action>
 		<action>

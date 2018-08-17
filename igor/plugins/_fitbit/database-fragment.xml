@@ -3,7 +3,7 @@
 	<actions>
 		<action>
 			<interval>36000</interval>
-			<url>/pluginscripts/fitbit/pull?user=jack</url>
+			<url>/pluginscript/fitbit/pull?user=jack</url>
 			<representing>sensors/fitbit</representing>
 		</action>
 	</actions>

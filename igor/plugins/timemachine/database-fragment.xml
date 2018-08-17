@@ -6,7 +6,7 @@
 	<actions>
 		<action>
 			<interval>36000</interval>
-			<url>/pluginscripts/timemachine/get?name=backup.desktop&amp;remoteHost=localhost</url>
+			<url>/pluginscript/timemachine/get?name=backup.desktop&amp;remoteHost=localhost</url>
 			<aggregate>true</aggregate>
 		</action>
 	</actions>

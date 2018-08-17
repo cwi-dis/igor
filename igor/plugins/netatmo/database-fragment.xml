@@ -3,7 +3,7 @@
 	<actions>
 		<action>
 			<interval>900</interval>
-			<url>/pluginscripts/netatmo/pull</url>
+			<url>/pluginscript/netatmo/pull</url>
 			<representing>sensors/netatmo</representing>
 			<aggregate>true</aggregate>
 		</action>

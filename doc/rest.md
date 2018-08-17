@@ -25,7 +25,7 @@ Trigger a named action. `GET` only.
 
 Run a plugin. `GET` only. First field is the plugin name, optional second field is the method of the plugin to call (default _index_). Query parameters are passed to the Python method as named arguments. Plugin data from `/data/plugindata/_name_` is made available to the plugin factory function, and if a _user_ query parameter is present Igor will add a _userData_ argument containing the data from `/data/identities/_user_/plugindata/_name_` (as a Python dictionary).
 
-## /pluginscripts/\*/\*
+## /pluginscript/\*/\*
 
 Run a plugin script. `GET` only. First argument is the plugin name, second argument is the script name. The script is obtained from file `/plugins/_name_/scripts/_scriptname_.sh`.
 

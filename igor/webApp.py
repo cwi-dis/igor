@@ -30,7 +30,7 @@ def initDatabaseAccess():
         _ = xmlDatabaseAccess()
         
 urls = (
-    '/pluginscripts/([^/]+)/([^/]+)', 'runScript',
+    '/pluginscript/([^/]+)/([^/]+)', 'runScript',
     '/data/(.*)', 'xmlDatabaseAccess',
     '/evaluate/(.*)', 'xmlDatabaseEvaluate',
     '/internal/([^/]+)', 'runCommand',

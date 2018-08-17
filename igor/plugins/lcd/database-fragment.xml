@@ -6,7 +6,7 @@
 	<actions>
 		<action>
 			<xpath>/data/environment/messages/*</xpath>
-			<url>/pluginscripts/lcd/message?args={.}</url>
+			<url>/pluginscript/lcd/message?args={.}</url>
 			<representing>devices/lcd</representing>
 		</action>
 	</actions>

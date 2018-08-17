@@ -6,17 +6,17 @@
 	<actions>
 		<action>
 			<xpath>/data/devices/tv/power</xpath>
-			<url>/pluginscripts/philips/power?power={.}</url>
+			<url>/pluginscript/philips/power?power={.}</url>
 			<representing>devices/tv</representing>
 		</action>
 		<action>
 			<xpath>/data/devices/tv/*[name()!='power']</xpath>
-			<url>/pluginscripts/philips/push?{name()}={.}</url>
+			<url>/pluginscript/philips/push?{name()}={.}</url>
 			<representing>devices/tv</representing>
 		</action>
 		<action>
 			<interval>60</interval>
-			<url>/pluginscripts/philips/pull</url>
+			<url>/pluginscript/philips/pull</url>
 			<aggregate>true</aggregate>
 		</action>
 	</actions>

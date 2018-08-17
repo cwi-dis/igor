@@ -3,7 +3,7 @@
 	<actions>
 		<action>
 			<interval>60</interval>
-			<url>/pluginscripts/smartmeter_rfduino/pull</url>
+			<url>/pluginscript/smartmeter_rfduino/pull</url>
 			<aggregate>true</aggregate>
 		</action>
 		<action>

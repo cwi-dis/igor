@@ -4,7 +4,7 @@
 		<action>
 			<xpath>/data/environment/messages/*</xpath>
 			<condition>not(data/environment/night)</condition>
-			<url>/pluginscripts/say/message?args={.}</url>
+			<url>/pluginscript/say/message?args={.}</url>
 		</action>
 	</actions>
 </data>

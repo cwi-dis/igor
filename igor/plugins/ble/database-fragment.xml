@@ -9,7 +9,7 @@
 	<actions>
 		<action>
 			<interval>60/interval>
-			<url>/pluginscripts/ble/pull</url>
+			<url>/pluginscript/ble/pull</url>
 			<representing>sensors/ble</representing>
 			<aggregate>true</aggregate>
 		</action>

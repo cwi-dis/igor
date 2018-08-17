@@ -113,7 +113,7 @@ Capabilities this user will carry when logged in. Contains at least:
 Capabilities that are carried by all actions. Contains at least:
 
 - get(descendant), /plugin
-- get(descendant), /pluginscripts
+- get(descendant), /pluginscript
 - get(child), /action
 
 ### /data/actions/action

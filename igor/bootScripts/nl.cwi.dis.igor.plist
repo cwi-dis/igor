@@ -18,13 +18,10 @@ database - directory where the database lives (usually ~user/.igor)
         <string>-d</string>
         <string>%(database)s</string>
         <string>--advertise</string>
+        <string>--nologstderr</script>
     </array>
     <key>WorkingDirectory</key>
     <string>%(database)s</string>
-    <key>StandardErrorPath</key>
-    <string>%(database)s/igor.log</string>
-    <key>StandardOutPath</key>
-    <string>%(database)s/igor.log</string>
     <key>UserName</key>
     <string>%(user)s</string>
     <key>KeepAlive</key>

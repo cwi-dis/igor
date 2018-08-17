@@ -25,9 +25,8 @@ export PATH=$PATH:/usr/sbin:~$RUNAS/bin
 # Process name ( For display )
 NAME=igor
 # Daemon name, where is the actual executable
-DAEMON_ARGS="-d $IGOR_DIR --advertise"
+DAEMON_ARGS="-d $IGOR_DIR --advertise --nologstderr"
 
-LOGFILE="$IGOR_DIR/igor.log"
 SCRIPT="$DAEMON $DAEMON_ARGS"
 PIDFILE=/var/run/igor.pid
 
@@ -37,7 +36,7 @@ start() {
     return 1
   fi
   echo 'Starting service…' >&2
-  local CMD="PATH=$PATH $SCRIPT >\"$LOGFILE\" 2>&1 & echo \$!"
+  local CMD="PATH=$PATH $SCRIPT & echo \$!"
   su -c "$CMD" $RUNAS > "$PIDFILE"
   echo 'Service started' >&2
 }

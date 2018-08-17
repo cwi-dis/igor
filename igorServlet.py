@@ -9,6 +9,8 @@ import jwt
 
 DEBUG=False
 
+web.config.debug = False
+
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
@@ -96,7 +98,7 @@ class IgorServlet(threading.Thread):
         IgorServlet.issuerSharedKey = issuerSharedKey
         
         if DEBUG: print 'igorServlet: IgorServlet.__init__ called for', self
-        self.app = MyApplication((), globals(), autoreload=False, debug=DEBUG)
+        self.app = MyApplication((), globals(), autoreload=False)
         
     def run(self):
         if self.ssl:

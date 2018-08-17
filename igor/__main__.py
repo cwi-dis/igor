@@ -5,6 +5,7 @@ import actions
 import sseListener
 import callUrl
 import os
+import signal
 import argparse
 import besthostname
 import time
@@ -198,8 +199,14 @@ class IgorServer:
             from web.wsgiserver import CherryPyWSGIServer
             CherryPyWSGIServer.ssl_certificate = self.certificateFile
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
+        signal.signal(signal.SIGTERM, self._sigterm_caught)
         self.app.run(self.port)
-        
+        print 'Igor terminating'
+
+    def _sigterm_caught(self, signum, frame):
+        print 'SIGTERM caught, exiting gracefully...'
+        self.stop(save=True, token=self.access.tokenForIgor())
+                
     def check(self, fix=False, token=None):
         rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
         print rv
@@ -374,7 +381,6 @@ class IgorServer:
             else:
                 PROFILER_STATS.add(self.profile)
             PROFILER_STATS.dump_stats("igor.profile")
-        sys.exit(0)
         
     def restart(self, token):
         self.save(token)

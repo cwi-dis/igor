@@ -18,7 +18,6 @@ MAX_EXTERNAL_FLUSH_DURATION=0   # How long we wait for external actions to be co
             
 class IgorTest(unittest.TestCase, IgorSetupAndControl):
     igorDir = os.path.join(FIXTURES, 'testIgor')
-    igorLogFile = os.path.join(FIXTURES, 'testIgor.log')
     igorHostname=socket.gethostname()
     igorHostname2='localhost'
     igorPort = 19333
@@ -349,13 +348,11 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
-    igorLogFile = os.path.join(FIXTURES, 'testIgorHttps.log')
     igorPort = 29333
     igorProtocol = "https"
     
 class IgorTestCaps(IgorTestHttps):
     igorDir = os.path.join(FIXTURES, 'testIgorCaps')
-    igorLogFile = os.path.join(FIXTURES, 'testIgorCaps.log')
     igorPort = 39333
     igorServerArgs = ["--capabilities"]
     igorUseCapabilities = True

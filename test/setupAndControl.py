@@ -10,8 +10,8 @@ import threading
 
 DEBUG_TEST=False
 if DEBUG_TEST:
-    igorVar.VERBOSE=True
-    igorServlet.DEBUG=True
+    igorVar.VERBOSE=DEBUG_TEST
+    igorServlet.DEBUG=DEBUG_TEST
 
 class ServletHelper:
     def __init__(self, port, protocol, capabilities, database, audience):
@@ -86,7 +86,6 @@ class IgorSetupAndControl(object):
     #
     
     igorDir = None # os.path.join(FIXTURES, 'testIgor')
-    igorLogFile = None # os.path.join(FIXTURES, 'testIgor.log')
     igorHostname=None # socket.gethostname()
     igorHostname2=None # 'localhost'
     igorPort = None # 19333
@@ -100,9 +99,6 @@ class IgorSetupAndControl(object):
         if DEBUG_TEST: print 'xxxjack setupIgor', cls
         if DEBUG_TEST: print 'IgorTest: Delete old database and logfile'
         shutil.rmtree(cls.igorDir, True)
-        if os.path.exists(cls.igorLogFile):
-            os.unlink(cls.igorLogFile)
-        logFile = open(cls.igorLogFile, 'a')
         cls.igorUrl = "%s://%s:%d/data/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort)
         cls.servletUrl = "%s://%s:%d" % (cls.igorProtocol, cls.igorHostname, cls.igorPort+1)
         
@@ -111,13 +107,16 @@ class IgorSetupAndControl(object):
         ok = setup.cmd_initialize()
         assert ok
         setup.postprocess(run=True)
+
+        logFile = os.path.join(cls.igorDir, 'igor.log')
+        logFP = open(logFile, 'a')
         
         if cls.igorProtocol == 'https':
             if DEBUG_TEST: print 'IgorTest: setup self-signed signature'
             ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname)
 #            ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname, cls.igorHostname2, '127.0.0.1', '::1')
             assert ok
-            setup.postprocess(run=True, subprocessArgs=dict(stdout=logFile, stderr=subprocess.STDOUT))
+            setup.postprocess(run=True, subprocessArgs=dict(stdout=logFP, stderr=subprocess.STDOUT))
             certFile = os.path.join(cls.igorDir, 'igor.crt')
             cls.igorVarArgs['certificate'] = certFile
 #            cls.igorVarArgs['noverify'] = True
@@ -126,15 +125,15 @@ class IgorSetupAndControl(object):
 #            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
         if DEBUG_TEST: print 'IgorTest: Check database consistency'
-        cmd = [sys.executable, "-m", "igor", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
-        sts = subprocess.call(cmd + cls.igorServerArgs, stdout=logFile, stderr=subprocess.STDOUT)
+        cmd = [sys.executable, "-m", "igor", "--nologstderr", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
+        sts = subprocess.call(cmd + cls.igorServerArgs)
         if sts:
             print 'IgorTest: status=%s returned by command %s' % (str(sts), ' '.join(cmd))
-            print 'IgorTest: logfile %s:' % cls.igorLogFile
-            sys.stdout.write(open(cls.igorLogFile).read())
+            print 'IgorTest: logfile %s:' % logFile
+            sys.stdout.write(open(logFile).read())
             assert 0
         if DEBUG_TEST: print 'IgorTest: Start server'
-        cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs, stdout=logFile, stderr=subprocess.STDOUT)
+        cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--nologstderr", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs)
         if DEBUG_TEST: print 'IgorTest: Start servlet'
         cls.servlet = ServletHelper(
                 port=cls.igorPort+1, 

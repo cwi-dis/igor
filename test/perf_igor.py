@@ -26,7 +26,6 @@ def _meanAndSigma(measurements):
             
 class IgorPerf(IgorSetupAndControl):
     igorDir = os.path.join(FIXTURES, 'perfIgor')
-    igorLogFile = os.path.join(FIXTURES, 'perfIgor.log')
     igorHostname=socket.gethostname()
     igorHostname2='localhost'
     igorPort = 19433
@@ -250,13 +249,11 @@ class IgorPerf(IgorSetupAndControl):
         
 class IgorPerfHttps(IgorPerf):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
-    igorLogFile = os.path.join(FIXTURES, 'testIgorHttps.log')
     igorPort = 29433
     igorProtocol = "https"
     
 class IgorPerfCaps(IgorPerfHttps):
     igorDir = os.path.join(FIXTURES, 'testIgorCaps')
-    igorLogFile = os.path.join(FIXTURES, 'testIgorCaps.log')
     igorPort = 39433
     igorServerArgs = ["--capabilities"]
     igorUseCapabilities = True

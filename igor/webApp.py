@@ -15,6 +15,7 @@ import mimetypes
 import access
 import traceback
 
+DEBUG=False
 DATABASE=None   # The database itself. Will be set by main module
 DATABASE_ACCESS=None    # Will be set later by this module
 SCRIPTDIR=None  # The directory for scripts
@@ -46,7 +47,9 @@ class MyApplication(web.application):
         func = self.wsgifunc(*middleware)
         return web.httpserver.runsimple(func, ('0.0.0.0', port))
 
-WEBAPP = MyApplication(urls, globals())
+web.config.debug = DEBUG
+
+WEBAPP = MyApplication(urls, globals(), autoreload=False)
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')

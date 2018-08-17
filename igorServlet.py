@@ -96,7 +96,7 @@ class IgorServlet(threading.Thread):
         IgorServlet.issuerSharedKey = issuerSharedKey
         
         if DEBUG: print 'igorServlet: IgorServlet.__init__ called for', self
-        self.app = MyApplication((), globals(), autoreload=False)
+        self.app = MyApplication((), globals(), autoreload=False, debug=DEBUG)
         
     def run(self):
         if self.ssl:

@@ -10,6 +10,7 @@ import besthostname
 import time
 import json
 import web
+import wsgilog
 import subprocess
 import imp
 import threading
@@ -51,9 +52,26 @@ def enable_thread_profiling():
 
     threading.Thread.run = profile_run
     
-
+# class IgorLogger(wsgilog.WsgiLog):
+#     IGOR_LOG_DIR="."
+#     IGOR_LOG_FILE="igor.log"
+#     IGOR_LOG_INTERVAL=24
+#     IGOR_LOG_BACKUPS=9
+#     IGOR_LOG_TOPRINT=True
+#     def __init__(self, application):
+#         wsgilog.WsgiLog.__init__(
+#             self,
+#             application,
+#             logformat = '%(message)s',
+#             tofile = True,
+#             toprint = self.IGOR_LOG_TOPRINT,
+#             file = os.path.join(self.IGOR_LOG_DIR, self.IGOR_LOG_FILE),
+#             interval = self.IGOR_LOG_INTERVAL,
+#             backups = self.IGOR_LOG_BACKUPS
+#             )
+# 
 class IgorServer:
-    def __init__(self, datadir, port=9333, advertise=False, profile=False, nossl=False):
+    def __init__(self, datadir, port=9333, advertise=False, profile=False, nossl=False, nologger=False):
         #
         # Create the database, and tell the web application about it
         #
@@ -67,6 +85,8 @@ class IgorServer:
         self.port = port
         self.app = webApp.WEBAPP
         self.datadir = datadir
+#        IgorLogger.IGOR_LOG_DIR = datadir
+        self.nologger = nologger
         
         shelveFilename = os.path.join(self.datadir, 'igorSessions')
         self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(shelveFilename, flag="n")))
@@ -178,7 +198,7 @@ class IgorServer:
             from web.wsgiserver import CherryPyWSGIServer
             CherryPyWSGIServer.ssl_certificate = self.certificateFile
             CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
-        self.app.run(port=self.port)
+        self.app.run(self.port)
         
     def check(self, fix=False, token=None):
         rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
@@ -406,12 +426,14 @@ def main():
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
     parser.add_argument("--profile", action="store_true", help="Enable Python profiler (debugging Igor only)")
+    parser.add_argument("--nologfile", action="store_true", help="Do not install logging to files (output to stdout only)")
+    parser.add_argument("--nologstderr", action="store_true", help="Do not install logging to stderr (output to logfile only)")
     parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
     parser.add_argument('--check', action="store_true", help="Do not run the server, only check the database for consistency")
     parser.add_argument('--fix', action="store_true", help="Do not run the server, only check the database for consistency and possibly fix it if needed")
     args = parser.parse_args()
     
-    myLogger.install(args.logLevel)
+    myLogger.install(args.logLevel, nologfile=args.nologfile, nologstderr=args.nologstderr, logdir=args.database)
     if args.version:
         print >>sys.stderr, VERSION
         sys.exit(0)
@@ -435,7 +457,7 @@ def main():
     datadir = args.database
     print >>sys.stderr, 'igorServer %s running from %s' % (VERSION, sys.argv[0])
     try:
-        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl)
+        igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl, nologger=args.nologfile)
     except IOError, arg:
         print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
         print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]

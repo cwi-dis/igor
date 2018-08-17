@@ -11,7 +11,6 @@ import besthostname
 import time
 import json
 import web
-import wsgilog
 import subprocess
 import imp
 import threading

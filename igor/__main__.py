@@ -354,6 +354,9 @@ class IgorServer:
         self.urlCaller.flush(timeout)
         return 'OK'
         
+    def fail(self, token=None):
+        assert 0, 'User-requested failure'
+        
     def stop(self, token=None, save=True):
         """Exits igorServer after saving"""
         global PROFILER_STATS

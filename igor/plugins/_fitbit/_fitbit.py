@@ -72,6 +72,7 @@ class FitbitPlugin:
             methods = userData.get('methods', 'get_bodyweight')
         methods = methods.split(',')
         for method in methods:
+            if DEBUG: print 'xxxjack calling method', method, 'with', kwargs
             m = getattr(fb, method)
             item = m(**kwargs)
             if DEBUG: print "xxxjack method", method, "returned", m

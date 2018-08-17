@@ -669,11 +669,14 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
 #   
 singleton = None
 
-def createSingleton(noCapabilities=False):
+def createSingleton(noCapabilities=False, warnOnly=False):
     global singleton
     if singleton: return
+    if warnOnly:
+        print >>sys.stderr, 'Warning: capability-based access control disabled, with warnings'
+        AccessChecker.WARN_ONLY = True
     if noCapabilities:
-        print >>sys.stderr, 'Warning: capability-base access control disabled'
+        print >>sys.stderr, 'Warning: capability-based access control disabled'
         import dummyAccess
         dummyAccess.createSingleton(noCapabilities)
         singleton = dummyAccess.singleton

@@ -430,6 +430,7 @@ def main():
     parser.add_argument("-s", "--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
     parser.add_argument("--noCapabilities", action="store_true", help="Disable access control via capabilities (allowing all access)")
     parser.add_argument("--capabilities", action="store_true", help="Enable access control via capabilities")
+    parser.add_argument("--warnCapabilities", action="store_true", help="Disable access control via capabilities, but check anyway (and give warnings)")
     parser.add_argument("--debug", metavar="MODULE", help="Enable debug output for MODULE (all for all modules)")
     parser.add_argument("--advertise", action="store_true", help="Advertise service through bonjour/zeroconf")
     parser.add_argument("--version", action="store_true", help="Print version and exit")
@@ -451,7 +452,9 @@ def main():
         useCapabilities = False
     if args.capabilities:
         useCapabilities = True
-    access.createSingleton(not useCapabilities)
+    if args.warnCapabilities:
+        useCapabilities = True
+    access.createSingleton(not useCapabilities, args.warnCapabilities)
     if args.debug:
         if args.debug in ('callUrl', 'all'): callUrl.DEBUG = True
         elif args.debug in ('sseListener', 'all'): sseListener.DEBUG = True

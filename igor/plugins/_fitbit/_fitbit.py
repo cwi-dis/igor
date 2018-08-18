@@ -119,7 +119,7 @@ class FitbitPlugin:
         if not code:
             raise myWebError("401 fitbitplugin/auth2 requires 'code' argument")
 
-        step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content')
+        step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content', token)
         step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
 
         fb = Fitbit(state=state, redirect_uri=step2url, **oauthSettings)

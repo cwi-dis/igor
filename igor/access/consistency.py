@@ -290,6 +290,13 @@ class CapabilityConsistency(StructuralConsistency):
                 self._hasCapability('/data/actions', cid='action-action', obj='/action', get='child')
                 self._hasCapability('/data/actions', cid='action-internal', obj='/internal', get='descendant')
                 self._hasCapability('/data/actions', cid='action-environment', obj='/data/environment', get='descendant', put='descendant', post='descendant', delete='descendant')
+                
+                for pluginElement in self._getAllElements('/data/plugindata/*'):
+                    pluginName = pluginElement.tagName
+                    if ':' in pluginName or '{' in pluginName:
+                        continue
+                    pluginPath = '/data/plugindata/%s' % pluginName
+                    self._hasCapability(pluginPath, obj=pluginPath, get='descendant-or-self')
                 #
                 # Second set of checks: test that capability tree is indeed a tree
                 #

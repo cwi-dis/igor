@@ -409,8 +409,13 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         
     def tokenForPlugin(self, pluginname, token=None):
         """Return token(s) for a plugin with the given pluginname"""
-        # xxxjack should fix this: plugins are allowed to do everything.
-        tokenForPlugin = self.tokenForIgor()
+        tokenForPlugin = None
+        elements = self.database.getElements("plugindata/%s" % pluginname, 'get', _accessSelfToken)
+        if elements:
+            tokenForPlugin = self._tokenForElement(elements[0])
+        if not tokenForPlugin:
+            print 'access: warning: providing plugin %s with tokenForIgor' % pluginname
+            tokenForPlugin = self.tokenForIgor()
         if token is None:
             token = tokenForPlugin
         else:

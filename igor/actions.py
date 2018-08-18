@@ -228,11 +228,19 @@ class ActionCollection(threading.Thread):
                 #
                 if DEBUG: print 'ActionCollection.run(t=%d)' % time.time()
                 nothingBefore = NEVER
+                toCall = []
                 for a in self.actions:
                     if a.nextTime <= time.time():
-                        a.callback()
+                        toCall.append(a)
                     if a.nextTime < nothingBefore:
                         nothingBefore = a.nextTime
+                        
+                # Release the lock while we're doing the callbacks
+                self.lock.release()
+                for a in toCall:
+                    a.callback()
+                self.lock.acquire()
+                
                 # Repeat the loop if the earliest future time is in the past, by now.
                 if nothingBefore < time.time():
                     continue
@@ -269,7 +277,7 @@ class ActionCollection(threading.Thread):
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""
-        if DEBUG: print 'ActionCollection.triggerAction(%s)' % node        
+        if DEBUG: print 'ActionCollection.triggerAction(%s)' % node   
         for a in self.actions:
             if a.element == node:
                 a.callback()

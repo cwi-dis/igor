@@ -14,6 +14,7 @@ import web
 import subprocess
 import imp
 import threading
+import traceback
 import cProfile
 import pstats
 import shelve
@@ -24,6 +25,17 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+_real_stderr = sys.stderr
+def _dump_app_stacks(*args):
+    _dump_app_stacks_to(_real_stderr)
+    _dump_app_stacks_to(sys.stderr)
+def _dump_app_stacks_to(file):
+    print >> file, "igorServer: QUIT received, dumping all stacks, %d threads:" % len(sys._current_frames())
+    for threadId, stack in sys._current_frames().items():
+        print >> file, "\nThreadID:", threadId
+        traceback.print_stack(stack, file=file)
+        print >> file
+    print >> file, "igorServer: End of stack dumps"
 #
 # Helper for profileing multiple threads
 # 
@@ -417,6 +429,7 @@ class IgorServer:
         return VERSION + '\n'
     
 def main():
+    signal.signal(signal.SIGQUIT, _dump_app_stacks)
     DEFAULTDIR=os.path.join(os.path.expanduser('~'), '.igor')
     if 'IGORSERVER_DIR' in os.environ:
         DEFAULTDIR = os.environ['IGORSERVER_DIR']

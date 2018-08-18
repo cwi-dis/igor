@@ -14,6 +14,7 @@ from requests.packages import urllib3
 urllib3.disable_warnings()
 import os
 import sys
+import traceback
 
 DEBUG=False
 
@@ -74,7 +75,12 @@ class FitbitPlugin:
         for method in methods:
             if DEBUG: print 'xxxjack calling method', method, 'with', kwargs
             m = getattr(fb, method)
-            item = m(**kwargs)
+            try:
+                item = m(**kwargs)
+            except Exception as ex:
+                print 'Exception in fitbit.%s with args %s' % (method, repr(kwargs))
+                traceback.print_exc(file=sys.stdout)
+                raise myWebError("501 fitbit error %s" % repr(ex))
             if DEBUG: print "xxxjack method", method, "returned", m
             results.update(item)
         

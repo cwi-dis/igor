@@ -413,13 +413,8 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         elements = self.database.getElements("plugindata/%s" % pluginname, 'get', _accessSelfToken)
         if elements:
             tokenForPlugin = self._tokenForElement(elements[0])
-        if not tokenForPlugin:
-            print 'access: warning: providing plugin %s with tokenForIgor' % pluginname
-            tokenForPlugin = self.tokenForIgor()
-        if token is None:
-            token = tokenForPlugin
-        else:
-            token = _combineTokens(token, tokenForPlugin)
+        token = _combineTokens(token, tokenForPlugin)
+        token = _combineTokens(token, self._defaultToken())
         return token
 
     def tokenForIgor(self):

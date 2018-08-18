@@ -21,6 +21,7 @@ class Action:
     def __init__(self, hoster, element):
         self.hoster = hoster
         self.element = element
+        self.actionXPath = self.hoster.database.getXPathForElement(self.element)
         tag, content = self.hoster.database.tagAndDictFromElement(self.element)
         assert tag == 'action'
         assert 'url' in content
@@ -106,6 +107,7 @@ class Action:
             tocall['mimetype'] = self.mimetype
             tocall['aggregate'] = self.aggregate
             tocall['representing'] = self.representing
+            tocall['original_action'] = self.actionXPath
             # xxxjack can add things like mimetype, credentials, etc
             self._willRunNow()
             self.hoster.scheduleCallback(tocall)

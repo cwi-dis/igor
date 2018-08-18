@@ -41,6 +41,10 @@ class URLCallRunner(threading.Thread):
             data = tocall.get('data')
             headers = {}
             env = {}
+            if 'representing' in tocall:
+                env['representing'] = tocall['representing']
+            if 'original_action' in tocall:
+                env['original_action'] = tocall['original_action']
             if 'mimetype' in tocall:
                 headers['Content-type'] = tocall['mimetype']
             if not method:

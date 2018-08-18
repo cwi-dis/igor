@@ -1,4 +1,5 @@
 from .vars import *
+import web
 
 class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
@@ -23,8 +24,21 @@ class AccessChecker:
             print '\taccess: %s %s: no access allowed by %d tokens:' % (operation, self.destination, len(identifiers))
             for i in identifiers:
                 print '\t\t%s' % i
+            try:
+                print '\taccess: On behalf of request to %s' % web.ctx.path
+            except AttributeError:
+                pass
+            try:
+                print '\taccess: On behalf of action %s' % web.ctx.original_action
+            except AttributeError:
+                pass
+            try:
+                print '\taccess: Representing  %s' % web.ctx.representing
+            except AttributeError:
+                pass
+                
             if self.WARN_ONLY:
-                print 'access: allowed anyway because of --warncapabilities mode'
+                print '\taccess: allowed anyway because of --warncapabilities mode'
                 return True
         return ok
     

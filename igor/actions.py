@@ -18,11 +18,11 @@ assert NEVER > 1
 class Action:
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
-    def __init__(self, hoster, element):
-        self.hoster = hoster
+    def __init__(self, collection, element):
+        self.collection = collection
         self.element = element
-        self.actionXPath = self.hoster.database.getXPathForElement(self.element)
-        tag, content = self.hoster.database.tagAndDictFromElement(self.element)
+        self.actionXPath = self.collection.igor.database.getXPathForElement(self.element)
+        tag, content = self.collection.igor.database.tagAndDictFromElement(self.element)
         assert tag == 'action'
         assert 'url' in content
         self.interval = content.get('interval')
@@ -39,8 +39,8 @@ class Action:
         self.mimetype = content.get('mimetype','text/plain')
         self.condition = content.get('condition')
         self.representing = content.get('representing')
-        self.accessChecker = self.hoster.access.checkerForElement(self.element)
-        self.token = self.hoster.access.tokenForAction(self.element)
+        self.accessChecker = self.collection.igor.access.checkerForElement(self.element)
+        self.token = self.collection.igor.access.tokenForAction(self.element)
         self.nextTime = NEVER
         if self.interval:
             self._scheduleNextRunIn(0)
@@ -48,7 +48,7 @@ class Action:
         
     def delete(self):
         self.uninstall()
-        self.hoster = None
+        self.collection = None
         
     def dump(self):
         t = self.nextTime
@@ -63,16 +63,16 @@ class Action:
     def install(self):
         """Install any xpath triggers needed by this action into the database"""
         for xpath in self.xpaths:
-            self.hoster.database.registerCallback(self.callback, xpath)
+            self.collection.igor.database.registerCallback(self.callback, xpath)
         
     def uninstall(self):
         """Remove any installed triggers from the database"""
-        self.hoster.database.unregisterCallback(self.callback)
+        self.collection.igor.database.unregisterCallback(self.callback)
                 
     def callback(self, *nodelist):
         """Schedule the action, if it is runnable at this time, and according to the condition"""
-        if not self.hoster:
-            print 'ERROR: Action.callback called without hoster:', self
+        if not self.collection:
+            print 'ERROR: Action.callback called without actionCollection:', self
             return
         # Test whether we are allowed to run, depending on minInterval
         now = time.time()
@@ -85,7 +85,7 @@ class Action:
         for node in nodelist:
             # Test whether we are allowed to run according to our condition
             if self.condition:
-                shouldRun = self.hoster.database.getValue(self.condition, token=self.token, context=node)
+                shouldRun = self.collection.igor.database.getValue(self.condition, token=self.token, context=node)
                 if not shouldRun:
                     if DEBUG: print '\t%s: condition failed' % repr(node)
                     continue
@@ -95,10 +95,10 @@ class Action:
                 if DEBUG: print '\t%s: calling %s' % (repr(node), url)
                 data = self._evaluate(self.data, node, False)
             except xmlDatabase.DBAccessError:
-                actionPath = self.hoster.database.getXPathForElement(self.element)
-                nodePath = self.hoster.database.getXPathForElement(node)
+                actionPath = self.collection.igor.database.getXPathForElement(self.element)
+                nodePath = self.collection.igor.database.getXPathForElement(node)
                 print "actions: Error: action %s lacks AWT permission for '%s' or '%s'" % (actionPath, self.url, self.data)
-                # self.hoster.app.request('/internal/updateStatus/%s' % self.representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
+                # self.collection.igor.app.request('/internal/updateStatus/%s' % self.representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 continue
             # Prepare to run
             tocall = dict(method=self.method, url=url, token=self.token)
@@ -110,7 +110,7 @@ class Action:
             tocall['original_action'] = self.actionXPath
             # xxxjack can add things like mimetype, credentials, etc
             self._willRunNow()
-            self.hoster.scheduleCallback(tocall)
+            self.collection.scheduleCallback(tocall)
             # If we are running from an xpath we only run once (for the first matching node) unless multiple is given
             if not self.multiple:
                 break
@@ -162,8 +162,8 @@ class Action:
         """Set the preferred (latest) next time this action should run"""
         nextTime = interval + time.time()
         self.nextTime = self._earliestRunTimeAfter(nextTime)
-        if self.hoster:
-            self.hoster.actionTimeChanged(self)
+        if self.collection:
+            self.collection.actionTimeChanged(self)
         
     def _evaluate(self, text, node, urlencode):
         """Interpolate {xpathexpr} expressions in a string"""
@@ -183,7 +183,7 @@ class Action:
                 # Escaped { and }. Unfortunately both must be escaped...
                 replacement = expression
             else:
-                replacement = self.hoster.database.getValue(expression, token=self.token, context=node)
+                replacement = self.collection.igor.database.getValue(expression, token=self.token, context=node)
                 if replacement is None: replacement = ''
                 if type(replacement) == type(True):
                     replacement = 'true' if replacement else ''
@@ -201,15 +201,15 @@ class Action:
         return id(self)
                 
 class ActionCollection(threading.Thread):
-    def __init__(self, database, scheduleCallback, access):
+    def __init__(self, igor):
         threading.Thread.__init__(self)
+        self.igor = igor
         self.daemon = True
         self.actions = []
         self.lock = threading.RLock()
         self.actionsChanged = threading.Condition(self.lock)
-        self.database = database
-        self.scheduleCallback = scheduleCallback
-        self.access = access
+        self.database = self.igor.database
+        self.scheduleCallback = self.igor.urlCaller.callURL
         self.stopping = False
         self.start()
         

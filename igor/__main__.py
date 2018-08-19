@@ -349,7 +349,7 @@ class IgorInternal:
             if len(startupActions) > 1:
                 raise web.HTTPError('401 only one <actions> element allowed')
             if not self.igor.actionHandler:
-                self.igor.actionHandler = actions.ActionCollection(self.igor.database, self.igor.urlCaller.callURL, self.igor.access)
+                self.igor.actionHandler = actions.ActionCollection(self.igor)
             self.igor.actionHandler.updateActions(startupActions[0])
         elif self.igor.actionHandler:
             self.igor.actionHandler.updateActions([])

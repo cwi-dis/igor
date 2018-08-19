@@ -47,7 +47,8 @@ class UserPlugin:
             get='descendant-or-self', 
             put='descendant', 
             post='descendant', 
-            delete='descendant')
+            delete='descendant',
+            delegate=True)
         COMMANDS.accessControl('newToken', 
             token=token, 
             tokenId='admin-data',
@@ -55,7 +56,8 @@ class UserPlugin:
             newPath='/data/people/%s' % username, 
             put='descendant', 
             post='descendant', 
-            delete='descendant')
+            delete='descendant',
+            delegate=True)
         COMMANDS.save(token)
         if returnTo:
             raise web.seeother(returnTo)

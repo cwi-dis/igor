@@ -282,8 +282,8 @@ class CapabilityConsistency(StructuralConsistency):
                     if ':' in userName or '{' in userName or userName == 'admin':
                         continue # This is not a user but a capability
                     userPath = '/data/identities/'+userName
-                    self._hasCapability(userPath, obj=userPath, get='descendant-or-self', put='descendant', post='descendant', delete='descendant')
-                    self._hasCapability(userPath, obj='/data/people/'+userName, put='descendant', post='descendant', delete='descendant')
+                    self._hasCapability(userPath, obj=userPath, get='descendant-or-self', put='descendant', post='descendant', delete='descendant', delegate='true')
+                    self._hasCapability(userPath, obj='/data/people/'+userName, put='descendant', post='descendant', delete='descendant', delegate='true')
             
                 self._hasCapability('/data/actions', cid='action-plugin', obj='/plugin', get='descendant')
                 self._hasCapability('/data/actions', cid='action-pluginscript', obj='/pluginscript', get='descendant')

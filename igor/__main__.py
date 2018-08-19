@@ -149,7 +149,7 @@ class IgorServer:
         webApp.SESSION = self.session
         webApp.COMMANDS = self.internal
         
-        self.urlCaller = callUrl.URLCaller(self.app)
+        self.urlCaller = callUrl.URLCaller(self)
         self.urlCaller.start()
         
         #

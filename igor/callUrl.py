@@ -19,10 +19,10 @@ class CheckableQueue(Queue.Queue):
             return item in self.queue
 
 class URLCallRunner(threading.Thread):
-    def __init__(self, app, what):
+    def __init__(self, igor, what):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.app = app
+        self.igor = igor
         self.queue = CheckableQueue()
         self.what = what
         self.stopping = False
@@ -61,7 +61,7 @@ class URLCallRunner(threading.Thread):
                     # xxxjack have to work out exceptions
                     token.addToHeadersAsOTP(headers)
                     if headers == {}: headers = None
-                    rep = self.app.request(url, method=method, data=data, headers=headers, env=env)
+                    rep = self.igor.app.request(url, method=method, data=data, headers=headers, env=env)
                     resultStatus = rep.status
                     resultData = rep.data
                     if not resultData:
@@ -104,7 +104,7 @@ class URLCallRunner(threading.Thread):
                     resultData = errorMessage
                 args = dict(alive=alive, resultData=resultData)
                 # xxxjack should we add the token here too?
-                self.app.request('/internal/updateStatus/%s' % representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
+                self.igor.app.request('/internal/updateStatus/%s' % representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 
     def dump(self):
         rv = 'URLCaller %s (%s):\n' % (repr(self), self.what)
@@ -132,12 +132,12 @@ class URLCallRunner(threading.Thread):
             pass # This can happen if we are actually running via callUrl ourselves...
         
 class URLCaller:
-    def __init__(self, app):
+    def __init__(self, igor):
         self.lock = threading.Lock()
         self.flushedCV = threading.Condition(self.lock)
-        self.dataRunner = URLCallRunner(app, 'internal actions')
-        self.extRunner = URLCallRunner(app, 'network actions')
-        self.otherRunner = URLCallRunner(app, 'scripting and plugin actions')
+        self.dataRunner = URLCallRunner(igor, 'internal actions')
+        self.extRunner = URLCallRunner(igor, 'network actions')
+        self.otherRunner = URLCallRunner(igor, 'scripting and plugin actions')
         
     def start(self):
         self.dataRunner.start()

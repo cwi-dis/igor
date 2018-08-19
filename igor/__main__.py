@@ -64,6 +64,9 @@ def enable_thread_profiling():
 
     threading.Thread.run = profile_run
     
+class Struct:
+    pass
+    
 # class IgorLogger(wsgilog.WsgiLog):
 #     IGOR_LOG_DIR="."
 #     IGOR_LOG_FILE="igor.log"
@@ -85,77 +88,85 @@ def enable_thread_profiling():
 class IgorServer:
     def __init__(self, datadir, port=9333, advertise=False, profile=False, nossl=False, nologger=False):
         #
-        # Create the database, and tell the web application about it
+        # Store all pathnames and such
         #
-        self.advertise = advertise
-        self.profile = None
-        if profile:
-            enable_thread_profiling()
-            self.profile = cProfile.Profile()
-            self.profile.enable()
-        
         self.port = port
-        self.app = webApp.WEBAPP
-        self.datadir = datadir
-#        IgorLogger.IGOR_LOG_DIR = datadir
-        self.nologger = nologger
-        
-        shelveFilename = os.path.join(self.datadir, 'igorSessions')
-        self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(shelveFilename, flag="n")))
-        
-        self.ssl = not nossl
-        keyFile = os.path.join(self.datadir, 'igor.key')
-        if self.ssl and not os.path.exists(keyFile):
+        self.pathnames = Struct()
+        self.pathnames.datadir = datadir
+        self.pathnames.scriptdir = os.path.join(datadir, 'scripts')
+        self.pathnames.plugindir = os.path.join(datadir, 'plugins')
+        self.pathnames.staticdir = os.path.join(datadir, 'static')
+        self.pathnames.sessionfile = os.path.join(self.pathnames.datadir, 'igorSessions')
+        self.pathnames.privateKeyFile = None
+        self.pathnames.certificateFile = None
+        #
+        # Determine parameters for SSL handling
+        #
+        self._do_ssl = not nossl
+        self.certificateFingerprint = None
+        keyFile = os.path.join(self.pathnames.datadir, 'igor.key')
+        if self._do_ssl and not os.path.exists(keyFile):
             print >>sys.stderr, 'Warning: Using http in stead of https: no private key file', keyFile
-            self.ssl = False
-        if self.ssl:
-            self.privateKeyFile = keyFile
-            self.certificateFile = os.path.join(self.datadir, 'igor.crt')
+            self._do_ssl = False
+        if self._do_ssl:
+            self.pathnames.privateKeyFile = keyFile
+            self.pathnames.certificateFile = os.path.join(self.pathnames.datadir, 'igor.crt')
             import OpenSSL.crypto
-            certificateData = open(self.certificateFile, 'rb').read()
+            certificateData = open(self.pathnames.certificateFile, 'rb').read()
             certificate = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificateData)
             self.certificateFingerprint = certificate.digest("sha1")
-        else:
-            self.privateKeyFile = None
-            self.certificateFile = None
-            self.certificateFingerprint = None
-
-        self.database = xmlDatabase.DBImpl(os.path.join(self.datadir, 'database.xml'))
-        webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
-        webApp.SCRIPTDIR = os.path.join(datadir, 'scripts')
-        webApp.PLUGINDIR = os.path.join(datadir, 'plugins')
-        webApp.STATICDIR = os.path.join(datadir, 'static')
-        webApp.SESSION = self.session
-        webApp.COMMANDS = self
+        #
+        # Create some objects that are not intended to be accessed by other objects
+        #
+        self._do_advertise = advertise
+        self._advertiser = None
+        self._profiler = None
+        if profile:
+            enable_thread_profiling()
+            self._profiler = cProfile.Profile()
+            self._profiler.enable()
+        #
+        # Create the objects that are intended to be used by other objects
+        #
+        self.internal = IgorInternal(self)
         
-        #
-        # Create the access control handler
-        #
+        self.app = webApp.WEBAPP
+        
+        self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(self.pathnames.sessionfile, flag="n")))
+
         access.createSingleton() # Has probably been done in main() already
         self.access = access.singleton
         self.access.setSession(self.session)
-        self.access.setCommand(self)
-        #
-        # Create and start the asynchronous URL accessor
-        #
+        self.access.setCommand(self.internal)
+    
+        self.database = xmlDatabase.DBImpl(os.path.join(self.pathnames.datadir, 'database.xml'))
+
+        # xxxjack the webApp object is currently a module, not an object. To be fixed.
+        webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
+        webApp.SCRIPTDIR = self.pathnames.scriptdir
+        webApp.PLUGINDIR = self.pathnames.plugindir
+        webApp.STATICDIR = self.pathnames.staticdir
+        webApp.SESSION = self.session
+        webApp.COMMANDS = self.internal
+        
         self.urlCaller = callUrl.URLCaller(self.app)
         self.urlCaller.start()
         
         #
         # Fill self data
         #        
-        self.fillSelfData()
+        self._fillSelfData()
         #
-        # Startup other components
+        # Other components will be started later, in preRun()
         #
         self.actionHandler = None
         self.eventSources = None
         self.triggerHandler = None
         
     def preRun(self):
-        self.updateActions()
-        self.updateEventSources()
-        self.updateTriggers()
+        self.internal.updateActions()
+        self.internal.updateEventSources()
+        self.internal.updateTriggers()
         #
         # Disable debug
         #
@@ -164,11 +175,11 @@ class IgorServer:
         # Send start action to start any plugins
         #
         self.urlCaller.callURL(dict(method='GET', url='/action/start', token=self.access.tokenForIgor()))
-        if self.advertise:
-            self.startAdvertising(self.port)
+        if self._do_advertise:
+            self._startAdvertising(self.port)
             
-    def startAdvertising(self, port):
-        if self.ssl:
+    def _startAdvertising(self, port):
+        if self._do_ssl:
             proto = '_https._tcp'
         else:
             proto = '_http._tcp'
@@ -180,16 +191,16 @@ class IgorServer:
             print >> sys.stderr, "Cannot do mdns-advertise on platform", sys.platform
             return
         try:
-            self.advertiser = subprocess.Popen(cmd)
+            self._advertiser = subprocess.Popen(cmd)
         except OSError:
             print >> sys.stderr, "advertisement command failed: %s" % (' '.join(cmd))
     
     
-    def fillSelfData(self):
+    def _fillSelfData(self):
         """Put our details in the database"""
         hostName = besthostname.besthostname()
         protocol = 'http'
-        if self.ssl:
+        if self._do_ssl:
             protocol = 'https'
         url = '%s://%s:%d/data' % (protocol, hostName, self.port)
         oldRebootCount = self.database.getValue('/data/services/igor/rebootCount', token=self.access.tokenForIgor())
@@ -206,10 +217,10 @@ class IgorServer:
         self.urlCaller.callURL(tocall)
         
     def run(self):
-        if self.ssl:
+        if self._do_ssl:
             from web.wsgiserver import CherryPyWSGIServer
-            CherryPyWSGIServer.ssl_certificate = self.certificateFile
-            CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
+            CherryPyWSGIServer.ssl_certificate = self.pathnames.certificateFile
+            CherryPyWSGIServer.ssl_private_key = self.pathnames.privateKeyFile
         signal.signal(signal.SIGTERM, self._sigterm_caught)
         self.app.run(self.port)
         print 'Igor terminating'
@@ -221,18 +232,54 @@ class IgorServer:
     def check(self, fix=False, token=None):
         rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
         print rv
+
+    def stop(self, token=None, save=True):
+        """Exits igorServer after saving"""
+        global PROFILER_STATS
+        if self.actionHandler:
+            self.actionHandler.stop()
+            self.actionHandler = None
+        if self.eventSources:
+            self.eventSources.stop()
+            self.eventSources = None
+        if self.triggerHandler:
+            self.triggerHandler.stop()
+            self.triggerHandler = None
+        if self.urlCaller:
+            self.urlCaller.stop()
+            self.urlCaller = None
+        if save:
+            self.save(token)
+        self.app.stop()
+        self.app = None
+        if self._profiler:
+            self._profiler.disable()
+            if PROFILER_STATS is None:
+                PROFILER_STATS = pstats.Stats(self._profiler)
+            else:
+                PROFILER_STATS.add(self._profiler)
+            PROFILER_STATS.dump_stats("igor.profile")
+        if self._advertiser:
+            self._advertiser.terminate()
+            self._advertiser = None
+        self.internal = None
+                
+class IgorInternal:
+    """ Implements all internal commands for Igor"""
+    def __init__(self, igor):
+        self.igor = igor
         
     def dump(self, token=None):
         # xxxjack ignoring token for now
         rv = ''
-        if self.urlCaller: rv += self.urlCaller.dump() + '\n'
-        if self.actionHandler: rv += self.actionHandler.dump() + '\n'
-        if self.eventSources: rv += self.eventSources.dump() + '\n'
+        if self.igor.urlCaller: rv += self.igor.urlCaller.dump() + '\n'
+        if self.igor.actionHandler: rv += self.igor.actionHandler.dump() + '\n'
+        if self.igor.eventSources: rv += self.igor.eventSources.dump() + '\n'
         return rv
         
     def log(self, token=None):
         # xxxjack ignoring token for now
-        logfn = os.path.join(self.datadir, 'igor.log')
+        logfn = os.path.join(self.igor.pathnames.datadir, 'igor.log')
         if os.path.exists(logfn):
             return open(logfn).read()
         raise web.HTTPError('404 Log file not available')
@@ -251,7 +298,7 @@ class IgorServer:
             lastSuccess = lastActivity
         
         # xxxjack unsure whether this is correct: do status updates using the igor supertoken.
-        token = self.access.tokenForIgor()
+        token = self.igor.access.tokenForIgor()
         
         # xxxjack this needs to be done differently. Too much spaghetti.
         dbAccess = webApp.DATABASE_ACCESS
@@ -287,7 +334,7 @@ class IgorServer:
     def accessControl(self, subcommand=None, returnTo=None, **kwargs):
         if not subcommand:
             raise web.notfound()
-        method = getattr(self.access, subcommand, None)
+        method = getattr(self.igor.access, subcommand, None)
         if not method:
             raise web.notfound()
         rv = method(**kwargs)
@@ -297,58 +344,58 @@ class IgorServer:
         
     def updateActions(self, token=None):
         """Create any (periodic) event handlers defined in the database"""
-        startupActions = self.database.getElements('actions', 'get', self.access.tokenForIgor())
+        startupActions = self.igor.database.getElements('actions', 'get', self.igor.access.tokenForIgor())
         if len(startupActions):
             if len(startupActions) > 1:
                 raise web.HTTPError('401 only one <actions> element allowed')
-            if not self.actionHandler:
-                self.actionHandler = actions.ActionCollection(self.database, self.urlCaller.callURL, self.access)
-            self.actionHandler.updateActions(startupActions[0])
-        elif self.actionHandler:
-            self.actionHandler.updateActions([])
+            if not self.igor.actionHandler:
+                self.igor.actionHandler = actions.ActionCollection(self.igor.database, self.igor.urlCaller.callURL, self.igor.access)
+            self.igor.actionHandler.updateActions(startupActions[0])
+        elif self.igor.actionHandler:
+            self.igor.actionHandler.updateActions([])
         return 'OK'
 
     def updateEventSources(self, token=None):
         """Create any SSE event sources that are defined in the database"""
-        eventSources = self.database.getElements('eventSources', 'get', self.access.tokenForIgor())
+        eventSources = self.igor.database.getElements('eventSources', 'get', self.igor.access.tokenForIgor())
         if len(eventSources):
             if len(eventSources) > 1:
                 raise web.HTTPError('401 only one <eventSources> element allowed')
-            if not self.eventSources:
-                self.eventSources = sseListener.EventSourceCollection(self.database, self.urlCaller.callURL)
-            self.eventSources.updateEventSources(eventSources[0])
-        elif self.eventSources:
-            self.eventSources.updateEventSources([])
+            if not self.igor.eventSources:
+                self.igor.eventSources = sseListener.EventSourceCollection(self.igor.database, self.igor.urlCaller.callURL)
+            self.igor.eventSources.updateEventSources(eventSources[0])
+        elif self.igor.eventSources:
+            self.igor.eventSources.updateEventSources([])
         return 'OK'
 
     def updateTriggers(self, token=None):
         pass
         
     def runAction(self, actionname, token):
-        if not self.actionHandler:
+        if not self.igor.actionHandler:
             raise web.notfound()
-        nodes = self.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.access.tokenForIgor())
+        nodes = self.igor.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
         if not nodes:
             raise web.notfound()
         for node in nodes:
-            self.actionHandler.triggerAction(node)
+            self.igor.actionHandler.triggerAction(node)
         return 'OK'
     
     def runTrigger(self, triggername, token):
         raise web.HTTPError("502 triggers not yet implemented")
-        if not self.triggerHandler:
+        if not self.igor.triggerHandler:
             raise web.notfound()
-        triggerNodes = self.database.getElements('triggers/%s' % triggername, 'get', self.access.tokenForIgor())
+        triggerNodes = self.igor.database.getElements('triggers/%s' % triggername, 'get', self.igor.access.tokenForIgor())
         if not triggerNodes:
             raise web.notfound()
         if len(triggerNodes) > 1:
             raise web.HTTPError("502 multiple triggers %s in database" % triggername)
         triggerNode = triggerNodes[0]
-        self.triggerHandler.triggerTrigger(triggerNode)
+        self.igor.triggerHandler.triggerTrigger(triggerNode)
         
     def save(self, token):
         """Saves the database to the filesystem"""
-        self.database.saveFile()
+        self.igor.database.saveFile()
         return 'OK'
         
     def started(self, token):
@@ -356,45 +403,21 @@ class IgorServer:
         
     def queue(self, subcommand, token):
         """Queues an internal command through callUrl (used for save/stop/restart)"""
-        self.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
+        self.igor.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
         return 'OK'
         
     def flush(self, token=None, timeout=None):
         """Wait until all currently queued urlCaller events have been completed"""
         if timeout:
             timeout = float(timeout)
-        self.urlCaller.flush(timeout)
+        self.igor.urlCaller.flush(timeout)
         return 'OK'
         
     def fail(self, token=None):
         assert 0, 'User-requested failure'
         
     def stop(self, token=None, save=True):
-        """Exits igorServer after saving"""
-        global PROFILER_STATS
-        if self.actionHandler:
-            self.actionHandler.stop()
-            self.actionHandler = None
-        if self.eventSources:
-            self.eventSources.stop()
-            self.eventSources = None
-        if self.triggerHandler:
-            self.triggerHandler.stop()
-            self.triggerHandler = None
-        if self.urlCaller:
-            self.urlCaller.stop()
-            self.urlCaller = None
-        if save:
-            self.save(token)
-        self.app.stop()
-        self.app = None
-        if self.profile:
-            self.profile.disable()
-            if PROFILER_STATS is None:
-                PROFILER_STATS = pstats.Stats(self.profile)
-            else:
-                PROFILER_STATS.add(self.profile)
-            PROFILER_STATS.dump_stats("igor.profile")
+        self.igor.stop(token, save)
         
     def restart(self, token):
         self.save(token)

@@ -263,6 +263,10 @@ class IgorServer:
             self._advertiser.terminate()
             self._advertiser = None
         self.internal = None
+
+    def save(self, token=None):
+        """Saves the database to the filesystem"""
+        self.database.saveFile()
                 
 class IgorInternal:
     """ Implements all internal commands for Igor"""
@@ -393,9 +397,9 @@ class IgorInternal:
         triggerNode = triggerNodes[0]
         self.igor.triggerHandler.triggerTrigger(triggerNode)
         
-    def save(self, token):
+    def save(self, token=None):
         """Saves the database to the filesystem"""
-        self.igor.database.saveFile()
+        self.igor.save(token)
         return 'OK'
         
     def started(self, token):

@@ -94,9 +94,9 @@ class SSEListener(threading.Thread):
         pass
         
 class EventSource(SSEListener):
-    def __init__(self, hoster, srcUrl, dstUrl, srcMethod, dstMethod, mimetype, event):
+    def __init__(self, collection, srcUrl, dstUrl, srcMethod, dstMethod, mimetype, event):
         SSEListener.__init__(self, srcUrl, srcMethod)
-        self.hoster = hoster
+        self.collection = collection
         self.dstUrl = dstUrl
         self.dstMethod = dstMethod
         self.mimetype = mimetype
@@ -106,23 +106,23 @@ class EventSource(SSEListener):
         if self.event and eventType != self.event:
             return
         tocall = dict(method=self.dstMethod, url=self.dstUrl, mimetype=self.mimetype, data=data)
-        self.hoster.scheduleCallback(tocall)
+        self.collection.scheduleCallback(tocall)
 
     def log(self, message):
         datetime = time.strftime('%d/%b/%Y %H:%M:%S')
         print >>sys.stderr, '- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message)
     
 class EventSourceCollection:
-    def __init__(self, database, scheduleCallback):
+    def __init__(self, igor):
+        self.igor = igor
         self.eventSources = []
-        self.database = database
-        self.scheduleCallback = scheduleCallback
+        self.scheduleCallback = self.igor.urlCaller.callURL
         
     def dump(self):
         return ''
         
     def updateEventSources(self, node):
-        tag, content = self.database.tagAndDictFromElement(node)
+        tag, content = self.igor.database.tagAndDictFromElement(node)
         assert tag == 'eventSources'
         for old in self.eventSources:
             old.delete()

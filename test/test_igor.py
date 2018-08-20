@@ -346,6 +346,27 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result = self.servlet.get()
         self.assertEqual(result, 'seventy-six')
         
+    def test_81_call_plugin(self):
+        """Test that a plugin can run, and read and write the database"""
+        pAdmin = self._igorVar(credentials='admin:')
+        optBearerToken = self._create_cap_for_plugin(pAdmin, 'copytree')
+        p = self._igorVar(**optBearerToken)
+        content = {'test81' : {'src':'eighty-one', 'sink':''}}
+        p.put('sandbox/test81', json.dumps(content), datatype='application/json')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        p.get('/plugin/copytree', query=dict(src='/data/sandbox/test81/src', dst='/data/sandbox/test81/sink'))
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        result = p.get('sandbox/test81', format='application/json')
+        resultDict = json.loads(result)
+        wantedContent = {'test81':{'src':'eighty-one', 'sink':'eighty-one'}}
+        self.assertEqual(resultDict, wantedContent)
+
+    def _create_cap_for_plugin(self, pAdmin, action):
+        """Create capability required to GET a plugin from extern"""
+        return {}
+        
+                
+
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorPort = 29333
@@ -452,6 +473,19 @@ class IgorTestCaps(IgorTestHttps):
             tokenId='admin-action', 
             newOwner='/data/identities/admin', 
             newPath='/action/%s' % callee,
+            get='self',
+            delegate='1'
+            )
+        self._new_sharedkey(pAdmin, sub='localhost')
+        bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
+        return {'bearer_token' : bearerToken }
+        
+    def _create_cap_for_plugin(self, pAdmin, callee):
+        """Create capability required to GET a plugin from extern"""
+        newCapID = self._new_capability(pAdmin, 
+            tokenId='admin-plugin', 
+            newOwner='/data/identities/admin', 
+            newPath='/plugin/%s' % callee,
             get='self',
             delegate='1'
             )

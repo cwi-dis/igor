@@ -274,7 +274,7 @@ class IgorInternal:
         self.igor = igor
         
     def dump(self, token=None):
-        # xxxjack ignoring token for now
+        """Show internal run queues, action handlers and events"""
         rv = ''
         if self.igor.urlCaller: rv += self.igor.urlCaller.dump() + '\n'
         if self.igor.actionHandler: rv += self.igor.actionHandler.dump() + '\n'
@@ -282,6 +282,7 @@ class IgorInternal:
         return rv
         
     def log(self, token=None):
+        """Show current igor log file."""
         # xxxjack ignoring token for now
         logfn = os.path.join(self.igor.pathnames.datadir, 'igor.log')
         if os.path.exists(logfn):
@@ -289,7 +290,7 @@ class IgorInternal:
         raise web.HTTPError('404 Log file not available')
         
     def updateStatus(self, subcommand=None, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None, token=None):
-        """Update status field of some service/sensor/actuator after an action"""
+        """Update status field of some service/sensor/actuator after an action. Not intended for human use"""
         if subcommand:
             representing = subcommand
         if representing.startswith('/data/'):
@@ -336,6 +337,7 @@ class IgorInternal:
         return ''
         
     def accessControl(self, subcommand=None, returnTo=None, **kwargs):
+        """Low-level access control, key and capability interface. Not intended for human use"""
         if not subcommand:
             raise web.notfound()
         method = getattr(self.igor.access, subcommand, None)
@@ -347,7 +349,7 @@ class IgorInternal:
         return rv
         
     def updateActions(self, token=None):
-        """Create any (periodic) event handlers defined in the database"""
+        """Recreate event handlers defined in the database. Not intended for human use"""
         startupActions = self.igor.database.getElements('actions', 'get', self.igor.access.tokenForIgor())
         if len(startupActions):
             if len(startupActions) > 1:
@@ -360,7 +362,7 @@ class IgorInternal:
         return 'OK'
 
     def updateEventSources(self, token=None):
-        """Create any SSE event sources that are defined in the database"""
+        """Recreate SSE event sources defined in the database. Not intended for human use"""
         eventSources = self.igor.database.getElements('eventSources', 'get', self.igor.access.tokenForIgor())
         if len(eventSources):
             if len(eventSources) > 1:
@@ -373,9 +375,11 @@ class IgorInternal:
         return 'OK'
 
     def updateTriggers(self, token=None):
+        """Recreate trigger handlers. Unimplemented. Not intended for human use"""
         pass
         
     def runAction(self, actionname, token):
+        """Mechanism behind running actions. Not intended for human use."""
         if not self.igor.actionHandler:
             raise web.notfound()
         nodes = self.igor.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
@@ -386,6 +390,7 @@ class IgorInternal:
         return 'OK'
     
     def runTrigger(self, triggername, token):
+        """Mechanism behind running triggers. Unimplemented. Not intended for human use"""
         raise web.HTTPError("502 triggers not yet implemented")
         if not self.igor.triggerHandler:
             raise web.notfound()
@@ -403,57 +408,57 @@ class IgorInternal:
         return 'OK'
         
     def started(self, token):
+        """Called when Igor has fully started up. Not intended for human use"""
         return "IgorServer started"
         
     def queue(self, subcommand, token):
-        """Queues an internal command through callUrl (used for save/stop/restart)"""
+        """Queues an internal command through callUrl (used for save/stop/restart). Not intended for human use."""
         self.igor.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
         return 'OK'
         
     def flush(self, token=None, timeout=None):
-        """Wait until all currently queued urlCaller events have been completed"""
+        """Wait until all currently queued urlCaller events have been completed, intended for testing"""
         if timeout:
             timeout = float(timeout)
         self.igor.urlCaller.flush(timeout)
         return 'OK'
         
     def fail(self, token=None):
+        """Raises a Python exception, intended for testing"""
         assert 0, 'User-requested failure'
         
     def stop(self, token=None, save=True):
+        """Gracefully stop Igor"""
         self.igor.stop(token, save)
         
     def restart(self, token):
+        """Attempt to gracefully stop and restart Igor"""
         self.save(token)
         os.closerange(3, subprocess.MAXFD)
         os.execl(sys.executable, sys.executable, *sys.argv)
-        
-    def command(self, token):
-        rv = ''
-        if 'IGORSERVER_DIR' in os.environ:
-            rv = rv + 'export IGORSERVER_DIR=' + repr(os.environ['IGORSERVER_DIR']) + '\n'
-        if 'IGORSERVER_PORT' in os.environ:
-            rv = rv + 'export IGORSERVER_PORT=%d\n' % int(os.environ['IGORSERVER_PORT'])
-        rv = rv + 'exec %s' % repr(sys.executable)
-        for a in sys.argv:
-            rv += ' ' + repr(a)
-        rv += '\n'
-        return rv
-        
-    def help(self, token):
-        rv = 'Internal igor commands:\n'
-        rv += 'help - this help\n'
-        rv += 'version - return version number\n'
-        rv += 'save - Make sure database is saved to disk\n'
-        rv += 'restart - Save and restart this Igor (may appear to fail even when executed correctly)\n'
-        rv += 'stop - Save and stop this Igor (may appear to fail even when executed correctly)\n'
-        rv += 'command - Show command line that started this Igor instance\n'
-        rv += 'dump - Show internal run queue of this Igor instance\n'
-        rv += 'log - Show httpd-style log file of this Igor instance\n'
-        return rv
-        
+
     def version(self, token):
+        """Show Igor version"""
         return VERSION + '\n'
+                
+    def help(self, token):
+        """Show list of all internal commands"""
+        commands = []
+        for name in dir(self.__class__):
+            if name[0] == '_': continue
+            handler = getattr(self, name)
+            try:
+                doc = handler.__doc__
+            except AttributeError:
+                continue
+            if not doc or 'Not intended for human use' in doc:
+                continue
+            commands.append((name, doc))
+        commands.sort()
+        rv = 'Internal Igor commands:\n'
+        for name, doc in commands:
+            rv += '%s - %s\n' % (name, doc)
+        return rv
     
 def main():
     signal.signal(signal.SIGQUIT, _dump_app_stacks)

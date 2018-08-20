@@ -544,7 +544,8 @@ class xmlDatabaseAccess(AbstractDatabaseAccess):
                 rv = [self.db.getDocument(token)]
                 # This always returns XML, so just continue
             else:
-                key = '/%s/%s' % (self.rootTag, key)
+                if key[0] != '/':
+                    key = '/%s/%s' % (self.rootTag, key)
                 rv = self.db.getElements(key, 'get', token)
             rv = self.convertto(rv, mimetype, variant)
             return rv

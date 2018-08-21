@@ -361,7 +361,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         wantedContent = {'test81':{'src':'eighty-one', 'sink':'eighty-one'}}
         self.assertEqual(resultDict, wantedContent)
 
-    def _create_cap_for_plugin(self, pAdmin, action):
+    def _create_cap_for_plugin(self, pAdmin, callee):
         """Create capability required to GET a plugin from extern"""
         return {}
         

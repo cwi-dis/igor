@@ -130,7 +130,7 @@ class IgorServer:
         #
         self.internal = IgorInternal(self)
         
-        self.app = webApp.WEBAPP
+        self.app = webApp.WebApp(self)
         
         self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(self.pathnames.sessionfile, flag="n")))
 
@@ -140,15 +140,8 @@ class IgorServer:
         self.access.setCommand(self.internal)
     
         self.database = xmlDatabase.DBImpl(os.path.join(self.pathnames.datadir, 'database.xml'))
+        self.databaseAccessor = webApp.XmlDatabaseAccess(self)
 
-        # xxxjack the webApp object is currently a module, not an object. To be fixed.
-        webApp.DATABASE = self.database # Have to set in a module-global variable, to be fixed some time...
-        webApp.SCRIPTDIR = self.pathnames.scriptdir
-        webApp.PLUGINDIR = self.pathnames.plugindir
-        webApp.STATICDIR = self.pathnames.staticdir
-        webApp.SESSION = self.session
-        webApp.COMMANDS = self.internal
-        
         self.urlCaller = callUrl.URLCaller(self)
         self.urlCaller.start()
         
@@ -305,35 +298,32 @@ class IgorInternal:
         # xxxjack unsure whether this is correct: do status updates using the igor supertoken.
         token = self.igor.access.tokenForIgor()
         
-        # xxxjack this needs to be done differently. Too much spaghetti.
-        dbAccess = webApp.DATABASE_ACCESS
-        
         key = 'status/' + representing
         
         # Check whether record exists, otherwise create it (empty)
         try:
-            _ = dbAccess.get_key(key, 'application/x-python-object', 'content', token)
+            _ = self.igor.databaseAccessor.get_key(key, 'application/x-python-object', 'content', token)
         except web.HTTPError:
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-            _ = dbAccess.put_key(key, 'application/x-python-object', None, '', 'text/plain', token)
+            _ = self.igor.databaseAccessor.put_key(key, 'application/x-python-object', None, '', 'text/plain', token)
             
         # Fill only entries we want
-        _ = dbAccess.put_key(key + '/alive', 'application/x-python-object', None, not not alive, 'application/x-python-object', token)
-        _ = dbAccess.put_key(key + '/lastActivity', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
+        _ = self.igor.databaseAccessor.put_key(key + '/alive', 'application/x-python-object', None, not not alive, 'application/x-python-object', token)
+        _ = self.igor.databaseAccessor.put_key(key + '/lastActivity', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
         if lastSuccess:
-            _ = dbAccess.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object', token)
+            _ = self.igor.databaseAccessor.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object', token)
         if alive:
-            _ = dbAccess.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object', token)
+            _ = self.igor.databaseAccessor.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object', token)
             resultData = ''
         else:
-            _ = dbAccess.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
+            _ = self.igor.databaseAccessor.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
             if not resultData:
                 resultData = '%s failed without error message' % representing
         if type(resultData) == type({}):
             for k, v in resultData.items():
-                _ = dbAccess.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object', token)
+                _ = self.igor.databaseAccessor.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object', token)
         else:
-            _ = dbAccess.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
+            _ = self.igor.databaseAccessor.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
         return ''
         
     def accessControl(self, subcommand=None, returnTo=None, **kwargs):

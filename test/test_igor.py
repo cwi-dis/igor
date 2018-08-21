@@ -488,6 +488,10 @@ class IgorTestCaps(IgorTestHttps):
         duration = self.servlet.waitDuration()
         self.assertEqual(duration, None)
 
+    # xxxjack need a test that an action can use privilege escalation (by carrying the required capabiity)
+
+    # xxxjack need a test that a plugin can use privilege escalation (by carrying the required capabiity)
+
     def _create_cap_for_call(self, pAdmin, callee):
         """Create capability required to GET an action from extern"""
         newCapID = self._new_capability(pAdmin, 

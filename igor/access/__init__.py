@@ -423,27 +423,32 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         
     def tokenForRequest(self, headers):
         """Return token for the given incoming http(s) request"""
+        token = None
         if 'HTTP_AUTHORIZATION' in headers:
             authHeader = headers['HTTP_AUTHORIZATION']
             authFields = authHeader.split()
             if authFields[0].lower() == 'bearer':
                 decoded = authFields[1] # base64.b64decode(authFields[1])
                 if DEBUG: print 'access: tokenForRequest: returning token found in Authorization: Bearer header'
-                return self._externalAccessToken(decoded)
-            if authFields[0].lower() == 'basic':
+                token = self._externalAccessToken(decoded)
+            elif authFields[0].lower() == 'basic':
                 decoded = base64.b64decode(authFields[1])
                 if decoded.startswith('-otp-'):
                     # This is a one time pad, not a username/password combination
                     if DEBUG: print 'access: tokenForRequest: found OTP in Authorization: Basic header'
+                    # OTP-token should already include the default set, so just return
                     return self._consumeOTPForToken(decoded)
-                username, password = decoded.split(':')
-                if DEBUG: print 'access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username
-                if self.userAndPasswordCorrect(username, password):
-                    return self._tokenForUser(username)
                 else:
-                    web.header('WWW_Authenticate', 'Basic realm="igor"')
-                    raise web.HTTPError('401 Unauthorized')
+                    username, password = decoded.split(':')
+                    if DEBUG: print 'access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username
+                    if self.userAndPasswordCorrect(username, password):
+                        # _tokenForUser already includes the default set, so just return.
+                        return self._tokenForUser(username)
+                    else:
+                        web.header('WWW_Authenticate', 'Basic realm="igor"')
+                        raise web.HTTPError('401 Unauthorized')
             # Add more here for other methods
+            return _combineTokens(token, self._defaultToken())
         if self.session and 'user' in self.session and self.session.user:
             if DEBUG: print 'access: tokenForRequest: returning token for session.user %s' % self.session.user
             return self._tokenForUser(self.session.user)

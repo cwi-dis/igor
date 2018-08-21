@@ -364,7 +364,28 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     def _create_cap_for_plugin(self, pAdmin, callee):
         """Create capability required to GET a plugin from extern"""
         return {}
-        
+
+    def test_82_call_action_plugin(self):
+        """Test that an action can run a plugin, and that plugin can read and write the database"""
+        pAdmin = self._igorVar(credentials='admin:')
+        optBearerToken = self._create_cap_for_call(pAdmin, 'test82action')
+        p = self._igorVar(**optBearerToken)
+        content = {'test82' : {'src':'eighty-two', 'sink':''}}
+        action = {'action':dict(name='test82action', url='/plugin/copytree?src=/data/sandbox/test82/src&dst=/data/sandbox/test82/sink')}
+        pAdmin.put('sandbox/test82', json.dumps(content), datatype='application/json')
+        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        self._create_cap_for_plugin_for_action(pAdmin, 'test82action', 'copytree')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        p.get('/action/test82action')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        result = p.get('sandbox/test82', format='application/json')
+        resultDict = json.loads(result)
+        wantedContent = {'test82':{'src':'eighty-two', 'sink':'eighty-two'}}
+        self.assertEqual(resultDict, wantedContent)
+
+    def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
+        pass
                 
 
 class IgorTestHttps(IgorTest):
@@ -493,6 +514,16 @@ class IgorTestCaps(IgorTestHttps):
         bearerToken = pAdmin.get('/internal/accessControl/exportToken?tokenId=%s&subject=localhost' % newCapID)        
         return {'bearer_token' : bearerToken }
         
+    def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
+        """Create capability so action caller can call a plugin"""
+        newCapID = self._new_capability(pAdmin, 
+            tokenId='admin-plugin', 
+            newOwner="/data/actions/action[name='%s']" % caller,
+            newPath='/plugin/%s' % callee,
+            get='self',
+            )
+        return newCapID
+                
     def _create_caps_for_action(self, pAdmin, caller, obj, delegate='1', **kwargs):
         """Create capability so that action caller can GET an external action"""
         igorIssuer = pAdmin.get('/internal/accessControl/getSelfIssuer')

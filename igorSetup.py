@@ -80,7 +80,7 @@ class IgorSetup:
             self.database = os.environ['IGORSERVER_DIR']
         else:
             self.database = os.path.join(os.path.expanduser('~'+self.username), '.igor')
-        self.igorDir = os.path.dirname(igor.__file__)
+        self.igorDir = os.path.abspath(os.path.dirname(igor.__file__))
         # Default database directory
         self.plugindir = os.path.join(self.database, 'plugins')
         self.runcmds = []

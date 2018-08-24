@@ -165,7 +165,9 @@ class IgorSetup:
             basedir, pluginname = os.path.split(pluginpath)
             if not pluginname:
                 basedir, pluginname = os.path.split(pluginpath)
-            self.runcmds += self._installplugin(self.database, pluginpath, pluginname, shutil.cptree)
+            ok = self._installplugin(self.database, pluginpath, pluginname, shutil.cptree)
+            if not ok:
+                return False
         return True
 
     def cmd_addstd(self, *pluginnames):
@@ -175,7 +177,9 @@ class IgorSetup:
             return False
         for pluginname in pluginnames:
             pluginsrcpath = os.path.join(self.igorDir, 'plugins', pluginname)
-            self.runcmds += self._installplugin(self.database, pluginsrcpath, pluginname, os.symlink)
+            ok = self._installplugin(self.database, pluginsrcpath, pluginname, os.symlink)
+            if not ok:
+                return False
         return True
 
     def cmd_updatestd(self):
@@ -189,7 +193,8 @@ class IgorSetup:
                 print 'Updating', pluginpath
                 os.unlink(pluginpath)
                 pluginsrcpath = os.path.join(self.igorDir, 'plugins', name)
-                self.runcmds += self._installplugin(self.database, pluginsrcpath, name, os.symlink)
+                ok = self._installplugin(self.database, pluginsrcpath, name, os.symlink)
+                if not ok: return False
         return True
 
     def cmd_remove(self, *pluginnames):
@@ -357,16 +362,22 @@ class IgorSetup:
         dst = os.path.join(database, 'plugins', pluginname)
         if os.path.exists(dst):
             print >>sys.stderr, "%s: already exists: %s" % (self.progname, dst)
-            return []
+            return False
         if not os.path.exists(src):
             print >>sys.stderr, "%s: does not exist: %s" % (self.progname, src)
-            return []
+            return False
         cpfunc(src, dst)
+        # Sometimes (only under travis?) the symlink seems to fail
+        try:
+            os.listdir(dst)
+        except OSError:
+            print >> sys.stderr, "%s: creation of %s failed" % (self.progname, dst)
+            return False
         xmlfrag = os.path.join(dst, 'database-fragment.xml')
         if os.path.exists(xmlfrag):
             runcmd = '"%s" "%s" "%s"' % (os.environ.get("EDITOR", "edit"), xmlfrag, os.path.join(database, 'database.xml'))
-            return [runcmd]
-        return []
+            self.runcmds.append(runcmd)
+        return True
     
 def main():
     parser = argparse.ArgumentParser(usage=USAGE)

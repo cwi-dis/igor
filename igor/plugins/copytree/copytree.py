@@ -9,14 +9,13 @@ import web
 import httplib2
 import urlparse
 
-DATABASE_ACCESS=None
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
     
 class CopyTree:
-    def __init__(self):
-        pass
+    def __init__(self, igor):
+        self.igor = igor
 
     def index(self, src=None, dst=None, mimetype="text/plain", method='PUT', token=None):
         if not src:
@@ -27,7 +26,7 @@ class CopyTree:
         srcParsed = urlparse.urlparse(src)
         if srcParsed.scheme == '' and srcParsed.netloc == '':
             # Local source
-            srcValue = DATABASE_ACCESS.get_key(srcParsed.path, mimetype, None, token)
+            srcValue = self.igor.databaseAccessor.get_key(srcParsed.path, mimetype, None, token)
         else:
             # Remote source
             h = httplib2.Http()
@@ -37,7 +36,7 @@ class CopyTree:
     
         dstParsed = urlparse.urlparse(dst)
         if dstParsed.scheme == '' and dstParsed.netloc == '':
-            rv = DATABASE_ACCESS.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, token, method=='PUT')
+            rv = self.igor.databaseAccessor.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, token, method=='PUT')
         else:
             headers = {'Content-type' : mimetype}
             h = httplib2.Http()
@@ -47,6 +46,6 @@ class CopyTree:
 
         return rv
 
-def igorPlugin(pluginName, pluginData):
-        return CopyTree()
+def igorPlugin(igor, pluginName, pluginData):
+        return CopyTree(igor)
         

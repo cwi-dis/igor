@@ -90,10 +90,7 @@ class static(BaseHandler):
             # can come from untrusted sources.
             #
             globals = dict(
-                DATABASE=self.igor.database, # xxxjack for now
-                COMMANDS=self.igor.internal, # xxxjack for now
-                SESSION=self.igor.session, # xxxjack for now
-                IGOR=self.igor,
+                igor=self.igor,
                 token=token,
                 json=json,
                 str=str,
@@ -333,18 +330,6 @@ class runPlugin(BaseHandler):
                 traceback.print_exc()
                 print '------'
                 raise web.notfound()
-            #
-            # Tell the new module about the database and the app
-            #
-            # xxxjack note that the following set of globals basically exports the
-            # whole object hierarchy to plugins. This means that a plugin has
-            # unlimited powers. This needs to be fixed at some time, so plugin
-            # can come from untrusted sources.
-            #
-            pluginModule.DATABASE = self.igor.database  # xxxjack
-            pluginModule.DATABASE_ACCESS = self.igor.databaseAccessor  # xxxjack
-            pluginModule.COMMANDS = self.igor.internal  # xxxjack
-            pluginModule.WEBAPP = self.igor.app  # xxxjack
             pluginModule.SESSION = self.igor.session  # xxxjack
             pluginModule.IGOR = self.igor
         allArgs = web.input()
@@ -364,7 +349,13 @@ class runPlugin(BaseHandler):
             factory = getattr(pluginModule, 'igorPlugin')
         except AttributeError:
             raise myWebError("501 Plugin %s problem: misses igorPlugin() method" % (pluginName))
-        pluginObject = factory(pluginName, pluginData)
+        #
+        # xxxjack note that the following set of globals basically exports the
+        # whole object hierarchy to plugins. This means that a plugin has
+        # unlimited powers. This needs to be fixed at some time, so plugin
+        # can come from untrusted sources.
+        #
+        pluginObject = factory(igor, pluginName, pluginData)
         #
         # If there is a user argument also get userData
         #

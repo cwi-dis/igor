@@ -6,10 +6,6 @@ import sys
 
 DEBUG=False
 
-DATABASE_ACCESS=None
-PLUGINDATA=None
-COMMANDS=None
-
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
@@ -40,7 +36,8 @@ INDEX_HTML="""<html lang="en">
 """
 
 class CAPlugin:
-    def __init__(self):
+    def __init__(self, igor):
+        self.igor = igor
         self.ca = None
     
     def initCA(self):
@@ -93,6 +90,6 @@ class CAPlugin:
         web.header('Content-Disposition', 'attachment; filename="igor-root-certificate-chain.pem"')
         return chain
 
-def igorPlugin(pluginName, pluginData):
-    return CAPlugin()
+def igorPlugin(igor, pluginName, pluginData):
+    return CAPlugin(igor)
     

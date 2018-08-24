@@ -18,10 +18,6 @@ import traceback
 
 DEBUG=False
 
-DATABASE_ACCESS=None
-PLUGINDATA=None
-COMMANDS=None
-
 KEYS_PER_APP=['client_id', 'client_secret']
 KEYS_PER_USER = ['access_token', 'refresh_token']
 DEFAULT_METHODS=['get_bodyweight']
@@ -30,7 +26,8 @@ def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class FitbitPlugin:
-    def __init__(self, pluginName, pluginData):
+    def __init__(self, igor, pluginName, pluginData):
+        self.igor = igor
         self.pluginName = pluginName
         self.pluginData = pluginData
         self.user = None
@@ -38,8 +35,8 @@ class FitbitPlugin:
         
     def _refresh(self, tokenData):
         if DEBUG: print 'xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
-        DATABASE_ACCESS.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', self.token, replace=True)
-        COMMANDS.queue('save', self.token)
+        self.igor.databaseAccessor.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', self.token, replace=True)
+        self.igor.internal.queue('save', self.token)
         if DEBUG: print 'xxxjack queued save call'
     
     def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
@@ -84,7 +81,7 @@ class FitbitPlugin:
             if DEBUG: print "xxxjack method", method, "returned", m
             results.update(item)
         
-        DATABASE_ACCESS.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)
+        self.igor.databaseAccessor.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)
         return str(results)
     
     def auth1(self, user=None, userData={}, token=None, **kwargs):
@@ -99,7 +96,7 @@ class FitbitPlugin:
         
         fb = Fitbit(**oauthSettings)
     
-        step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content', token)
+        step2url = self.igor.databaseAccessor.get_key('services/igor/url', 'text/plain', 'content', token)
         step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
         #step2url += '?' + urllib.urlencode(dict(user=user))
         redirectUrl, _ = fb.client.authorize_token_url(redirect_uri=step2url, state=user)
@@ -119,7 +116,7 @@ class FitbitPlugin:
         if not code:
             raise myWebError("401 fitbitplugin/auth2 requires 'code' argument")
 
-        step2url = DATABASE_ACCESS.get_key('services/igor/url', 'text/plain', 'content', token)
+        step2url = self.igor.databaseAccessor.get_key('services/igor/url', 'text/plain', 'content', token)
         step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
 
         fb = Fitbit(state=state, redirect_uri=step2url, **oauthSettings)
@@ -129,5 +126,5 @@ class FitbitPlugin:
         return 'ok\n'
 
 def igorPlugin(pluginName, pluginData):
-    return FitbitPlugin(pluginName, pluginData)
+    return FitbitPlugin(igor, pluginName, pluginData)
     

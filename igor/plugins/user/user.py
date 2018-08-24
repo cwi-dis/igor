@@ -7,16 +7,12 @@ NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
 DEBUG=False
 
-DATABASE_ACCESS=None
-PLUGINDATA=None
-COMMANDS=None
-
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class UserPlugin:
-    def __init__(self):
-        pass
+    def __init__(self, igor):
+        self.igor = igor
     
     def index(self, token=None):
         raise web.notfound()
@@ -30,16 +26,16 @@ class UserPlugin:
 
         if not NAME_RE.match(username):
             raise myWebError('400 Illegal name for user')
-        if DATABASE_ACCESS.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
+        if self.igor.databaseAccessor.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
             raise myWebError('400 user already exists')
         # Create identities item
-        DATABASE_ACCESS.put_key('identities/%s' % username, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
+        self.igor.databaseAccessor.put_key('identities/%s' % username, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
         # Create people item
-        DATABASE_ACCESS.put_key('people/%s' % username, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
+        self.igor.databaseAccessor.put_key('people/%s' % username, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
         # Create password
-        COMMANDS.accessControl('setUserPassword', token=token, username=username, password=password)
+        self.igor.internal.accessControl('setUserPassword', token=token, username=username, password=password)
         # Create capabilities
-        COMMANDS.accessControl('newToken', 
+        self.igor.internal.accessControl('newToken', 
             token=token, 
             tokenId='admin-data',
             newOwner='identities/%s' % username, 
@@ -49,7 +45,7 @@ class UserPlugin:
             post='descendant', 
             delete='descendant',
             delegate=True)
-        COMMANDS.accessControl('newToken', 
+        self.igor.internal.accessControl('newToken', 
             token=token, 
             tokenId='admin-data',
             newOwner='identities/%s' % username, 
@@ -58,7 +54,7 @@ class UserPlugin:
             post='descendant', 
             delete='descendant',
             delegate=True)
-        COMMANDS.save(token)
+        self.igor.internal.save(token)
         if returnTo:
             raise web.seeother(returnTo)
         return ''
@@ -71,13 +67,13 @@ class UserPlugin:
                     print '\t\t%s' % i
         if not NAME_RE.match(username):
             raise myWebError('400 Illegal name for user')
-        if not DATABASE_ACCESS.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
+        if not self.igor.databaseAccessor.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
             raise myWebError('404 user %s does not exist' % username)
-        DATABASE_ACCESS.delete_key('people/%s' % username, token)
+        self.igor.databaseAccessor.delete_key('people/%s' % username, token)
         # delete or save all capabilities
         # xxxjack to be implemented...
-        DATABASE_ACCESS.delete_key('identities/%s' % username, token)
-        COMMANDS.save(token)
+        self.igor.databaseAccessor.delete_key('identities/%s' % username, token)
+        self.igor.internal.save(token)
         if returnTo:
             raise web.seeother(returnTo)
         return ''
@@ -85,15 +81,15 @@ class UserPlugin:
     def password(self, token=None, username=None, password=None, returnTo=None):
         if not NAME_RE.match(username):
             raise myWebError('400 Illegal name for user')
-        if not DATABASE_ACCESS.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
+        if not self.igor.databaseAccessor.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):
             raise myWebError('404 user %s does not exist' % username)
-        COMMANDS.accessControl('setUserPassword', token=token, username=username, password=password)
-        COMMANDS.save(token)
+        self.igor.internal.accessControl('setUserPassword', token=token, username=username, password=password)
+        self.igor.internal.save(token)
         if returnTo:
             raise web.seeother(returnTo)
         return ''
     
 
-def igorPlugin(pluginName, pluginData):
-    return UserPlugin()
+def igorPlugin(igor, pluginName, pluginData):
+    return UserPlugin(igor)
     

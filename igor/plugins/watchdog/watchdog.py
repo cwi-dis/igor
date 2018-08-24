@@ -46,7 +46,7 @@ class WatchdogClass:
                 self.watchdog_device.write('\n')
             time.sleep(2)
 
-def igorPlugin(pluginName, pluginData):
+def igorPlugin(igor, pluginName, pluginData):
     if not WatchdogClass._singleton:
         WatchdogClass._singleton = WatchdogClass()
     return WatchdogClass._singleton

@@ -9,27 +9,27 @@ $code:
             descr = dict(name=name)
             hostname = None
             representing = None
-            if DATABASE.getElements('devices/' + name, 'get', token):
+            if igor.database.getElements('devices/' + name, 'get', token):
                 descr['isDevice'] = True
-                hostname = DATABASE.getValue('devices/%s/hostname' % name, token)
+                hostname = igor.database.getValue('devices/%s/hostname' % name, token)
                 representing = 'devices/' + name
-            if DATABASE.getElements('sensors/' + name, 'get', token):
+            if igor.database.getElements('sensors/' + name, 'get', token):
                 descr['isSensor'] = True
                 hostname = None
                 representing = 'sensors/' + name
             if hostname:
                 descr['hostname'] = hostname
                 
-            if DATABASE.getElements('status/devices/' + name, 'get', token):
+            if igor.database.getElements('status/devices/' + name, 'get', token):
                 descr['status'] = '/data/status/devices/' + name
-            elif DATABASE.getElements('status/sensors/' + name, 'get', token):
+            elif igor.database.getElements('status/sensors/' + name, 'get', token):
                 descr['status'] = '/data/status/sensors/' + name
             
             if representing:
-                actionElements = DATABASE.getElements("actions/action[representing='%s']" % representing, 'get', token)
+                actionElements = igor.database.getElements("actions/action[representing='%s']" % representing, 'get', token)
                 actionPaths = []
                 for e in actionElements:
-                    actionPaths.append(DATABASE.getXPathForElement(e))
+                    actionPaths.append(igor.database.getXPathForElement(e))
                 if actionPaths:
                     descr['actions'] = actionPaths
                 descr['representing'] = representing
@@ -37,7 +37,7 @@ $code:
         return rv
 
     def _getNames(path, token):
-        allElements = DATABASE.getElements(path, 'get', token)
+        allElements = igor.database.getElements(path, 'get', token)
         rv = []
         for e in allElements:
             name = e.tagName
@@ -62,10 +62,10 @@ $code:
 	$if action == None or action == 'list':
 		<h1>Igor Devices and Sensors</h1>
 	
-		$if 'user' in SESSION and SESSION.user:
+		$if 'user' in igor.session and igor.session.user:
 			<p>
-				You are logged in as $SESSION.user.
-				$if SESSION.user != 'admin':
+				You are logged in as $igor.session.user.
+				$if igor.session.user != 'admin':
 					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
 			</p>
 		$else:
@@ -92,7 +92,7 @@ $code:
 				<th>Actions</th>
 				<th>OP</th>
 			</tr>
-			$ allKeys = COMMANDS.accessControl(subcommand='getKeyList', token=token)
+			$ allKeys = igor.internal.accessControl(subcommand='getKeyList', token=token)
 			$ allKeysAsTuples = [(k.get('iss', ''), k.get('aud', ''), k.get('sub', '')) for k in allKeys]
 			$ allKeysAsTuples.sort()
 			$ allKeyAudiences = set([k.get('aud') for k in allKeys])
@@ -134,7 +134,7 @@ $code:
 					</td>
 					<td>
 						$for action in device.get('actions', []):
-							$ actionName = DATABASE.getValues(action+'/name', token=token)
+							$ actionName = igor.database.getValues(action+'/name', token=token)
 							$ if actionName: actionName = actionName[0][1]
 							$ if not actionName: actionName = actionName.split('/')[-1]
 							<a href=${action}>${actionName}</a><br>
@@ -284,7 +284,7 @@ $code:
 			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
 			<input type="hidden" name="subject" value="/${kwargs['hostname']}">
 			Action: <select name="obj">
-				$for _, actionName in DATABASE.getValues('actions/action/name', token=token):
+				$for _, actionName in igor.database.getValues('actions/action/name', token=token):
 					<option value="/action/${actionName}">${actionName}</option>
 			</select>
 			<input type="submit" value="Add Action">

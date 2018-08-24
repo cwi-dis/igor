@@ -9,16 +9,13 @@ NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
 DEBUG=False
 
-DATABASE_ACCESS=None
-PLUGINDATA=None
-COMMANDS=None
-
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class DevicePlugin:
-    def __init__(self):
-        self.hasCapabilities = COMMANDS.accessControl('hasCapabilitySupport')
+    def __init__(self, igor):
+        self.igor = igor
+        self.hasCapabilities = self.igor.internal.accessControl('hasCapabilitySupport')
     
     def index(self, token=None):
         raise web.notfound()
@@ -47,23 +44,23 @@ class DevicePlugin:
         else:
             raise myWebError('400 either isDevice or isSensor must be set')
             
-        if DATABASE_ACCESS.get_key(databaseEntry, 'application/x-python-object', 'multi', token):
+        if self.igor.databaseAccessor.get_key(databaseEntry, 'application/x-python-object', 'multi', token):
             raise myWebError('400 %s already exists' % name)
             
         # Create item
         entryValues = {}
         if hostname != name + ".local":
             entryValues['hostname'] = hostname
-        DATABASE_ACCESS.put_key(databaseEntry, 'text/plain', 'ref', entryValues, 'application/x-python-object', token, replace=True)
+        self.igor.databaseAccessor.put_key(databaseEntry, 'text/plain', 'ref', entryValues, 'application/x-python-object', token, replace=True)
         # Create status item
-        DATABASE_ACCESS.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
+        self.igor.databaseAccessor.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
 
         rv = dict(name=name, isDevice=isDevice, isSensor=isSensor, hostname=hostname)
         
         if isDevice and self.hasCapabilities:
             deviceKey = self._genSecretKey(aud=hostname, token=token)
             rv['audSharedKeyId'] = deviceKey
-            deviceTokenId = COMMANDS.accessControl('newToken',
+            deviceTokenId = self.igor.internal.accessControl('newToken',
                 token=token,
                 tokenId='external',
                 newOwner='identities/admin',
@@ -96,7 +93,7 @@ class DevicePlugin:
         return json.dumps(rv)
 
     def _genSecretKey(self, token=None, aud=None, sub=None):
-        return COMMANDS.accessControl('createSharedKey', token=token, aud=aud, sub=sub)
+        return self.igor.internal.accessControl('createSharedKey', token=token, aud=aud, sub=sub)
                 
     def addAction(self, token=None, subject=None, verb='get', obj=None, returnTo=None):
         rv = self._addAction(token, subject, verb, obj)
@@ -119,7 +116,7 @@ class DevicePlugin:
         else:
             raise myWebError('400 bad action %s' % obj)
         print 'xxxjack obj', obj
-        newTokenId = actionTokenId = COMMANDS.accessControl('newToken',
+        newTokenId = actionTokenId = self.igor.internal.accessControl('newToken',
             token=token,
             tokenId=parentTokenId,
             newOwner='identities/admin',
@@ -127,7 +124,7 @@ class DevicePlugin:
             delegate=True,
             **{verb : 'self'}
             )
-        newTokenRepresentation = COMMANDS.accessControl('exportToken',
+        newTokenRepresentation = self.igor.internal.accessControl('exportToken',
             token=token,
             tokenId=newTokenId,
             subject=subject
@@ -142,19 +139,19 @@ class DevicePlugin:
         if self.hasCapabilities:
             self._delSecretKey(aud=hostname, token=token)
             self._delSecretKey(sub=hostname, token=token)
-        isDevice = not not DATABASE_ACCESS.get_key('devices/%s' % name, 'application/x-python-object', 'multi', token)
-        isSensor = not not DATABASE_ACCESS.get_key('sensors/%s' % name, 'application/x-python-object', 'multi', token)
-        DATABASE_ACCESS.delete_key('devices/%s' % name, token)
-        DATABASE_ACCESS.delete_key('sensors/%s' % name, token)
-        DATABASE_ACCESS.delete_key('status/devices/%s' % name, token)
-        DATABASE_ACCESS.delete_key('status/sensors/%s' % name, token)
-        COMMANDS.save(token)
+        isDevice = not not self.igor.databaseAccessor.get_key('devices/%s' % name, 'application/x-python-object', 'multi', token)
+        isSensor = not not self.igor.databaseAccessor.get_key('sensors/%s' % name, 'application/x-python-object', 'multi', token)
+        self.igor.databaseAccessor.delete_key('devices/%s' % name, token)
+        self.igor.databaseAccessor.delete_key('sensors/%s' % name, token)
+        self.igor.databaseAccessor.delete_key('status/devices/%s' % name, token)
+        self.igor.databaseAccessor.delete_key('status/sensors/%s' % name, token)
+        self.igor.internal.save(token)
         if returnTo:
             raise web.seeother(returnTo)
         return ''
         
     def _delSecretKey(self, token=None, aud=None, sub=None):
-        COMMANDS.accessControl('deleteSharedKey', token=token, aud=aud, sub=sub)
+        self.igor.internal.accessControl('deleteSharedKey', token=token, aud=aud, sub=sub)
         
     def list(self, token=None):
         allNames = self._getNames('devices/*', token) + self._getNames('sensors/*', token) + self._getNames('status/sensors/*', token) + self._getNames('status/devices/*', token)
@@ -165,34 +162,34 @@ class DevicePlugin:
             descr = dict(name=name)
             hostname = None
             representing = None
-            if DATABASE.getElements('devices/' + name, 'get', token):
+            if self.igor.database.getElements('devices/' + name, 'get', token):
                 descr['isDevice'] = True
-                hostname = DATABASE.getValue('devices/%s/hostname' % name, token)
+                hostname = self.igor.database.getValue('devices/%s/hostname' % name, token)
                 representing = 'devices/' + name
-            if DATABASE.getElements('sensors/' + name, 'get', token):
+            if self.igor.database.getElements('sensors/' + name, 'get', token):
                 descr['isSensor'] = True
                 hostname = None
                 representing = 'sensors/' + name
             if hostname:
                 descr['hostname'] = hostname
                 
-            if DATABASE.getElements('status/devices/' + name, 'get', token):
+            if self.igor.database.getElements('status/devices/' + name, 'get', token):
                 descr['status'] = '/data/status/devices/' + name
-            elif DATABASE.getElements('status/sensors/' + name, 'get', token):
+            elif self.igor.database.getElements('status/sensors/' + name, 'get', token):
                 descr['status'] = '/data/status/sensors/' + name
             
             if representing:
-                actionElements = DATABASE.getElements('actions/action[representing="%s"]' % representing, 'get', token)
+                actionElements = self.igor.database.getElements('actions/action[representing="%s"]' % representing, 'get', token)
                 actionPaths = []
                 for e in actionElements:
-                    actionPaths.append(DATABASE.getXPathForElement(e))
+                    actionPaths.append(self.igor.database.getXPathForElement(e))
                 if actionPaths:
                     descr['actions'] = actionPaths
             rv.append(descr)
         return json.dumps(rv)
             
     def _getNames(self, path, token):
-        allElements = DATABASE.getElements(path, 'get', token)
+        allElements = self.igor.database.getElements(path, 'get', token)
         rv = []
         for e in allElements:
             name = e.tagName
@@ -200,6 +197,6 @@ class DevicePlugin:
             rv.append(name)
         return rv
         
-def igorPlugin(pluginName, pluginData):
-    return DevicePlugin()
+def igorPlugin(igor, pluginName, pluginData):
+    return DevicePlugin(igor)
     

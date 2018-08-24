@@ -16,7 +16,7 @@ $def with (action=None, username=None, **kwargs)
 	$if action == None or action == 'list':
 		<h1>Igor Users</h1>
 	
-		$ currentUser = SESSION.user if 'user' in SESSION else ''
+		$ currentUser = igor.session.user if 'user' in igor.session else ''
 		$if currentUser:
 			<p>
 				You are logged in as $currentUser.
@@ -36,7 +36,7 @@ $def with (action=None, username=None, **kwargs)
 				<th>Operation</th>
 			</tr>
 		
-			$ userList = DATABASE.getElements('/data/identities/*', 'get', token)
+			$ userList = igor.database.getElements('/data/identities/*', 'get', token)
 			$for user in userList:
 				$if not ':' in user.tagName:
 					$ username = user.tagName

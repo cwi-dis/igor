@@ -3,9 +3,6 @@ import socket
 import web
 import time
 
-DATABASE_ACCESS=None
-PLUGINDATA={}
-
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
@@ -25,8 +22,9 @@ def niceDelta(delta):
     return "%d weeks" % delta
     
 class SystemHealthPlugin:
-    def __init__(self):
-        pass
+    def __init__(self, igor, pluginData):
+        self.igor = igor
+        self.pluginData = pluginData
         
     def index(self, ignore=None, duration=0, returnTo=None, token=None):
         #
@@ -37,10 +35,10 @@ class SystemHealthPlugin:
             targetPath = "status/%s/ignoreErrorUntil" % ignore
             if duration:
                 ignoreUntil = time.time() + float(duration)
-                DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, str(int(ignoreUntil)), 'text/plain', token, replace=True)
+                self.igor.databaseAccessor.put_key(targetPath, 'text/plain', None, str(int(ignoreUntil)), 'text/plain', token, replace=True)
             else:
                 try:
-                    DATABASE_ACCESS.delete_key(targetPath, token)
+                    self.igor.databaseAccessor.delete_key(targetPath, token)
                 except web.HTTPError:
                     web.ctx.status = "200 OK"
         #
@@ -48,9 +46,9 @@ class SystemHealthPlugin:
         # error message if so.
         #
         badSensors = {}
-        if 'sensorMaxInterval' in PLUGINDATA:
-            sensorMaxInterval = PLUGINDATA['sensorMaxInterval']
-            sensors = DATABASE_ACCESS.get_key("status/sensors/*", "application/x-python-object", "multi", token)
+        if 'sensorMaxInterval' in self.pluginData:
+            sensorMaxInterval = self.pluginData['sensorMaxInterval']
+            sensors = self.igor.databaseAccessor.get_key("status/sensors/*", "application/x-python-object", "multi", token)
             if sensors:
                 for xp, content in sensors.items():
                     if type(content) != type({}):
@@ -62,11 +60,11 @@ class SystemHealthPlugin:
                         miTime = float(sensorMaxInterval[sensorName])
                         if laTime + miTime < time.time():
                             errorMessage = 'No activity from %s sensors for %s' % (sensorName, niceDelta(time.time()-laTime))
-                            DATABASE_ACCESS.put_key(xp + '/errorMessage', 'text/plain', None, errorMessage, 'text/plain', token, replace=True)
+                            self.igor.databaseAccessor.put_key(xp + '/errorMessage', 'text/plain', None, errorMessage, 'text/plain', token, replace=True)
                             content['errorMessage'] = errorMessage
                             badSensors[xp] = content
 
-        statuses = DATABASE_ACCESS.get_key("status/*/*", "application/x-python-object", "multi", token)
+        statuses = self.igor.databaseAccessor.get_key("status/*/*", "application/x-python-object", "multi", token)
         #
         # For all sensors and services see whether we have an error condition.
         #
@@ -82,22 +80,22 @@ class SystemHealthPlugin:
                     ignoreUntil = int(content['ignoreErrorUntil'])
                     if ignoreUntil < time.time():
                         hasIgnore = False
-                        DATABASE_ACCESS.put_key(xp + '/ignoreErrorUntil', 'text/plain', None, '', 'text/plain', token, replace=True)
+                        self.igor.databaseAccessor.put_key(xp + '/ignoreErrorUntil', 'text/plain', None, '', 'text/plain', token, replace=True)
                 if hasIgnore:
                     hasError = False
                 targetPath = "environment/systemHealth/messages/" + serviceName
                 if hasError:
                     # Copy error into environment/systemHealth
-                    DATABASE_ACCESS.put_key(targetPath, 'text/plain', None, content['errorMessage'], 'text/plain', token, replace=True)
+                    self.igor.databaseAccessor.put_key(targetPath, 'text/plain', None, content['errorMessage'], 'text/plain', token, replace=True)
                 else:
                     # Remove error from environment/systemHealth if it is there currently
                     try:
-                        DATABASE_ACCESS.delete_key(targetPath, token)
+                        self.igor.databaseAccessor.delete_key(targetPath, token)
                     except web.HTTPError:
                         web.ctx.status = "200 OK"
                         pass
         if returnTo:
             raise web.seeother(returnTo)
 
-def igorPlugin(pluginName, pluginData):
-    return SystemHealthPlugin()
+def igorPlugin(igor, pluginName, pluginData):
+    return SystemHealthPlugin(igor, pluginData)

@@ -16,12 +16,12 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	$if action == None or action == 'list':
 		<h1>Igor Capabilities</h1>
 
-		$if not COMMANDS.accessControl('hasCapabilitySupport'):
+		$if not igor.internal.accessControl('hasCapabilitySupport'):
 			<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
 	
-		$if 'user' in SESSION and SESSION.user:
+		$if 'user' in igor.session and igor.session.user:
 			<p>
-				You are logged in as $SESSION.user.
+				You are logged in as $igor.session.user.
 				$if cid == None:
 					Here is the list of all capabilities assigned to your user identity.
 				$else:
@@ -47,7 +47,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<th>...</th>
 			</tr>
 		
-			$ capList = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)
+			$ capList = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)
 			$for cap in capList:
 				$ cid = cap.pop('cid', '')
 				$ comment = cap.pop('comment', '')
@@ -96,7 +96,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	$elif action == "delegate":
 		<h1>Delegate capability ${cid}</h1>
 		
-		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		
 		<form action="/internal/accessControl/newToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
@@ -161,7 +161,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	$elif action == "transfer":
 		<h1>Delegate capability ${cid}</h1>
 		
-		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		
 		<form action="/internal/accessControl/passToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
@@ -204,7 +204,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	$elif action == "export":
 		<h1>Export capability ${cid}</h1>
 		
-		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		$ cap.pop('owner', None)
 		$ cap.pop('parent', None)
 		<form action="/internal/accessControl/exportToken">
@@ -219,7 +219,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td>Subject</td>
 					<td>
-						$ subjectList = COMMANDS.accessControl(subcommand='getSubjectList')
+						$ subjectList = igor.internal.accessControl(subcommand='getSubjectList')
 						$if subjectList:
 							<select name="subject" required>
 							$for sub in subjectList:
@@ -289,7 +289,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	$elif action == "revoke":
 		<h1>Revoke capability ${childCid}</h1>
 		
-		$ cap = COMMANDS.accessControl(subcommand='getTokenDescription', token=token, tokenId=childCid)[0]
+		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=childCid)[0]
 		
 		<form action="/internal/accessControl/revokeToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
@@ -343,7 +343,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	$elif action == "listKeys":
 		<h1>Shared secret keys issued by this Igor</h1>
 		
-		$ keys = COMMANDS.accessControl(subcommand='getKeyList', token=token)
+		$ keys = igor.internal.accessControl(subcommand='getKeyList', token=token)
 		<table>
 			<tr>
 				<th>Issuer</th>

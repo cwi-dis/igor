@@ -6,9 +6,6 @@ import os
 import time
 import json
 
-DATABASE_ACCESS=None
-COMMANDS=None
-
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
@@ -28,8 +25,8 @@ def niceDelta(delta):
     return "%d weeks" % delta
     
 class LastFileAccess:
-    def __init__(self):
-        pass
+    def __init__(self, igor):
+        self.igor = igor
         
     def index(self, name=None, service='services/%s', path=None, stamp="mtime", max=0, token=None):
         if not name or not path:
@@ -71,8 +68,8 @@ class LastFileAccess:
         if message:
             status['resultData'] = message
         toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'}, token=token)
-        COMMANDS.urlCaller.callURL(toCall)
+        self.igor.internal.urlCaller.callURL(toCall)
         return str(int(time.time()-latest))
 
-def igorPlugin(pluginName, pluginData):
-    return LastFileAccess()
+def igorPlugin(igor, pluginName, pluginData):
+    return LastFileAccess(igor)

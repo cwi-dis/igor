@@ -4,15 +4,13 @@ import web
 import time
 import json
 
-DATABASE_ACCESS=None
-COMMANDS=None
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class LanPlugin:
-    def __init__(self):
-        pass
+    def __init__(self, igor):
+        self.igor = igor
         
     def index(self, name=None, service='services/%s', ip=None, port=80, timeout=5, token=None):
         if not name:
@@ -42,10 +40,10 @@ class LanPlugin:
         if not alive:
             status['resultData'] = '%s is not available%s' % (name, detail)
         toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'}, token=token)
-        COMMANDS.urlCaller.callURL(toCall)
+        self.igor.internal.urlCaller.callURL(toCall)
         if alive:
             return 'ok\n'
         return '%s is not available%s\n' % (name, detail)
     
-def igorPlugin(pluginName, pluginData):
-    return LanPlugin()
+def igorPlugin(igor, pluginName, pluginData):
+    return LanPlugin(igor)

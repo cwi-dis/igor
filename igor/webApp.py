@@ -355,7 +355,7 @@ class runPlugin(BaseHandler):
         # unlimited powers. This needs to be fixed at some time, so plugin
         # can come from untrusted sources.
         #
-        pluginObject = factory(igor, pluginName, pluginData)
+        pluginObject = factory(self.igor, pluginName, pluginData)
         #
         # If there is a user argument also get userData
         #

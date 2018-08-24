@@ -6,8 +6,5 @@ install:
 script:
     - python -m unittest discover test
     - python test/perf_igor.py
-    - ls -lR test
-    - ls -lRL test
-    - cat test/fixtures/testIgor/igor.log
     
     

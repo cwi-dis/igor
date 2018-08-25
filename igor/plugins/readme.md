@@ -10,25 +10,35 @@ Some are more examples that you should copy and adapt to your own need, or use a
 
 Plugins take their name (for use in `plugindata`, for example) from the name they are installed under. So you can install multiple independent copies (for example as _say_ and _sayInBedroom_) and use different plugindata to control each copy of the plugin.
 
+Various plugins should be considered standard to Igor operations and usually installed:
+
+- _ca_ allows access to the Certificate Authority
+- _device_ allows adding and removing devices
+- _user_ allows adding and removing users
+- _systemHealth_ implements the self-checks and health-checks of Igor
+
 ## Plugin Structure
 
 ### pluginname.py
 
-A plugin can be implemented in Python. Then it must define a function `igorPlugin(pluginName, pluginData)` which is called whenever any method of the
-plugin is to be called. This function should return an object on which the individual methods are looked up. The `igorPlugin` function is called
-every time a plugin method needs to be called, but it can of course return a singleton object. See the _watchdog_ plugin for an example. _PluginName_
+A plugin can be implemented in Python. Then it must define a class (or factory function)
+
+```
+igorPlugin(igor, pluginName, pluginData)
+``` 
+
+which is called whenever any method of the plugin is to be called. This function should return an object on which the individual methods are looked up. The `igorPlugin` function is called every time a plugin method needs to be called, but it can of course return a singleton object. See the _watchdog_ plugin for an example. _igor_ is a pointer to the global Igor object (see below), _PluginName_
 is the name under which the plugin has been installed, and _PluginData_ is filled from `/data/plugindata/_pluginname_`.
 
-Accessing `/plugin/pluginname` will call the `index()` method. Accessing `/plugin/pluginname/methodname` will call `methodname()`. 
-The method is called with `**kwargs` encoding the plugin arguments, and if there is a `user` argument there will be an additional argument `userData`
-which is filled from `/data/identities/_user_/plugindata/_pluginname_`.
+Accessing `/plugin/pluginname` will call the `index()` method. Accessing `/plugin/pluginname/methodname` will call `methodname()`.  The method is called with `**kwargs` encoding the plugin arguments, and if there is a `user` argument there will be an additional argument `userData` which is filled from `/data/identities/_user_/plugindata/_pluginname_`.
 
-On plugin import a number of global variables are added to the module to allow access to Igor:
+The _igor_ object has a number of attributes that allow access to various aspects of Igor:
 
-- `DATABASE` is the XML database
-- `DATABASE_ACCESS` is the higher-level database accessor
-- `COMMANDS` is where the `/internal` methods live
-- `WEBAPP` is the web.py _Application_ object
+- `igor.database` is the XML database (implemented in `igor.xmlDatabase.DBImpl`)
+- `igor.databaseAccessor` is a higher level, more REST-like interface to the database.
+- `igor.internal` gives access to the set of commands implemented by `igor.__main__.IgorInternal`.
+- `igor.app` is the web application (from `igor.webApp.WebApp`).
+- `igor.session` is the session data, from `web.session.Session`.
 
 ### scripts
 
@@ -73,6 +83,9 @@ Certificate Authority. Programming interface to the Igor SSL certificate authori
 
 Copies subtree ```src``` to ```dst```. Both src and dst can be local or remote, allowing mirroring from one Igor to another (or actually between any two REST servers). Optional arguments ```mimetype``` and ```method``` are available.
 
+### device
+
+Low level API to add devices and their capabilities and secret keys, and allow devices to call certain actions. User interface is provided by `/devices.html`.
 ### dhcp
 
 Queries database of DHCP server on local machine and stores all active dhcp leases. See [dhcp/readme.md](dhcp/readme.md) for details.
@@ -101,9 +114,17 @@ Turns lights (or other devices) on and off using a KlikAanKlikUit device. See [k
 Determines whether a local (or remote) internet service is up and running.
 See [lan/readme.md](lan/readme.md) for details.
 
+### lastFileAccess
+
+Determine when a file was last modified or accessed (for example to check when some program was last used). 
+
 ### lcd
 
 Displays messages on an LCD display. See [lcd/readme.md](lcd/readme.md) for details.
+
+### logparse
+
+Incomplete.
 
 ### neoclock
 
@@ -144,6 +165,10 @@ A Python-based plugin that simply shows all the arguments it has been passed. Th
 ### timemachine
 
 Checks last time that Apple Time Machine backed up specific machines. See [timemachine/readme.md](timemachine/readme.md) for details.
+
+### user
+
+Low-level interface to add and delete users, including capabilities and such, and change passwords. The user-oriented web interface is provided by `/users.html`.
 
 ### watchdog
 

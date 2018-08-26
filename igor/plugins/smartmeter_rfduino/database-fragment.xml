@@ -5,6 +5,7 @@
 			<interval>60</interval>
 			<url>/pluginscript/smartmeter_rfduino/pull</url>
 			<aggregate>true</aggregate>
+			<representing>sensors/smartmeter_rfduino</representing>
 		</action>
 		<action>
 			<xpath>/data/sensors/smartMeter</xpath>
@@ -12,14 +13,6 @@
 			<url>/data/environment/energy/electricity</url>
 			<mimetype>text/plain</mimetype>
 			<data>{current_kw}</data>
-		</action>
-		<action>
-			<xpath>/data/sensors/smartMeter/timestamp</xpath>
-			<method>PUT</method>
-            <url>/data/environment/introspection/lastActivity/smartMeter</url>
-            <method>PUT</method>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_dateTime(.)}</data>
 		</action>
 	</actions>
 	<environment>

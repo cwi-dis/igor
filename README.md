@@ -11,7 +11,7 @@ discretion, even within the household. It can work together with other Igors
 Home page is <https://github.com/cwi-dis/igor>. 
 This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS group, <http://www.dis.cwi.nl>.
 
-**Please note:** Igor is not a finished product yet, important functionality may be missing and/or faulty. Specifically, there is no security and privacy mechanism in place yet, so any data stored in Igor is readable by anyone who can access port 9333.
+**Please note:** Igor is not a finished product yet, important functionality may be missing and/or faulty. Specifically, the security and privacy mechanisms are not complete yet.
 
 ## Prerequisites
 
@@ -57,7 +57,7 @@ different method this does not affect the other rules. Moreover, you can
 give a person (or service) access to the state variable _"Jack is home"_ 
 without giving them the MAC address of his phone.
 
-## Implementation
+## Server Implementation
 
 Igor is implemented in Python 2. At the core of Igor is an XML datastore (using
 ``xml.dom``, so the underlying datastore can be replaced by a more efficient 
@@ -65,30 +65,29 @@ one if needed) with locking for concurrent access. Only elements (and text data)
 are used for normal storage, no attributes, so the data structures can easily 
 be represented in JSON or some other form.
 
-On top of that an XPath 1.0 implementation (currently ``py-dom-xpath`` but again: 
-could be replaced for efficiency reasons) to allow 
-searching, selecting and combining (using expressions) of database elements.
+On top of that an XPath 1.0 implementation (currently ``py-dom-xpath`` but again: could be replaced for efficiency reasons) to allow searching, selecting and combining (using expressions) of database elements.
 
-On top of that is a webserver (based on ``web.py``) that allows REST-like 
-access to the database (GET, PUT, POST and DELETE methods), by default on port 9333. The server handles 
-conversion between the internal (XML) format and external XML, JSON or plain text format.
+On top of that is a webserver (based on ``web.py``, using either _http_ or _https_ access) that allows REST-like access to the database (GET, PUT, POST and DELETE methods), by default on port 9333. The server handles conversion between the internal (XML) format and external XML, JSON or plain text format.
+
 In addition to database access, the web server exposes internal
 functionality (for example to save the database), more general XPath
 expressions over the database and plugin modules. It can also serve static
 content and template-based content (using the web.py template functionality
 and data from the database).
 
-Finally there is an ``actions`` module, populated from a special section of the
+Then there is an ``actions`` module, populated from a special section of the
 database, that allows actions to be triggered by events. Here, _actions_ are
-REST operations (on the database itself or on external URLs) using data constructed
-from the database, and _events_ are one or a combination of:
+REST operations (on the database itself or on external URLs) using data constructed from the database, and _events_ are one or a combination of:
 
 - periodic timers,
 - specific incoming REST requests,
 - changes to database nodes that match specific XPath selectors.
 
-There is a command-line utility ``igorVar.py`` to allow access to the database REST
-interface from shell scripts.
+Igor has an optional capability-based access control mechanism that allows fine-grained control over which agent (user, external device, plugin, etc) is allowed  to do which operation. Human users can log in to the Igor server to gain access to their set of capabilities, external devices can carry their capabilities in requests. Igor can handle signing those capabilities with a secret key shared between the device and Igor.
+
+For convenience on a local subnet Igor can also function as a Certificate Authority (CA), signing the SSL certificates needed to allow trusted _https_ access between Igor and external devices (and any other local services you have).
+
+There are a number of command-line utilities and Python modules, such as ``igorVar`` to allow access to the database REST interface from shell scripts, ``igorSetup`` to initialize and control the database or ``igorCA`` to access the Certificate Authority.
 
 ## Plugins
 
@@ -109,10 +108,7 @@ A description of the database can be found in [doc/schema.md](doc/schema.md).
 
 ## Missing functionality
 
-A security and access control module is planned but not implemented yet.
-
-Mirroring and distributing the database over multiple Igor instances is planned but
-not implemented yet.
+Mirroring and distributing the database over multiple Igor instances is planned but not implemented yet.
 
 A method for easy installation (and updating and removal) of plugins is not implemented yet.
 

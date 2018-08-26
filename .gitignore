@@ -1,6 +1,7 @@
 *.pyc
 *.log
 build
+_build
 dist
 *.egg-info
 test/fixtures/testIgor

@@ -80,9 +80,8 @@ Example value:
 
 ### environment/systemHealth
 
-**(this section is expected to change soon)**
-
-High-level information about how the technical infrastructure of the household (such as the internet connection, and Igor itself) is functioning. Used by plugins like _neoclock_ to inform the user of anomalous conditions. Health-checking actions are expected to create entries in `environment/systemHealth/messages` with descriptive names and user-readable text. These entries should be removed when the anomalous condition no longer exists. For example:
+High-level information about how the technical infrastructure of the household (such as the internet connection, and Igor itself) is functioning. The _systemHealth_ plugin maintains this, from low-level information in `/data/status`.
+_systemHealth_ creates entries in `environment/systemHealth/messages` with descriptive names and user-readable text. These entries are removed when the anomalous condition no longer exists. For example:
 
 ```
 <systemHealth>
@@ -91,20 +90,20 @@ High-level information about how the technical infrastructure of the household (
 	</messages>
 </systemHealth>
 ```
-The intention is that there will be a mechanism whereby the user can silence anomalous conditions he or she knows about (and does not want to be bothered with) for a period of time.
+The user can silence anomalous conditions he or she knows about (and does not want to be bothered with) for a period of time by setting fields in `/data/status`.
 
 ### environment/introspection
+
+**(outdated, used only by some plugins that have not been converted yet)**
+
 Information about activity of various plugins and Igor itself.
 
 #### environment/introspection/lastActivity
 For most plugins, an _isotime_ telling when the plugin was last active. `igor` reflects the last activity of igor itself. These fields are here mainly to check that the individual devices or services are still alive, so an _action_ can be triggered when an important device has not been active for too long.
 
-#### environment/introspection/rebootCount
-An _integer_ telling how many times Igor was succesfully restarted on this database.
-
 ## status
 
-Status information on everything Igor knows about, such as whether services and devices are functioning, when they were last accessed correctly and any error messages produced.
+Status information on everything Igor knows about, such as whether services and devices are functioning, when they were last accessed correctly and any error messages produced. Updated by `/internal/updateStatus`, governed by the `representing` variable in actions and such. Interpreted by the _systemHealth_ plugin, among others.
 
 Each entry has a number of fields:
 
@@ -177,6 +176,10 @@ As an example:
 	* `identities/jack/plugindata/fitbit`: Information that allows the [fitbit plugin](igor/plugins/fitbit/readme.md) to obtain health information for user "Jack".
 * `identities/jack/device`: Name of a device that user "Jack" tends to carry with him (string).
 
+If capability support is enabled, identity entries will also carry the set of capabilities for that user, but these are inaccessible during normal operation.
+
+A special user _admin_ will carry a set of _master capabilities_.
+
 ## actions
 
 Stores all the triggers and actions that operate on the database. *(this name is hardcoded in the Igor implementation)*
@@ -211,6 +214,8 @@ Here is a description of the available elements:
 * `actions/action/method`: The method used to access the url, default GET (string).
 * `actions/action/data`: For POST and PUT methods, the data to supply to the operation (string). Can use AVTs.
 * `actions/action/mimetype`: The MIME type of _data_ (string), default `text/plain`.
+
+If capabilities are enabled each action can carry a set of capabilities and the _actions_ element itself can also carry a set (that will be inherited by each action).
 
 ### Standard actions
 There are a number of standard actions, which are used by Igor itself or used to fill some of the standard elements in the database. Multiple actions with the same name can exist, and all of them will fire (so you can add actions to do additional things if these events happen). These actions (by _name_) are:

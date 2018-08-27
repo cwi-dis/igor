@@ -35,12 +35,8 @@ class LanPlugin:
                 detail = ' (%s)' % repr(e)
         if '%' in service:
             service = service % name
-
-        status = dict(alive=(not not alive))
-        if not alive:
-            status['resultData'] = '%s is not available%s' % (name, detail)
-        toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'}, token=token)
-        self.igor.internal.urlCaller.callURL(toCall)
+        statusLine = '%s is not available%s' % (name, detail)
+        self.igor.internal.updateStatus(representing=service, alive=(not not alive), resultData=statusLine, token=token)
         if alive:
             return 'ok\n'
         return '%s is not available%s\n' % (name, detail)

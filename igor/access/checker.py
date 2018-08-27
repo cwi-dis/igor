@@ -29,11 +29,15 @@ class AccessChecker:
             except AttributeError:
                 pass
             try:
-                print '\taccess: On behalf of action %s' % web.ctx.original_action
+                original_action = web.ctx.env.get('original_action')
+                if original_action:
+                    print '\taccess: On behalf of action %s' % original_action
             except AttributeError:
                 pass
             try:
-                print '\taccess: Representing  %s' % web.ctx.representing
+                representing = web.ctx.env.get('representing')
+                if representing:
+                    print '\taccess: Representing  %s' % representing
             except AttributeError:
                 pass
                 

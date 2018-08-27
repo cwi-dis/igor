@@ -62,13 +62,12 @@ class LastFileAccess:
             service = service % name
 
         # Now fill in fields. Note that we can also have missing fields (which we delete)
-        status = dict(alive=(not not alive))
         if latest > 0:
-            status['lastSuccess'] = int(latest)
-        if message:
-            status['resultData'] = message
-        toCall = dict(url='/internal/updateStatus/%s'%service, method='POST', data=json.dumps(status), headers={'Content-type':'application/json'}, token=token)
-        self.igor.internal.urlCaller.callURL(toCall)
+            lastSuccess = int(latest)
+        else:
+            lastSuccess = None
+        
+        self.igor.internal.updateStatus(representing=service, alive=(not not alive), resultData=message, lastSuccess=lastSuccess, token=token)
         return str(int(time.time()-latest))
 
 def igorPlugin(igor, pluginName, pluginData):

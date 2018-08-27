@@ -136,8 +136,7 @@ class IgorServer:
 
         access.createSingleton() # Has probably been done in main() already
         self.access = access.singleton
-        self.access.setSession(self.session)
-        self.access.setCommand(self.internal)
+        self.access.setIgor(self)
     
         self.database = xmlDatabase.DBImpl(os.path.join(self.pathnames.datadir, 'database.xml'))
         self.databaseAccessor = webApp.XmlDatabaseAccess(self)

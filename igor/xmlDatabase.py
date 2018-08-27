@@ -287,7 +287,6 @@ class DBImpl(DBSerializer):
         DBSerializer.__init__(self)
         import access
         self.access = access.singleton
-        self.access.setDatabase(self)
         self._terminating = False
         self._domimpl = xml.dom.getDOMImplementation()
         self.filename = filename

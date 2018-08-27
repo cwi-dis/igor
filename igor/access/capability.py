@@ -306,7 +306,7 @@ class AccessToken(BaseAccessToken):
     def _save(self):
         """Saves a token back to stable storage"""
         if DEBUG_DELEGATION: print 'access: saving capability %s' % self.identifier
-        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % self.identifier, 'put', _accessSelfToken, namespaces=NAMESPACES)
+        capNodeList = singleton.igor.database.getElements("//au:capability[cid='%s']" % self.identifier, 'put', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
             print 'access: Warning: Cannot save token %s because it is not in the database' % self.identifier
             return
@@ -314,7 +314,7 @@ class AccessToken(BaseAccessToken):
             print 'access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList))
             raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
         oldCapElement = capNodeList[0]
-        newCapElement = singleton.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
+        newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
         parentElement = oldCapElement.parentNode
         parentElement.replaceChild(newCapElement, oldCapElement)
               
@@ -324,7 +324,7 @@ class AccessToken(BaseAccessToken):
     def _setOwner(self, newOwner):
         """Set new owner of this token"""
         if DEBUG_DELEGATION: print 'access: set owner %s on capability %s' % (newOwner, self.identifier)
-        capNodeList = singleton.database.getElements("//au:capability[cid='%s']" % self.identifier, 'delete', _accessSelfToken, namespaces=NAMESPACES)
+        capNodeList = singleton.igor.database.getElements("//au:capability[cid='%s']" % self.identifier, 'delete', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
             print 'access: Warning: Cannot setOwner token %s because it is not in the database' % self.identifier
             return False
@@ -333,7 +333,7 @@ class AccessToken(BaseAccessToken):
             raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
         oldCapElement = capNodeList[0]
         parentElement = oldCapElement.parentNode
-        newParentElementList = singleton.database.getElements(newOwner, "post", _accessSelfToken)
+        newParentElementList = singleton.igor.database.getElements(newOwner, "post", _accessSelfToken)
         if len(newParentElementList) == 0:
             print 'access: cannot setOwner %s because it is not in the database'
             raise myWebError("401 Unknown new token owner %s" % newOwner)
@@ -341,7 +341,7 @@ class AccessToken(BaseAccessToken):
             print 'access: cannot setOwner %s because it occurs multiple times in the database'
             raise myWebError("401 Multiple new token owner %s" % newOwner)
         newParentElement = newParentElementList[0]
-        newCapElement = singleton.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
+        newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
         newParentElement.appendChild(oldCapElement) # This also removes it from where it is now...
         self.owner = newOwner
         return True
@@ -358,7 +358,7 @@ class AccessToken(BaseAccessToken):
             children = [children]
         for ch in children:
             print 'access: WARNING: Recursive delete of capability not yet implemented: %s' % ch
-        singleton.database.delValues("//au:capability[cid='%s']" % self.identifier, _accessSelfToken, namespaces=NAMESPACES)
+        singleton.igor.database.delValues("//au:capability[cid='%s']" % self.identifier, _accessSelfToken, namespaces=NAMESPACES)
           
 class ExternalAccessTokenImplementation(AccessToken):
     def __init__(self, content):

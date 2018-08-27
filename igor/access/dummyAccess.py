@@ -94,24 +94,16 @@ class UserPasswords:
 
 class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
     def __init__(self):
-        self.database = None
-        self.COMMAND = None
+        self.igor = None
         
     def hasCapabilitySupport(self):
         return False
         
-    def setDatabase(self, database):
-        """Temporary helper method - Informs the access checker where it can find the database object"""
-        self.database = database
-        
-    def setSession(self, session):
-        """Temporary helper method - Informs the access checker where sessions are stored"""
-        pass
+    def setIgor(self, igor):
+        """Inform Access singleton of main Igor object. Not passed on __init__ because of app initialization sequence."""
+        assert self.igor is None
+        self.igor = igor
 
-    def setCommand(self, command):
-        """Temporary helper method - Set command processor so access can save the database"""
-        self.COMMAND = command
-        
     def checkerForElement(self, element):
         """Returns an AccessChecker for an XML element"""
         return _checker
@@ -164,15 +156,18 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         raise myWebError("400 This Igor does not have token support")
 
     def consistency(self, token=None, fix=False, restart=False):
+        assert self.igor
+        assert self.igor.database
+        assert self.igor.internal
         if fix:
-            self.COMMAND.save(token)
-        checker = StructuralConsistency(self.database, fix, None, _token)
+            self.igor.internal.save(token)
+        checker = StructuralConsistency(self.igor.database, fix, None, _token)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
-            self.COMMAND.save(token)
+            self.igor.internal.save(token)
             if restart:
                 rv += '\nRestarting Igor'
-                self.COMMAND.queue('restart', _token)
+                self.igor.internal.queue('restart', _token)
             else:
                 rv += '\nRestart Igor to update capability data structures'
         return rv

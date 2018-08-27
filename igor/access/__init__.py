@@ -66,7 +66,6 @@ class TokenStorage:
     """Handle storing and retrieving capabilities"""
     
     def __init__(self):
-        self.database = None          
         self._tokenCache = {}
         self._defaultTokenInstance = None
 
@@ -80,20 +79,20 @@ class TokenStorage:
     def _loadTokenWithIdentifier(self, identifier):
         if identifier in self._tokenCache:
             return self._tokenCache[identifier]
-        capNodeList = self.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
+        capNodeList = self.igor.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
             print 'access: Warning: Cannot get token %s because it is not in the database' % identifier
             raise myWebError("500 Access: no capability with cid=%s" % identifier)
         elif len(capNodeList) > 1:
             print 'access: Error: Cannot get token %s because it occurs %d times in the database' % (identifier, len(capNodeList))
             raise myWebError("500 Access: multiple capabilities with cid=%s" % identifier)
-        capData = self.database.tagAndDictFromElement(capNodeList[0])[1]
+        capData = self.igor.database.tagAndDictFromElement(capNodeList[0])[1]
         return AccessToken(capData)
 
     def _defaultToken(self):
         """Internal method - returns token(s) for operations/users/plugins/etc that have no explicit tokens"""
-        if self._defaultTokenInstance == None and self.database:
-            defaultContainer = self.database.getElements('au:access/au:defaultCapabilities', 'get', _accessSelfToken, namespaces=NAMESPACES)
+        if self._defaultTokenInstance == None and self.igor.database:
+            defaultContainer = self.igor.database.getElements('au:access/au:defaultCapabilities', 'get', _accessSelfToken, namespaces=NAMESPACES)
             if len(defaultContainer) != 1:
                 raise myWebError("501 Database should contain single au:access/au:defaultCapabilities")
             self._defaultTokenInstance = self._tokenForElement(defaultContainer[0])
@@ -105,7 +104,7 @@ class TokenStorage:
         """Internal method - Return token(s) for a user with the given name"""
         if not username or '/' in username:
             raise myWebError('401 Illegal username')
-        elements = self.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
+        elements = self.igor.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
         if len(elements) != 1:
             raise myWebError('501 Database error: %d users named %s' % (len(elements), username))
         element = elements[0]
@@ -119,7 +118,7 @@ class TokenStorage:
         nodelist = xpath.find("au:capability", element, namespaces=NAMESPACES)
         if not nodelist:
             return None
-        tokenDataList = map(lambda e: self.database.tagAndDictFromElement(e)[1], nodelist)
+        tokenDataList = map(lambda e: self.igor.database.tagAndDictFromElement(e)[1], nodelist)
         if len(tokenDataList) > 1:
             return MultiAccessToken(tokenDataList, owner=owner)
         rv = AccessToken(tokenDataList[0], owner=owner)
@@ -129,7 +128,6 @@ class RevokeList:
     """Handles revocation list"""
     def __init__(self):
         self._revokeList = []
-        self.database = None
 
     def _addToRevokeList(self, tokenId, nva=None):
         """Add given token to the revocation list"""
@@ -140,8 +138,8 @@ class RevokeList:
             revokeData = dict(cid=tokenId)
             if nva:
                 revokeData['nva'] = nva
-            element = self.database.elementFromTagAndData("revokedCapability", revokeData, namespace=NAMESPACES)
-            parents = self.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
+            element = self.igor.database.elementFromTagAndData("revokedCapability", revokeData, namespace=NAMESPACES)
+            parents = self.igor.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
             assert len(parents) == 1
             parents[0].appendChild(element)
         
@@ -152,18 +150,17 @@ class RevokeList:
         return tokenId in self._revokeList
         
     def _loadRevokeList(self):
-        self._revokeList = self.database.getValues('au:access/au:revokedCapabilities/au:revokedCapability/cid', _accessSelfToken, namespaces=NAMESPACES)
+        self._revokeList = self.igor.database.getValues('au:access/au:revokedCapabilities/au:revokedCapability/cid', _accessSelfToken, namespaces=NAMESPACES)
      
 class IssuerInterface:
     """Implement interface to the issuer"""
     def __init__(self):
         self._self_audience = None
-        self.database = None
 
     def getSelfAudience(self, token=None):
         """Return an audience identifier that refers to us"""
         if not self._self_audience:
-            baseUrl = self.database.getValue('services/igor/url', _accessSelfToken)
+            baseUrl = self.igor.database.getValue('services/igor/url', _accessSelfToken)
             self._self_audience = urlparse.urljoin(baseUrl, '/')
         return self._self_audience
 
@@ -178,7 +175,7 @@ class IssuerInterface:
         if aud is None:
             aud = self.getSelfAudience()
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
-        externalKey = self.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
+        externalKey = self.igor.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         if not externalKey:
             print 'access: _getExternalRepresentation: no key found at %s' % keyPath
             raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
@@ -224,8 +221,10 @@ class IssuerInterface:
         
     def getSubjectList(self, token=None):
         """Return list of subjects that trust this issuer"""
+        assert self.igor
+        assert self.igor.database
         # xxxjack this is wrong: it also returns keys shared with other issuers
-        subjectValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
+        subjectValues = self.igor.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
         subjectValues = map(lambda x : x[1], subjectValues)
         subjectValues = list(subjectValues)
         subjectValues.sort()
@@ -233,7 +232,7 @@ class IssuerInterface:
 
     def getAudienceList(self, token=None):
         """Return list of audiences that trust this issuer"""
-        audienceValues = self.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
+        audienceValues = self.igor.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
         audienceValues = set(audienceValues)
         audienceValues = list(audienceValues)
         audienceValues.sort()
@@ -241,12 +240,14 @@ class IssuerInterface:
         
     def getKeyList(self, token=None):
         """Return list of tuples with (iss, sub, aud) for every key"""
-        keyElements = self.database.getElements('au:access/au:sharedKeys/au:sharedKey', 'get', _accessSelfToken, namespaces=NAMESPACES)
+        assert self.igor
+        assert self.igor.database
+        keyElements = self.igor.database.getElements('au:access/au:sharedKeys/au:sharedKey', 'get', _accessSelfToken, namespaces=NAMESPACES)
         rv = []
         for kElement in keyElements:
-            iss = self.database.getValue('iss', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
-            aud = self.database.getValue('aud', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
-            sub = self.database.getValue('sub', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
+            iss = self.igor.database.getValue('iss', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
+            aud = self.igor.database.getValue('aud', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
+            sub = self.igor.database.getValue('sub', _accessSelfToken, namespaces=NAMESPACES, context=kElement)
             kDict = dict(aud=aud)
             if iss:
                 kDict['iss'] = iss
@@ -257,25 +258,27 @@ class IssuerInterface:
         
     def createSharedKey(self, sub=None, aud=None, token=None):
         """Create a secret key that is shared between issues and audience"""
+        assert self.igor
+        assert self.igor.database
         iss = self.getSelfIssuer()
         if not aud:
             aud = self.getSelfAudience()
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
         if sub:
             keyPath += "[sub='%s']" % sub
-        keyElements = self.database.getElements(keyPath, 'get', _accessSelfToken, namespaces=NAMESPACES)
+        keyElements = self.igor.database.getElements(keyPath, 'get', _accessSelfToken, namespaces=NAMESPACES)
         if keyElements:
             raise myWebError('409 Shared key already exists')
         keyBits = 'k' + str(random.getrandbits(64))
         keyData = dict(iss=iss, aud=aud, externalKey=keyBits)
         if sub:
             keyData['sub'] = sub
-        parentElement = self.database.getElements('au:access/au:sharedKeys', 'post', _accessSelfToken, namespaces=NAMESPACES)
+        parentElement = self.igor.database.getElements('au:access/au:sharedKeys', 'post', _accessSelfToken, namespaces=NAMESPACES)
         if len(parentElement) != 1:
             if DEBUG_DELEGATION: print 'access: createSharedKey: no unique destination au:access/au:sharedKeys'
             raise web.notfound()
         parentElement = parentElement[0]
-        element = self.database.elementFromTagAndData("sharedKey", keyData, namespace=NAMESPACES)
+        element = self.igor.database.elementFromTagAndData("sharedKey", keyData, namespace=NAMESPACES)
         parentElement.appendChild(element)
         self._save()
         return keyBits
@@ -289,7 +292,7 @@ class IssuerInterface:
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
         if sub:
             keyPath += "[sub='%s']" % sub
-        self.database.delValues(keyPath, _accessSelfToken, namespaces=NAMESPACES)
+        self.igor.database.delValues(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         self._save()
         return ''
         
@@ -297,17 +300,19 @@ class UserPasswords:
     """Implements checking of passwords for users"""
     
     def __init__(self):
-        self.database = None
+        pass
 
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""
+        assert self.igor
+        assert self.igor.database
         # xxxjack this method should not be in the Access element
-        if self.database == None or not username:
-            if DEBUG: print 'access: basic authentication: database or username missing'
+        if not username:
+            if DEBUG: print 'access: basic authentication: username missing'
             return False
         if '/' in username:
             raise myWebError('401 Illegal username')
-        encryptedPassword = self.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
+        encryptedPassword = self.igor.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
         if not encryptedPassword:
             if DEBUG: print 'access: basic authentication: no encryptedPassword for user', username
             return True
@@ -324,11 +329,13 @@ class UserPasswords:
 
     def setUserPassword(self, username, password, token):
         """Change the password for the user"""
+        assert self.igor
+        assert self.igor.database
         import passlib.hash
         passwordHash = passlib.hash.pbkdf2_sha256.hash(password)
-        element = self.database.elementFromTagAndData('encryptedPassword', passwordHash)
-        self.database.delValues('identities/%s/encryptedPassword' % username, token)
-        parentElements = self.database.getElements('identities/%s' % username, 'post', token)
+        element = self.igor.database.elementFromTagAndData('encryptedPassword', passwordHash)
+        self.igor.database.delValues('identities/%s/encryptedPassword' % username, token)
+        parentElements = self.igor.database.getElements('identities/%s' % username, 'post', token)
         if len(parentElements) == 0:
             raise myWebError('404 User %s not found' % username)
         if len(parentElements) > 1:
@@ -343,36 +350,29 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         RevokeList.__init__(self)
         IssuerInterface.__init__(self)
         UserPasswords.__init__(self)
-        self.database = None
-        self.session = None
-        self.COMMAND = None
+        self.igor = None
         
     def _save(self):
         """Save database or capability store, if possible"""
-        if self.COMMAND:
-            self.COMMAND.queue('save', _accessSelfToken)
+        if self.igor.internal:
+            self.igor.internal.queue('save', _accessSelfToken)
 
     def hasCapabilitySupport(self):
         return True
         
-    def setDatabase(self, database):
-        """Temporary helper method - Informs the access checker where it can find the database object"""
-        self.database = database
-        
-    def setSession(self, session):
-        """Temporary helper method - Informs the access checker where sessions are stored"""
-        self.session = session
-        
-    def setCommand(self, command):
-        """Temporary helper method - Set command processor so access can save the database"""
-        self.COMMAND = command
+    def setIgor(self, igor):
+        """Inform Access singleton of main Igor object. Not passed on __init__ because of app initialization sequence."""
+        assert self.igor is None
+        self.igor = igor
 
     def checkerForElement(self, element):
         """Returns an AccessChecker for an XML element"""
+        assert self.igor
+        assert self.igor.database
         if not element:
             print 'access: ERROR: attempt to get checkerForElement(None)'
             return DefaultAccessChecker()
-        path = self.database.getXPathForElement(element)
+        path = self.igor.database.getXPathForElement(element)
         if not path:
             print 'access: ERROR: attempt to get checkerForElement(%s) that has no XPath' % repr(element)
             return DefaultAccessChecker()
@@ -409,8 +409,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         
     def tokenForPlugin(self, pluginname, token=None):
         """Return token(s) for a plugin with the given pluginname"""
+        assert self.igor
+        assert self.igor.database
         tokenForPlugin = None
-        elements = self.database.getElements("plugindata/%s" % pluginname, 'get', _accessSelfToken)
+        elements = self.igor.database.getElements("plugindata/%s" % pluginname, 'get', _accessSelfToken)
         if elements:
             tokenForPlugin = self._tokenForElement(elements[0])
         token = _combineTokens(token, tokenForPlugin)
@@ -449,9 +451,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                         raise web.HTTPError('401 Unauthorized')
             # Add more here for other methods
             return _combineTokens(token, self._defaultToken())
-        if self.session and 'user' in self.session and self.session.user:
-            if DEBUG: print 'access: tokenForRequest: returning token for session.user %s' % self.session.user
-            return self._tokenForUser(self.session.user)
+        if self.igor.session and 'user' in self.igor.session and self.igor.session.user:
+            if DEBUG: print 'access: tokenForRequest: returning token for session.user %s' % self.igor.session.user
+            return self._tokenForUser(self.igor.session.user)
         # xxxjack should we allow carrying tokens in cookies?
         if DEBUG: print 'access: no token found for request %s' % headers.get('PATH_INFO', '???'), 'returning', self._defaultToken()
         return self._defaultToken()
@@ -483,6 +485,8 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         
     def newToken(self, token, tokenId, newOwner, newPath=None, **kwargs):
         """Create a new token based on an existing token. Returns ID of new token."""
+        assert self.igor
+        assert self.igor.database
         #
         # Split remaining args into rights and other content
         #
@@ -512,7 +516,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # Check the new parent exists
         #
-        parentElement = self.database.getElements(newOwner, 'post', _accessSelfToken, namespaces=NAMESPACES)
+        parentElement = self.igor.database.getElements(newOwner, 'post', _accessSelfToken, namespaces=NAMESPACES)
         if len(parentElement) != 1:
             if DEBUG_DELEGATION: print 'access: newToken: no unique destination %s' % newOwner
             raise web.notfound()
@@ -530,7 +534,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         tokenData.update(newRights)
         tokenData.update(content)
 
-        element = self.database.elementFromTagAndData("capability", tokenData, namespace=NAMESPACES)
+        element = self.igor.database.elementFromTagAndData("capability", tokenData, namespace=NAMESPACES)
         #
         # Insert into the tree
         #
@@ -544,7 +548,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         # If the new token may affect actions we should update the actions
         #
         if newOwner.startswith('/data/actions') or newOwner.startswith('actions'):
-            self.COMMAND.queue('updateActions', _accessSelfToken)
+            self.igor.internal.queue('updateActions', _accessSelfToken)
         #
         # Return the ID
         #
@@ -657,15 +661,18 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         return '/data/au:access/au:exportedCapabilities'
         
     def consistency(self, token=None, fix=False, restart=False):
+        assert self.igor
+        assert self.igor.database
+        assert self.igor.internal
         if fix:
-            self.COMMAND.save(token)
-        checker = CapabilityConsistency(self.database, fix, NAMESPACES, _accessSelfToken)
+            self.igor.internal.save(token)
+        checker = CapabilityConsistency(self.igor.database, fix, NAMESPACES, _accessSelfToken)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
-            self.COMMAND.save(token)
+            self.igor.internal.save(token)
             if restart:
                 rv += '\nRestarting Igor'
-                self.COMMAND.queue('restart', _accessSelfToken)
+                self.igor.internal.queue('restart', _accessSelfToken)
             else:
                 rv += '\nRestart Igor to update capability data structures'
         return rv

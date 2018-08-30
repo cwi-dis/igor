@@ -344,13 +344,14 @@ class UserPasswords:
         parentElement.appendChild(element)
 
 class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
-    def __init__(self):
+    def __init__(self, warnOnly=False):
         OTPHandler.__init__(self)
         TokenStorage.__init__(self)
         RevokeList.__init__(self)
         IssuerInterface.__init__(self)
         UserPasswords.__init__(self)
         self.igor = None
+        self.warnOnly = warnOnly
         
     def _save(self):
         """Save database or capability store, if possible"""
@@ -371,29 +372,49 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert self.igor.database
         if not element:
             print 'access: ERROR: attempt to get checkerForElement(None)'
-            return DefaultAccessChecker()
+            return DefaultAccessChecker(self)
         path = self.igor.database.getXPathForElement(element)
         if not path:
             print 'access: ERROR: attempt to get checkerForElement(%s) that has no XPath' % repr(element)
-            return DefaultAccessChecker()
+            return DefaultAccessChecker(self)
         if not path.startswith('/data'):
             print 'access: ERROR: attempt to get checkerForElement(%s) with unexpected XPath: %s' % (repr(element), path)
-            return DefaultAccessChecker()
-        return AccessChecker(path)
+            return DefaultAccessChecker(self)
+        return AccessChecker(self, path)
         
     def checkerForNewElement(self, path):
         """Returns an AccessChecker for an element that does not exist yet (specified by XPath)"""
         if not path.startswith('/data'):
             print 'access: ERROR: attempt to get checkerForNewElement() with unexpected XPath: %s' %  path
-            return DefaultAccessChecker()
-        return AccessChecker(path)
+            return DefaultAccessChecker(self)
+        return AccessChecker(self, path)
             
     def checkerForEntrypoint(self, entrypoint):
         """Returns an AccessChecker for an external entrypoint that is not a tree element"""
         if not entrypoint or entrypoint[0] != '/' or entrypoint.startswith('/data'):
             print 'access: ERROR: attempt to get checkerForEntrypoint(%s)' % entrypoint
-            return DefaultAccessChecker()
-        return AccessChecker(entrypoint)
+            return DefaultAccessChecker(self)
+        return AccessChecker(self, entrypoint)
+        
+    def _checkerDisallowed(self, **kwargs):
+        # If Igor is running in warning-only mode we allow the operation anyway
+        if kwargs.get('defaultChecker'):
+            print '\taccess: %s ???: no access allowed by default checker' % operation
+        else:
+            identifiers = kwargs.get('identifiers', [])
+            print '\taccess: %s %s: no access allowed by %d tokens:' % (kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers))
+            for i in identifiers:
+                print '\t\t%s' % i
+        if 'requestPath' in kwargs:
+            print '\taccess: On behalf of request to %s' % kwargs['requestPath']
+        if 'action' in kwargs:
+            print '\taccess: On behalf of action %s' % kwargs['action']
+        if 'representing' in kwargs:
+            print '\taccess: Representing  %s' % kwargs['representing']
+            
+        if self.warnOnly:
+            print '\taccess: allowed anyway because of --warncapabilities mode'
+        return self.warnOnly
         
     def tokenForAction(self, element, token=None):
         """Return token(s) for an <action> element"""
@@ -693,6 +714,6 @@ def createSingleton(noCapabilities=False, warnOnly=False):
         dummyAccess.createSingleton(noCapabilities)
         singleton = dummyAccess.singleton
     else:
-        singleton = Access()
+        singleton = Access(warnOnly=warnOnly)
         capability.singleton = singleton
     

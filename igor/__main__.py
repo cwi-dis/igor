@@ -202,7 +202,7 @@ class IgorServer:
                 rebootCount = int(oldRebootCount)+1
             except ValueError:
                 pass
-        data = dict(host=hostName, url=url, port=self.port, protocol=protocol, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount)
+        data = dict(host=hostName, url=url, port=self.port, protocol=protocol, startTime=int(time.time()), version=VERSION, ticker=0, rebootCount=rebootCount, accessFailures='')
         if self.certificateFingerprint:
             data['fingerprint'] = self.certificateFingerprint
         tocall = dict(method='PUT', url='/data/services/igor', mimetype='application/json', data=json.dumps(data), representing='igor/core', token=self.access.tokenForIgor())
@@ -264,6 +264,7 @@ class IgorInternal:
     """ Implements all internal commands for Igor"""
     def __init__(self, igor):
         self.igor = igor
+        self.accessFailures = []
         
     def dump(self, token=None):
         """Show internal run queues, action handlers and events"""
@@ -324,6 +325,13 @@ class IgorInternal:
         else:
             _ = self.igor.databaseAccessor.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
         return ''
+        
+    def _accessFailure(self, failureDescription):
+        if not failureDescription in self.accessFailures:
+            self.accessFailures.append(failureDescription)
+            failureDescription['timestamp'] = time.time()
+            token = self.igor.access.tokenForIgor()
+            self.igor.databaseAccessor.put_key('/data/services/igor/accessFailures/accessFailure', 'application/x-python-object', None, failureDescription, 'application/x-python-object', token, replace=False)
         
     def accessControl(self, subcommand=None, returnTo=None, **kwargs):
         """Low-level access control, key and capability interface. Not intended for human use"""

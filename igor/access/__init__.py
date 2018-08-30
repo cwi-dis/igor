@@ -411,7 +411,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             print '\taccess: On behalf of action %s' % kwargs['action']
         if 'representing' in kwargs:
             print '\taccess: Representing  %s' % kwargs['representing']
-            
+        self.igor.internal._accessFailure(kwargs)
         if self.warnOnly:
             print '\taccess: allowed anyway because of --warncapabilities mode'
         return self.warnOnly

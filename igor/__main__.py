@@ -9,6 +9,7 @@ import signal
 import argparse
 import besthostname
 import time
+import copy
 import json
 import web
 import subprocess
@@ -329,7 +330,11 @@ class IgorInternal:
     def _accessFailure(self, failureDescription):
         if not failureDescription in self.accessFailures:
             self.accessFailures.append(failureDescription)
+            failureDescription = copy.deepcopy(failureDescription)
             failureDescription['timestamp'] = time.time()
+            for k in failureDescription.keys():
+                if not failureDescription[k]:
+                    del failureDescription[k]
             token = self.igor.access.tokenForIgor()
             self.igor.databaseAccessor.put_key('/data/services/igor/accessFailures/accessFailure', 'application/x-python-object', None, failureDescription, 'application/x-python-object', token, replace=False)
         

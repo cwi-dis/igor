@@ -402,7 +402,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             if kwargs.get('defaultChecker'):
                 print '\taccess: %s ???: no access allowed by default checker' % operation
             else:
-                identifiers = kwargs.get('identifiers', [])
+                identifiers = kwargs.get('capID', [])
                 print '\taccess: %s %s: no access allowed by %d tokens:' % (kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers))
                 for i in identifiers:
                     print '\t\t%s' % i

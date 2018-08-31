@@ -8,18 +8,18 @@ class AccessChecker:
         self.access = access
         self.destination = destination
         
-    def allowed(self, operation, token):
+    def allowed(self, operation, token, tentative=False):
         """Test whether the token (or set of tokens) allows this operation on the element represented by this AccessChecker"""
         if not token:
-            return self._failed(operation, token)
+            return self._failed(operation, token, tentative)
         if not operation in ALL_OPERATIONS:
             raise myWebError("500 Access: unknown operation '%s'" % operation)
         ok = token._allows(operation, self)
         if not ok:
-            ok = self._failed(operation, token)
+            ok = self._failed(operation, token, tentative)
         return ok
         
-    def _failed(self, operation, token):
+    def _failed(self, operation, token, tentative):
             others = {}
             try:
                 others['requestPath'] = web.ctx.path
@@ -36,8 +36,10 @@ class AccessChecker:
             ok = self.access._checkerDisallowed(
                 operation=operation,
                 path=self.destination,
-                capabilities=token._getIdentifiers(),
+                capID=token._getIdentifiers(),
+                tentative=tentative,
                 **others)
+            return ok
     
 class DefaultAccessChecker(AccessChecker):
     """An object that checks whether an operation (or request) has the right permission"""
@@ -47,7 +49,7 @@ class DefaultAccessChecker(AccessChecker):
         self.access = access
         self.destination = "(using default-accesschecker)"
 
-    def allowed(self, operation, token):
+    def allowed(self, operation, token, tentative=False):
         print 'access: no access allowed by DefaultAccessChecker'
         others = {}
         try:
@@ -66,5 +68,6 @@ class DefaultAccessChecker(AccessChecker):
             operation=operation,
             defaultChecker=True,
             capabilities=token._getIdentifiers(),
+            tentative=tentative,
             **others)
         return ok

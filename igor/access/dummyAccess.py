@@ -29,7 +29,7 @@ class AccessChecker:
     def __init__(self):
         pass
 
-    def allowed(self, operation, token):
+    def allowed(self, operation, token, tentative=False):
         return True
         
 _checker = AccessChecker()

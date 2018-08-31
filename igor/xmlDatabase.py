@@ -297,13 +297,14 @@ class DBImpl(DBSerializer):
         if not self.access:
             return
         ac = self.access.checkerForElement(element)
-        if ac.allowed(operation, token):
-            return
         if operation == 'post' and postChild:
+            # Special case: POST for a child on a parent element is allowed if PUT on that child would be allowed
             path = self.getXPathForElement(element) + '/' + postChild
             ac = self.access.checkerForNewElement(path)
-            if ac.allowed('put', token):
+            if ac.allowed('put', token, tentative=True):
                 return
+        if ac.allowed(operation, token):
+            return
         raise DBAccessError
 
     def filterAfterLoad(self, nodeOrDoc, token):

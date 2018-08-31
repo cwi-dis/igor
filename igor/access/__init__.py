@@ -397,23 +397,25 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         return AccessChecker(self, entrypoint)
         
     def _checkerDisallowed(self, **kwargs):
+        if not kwargs.get('tentative'):
+            # We don't report errors for tentative checking of access
+            if kwargs.get('defaultChecker'):
+                print '\taccess: %s ???: no access allowed by default checker' % operation
+            else:
+                identifiers = kwargs.get('identifiers', [])
+                print '\taccess: %s %s: no access allowed by %d tokens:' % (kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers))
+                for i in identifiers:
+                    print '\t\t%s' % i
+            if 'requestPath' in kwargs:
+                print '\taccess: On behalf of request to %s' % kwargs['requestPath']
+            if 'action' in kwargs:
+                print '\taccess: On behalf of action %s' % kwargs['action']
+            if 'representing' in kwargs:
+                print '\taccess: Representing  %s' % kwargs['representing']
+            self.igor.internal._accessFailure(kwargs)
+            if self.warnOnly:
+                print '\taccess: allowed anyway because of --warncapabilities mode'
         # If Igor is running in warning-only mode we allow the operation anyway
-        if kwargs.get('defaultChecker'):
-            print '\taccess: %s ???: no access allowed by default checker' % operation
-        else:
-            identifiers = kwargs.get('identifiers', [])
-            print '\taccess: %s %s: no access allowed by %d tokens:' % (kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers))
-            for i in identifiers:
-                print '\t\t%s' % i
-        if 'requestPath' in kwargs:
-            print '\taccess: On behalf of request to %s' % kwargs['requestPath']
-        if 'action' in kwargs:
-            print '\taccess: On behalf of action %s' % kwargs['action']
-        if 'representing' in kwargs:
-            print '\taccess: Representing  %s' % kwargs['representing']
-        self.igor.internal._accessFailure(kwargs)
-        if self.warnOnly:
-            print '\taccess: allowed anyway because of --warncapabilities mode'
         return self.warnOnly
         
     def tokenForAction(self, element, token=None):

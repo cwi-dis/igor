@@ -577,6 +577,24 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         return newId
         
+    def _findCompatibleTokens(self, token, newPath, **kwargs):
+        """Return list of token IDs that allow the given operation."""
+        assert self.igor
+        assert self.igor.database
+        #
+        # Get rights from the args
+        #
+        newRights = {}
+        for k, v in kwargs.items():
+            # Note delegate right is checked implicitly, below.
+            if k in NORMAL_OPERATIONS:
+                newRights[k] = v
+        rv = []
+        for t in token.getIdentifiers():
+            if t._allowsDelegation(newPath, newRights, kwargs.get('aud')):
+                rv = rv + r.getIdentifiers()
+        return rv
+                
     def passToken(self, token, tokenId, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
         originalToken = token

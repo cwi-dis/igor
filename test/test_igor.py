@@ -508,6 +508,7 @@ class IgorTestCaps(IgorTestHttps):
         duration = self.servlet.waitDuration()
         self.assertEqual(duration, None)
         
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
         # Check that the access failure is recorded correctly
         self.assertEqual(p.get("services/igor/accessFailures/accessFailure[action='%s']/operation" % actionPath.strip(), format="text/plain"), "get\n")
 

@@ -18,6 +18,9 @@ class AccessToken:
     def addToHeadersAsOTP(self, headers):
         pass
         
+    def _getIdentifiers(self):
+        return []
+        
 _token = AccessToken()
 
 class AccessControlError(ValueError):

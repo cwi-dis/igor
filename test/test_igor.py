@@ -425,7 +425,7 @@ class IgorTestCaps(IgorTestHttps):
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
         # Check that the access failure is recorded correctly
-        self.assertEqual(p.get("services/igor/accessFailures/accessFailure[requestPath='/data/environment/systemHealth/test29']/operation", format="text/plain"), "put\n")
+        self.assertEqual(p.get("services/igor/accessFailures/accessFailure[requestPath='/data/environment/systemHealth/test29']/operation", format="text/plain"), "post\n")
         
     def test39_delete_disallowed(self):
         """Check that DELETE on a variable for which you have no capability fails"""
@@ -496,7 +496,7 @@ class IgorTestCaps(IgorTestHttps):
         pAdmin = self._igorVar(credentials='admin:')
 
         action = {'action':dict(name='test69action', url=self.servletUrl+'/api/get')}
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        actionPath = pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         optBearerToken = self._create_cap_for_call(pAdmin, 'test69action')
@@ -507,6 +507,9 @@ class IgorTestCaps(IgorTestHttps):
 
         duration = self.servlet.waitDuration()
         self.assertEqual(duration, None)
+        
+        # Check that the access failure is recorded correctly
+        self.assertEqual(p.get("services/igor/accessFailures/accessFailure[action='%s']/operation" % actionPath.strip(), format="text/plain"), "get\n")
 
     # xxxjack need a test that an action can use privilege escalation (by carrying the required capabiity)
 

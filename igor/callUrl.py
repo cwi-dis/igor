@@ -74,6 +74,14 @@ class URLCallRunner(threading.Thread):
                     if os.environ.get('IGOR_TEST_NO_SSL_VERIFY'):
                         kwargs['verify'] = False
                     r = requests.request(method, url, data=data, headers=headers, **kwargs)
+                    if r.status_code == 401:
+                        # If we get a 401 Unauthorized error we also report it through the access control errors
+                        failureDescription = dict(operation=method.lower(), path=url, external=True, capabilities=token._getIdentifiers())
+                        if 'representing' in env:
+                            failureDescription['representing'] = env['representing']
+                        if 'original_action' in env:
+                            failureDescription['action'] = env['original_action']
+                        self.igor.internal._accessFailure(failureDescription)
                     resultStatus = str(r.status_code)
                     resultData = r.text
                     # Stop-gap to get more info in the log, if possible

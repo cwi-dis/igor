@@ -120,6 +120,20 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result = p.get('sandbox/test24', format='application/xml')
         self.assertEqual(data.strip(), result.strip())
         
+    def test_25_get_xpath(self):
+        p = self._igorVar()
+        data = '<test25><sub1><key>1</key></sub1><sub2a><key>2</key></sub2a><sub2b><key>2</key></sub2b></test25>'
+        p.put('sandbox/test25', data, datatype='application/xml')
+        result1 = p.get("sandbox/test25//*[key='1']", format="application/json")
+        result1value = json.loads(result1)
+        self.assertEqual(result1value, {'sub1':{'key':1}})
+        result2 = p.get("sandbox/test25//*[key='2']", format="application/json", variant="multi")
+        result2value = json.loads(result2)
+        self.assertEqual(result2value, [{'ref':'/data/sandbox/test25/sub2a', 'sub2a':{'key':2}}, {'ref':'/data/sandbox/test25/sub2b', 'sub2b':{'key':2}}])
+        result3 = p.get("sandbox/test25//*[key='3']", format="application/json", variant="multi")
+        result3value = json.loads(result3)
+        self.assertEqual(result3value, [])
+        
     def test31_post_text(self):
         """POST a database variable twice and check that both get through"""
         p = self._igorVar()

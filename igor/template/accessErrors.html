@@ -1,0 +1,60 @@
+$def with ()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Access Control Failures</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	<h1>Igor Access Control Failures</h1>
+	$if not igor.internal.accessControl('hasCapabilitySupport'):
+		<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
+
+	$if 'user' in igor.session and igor.session.user:
+		<p>You are logged in as $igor.session.user.</p>
+		
+	$ errors = igor.databaseAccessor.get_key('services/igor/accessFailures', 'application/x-python-object', 'content', token)
+	$if 'accessFailure' in errors:
+		$ errors = errors['accessFailure']
+		$ if type(errors) != type([]): errors = [errors]
+	$else:
+		$ errors = []
+	
+	<table style="width:100%">
+		<tr>
+			<th>time</th>
+			<th>action</th>
+			<th>representing</th>
+			<th>request path</th>
+			<th>operation</th>
+			<th>path</th>
+			<th>capabilities</th>
+			<th>...</th>
+		</tr>
+		$for error in errors:
+			<tr>
+				<td>${error.pop('timestamp', '')}</td>
+				<td>${error.pop('action', '')}</td>
+				<td>${error.pop('representing', '')}</td>
+				<td>${error.pop('requestPath', '')}</td>
+				<td>${error.pop('operation', '')}</td>
+				<td>${error.pop('path', '')}</td>
+				<td>
+					$for cid in error.pop('capID', []):
+						${cid}<br>
+				</td>
+				<td>
+					$for k, v in error.items():
+						${k}=${str(v)}
+				</td>
+			</tr>
+	</table>
+	
+</body>
+</html>

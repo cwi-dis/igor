@@ -94,6 +94,7 @@ class static(BaseHandler):
                 token=token,
                 json=json,
                 str=str,
+                repr=repr,
                 type=type
                 )                
             template = web.template.frender(filename, globals=globals)

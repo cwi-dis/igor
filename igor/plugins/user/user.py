@@ -19,7 +19,7 @@ class UserPlugin:
     
     def add(self, token=None, username=None, password=None, returnTo=None):
         if True:
-                identifiers = token._getIdentifiers()
+                identifiers = token.getIdentifiers()
                 print '\tuser: add: Tokens:'
                 for i in identifiers:
                     print '\t\t%s' % i
@@ -61,7 +61,7 @@ class UserPlugin:
         
     def delete(self, token=None, username=None, returnTo=None):
         if True:
-                identifiers = token._getIdentifiers()
+                identifiers = token.getIdentifiers()
                 print '\tuser: delete: Tokens:'
                 for i in identifiers:
                     print '\t\t%s' % i

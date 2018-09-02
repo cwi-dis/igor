@@ -499,7 +499,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             originalToken = token
             token = token._getTokenWithIdentifier(tokenId)
             if not token:
-                identifiers = originalToken._getIdentifiers()
+                identifiers = originalToken.getIdentifiers()
                 print '\taccess: getTokenDescription: no such token ID: %s. Tokens:' % tokenId
                 for i in identifiers:
                     print '\t\t%s' % i
@@ -529,7 +529,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         if newPath == None:
                 newPath = token._getObject()
         if not token:
-            identifiers = originalToken._getIdentifiers()
+            identifiers = originalToken.getIdentifiers()
             print '\taccess: newToken: no such token ID: %s. Tokens:' % tokenId
             for i in identifiers:
                 print '\t\t%s' % i
@@ -582,7 +582,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         originalToken = token
         tokenToPass = token._getTokenWithIdentifier(tokenId)
         if not tokenToPass:
-            identifiers = originalToken._getIdentifiers()
+            identifiers = originalToken.getIdentifiers()
             print '\taccess: passToken: no such token ID: %s. Tokens:' % tokenId
             for i in identifiers:
                 print '\t\t%s' % i
@@ -605,7 +605,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Revoke a token"""
         parentToken = token._getTokenWithIdentifier(parentId)
         if not parentToken:
-            identifiers = token._getIdentifiers()
+            identifiers = token.getIdentifiers()
             print '\taccess: revokeToken: no such token ID: %s. Tokens:' % parentId
             for i in identifiers:
                 print '\t\t%s' % i
@@ -670,7 +670,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def externalRepresentation(self, token, tokenId):
         tokenToExport = token._getTokenWithIdentifier(tokenId)
         if not tokenToExport:
-            identifiers = token._getIdentifiers()
+            identifiers = token.getIdentifiers()
             print '\taccess: externalRepresentation: no such token ID: %s. Tokens:' % tokenId
             for i in identifiers:
                 print '\t\t%s' % i

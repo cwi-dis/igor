@@ -36,7 +36,7 @@ class AccessChecker:
             ok = self.access._checkerDisallowed(
                 operation=operation,
                 path=self.destination,
-                capID=token._getIdentifiers(),
+                capID=token.getIdentifiers(),
                 tentative=tentative,
                 **others)
             return ok
@@ -67,7 +67,7 @@ class DefaultAccessChecker(AccessChecker):
         ok = self.access._checkerDisallowed(
             operation=operation,
             defaultChecker=True,
-            capabilities=token._getIdentifiers(),
+            capabilities=token.getIdentifiers(),
             tentative=tentative,
             **others)
         return ok

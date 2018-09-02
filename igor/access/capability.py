@@ -9,10 +9,10 @@ class BaseAccessToken:
         self.identifier = None
 
     def __repr__(self):
-        return "%s(0x%x, cids:%s)" % (self.__class__.__name__, id(self), '/'.join(self._getIdentifiers()))
+        return "%s(0x%x, cids:%s)" % (self.__class__.__name__, id(self), '/'.join(self.getIdentifiers()))
         
-    def _getIdentifiers(self):
-        """Internal method - Returns a list of all token IDs of this token (and any subtokens it contains)"""
+    def getIdentifiers(self):
+        """Returns a list of all token IDs of this token (and any subtokens it contains)"""
         return [self.identifier]
         
     def _hasExternalRepresentationFor(self, url):
@@ -374,10 +374,10 @@ class MultiAccessToken(BaseAccessToken):
             self.tokens.append(t)
         self.externalTokenCache = {}
 
-    def _getIdentifiers(self):
+    def getIdentifiers(self):
         rv = []
         for t in self.tokens:
-            rv += t._getIdentifiers()
+            rv += t.getIdentifiers()
         return rv
                     
     def _hasExternalRepresentationFor(self, url):

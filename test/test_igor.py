@@ -417,16 +417,22 @@ class IgorTestCaps(IgorTestHttps):
         """Check that GET on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.get, 'identities', format='application/xml')
+        # Check that the access failure is recorded correctly
+        self.assertEqual(p.get("services/igor/accessFailures/accessFailure[requestPath='/data/identities']/operation", format="text/plain"), "get\n")
         
     def test29_put_disallowed(self):
         """Check that PUT on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
+        # Check that the access failure is recorded correctly
+        self.assertEqual(p.get("services/igor/accessFailures/accessFailure[requestPath='/data/environment/systemHealth/test29']/operation", format="text/plain"), "put\n")
         
     def test39_delete_disallowed(self):
         """Check that DELETE on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.delete, 'environment/systemHealth')
+        # Check that the access failure is recorded correctly
+        self.assertEqual(p.get("services/igor/accessFailures/accessFailure[requestPath='/data/environment/systemHealth']/operation", format="text/plain"), "delete\n")
         
     def _new_capability(self, pAdmin, **kwargs):
         """Create a new capability and return its cid"""

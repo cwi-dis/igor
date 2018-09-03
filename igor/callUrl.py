@@ -76,7 +76,7 @@ class URLCallRunner(threading.Thread):
                     r = requests.request(method, url, data=data, headers=headers, **kwargs)
                     if r.status_code == 401:
                         # If we get a 401 Unauthorized error we also report it through the access control errors
-                        failureDescription = dict(operation=method.lower(), path=url, external=True, capabilities=token._getIdentifiers())
+                        failureDescription = dict(operation=method.lower(), path=url, external=True, capabilities=token.getIdentifiers())
                         if 'representing' in env:
                             failureDescription['representing'] = env['representing']
                         if 'original_action' in env:

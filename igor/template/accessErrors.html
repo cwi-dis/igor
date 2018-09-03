@@ -23,7 +23,10 @@ $code:
 		<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
 
 	$if 'user' in igor.session and igor.session.user:
-		<p>You are logged in as $igor.session.user.</p>
+		$ user = igor.session.user
+		<p>You are logged in as $user.</p>
+	$else:
+		$ user = "admin"
 		
 	<p>
 		This page lists all access control failures (missing capabilities) encountered by Igor in the current invocation.
@@ -86,10 +89,32 @@ $code:
 							$ kwargs['aud'] = 'to-be-provided'
 						$ myCaps = igor.access.findCompatibleTokens(token, keep['path'], **kwargs)
 						$if myCaps:
+							$ myCaps = '/'.join(myCaps)
 							$if 'action' in keep:
-								Can Fix
+								<form action="/capabilities.html">
+									<input name="returnTo" type="hidden" value="/accessErrors.html">
+									<input name="action" type="hidden" value="create">
+									<input name="newOwner" type="hidden" value="${keep.get('action','')}">
+									<input name="obj" type="hidden" value="${keep.get('path','')}">
+									$if 'external' in keep:
+										<input name="aud" type="hidden" value="cut-and-paste-from-obj">
+									<input name="${keep.get('operation', 'unknownOperation')}" type="hidden" value="self">
+									<input name="parentList" type="hidden" value="${myCaps}">
+									<input type="submit" value="Fix">
+								</form>
 							$else:
-								Can Create
+								<form action="/capabilities.html">
+									<input name="returnTo" type="hidden" value="/accessErrors.html">
+									<input name="action" type="hidden" value="create">
+									<input name="newOwner" type="hidden" value="/data/identities/$user">
+									<input name="obj" type="hidden" value="${keep.get('path','')}">
+									$if 'external' in keep:
+										<input name="aud" type="hidden" value="cut-and-paste-from-obj">
+									<input name="${keep.get('operation', 'unknownOperation')}" type="hidden" value="self">
+									<input name="delegate" type="hidden" value="true">
+									<input name="parentList" type="hidden" value="${myCaps}">
+									<input type="submit" value="Create">
+								</form>
 				</td>
 			</tr>
 	</table>

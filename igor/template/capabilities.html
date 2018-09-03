@@ -161,6 +161,79 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 			</table>
 		</form>
 		<p><a href="/capabilities.html">Return to listing</a></p>
+	$elif action == "create":
+		<p>Cannot do yet. Should create ${repr(kwargs)}.</p>
+		<form action="/internal/accessControl/newToken">
+			<input name="returnTo" type="hidden" value="${kwargs.get('returnTo', '/capabilities.html')}">
+			<table>
+				<tr>
+					<th>Field</th>
+					<th>Value</th>
+				</tr>
+				<tr>
+					<td>Delegate from</td>
+					<td>
+						<select name="tokenId">
+							$for cid in kwargs.get('parentList', '').split('/'):
+								<option value="$cid">$cid</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>New owner</td>
+					<td><input name="newOwner" type="text" value="${kwargs.get('newOwner','')}"></td>
+				</tr>
+				<tr>
+					<td>Path</td>
+					<td><input name="newPath" type="text" value="${kwargs.get('obj','')}"></td>
+				</tr>
+				$if 'aud' in kwargs:
+					<tr>
+						<td>Audience</td>
+						<td><input name="aud" type="text" value="${kwargs.get('aud', '')}"></td>
+					</tr>
+				<tr>
+					<td>Can Delegate</td>
+					<td>
+						$if kwargs.get('delegate'):
+						<input name="delegate" type="checkbox" value="true" checked>
+					</td>
+				</tr>			
+				$for right in ['get', 'put', 'post', 'delete']:
+					<tr>
+						<td>${right}</td>
+						$ rightValue = kwargs.get(right, '')
+						<td>
+							<select name="${right}">
+								$ selected = ' selected' if not rightValue else ''
+								<option value="" ${selected}>No access</option>
+								$ selected = ' selected' if rightValue == 'self' else ''
+								<option value="self" ${selected}>self</option>
+								$ selected = ' selected' if rightValue == 'descendant-or-self' else ''
+								<option value="descendant-or-self" ${selected}>descendant-or-self</option>
+								$ selected = ' selected' if rightValue == 'descendant' else ''
+								<option value="descendant" ${selected}>descendant</option>
+								$ selected = ' selected' if rightValue == 'child' else ''
+								<option value="child" ${selected}>child</option>
+							</select>
+						</td>
+					</tr>
+				<tr>
+					<td>Comment</td>
+					<td><input name="comment" type="text"></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><input type="submit" value="Delegate"></td>
+					<td></td>
+				</tr>
+			</table>
+		</form>		
+		<p>
+			<a href="/capabilities.html">List my capabilities.</a>
+			$if 'returnTo' in kwargs:
+				<br><a href="${kwargs['returnTo']}">Return to ${kwargs['returnTo']}.</a>
+		</p>
 	$elif action == "transfer":
 		<h1>Delegate capability ${cid}</h1>
 		

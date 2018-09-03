@@ -75,9 +75,12 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<td>
 						$if cap.pop('owner', ''):
 							<a href="/capabilities.html?action=transfer&cid=${cid}">transfer</a>
-						$if cap.pop('delegate', ''):
+						$ delegate = cap.pop('delegate', '')
+						$if delegate:
 							<br>
 							<a href="/capabilities.html?action=delegate&cid=${cid}">delegate</a>
+							$if delegate == 'external':
+								<i>(ext)</i>
 							<br>
 							<a href="/capabilities.html?action=export&cid=${cid}">export</a>
 						$if 'iss' in cap and 'aud' in cap:
@@ -114,8 +117,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				</tr>
 				<tr>
 					<td>Path</td>
-					<td><input name="newPath" type="text" value="${cap['obj']}"></td>
-					<td>${cap['obj']}</td>
+					<td><input name="newPath" type="text" value="${cap.get('obj','')}"></td>
+					<td>${cap.get('obj','')}</td>
 				</tr>
 				<tr>
 					<td>Can Delegate</td>

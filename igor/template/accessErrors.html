@@ -81,7 +81,10 @@ $code:
 				</td>
 				<td>
 					$if 'path' in keep and 'operation' in keep:
-						$ myCaps = igor.access.findCompatibleTokens(token, keep['path'], **{keep['operation']:'self'})
+						$ kwargs = {keep['operation']:'self'}
+						$if keep.get('external', ''):
+							$ kwargs['aud'] = 'to-be-provided'
+						$ myCaps = igor.access.findCompatibleTokens(token, keep['path'], **kwargs)
 						$if myCaps:
 							$if 'action' in keep:
 								Can Fix

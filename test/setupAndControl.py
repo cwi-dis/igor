@@ -149,6 +149,11 @@ class IgorSetupAndControl(object):
     
     @classmethod
     def tearDownIgor(cls):
+        if os.environ.get('IGOR_TEST_WAIT'):
+            print 'igorTest: tests finished.'
+            print 'igorTest: Waiting with teardown because environment variable IGOR_TEST_WAIT is set.'
+            print 'igorTest: Type return to continue - ',
+            sys.stdin.readline()
         # Stop servlet
         if DEBUG_TEST: print 'IgorTest: Stop servlet'
         cls.servlet.stop()

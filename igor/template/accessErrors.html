@@ -30,9 +30,8 @@ $def with ()
 		<tr>
 			<th>time</th>
 			<th>action</th>
-			<th>representing</th>
 			<th>request path</th>
-			<th>operation</th>
+			<th>op</th>
 			<th>path</th>
 			<th>capabilities</th>
 			<th>...</th>
@@ -40,18 +39,25 @@ $def with ()
 		$for error in errors:
 			<tr>
 				<td>${error.pop('timestamp', '')}</td>
-				<td>${error.pop('action', '')}</td>
-				<td>${error.pop('representing', '')}</td>
+				<td>
+					${error.pop('action', '')}
+					$if 'representing' in error:
+						<br><i>representing ${error.pop('representing', '')}</i>
+				</td>
 				<td>${error.pop('requestPath', '')}</td>
 				<td>${error.pop('operation', '')}</td>
-				<td>${error.pop('path', '')}</td>
+				<td>
+					${error.pop('path', '')}
+					$if 'external' in error:
+						<br><i>external=${error.pop('external','')}</i>
+				</td>
 				<td>
 					$for cid in error.pop('capID', []):
 						${cid}<br>
 				</td>
 				<td>
 					$for k, v in error.items():
-						${k}=${str(v)}
+						${k}=${str(v)}<br>
 				</td>
 			</tr>
 	</table>

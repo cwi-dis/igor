@@ -6,6 +6,7 @@ import sys
 import re
 import uuid
 import json
+import time
 import mimetypematch
 import copy
 import imp
@@ -95,6 +96,7 @@ class static(BaseHandler):
                 json=json,
                 str=str,
                 repr=repr,
+                time=time,
                 type=type
                 )                
             template = web.template.frender(filename, globals=globals)

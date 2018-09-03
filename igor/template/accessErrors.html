@@ -1,4 +1,10 @@
 $def with ()
+$code:
+	def showtime(tstr):
+		if not tstr: return tstr
+		t = float(tstr)
+		return time.strftime("%d/%b/%Y %H:%M:%S", time.localtime(t))
+		
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,6 +25,18 @@ $def with ()
 	$if 'user' in igor.session and igor.session.user:
 		<p>You are logged in as $igor.session.user.</p>
 		
+	<p>
+		This page lists all access control failures (missing capabilities) encountered by Igor in the current invocation.
+		(So, this information may be incorrect, because issues have been fixed already, and may be incomplete because Igor
+		may have restarted since a failure). For each failure the first occurrence is shown, so you can look it up in <a href="/internal/log">the Igor log</a>.
+	</p>
+	
+	<p>
+		If you (the user currently logged in) <i>do</i> have the correct capabilities to allow the operation you will see a <i>Fix</i>
+		button which will create the capability and assign it to the action. Or you may see a <i>Create</i> button which will create the
+		correct capability in your user account, so you can export it to the device that issued the request.
+	</p>
+	
 	$ errors = igor.databaseAccessor.get_key('services/igor/accessFailures', 'application/x-python-object', 'content', token)
 	$if 'accessFailure' in errors:
 		$ errors = errors['accessFailure']
@@ -35,10 +53,12 @@ $def with ()
 			<th>path</th>
 			<th>capabilities</th>
 			<th>...</th>
+			<th>Can fix?</th>
 		</tr>
 		$for error in errors:
+			$ keep = dict(error)
 			<tr>
-				<td>${error.pop('timestamp', '')}</td>
+				<td>${showtime(error.pop('timestamp', ''))}</td>
 				<td>
 					${error.pop('action', '')}
 					$if 'representing' in error:
@@ -58,6 +78,15 @@ $def with ()
 				<td>
 					$for k, v in error.items():
 						${k}=${str(v)}<br>
+				</td>
+				<td>
+					$if 'path' in keep and 'operation' in keep:
+						$ myCaps = igor.access.findCompatibleTokens(token, keep['path'], **{keep['operation']:'self'})
+						$if myCaps:
+							$if 'action' in keep:
+								Can Fix
+							$else:
+								Can Create
 				</td>
 			</tr>
 	</table>

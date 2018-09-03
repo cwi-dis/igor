@@ -577,7 +577,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         return newId
         
-    def _findCompatibleTokens(self, token, newPath, **kwargs):
+    def findCompatibleTokens(self, token, newPath, **kwargs):
         """Return list of token IDs that allow the given operation."""
         assert self.igor
         assert self.igor.database
@@ -590,9 +590,11 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             if k in NORMAL_OPERATIONS:
                 newRights[k] = v
         rv = []
-        for t in token.getIdentifiers():
+        for tID in token.getIdentifiers():
+            t = token._getTokenWithIdentifier(tID)
+            if not t: continue
             if t._allowsDelegation(newPath, newRights, kwargs.get('aud')):
-                rv = rv + r.getIdentifiers()
+                rv = rv + t.getIdentifiers()
         return rv
                 
     def passToken(self, token, tokenId, newOwner):

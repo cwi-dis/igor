@@ -143,6 +143,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Create a new token based on an existing token. Returns ID of new token."""
         raise myWebError("400 This Igor does not have token support")
         
+    def findCompatibleTokens(self, token, newPath, **kwargs):
+        return []
+
     def passToken(self, token, tokenId, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
         raise myWebError("400 This Igor does not have token support")

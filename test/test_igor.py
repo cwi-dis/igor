@@ -145,7 +145,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         p.post('sandbox/test31/item', 'thirty', datatype='text/plain')
         p.post('sandbox/test31/item', 'one', datatype='text/plain')
         result = p.get('sandbox/test31/item', format='text/plain')
-        self.assertEqual('thirtyone', result.translate(None, ' \n'))
+        self.assertEqual('thirtyone', ''.join(result.split()))
         
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test31/item', format='application/xml')
         

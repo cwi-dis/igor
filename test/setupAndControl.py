@@ -12,6 +12,7 @@ DEBUG_TEST=False
 if DEBUG_TEST:
     igorVar.VERBOSE=DEBUG_TEST
     igorServlet.DEBUG=DEBUG_TEST
+COVERAGE=True
 
 class ServletHelper:
     def __init__(self, port, protocol, capabilities, database, audience):
@@ -128,7 +129,10 @@ class IgorSetupAndControl(object):
 #            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
         if DEBUG_TEST: print 'IgorTest: Check database consistency'
-        cmd = [sys.executable, "-m", "igor", "--nologstderr", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
+        cmdHead = [sys.executable]
+        if COVERAGE:
+            cmdHead = ["coverage", "run", "--parallel-mode"]
+        cmd = cmdHead + ["-m", "igor", "--nologstderr", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
         sts = subprocess.call(cmd + cls.igorServerArgs)
         if sts:
             print 'IgorTest: status=%s returned by command %s' % (str(sts), ' '.join(cmd))

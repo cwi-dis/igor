@@ -12,7 +12,7 @@ DEBUG_TEST=False
 if DEBUG_TEST:
     igorVar.VERBOSE=DEBUG_TEST
     igorServlet.DEBUG=DEBUG_TEST
-COVERAGE=True
+COVERAGE=False
 
 class ServletHelper:
     def __init__(self, port, protocol, capabilities, database, audience):

@@ -21,7 +21,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 # Get the version number from the igor module
 with open(path.join(here, 'igor', '_version.py')) as f:
-    exec f.read()
+    exec(f.read())
     
 #
 # We need some helpers to determine the package_data, because we want to

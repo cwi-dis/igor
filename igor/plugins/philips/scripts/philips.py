@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import socket
 import struct
 import select
@@ -30,7 +31,7 @@ class JointSpaceRemote:
             self.tv = self.findTV()
             if self.tv:
                 break
-            if DEBUG: print "TV not found, is it turned on?'"
+            if DEBUG: print("TV not found, is it turned on?'")
             return False
         return True
         
@@ -48,7 +49,7 @@ class JointSpaceRemote:
             result = select.select([sock], [], [], 5)
             if sock in result[0]:
                 msg, sender = sock.recvfrom(2000)
-                if DEBUG: print 'Got message from', sender[0]
+                if DEBUG: print('Got message from', sender[0])
                 myHostName = socket.gethostname()
                 if not '.' in myHostName:
                 	myHostName = myHostName + '.local'
@@ -62,7 +63,7 @@ class JointSpaceRemote:
     def getData(self, path):
         assert self.tv
         url = 'http://%s:1925/1/%s' % (self.tv, path)
-        if DEBUG: print 'GET', url
+        if DEBUG: print('GET', url)
         data = urllib.urlopen(url).read()
         ##print 'RAW', data
         data = json.loads(data)
@@ -73,10 +74,10 @@ class JointSpaceRemote:
         assert self.tv
         url = 'http://%s:1925/1/%s' % (self.tv, path)
         data = json.dumps(data)
-        if DEBUG: print 'POST %s DATA %s' % (url, data)
+        if DEBUG: print('POST %s DATA %s' % (url, data))
         data = urllib.urlopen(url, data).read()
         if data:
-            if DEBUG: print 'PUTDATA RETURNED', data
+            if DEBUG: print('PUTDATA RETURNED', data)
         
     def curWatching(self):
         assert self.tv
@@ -96,7 +97,7 @@ class JointSpaceRemote:
         assert self.tv
         data = self.getData('sources')
         for source, descr in data.items():
-            print '%s\t%s' % (source, descr['name'])
+            print('%s\t%s' % (source, descr['name']))
 
     def cmd_channels(self):
         """List available TV channels"""
@@ -107,7 +108,7 @@ class JointSpaceRemote:
             all.append((int(descr['preset']), descr['name']))
         all.sort()
         for preset, name in all:
-            print '%s\t%s' % (preset, name)
+            print('%s\t%s' % (preset, name))
     
     def cmd_source(self, source=None):
         """Set to the given input source (or print current source)"""
@@ -116,7 +117,7 @@ class JointSpaceRemote:
             self.putData('sources/current', {'id' : source })
         else:
             data = self.getData('sources/current')
-            print data['id']
+            print(data['id'])
         
     def cmd_channel(self, channel=None):
         """Set to the given TV channel, by name, number or ID (or list current channel)"""
@@ -128,12 +129,12 @@ class JointSpaceRemote:
                     self.putData('channels/current', { 'id' : chID })
                     self.putData('sources/current', {'id' : 'tv' })
                     return
-            print >>sys.stderr, 'No such channel: %s' % channel
+            print('No such channel: %s' % channel, file=sys.stderr)
         else:
             data = self.getData('channels/current')
             chID = data['id']
             data = self.getData('channels')
-            print '%s\t%s' % (data[chID]['preset'], data[chID]['name'])
+            print('%s\t%s' % (data[chID]['preset'], data[chID]['name']))
     
     def cmd_volume(self, volume=None):
     	"""Change volume on the TV"""
@@ -141,7 +142,7 @@ class JointSpaceRemote:
         if volume is None:
             data = self.getData('audio/volume')
             muted = ' (muted)' if data['muted'] else ''
-            print '%d%s' % (data['current'], muted)
+            print('%d%s' % (data['current'], muted))
         else:
             volume = int(volume)
             self.putData('audio/volume', { 'muted' : False, 'current' : volume })
@@ -160,7 +161,7 @@ class JointSpaceRemote:
     	else:
     		jData = json.loads(data)
     		assert 0
-    	print json.dumps(data)
+    	print(json.dumps(data))
     		
 
     def cmd_help(self):
@@ -169,7 +170,7 @@ class JointSpaceRemote:
             if name[:4] == 'cmd_':
                 method = getattr(self, name)
                 doc = method.__doc__
-                print '%s\t%s' % (name[4:], doc)
+                print('%s\t%s' % (name[4:], doc))
                 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '-d':
@@ -179,16 +180,16 @@ def main():
     tv = JointSpaceRemote()
     if not tv.connect():
     	if len(sys.argv) == 2 and sys.argv[1] == 'json':
-    		print '{"power":false}'
+    		print('{"power":false}')
     		sys.exit(0)
-    	print >>sys.stderr, "TV not found, is it turned on?"
+    	print("TV not found, is it turned on?", file=sys.stderr)
         sys.exit(1)
     if len(sys.argv) <= 1:
-        print tv.curWatching()
+        print(tv.curWatching())
     else:
         cmdName = 'cmd_' + sys.argv[1]
         if not hasattr(tv, cmdName):
-            print >>sys.stderr, 'Unknown command: %s. Use help for help' % sys.argv[1]
+            print('Unknown command: %s. Use help for help' % sys.argv[1], file=sys.stderr)
             sys.exit(2)
         cmd = getattr(tv, cmdName)
         cmd(*sys.argv[2:])

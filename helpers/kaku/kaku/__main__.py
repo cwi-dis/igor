@@ -1,9 +1,11 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import sys
-import _kaku
+from . import _kaku
 
 def main():
 	if len(sys.argv) < 3 or sys.argv[1] not in ("on", "off"):
-		print >>sys.stderr, "Usage: %s on|off switchnum [...]" % sys.argv[0]
+		print("Usage: %s on|off switchnum [...]" % sys.argv[0], file=sys.stderr)
 		sys.exit(1)
 	k = _kaku.TPC300()
 	if sys.argv[1] == 'on':

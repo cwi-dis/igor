@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Access control
 import web
 import xpath
@@ -54,7 +56,7 @@ class OTPHandler:
             del self._otp2token[otp]
             return token
         else:
-            print 'access: Invalid OTP presented: ', otp
+            print('access: Invalid OTP presented: ', otp)
             raise myWebError("498 Invalid OTP presented")
             
     def invalidateOTPForToken(self, otp):
@@ -81,10 +83,10 @@ class TokenStorage:
             return self._tokenCache[identifier]
         capNodeList = self.igor.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
-            print 'access: Warning: Cannot get token %s because it is not in the database' % identifier
+            print('access: Warning: Cannot get token %s because it is not in the database' % identifier)
             raise myWebError("500 Access: no capability with cid=%s" % identifier)
         elif len(capNodeList) > 1:
-            print 'access: Error: Cannot get token %s because it occurs %d times in the database' % (identifier, len(capNodeList))
+            print('access: Error: Cannot get token %s because it occurs %d times in the database' % (identifier, len(capNodeList)))
             raise myWebError("500 Access: multiple capabilities with cid=%s" % identifier)
         capData = self.igor.database.tagAndDictFromElement(capNodeList[0])[1]
         return AccessToken(capData)
@@ -97,7 +99,7 @@ class TokenStorage:
                 raise myWebError("501 Database should contain single au:access/au:defaultCapabilities")
             self._defaultTokenInstance = self._tokenForElement(defaultContainer[0])
         if self._defaultTokenInstance == None:
-            print 'access: _defaultToken() called but no database (or no default token in database)'
+            print('access: _defaultToken() called but no database (or no default token in database)')
         return self._defaultTokenInstance
         
     def _tokenForUser(self, username):
@@ -177,31 +179,31 @@ class IssuerInterface:
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
         externalKey = self.igor.database.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         if not externalKey:
-            print 'access: _getExternalRepresentation: no key found at %s' % keyPath
+            print('access: _getExternalRepresentation: no key found at %s' % keyPath)
             raise myWebError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
         return externalKey
 
     def _decodeIncomingData(self, data):
         sharedKey = self._getSharedKey()
         if DEBUG: 
-            print 'access._decodeIncomingData: %s: externalRepresentation %s' % (self, data)
-            print 'access._decodeIncomingData: %s: externalKey %s' % (self, sharedKey)
+            print('access._decodeIncomingData: %s: externalRepresentation %s' % (self, data))
+            print('access._decodeIncomingData: %s: externalKey %s' % (self, sharedKey))
         try:
             content = jwt.decode(data, sharedKey, issuer=singleton.getSelfIssuer(), audience=singleton.getSelfAudience(), algorithm='RS256')
         except jwt.DecodeError:
-            print 'access: ERROR: incorrect signature on bearer token %s' % data
-            print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
+            print('access: ERROR: incorrect signature on bearer token %s' % data)
+            print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
             raise myWebError('400 Incorrect signature on key')
         except jwt.InvalidIssuerError:
-            print 'access: ERROR: incorrect issuer on bearer token %s' % data
-            print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
+            print('access: ERROR: incorrect issuer on bearer token %s' % data)
+            print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
             raise myWebError('400 Incorrect issuer on key')
         except jwt.InvalidAudienceError:
-            print 'access: ERROR: incorrect audience on bearer token %s' % data
-            print 'access: ERROR: content: %s' % jwt.decode(data, verify=False)
+            print('access: ERROR: incorrect audience on bearer token %s' % data)
+            print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
             raise myWebError('400 Incorrect audience on key')
         if DEBUG: 
-            print 'access._decodeIncomingData: %s: tokenContent %s' % (self, content)
+            print('access._decodeIncomingData: %s: tokenContent %s' % (self, content))
         return content
 
     def _encodeOutgoingData(self, tokenContent):
@@ -209,14 +211,14 @@ class IssuerInterface:
         aud = tokenContent.get('aud')
         # xxxjack Could check for multiple aud values based on URL to contact...
         if not iss or not aud:
-            print 'access: _getExternalRepresentation: no iss and aud, so no external representation'
+            print('access: _getExternalRepresentation: no iss and aud, so no external representation')
             raise myWebError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
         externalKey = singleton._getSharedKey(iss, aud)
         externalRepresentation = jwt.encode(tokenContent, externalKey, algorithm='HS256')
         if DEBUG: 
-            print 'access._encodeOutgoingData: %s: tokenContent %s' % (self, tokenContent)
-            print 'access._encodeOutgoingData: %s: externalKey %s' % (self, externalKey)
-            print 'access._encodeOutgoingData: %s: externalRepresentation %s' % (self, externalRepresentation)
+            print('access._encodeOutgoingData: %s: tokenContent %s' % (self, tokenContent))
+            print('access._encodeOutgoingData: %s: externalKey %s' % (self, externalKey))
+            print('access._encodeOutgoingData: %s: externalRepresentation %s' % (self, externalRepresentation))
         return externalRepresentation
         
     def getSubjectList(self, token=None):
@@ -275,7 +277,7 @@ class IssuerInterface:
             keyData['sub'] = sub
         parentElement = self.igor.database.getElements('au:access/au:sharedKeys', 'post', _accessSelfToken, namespaces=NAMESPACES)
         if len(parentElement) != 1:
-            if DEBUG_DELEGATION: print 'access: createSharedKey: no unique destination au:access/au:sharedKeys'
+            if DEBUG_DELEGATION: print('access: createSharedKey: no unique destination au:access/au:sharedKeys')
             raise web.notfound()
         parentElement = parentElement[0]
         element = self.igor.database.elementFromTagAndData("sharedKey", keyData, namespace=NAMESPACES)
@@ -308,13 +310,13 @@ class UserPasswords:
         assert self.igor.database
         # xxxjack this method should not be in the Access element
         if not username:
-            if DEBUG: print 'access: basic authentication: username missing'
+            if DEBUG: print('access: basic authentication: username missing')
             return False
         if '/' in username:
             raise myWebError('401 Illegal username')
         encryptedPassword = self.igor.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
         if not encryptedPassword:
-            if DEBUG: print 'access: basic authentication: no encryptedPassword for user', username
+            if DEBUG: print('access: basic authentication: no encryptedPassword for user', username)
             return True
         import passlib.hash
         import passlib.utils.binary
@@ -322,9 +324,9 @@ class UserPasswords:
         salt = passlib.utils.binary.ab64_decode(salt)
         passwordHash = passlib.hash.pbkdf2_sha256.using(salt=salt).hash(password)
         if encryptedPassword != passwordHash:
-            if DEBUG: print 'access: basic authentication: password mismatch for user', username
+            if DEBUG: print('access: basic authentication: password mismatch for user', username)
             return False
-        if DEBUG: print 'access: basic authentication: login for user', username
+        if DEBUG: print('access: basic authentication: login for user', username)
         return True
 
     def setUserPassword(self, username, password, token):
@@ -371,28 +373,28 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert self.igor
         assert self.igor.database
         if not element:
-            print 'access: ERROR: attempt to get checkerForElement(None)'
+            print('access: ERROR: attempt to get checkerForElement(None)')
             return DefaultAccessChecker(self)
         path = self.igor.database.getXPathForElement(element)
         if not path:
-            print 'access: ERROR: attempt to get checkerForElement(%s) that has no XPath' % repr(element)
+            print('access: ERROR: attempt to get checkerForElement(%s) that has no XPath' % repr(element))
             return DefaultAccessChecker(self)
         if not path.startswith('/data'):
-            print 'access: ERROR: attempt to get checkerForElement(%s) with unexpected XPath: %s' % (repr(element), path)
+            print('access: ERROR: attempt to get checkerForElement(%s) with unexpected XPath: %s' % (repr(element), path))
             return DefaultAccessChecker(self)
         return AccessChecker(self, path)
         
     def checkerForNewElement(self, path):
         """Returns an AccessChecker for an element that does not exist yet (specified by XPath)"""
         if not path.startswith('/data'):
-            print 'access: ERROR: attempt to get checkerForNewElement() with unexpected XPath: %s' %  path
+            print('access: ERROR: attempt to get checkerForNewElement() with unexpected XPath: %s' %  path)
             return DefaultAccessChecker(self)
         return AccessChecker(self, path)
             
     def checkerForEntrypoint(self, entrypoint):
         """Returns an AccessChecker for an external entrypoint that is not a tree element"""
         if not entrypoint or entrypoint[0] != '/' or entrypoint.startswith('/data'):
-            print 'access: ERROR: attempt to get checkerForEntrypoint(%s)' % entrypoint
+            print('access: ERROR: attempt to get checkerForEntrypoint(%s)' % entrypoint)
             return DefaultAccessChecker(self)
         return AccessChecker(self, entrypoint)
         
@@ -400,21 +402,21 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         if not kwargs.get('tentative'):
             # We don't report errors for tentative checking of access
             if kwargs.get('defaultChecker'):
-                print '\taccess: %s ???: no access allowed by default checker' % operation
+                print('\taccess: %s ???: no access allowed by default checker' % operation)
             else:
                 identifiers = kwargs.get('capID', [])
-                print '\taccess: %s %s: no access allowed by %d tokens:' % (kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers))
+                print('\taccess: %s %s: no access allowed by %d tokens:' % (kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers)))
                 for i in identifiers:
-                    print '\t\t%s' % i
+                    print('\t\t%s' % i)
             if 'requestPath' in kwargs:
-                print '\taccess: On behalf of request to %s' % kwargs['requestPath']
+                print('\taccess: On behalf of request to %s' % kwargs['requestPath'])
             if 'action' in kwargs:
-                print '\taccess: On behalf of action %s' % kwargs['action']
+                print('\taccess: On behalf of action %s' % kwargs['action'])
             if 'representing' in kwargs:
-                print '\taccess: Representing  %s' % kwargs['representing']
+                print('\taccess: Representing  %s' % kwargs['representing'])
             self.igor.internal._accessFailure(kwargs)
             if self.warnOnly:
-                print '\taccess: allowed anyway because of --warncapabilities mode'
+                print('\taccess: allowed anyway because of --warncapabilities mode')
         # If Igor is running in warning-only mode we allow the operation anyway
         return self.warnOnly
         
@@ -454,18 +456,18 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             authFields = authHeader.split()
             if authFields[0].lower() == 'bearer':
                 decoded = authFields[1] # base64.b64decode(authFields[1])
-                if DEBUG: print 'access: tokenForRequest: returning token found in Authorization: Bearer header'
+                if DEBUG: print('access: tokenForRequest: returning token found in Authorization: Bearer header')
                 token = self._externalAccessToken(decoded)
             elif authFields[0].lower() == 'basic':
                 decoded = base64.b64decode(authFields[1])
                 if decoded.startswith('-otp-'):
                     # This is a one time pad, not a username/password combination
-                    if DEBUG: print 'access: tokenForRequest: found OTP in Authorization: Basic header'
+                    if DEBUG: print('access: tokenForRequest: found OTP in Authorization: Basic header')
                     # OTP-token should already include the default set, so just return
                     return self._consumeOTPForToken(decoded)
                 else:
                     username, password = decoded.split(':')
-                    if DEBUG: print 'access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username
+                    if DEBUG: print('access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username)
                     if self.userAndPasswordCorrect(username, password):
                         # _tokenForUser already includes the default set, so just return.
                         return self._tokenForUser(username)
@@ -475,10 +477,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             # Add more here for other methods
             return _combineTokens(token, self._defaultToken())
         if self.igor.session and 'user' in self.igor.session and self.igor.session.user:
-            if DEBUG: print 'access: tokenForRequest: returning token for session.user %s' % self.igor.session.user
+            if DEBUG: print('access: tokenForRequest: returning token for session.user %s' % self.igor.session.user)
             return self._tokenForUser(self.igor.session.user)
         # xxxjack should we allow carrying tokens in cookies?
-        if DEBUG: print 'access: no token found for request %s' % headers.get('PATH_INFO', '???'), 'returning', self._defaultToken()
+        if DEBUG: print('access: no token found for request %s' % headers.get('PATH_INFO', '???'), 'returning', self._defaultToken())
         return self._defaultToken()
         
     def _externalAccessToken(self, data):
@@ -486,10 +488,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         content = self._decodeIncomingData(data)
         cid = content.get('cid')
         if not cid:
-            print 'access: ERROR: no cid on bearer token %s' % content
+            print('access: ERROR: no cid on bearer token %s' % content)
             raise myWebError('400 Missing cid on key')
         if singleton._isTokenOnRevokeList(cid):
-            print 'access: ERROR: token has been revoked: %s' % content
+            print('access: ERROR: token has been revoked: %s' % content)
             raise myWebError('400 Revoked token')
         return ExternalAccessTokenImplementation(content)
     
@@ -500,9 +502,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             token = token._getTokenWithIdentifier(tokenId)
             if not token:
                 identifiers = originalToken.getIdentifiers()
-                print '\taccess: getTokenDescription: no such token ID: %s. Tokens:' % tokenId
+                print('\taccess: getTokenDescription: no such token ID: %s. Tokens:' % tokenId)
                 for i in identifiers:
-                    print '\t\t%s' % i
+                    print('\t\t%s' % i)
                 raise myWebError('404 No such token: %s' % tokenId)
         return token._getTokenDescription()
         
@@ -530,9 +532,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                 newPath = token._getObject()
         if not token:
             identifiers = originalToken.getIdentifiers()
-            print '\taccess: newToken: no such token ID: %s. Tokens:' % tokenId
+            print('\taccess: newToken: no such token ID: %s. Tokens:' % tokenId)
             for i in identifiers:
-                print '\t\t%s' % i
+                print('\t\t%s' % i)
             raise myWebError('404 No such token: %s' % tokenId)
         if not token._allowsDelegation(newPath, newRights, content.get('aud')):
             raise myWebError('401 Delegation not allowed')
@@ -541,7 +543,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         parentElement = self.igor.database.getElements(newOwner, 'post', _accessSelfToken, namespaces=NAMESPACES)
         if len(parentElement) != 1:
-            if DEBUG_DELEGATION: print 'access: newToken: no unique destination %s' % newOwner
+            if DEBUG_DELEGATION: print('access: newToken: no unique destination %s' % newOwner)
             raise web.notfound()
         parentElement = parentElement[0]
         #
@@ -603,9 +605,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         tokenToPass = token._getTokenWithIdentifier(tokenId)
         if not tokenToPass:
             identifiers = originalToken.getIdentifiers()
-            print '\taccess: passToken: no such token ID: %s. Tokens:' % tokenId
+            print('\taccess: passToken: no such token ID: %s. Tokens:' % tokenId)
             for i in identifiers:
-                print '\t\t%s' % i
+                print('\t\t%s' % i)
             raise myWebError("401 No such token: %s" % tokenId)
         oldOwner = tokenToPass._getOwner()
         if not oldOwner:
@@ -626,15 +628,15 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         parentToken = token._getTokenWithIdentifier(parentId)
         if not parentToken:
             identifiers = token.getIdentifiers()
-            print '\taccess: revokeToken: no such token ID: %s. Tokens:' % parentId
+            print('\taccess: revokeToken: no such token ID: %s. Tokens:' % parentId)
             for i in identifiers:
-                print '\t\t%s' % i
+                print('\t\t%s' % i)
             raise myWebError("404 No such parent token: %s" % parentId)
         childToken = token._getTokenWithIdentifier(tokenId)
         if not childToken:
-            print '\taccess: revokeToken: no such token ID: %s. Tokens:' % tokenId
+            print('\taccess: revokeToken: no such token ID: %s. Tokens:' % tokenId)
             for i in identifiers:
-                print '\t\t%s' % i
+                print('\t\t%s' % i)
             raise myWebError("404 No such token: %s" % tokenId)
         self._addToRevokeList(tokenId, childToken.content.get('nva'))
         childToken._revoke()
@@ -691,9 +693,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         tokenToExport = token._getTokenWithIdentifier(tokenId)
         if not tokenToExport:
             identifiers = token.getIdentifiers()
-            print '\taccess: externalRepresentation: no such token ID: %s. Tokens:' % tokenId
+            print('\taccess: externalRepresentation: no such token ID: %s. Tokens:' % tokenId)
             for i in identifiers:
-                print '\t\t%s' % i
+                print('\t\t%s' % i)
             raise myWebError("401 No such token: %s" % tokenId)
         assert tokenToExport._hasExternalRepresentationFor(self.getSelfAudience())
         externalRepresentation = tokenToExport._getExternalRepresentation()
@@ -728,11 +730,11 @@ def createSingleton(noCapabilities=False, warnOnly=False):
     global singleton
     if singleton: return
     if warnOnly:
-        print >>sys.stderr, 'Warning: capability-based access control disabled, with warnings'
+        print('Warning: capability-based access control disabled, with warnings', file=sys.stderr)
         AccessChecker.WARN_ONLY = True
     if noCapabilities:
-        print >>sys.stderr, 'Warning: capability-based access control disabled'
-        import dummyAccess
+        print('Warning: capability-based access control disabled', file=sys.stderr)
+        from . import dummyAccess
         dummyAccess.createSingleton(noCapabilities)
         singleton = dummyAccess.singleton
     else:

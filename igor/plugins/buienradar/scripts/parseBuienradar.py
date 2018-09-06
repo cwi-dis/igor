@@ -10,6 +10,7 @@ meaning expected rain level is 123 at 13:45.
 
 http://www.buienradar.nl/overbuienradar/gratis-weerdata has description of the format.
 """
+from __future__ import print_function
 import sys
 import os
 import urllib
@@ -53,7 +54,7 @@ def process(input):
     if not measurementList: return False
     rv = dict(lastActivity=datetime.datetime.now().isoformat(), data=measurementList)
     json.dump(rv, sys.stdout)
-    print
+    print()
     return True
     
 def main():
@@ -62,7 +63,7 @@ def main():
     elif len(sys.argv) == 1:
         input = sys.stdin
     else:
-        print >>sys.stderr, "Usage: %s [buienradarurl]" % sys.argv[0]
+        print("Usage: %s [buienradarurl]" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     if not process(input):
         sys.exit(1)

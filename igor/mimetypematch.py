@@ -1,4 +1,5 @@
 """Match list of supported mimetypes to an Accept: header"""
+from __future__ import print_function
 import sys
 
 class MimetypeError(ValueError):
@@ -32,13 +33,13 @@ def match(acceptable, mimetypelist):
 
 def main():
     if len(sys.argv) < 3:
-        print >> sys.stderr, "Usage: %s acceptheader mimetype [...]" % sys.argv[0]
+        print("Usage: %s acceptheader mimetype [...]" % sys.argv[0], file=sys.stderr)
         sys.exit(2)
     acceptable = sys.argv[1]
     mimetypelist = sys.argv[2:]
     best = match(acceptable, mimetypelist)
     if best:
-        print best
+        print(best)
         sys.exit(0)
     sys.exit(1)
     

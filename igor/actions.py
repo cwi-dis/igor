@@ -1,9 +1,11 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import re
 import urllib
 import time
 import threading
 import Queue
-import xmlDatabase
+from . import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
@@ -72,7 +74,7 @@ class Action:
     def callback(self, *nodelist):
         """Schedule the action, if it is runnable at this time, and according to the condition"""
         if not self.collection:
-            print 'ERROR: Action.callback called without actionCollection:', self
+            print('ERROR: Action.callback called without actionCollection:', self)
             return
         # Test whether we are allowed to run, depending on minInterval
         now = time.time()
@@ -81,23 +83,23 @@ class Action:
         # Run for each node (or once, if no node present because we were not triggered by an xpath)        
         if not nodelist:
             nodelist = [None]
-        if DEBUG: print 'Action%s.callback(%s)' % (repr(self), repr(nodelist))
+        if DEBUG: print('Action%s.callback(%s)' % (repr(self), repr(nodelist)))
         for node in nodelist:
             # Test whether we are allowed to run according to our condition
             if self.condition:
                 shouldRun = self.collection.igor.database.getValue(self.condition, token=self.token, context=node)
                 if not shouldRun:
-                    if DEBUG: print '\t%s: condition failed' % repr(node)
+                    if DEBUG: print('\t%s: condition failed' % repr(node))
                     continue
             # Evaluate URL and paramters
             try:
                 url = self._evaluate(self.url, node, True)
-                if DEBUG: print '\t%s: calling %s' % (repr(node), url)
+                if DEBUG: print('\t%s: calling %s' % (repr(node), url))
                 data = self._evaluate(self.data, node, False)
             except xmlDatabase.DBAccessError:
                 actionPath = self.collection.igor.database.getXPathForElement(self.element)
                 nodePath = self.collection.igor.database.getXPathForElement(node)
-                print "actions: Error: action %s lacks AWT permission for '%s' or '%s'" % (actionPath, self.url, self.data)
+                print("actions: Error: action %s lacks AWT permission for '%s' or '%s'" % (actionPath, self.url, self.data))
                 # self.collection.igor.app.request('/internal/updateStatus/%s' % self.representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 continue
             # Prepare to run
@@ -228,7 +230,7 @@ class ActionCollection(threading.Thread):
                 # Run all actions that have a scheduled time now (or in the past)
                 # and remember the earliest future action time
                 #
-                if DEBUG: print 'ActionCollection.run(t=%d)' % time.time()
+                if DEBUG: print('ActionCollection.run(t=%d)' % time.time())
                 nothingBefore = NEVER
                 toCall = []
                 for a in self.actions:
@@ -259,7 +261,7 @@ class ActionCollection(threading.Thread):
         
     def updateActions(self, node):
         """Called by upper layers when something has changed in the actions in the database"""
-        if DEBUG: print 'ActionCollection.updateActions(t=%d)' % time.time()
+        if DEBUG: print('ActionCollection.updateActions(t=%d)' % time.time())
         assert node.tagName == 'actions'
         with self.lock:
             # Clear out old queue
@@ -279,12 +281,12 @@ class ActionCollection(threading.Thread):
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""
-        if DEBUG: print 'ActionCollection.triggerAction(%s)' % node   
+        if DEBUG: print('ActionCollection.triggerAction(%s)' % node)   
         for a in self.actions:
             if a.element == node:
                 a.callback()
                 return
-        print 'ERROR: triggerAction called for unknown element', repr(node)
+        print('ERROR: triggerAction called for unknown element', repr(node))
             
     def stop(self):
         with self.lock:

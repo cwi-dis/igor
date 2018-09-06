@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import shutil
 import sys
@@ -97,13 +98,13 @@ class IgorSetupAndControl(object):
     
     @classmethod
     def setUpIgor(cls):
-        if DEBUG_TEST: print 'xxxjack setupIgor', cls
-        if DEBUG_TEST: print 'IgorTest: Delete old database and logfile'
+        if DEBUG_TEST: print('xxxjack setupIgor', cls)
+        if DEBUG_TEST: print('IgorTest: Delete old database and logfile')
         shutil.rmtree(cls.igorDir, True)
         cls.igorUrl = "%s://%s:%d/data/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort)
         cls.servletUrl = "%s://%s:%d" % (cls.igorProtocol, cls.igorHostname, cls.igorPort+1)
         
-        if DEBUG_TEST: print 'IgorTest: Setup database'
+        if DEBUG_TEST: print('IgorTest: Setup database')
         setup = igorSetup.IgorSetup(database=cls.igorDir)
         ok = setup.cmd_initialize()
         assert ok
@@ -116,7 +117,7 @@ class IgorSetupAndControl(object):
         logFP = open(logFile, 'a')
         
         if cls.igorProtocol == 'https':
-            if DEBUG_TEST: print 'IgorTest: setup self-signed signature'
+            if DEBUG_TEST: print('IgorTest: setup self-signed signature')
             ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname)
 #            ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname, cls.igorHostname2, '127.0.0.1', '::1')
             assert ok
@@ -128,20 +129,20 @@ class IgorSetupAndControl(object):
             os.putenv('REQUESTS_CA_BUNDLE', certFile)
 #            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
-        if DEBUG_TEST: print 'IgorTest: Check database consistency'
+        if DEBUG_TEST: print('IgorTest: Check database consistency')
         cmdHead = [sys.executable]
         if COVERAGE:
             cmdHead = ["coverage", "run", "--parallel-mode"]
         cmd = cmdHead + ["-m", "igor", "--nologstderr", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
         sts = subprocess.call(cmd + cls.igorServerArgs)
         if sts:
-            print 'IgorTest: status=%s returned by command %s' % (str(sts), ' '.join(cmd))
-            print 'IgorTest: logfile %s:' % logFile
+            print('IgorTest: status=%s returned by command %s' % (str(sts), ' '.join(cmd)))
+            print('IgorTest: logfile %s:' % logFile)
             sys.stdout.write(open(logFile).read())
             assert 0
-        if DEBUG_TEST: print 'IgorTest: Start server'
+        if DEBUG_TEST: print('IgorTest: Start server')
         cls.igorProcess = subprocess.Popen([sys.executable, "-u", "-m", "igor", "--nologstderr", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs)
-        if DEBUG_TEST: print 'IgorTest: Start servlet'
+        if DEBUG_TEST: print('IgorTest: Start servlet')
         cls.servlet = ServletHelper(
                 port=cls.igorPort+1, 
                 protocol=cls.igorProtocol, 
@@ -154,25 +155,25 @@ class IgorSetupAndControl(object):
     @classmethod
     def tearDownIgor(cls):
         if os.environ.get('IGOR_TEST_WAIT'):
-            print 'igorTest: tests finished.'
-            print 'igorTest: Waiting with teardown because environment variable IGOR_TEST_WAIT is set.'
-            print 'igorTest: Type return to continue - ',
+            print('igorTest: tests finished.')
+            print('igorTest: Waiting with teardown because environment variable IGOR_TEST_WAIT is set.')
+            print('igorTest: Type return to continue - ', end=' ')
             sys.stdin.readline()
         # Stop servlet
-        if DEBUG_TEST: print 'IgorTest: Stop servlet'
+        if DEBUG_TEST: print('IgorTest: Stop servlet')
         cls.servlet.stop()
         # Gracefully stop server
-        if DEBUG_TEST: print 'IgorTest: Request server to stop'
+        if DEBUG_TEST: print('IgorTest: Request server to stop')
         try:
             p = igorVar.IgorServer(cls.igorUrl, **cls.igorVarArgs)
             result = p.get('/internal/stop', credentials='admin:')
         except:
-            if DEBUG_TEST: print 'IgorTest: Ignoring exception during stop request'        
+            if DEBUG_TEST: print('IgorTest: Ignoring exception during stop request')        
         time.sleep(2)
         
         sts = cls.igorProcess.poll()
         if sts is None:
-            if DEBUG_TEST: print 'IgorTest: Terminate server'
+            if DEBUG_TEST: print('IgorTest: Terminate server')
             cls.igorProcess.terminate()
             time.sleep(2)
         sts = cls.igorProcess.wait()

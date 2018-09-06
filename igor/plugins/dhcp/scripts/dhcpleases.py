@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import datetime
 import time
 import bisect
@@ -329,7 +330,7 @@ def main():
     if args.json:
         if args.wrap:
             report_dataset = {"lease" : report_dataset, "lastActivity" : time.time() }
-        print json.dumps(report_dataset, cls=DatetimeEncoder)
+        print(json.dumps(report_dataset, cls=DatetimeEncoder))
     else:
 
         print('+------------------------------------------------------------------------------')

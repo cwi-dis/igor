@@ -1,3 +1,4 @@
+from __future__ import print_function
 import threading
 import requests
 import Queue
@@ -55,7 +56,7 @@ class URLCallRunner(threading.Thread):
                 errorMessage = ""
                 datetime = time.strftime('%d/%b/%Y %H:%M:%S')
                 parsedUrl = urlparse.urlparse(url)
-                if DEBUG: print 'URLCaller.run calling', url, 'method', method, 'headers', headers, 'data', data
+                if DEBUG: print('URLCaller.run calling', url, 'method', method, 'headers', headers, 'data', data)
                 if parsedUrl.scheme == '' and parsedUrl.netloc == '':
                     # Local. Call the app directly.
                     # xxxjack have to work out exceptions
@@ -93,18 +94,18 @@ class URLCallRunner(threading.Thread):
                 errorMessage = msg
             except:
                 resultStatus = '502 URLCaller: exception while calling URL %s' % url
-                print resultStatus
+                print(resultStatus)
                 sys.stdout.flush()
                 errorMessage = resultStatus
                 traceback.print_exc(file=sys.stdout)
-            print >>sys.stderr, '- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus)
+            print('- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus), file=sys.stderr)
             alive = resultStatus[:3] == '200'
             if not alive or DEBUG:
                 if resultData and resultData.strip() != resultStatus.strip():
-                    print 'Output:'
+                    print('Output:')
                     resultLines = resultData.splitlines()
                     for line in resultLines:
-                        print '\t'+line
+                        print('\t'+line)
                     sys.stdout.flush()
             representing = tocall.get('representing')
             if representing:
@@ -121,13 +122,13 @@ class URLCallRunner(threading.Thread):
         return rv
         
     def callURL(self, tocall):
-        if DEBUG: print 'URLCaller.callURL(%s)' % repr(tocall)
+        if DEBUG: print('URLCaller.callURL(%s)' % repr(tocall))
         if not callable(tocall):
             assert 'token' in tocall
             if tocall.get('aggregate'):
                 # We should aggregate this action, so don't insert if already in the queue
                 if tocall in self.queue:
-                    if DEBUG: print '(skipped because aggregate is true)'
+                    if DEBUG: print('(skipped because aggregate is true)')
                     return
         self.queue.put(tocall)
 

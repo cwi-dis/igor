@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import web
 import shlex
 import subprocess
@@ -7,13 +9,13 @@ import re
 import uuid
 import json
 import time
-import mimetypematch
+from . import mimetypematch
 import copy
 import imp
 import xpath
-import xmlDatabase
+from . import xmlDatabase
 import mimetypes
-import access
+from . import access
 import traceback
 
 DEBUG=False
@@ -127,7 +129,7 @@ class runScript(BaseHandler):
         if '/' in scriptName or '.' in scriptName:
             raise myWebError("400 Cannot use / or . in scriptName")
             
-        if allArgs.has_key('args'):
+        if 'args' in allArgs:
             args = shlex.split(allArgs.args)
         else:
             args = []
@@ -197,7 +199,7 @@ class runScript(BaseHandler):
         try:
             rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env)
             self.igor.access.invalidateOTPForToken(oneTimePassword)
-        except subprocess.CalledProcessError, arg:
+        except subprocess.CalledProcessError as arg:
             self.igor.access.invalidateOTPForToken(oneTimePassword)
             msg = "502 Command %s exited with status code=%d" % (scriptName, arg.returncode)
             output = msg + '\n\n' + arg.output
@@ -207,7 +209,7 @@ class runScript(BaseHandler):
                 msg += ': ' + argOutputLines[0]
                 output = ''
             raise web.HTTPError(msg, {"Content-type": "text/plain"}, output)
-        except OSError, arg:
+        except OSError as arg:
             self.igor.access.invalidateOTPForToken(oneTimePassword)
             raise myWebError("502 Error running command: %s: %s" % (scriptName, arg.strerror))
         return rv
@@ -236,7 +238,7 @@ class runCommand(BaseHandler):
             allArgs['subcommand'] = subcommand
         try:
             rv = method(token=token, **dict(allArgs))
-        except TypeError, arg:
+        except TypeError as arg:
             raise #myWebError("400 Error in command method %s parameters: %s" % (command, arg))
         return rv
 
@@ -258,7 +260,7 @@ class runCommand(BaseHandler):
             allArgs['subcommand'] = subcommand
         try:
             rv = method(token=token, **allArgs)
-        except TypeError, arg:
+        except TypeError as arg:
             raise myWebError("400 Error in command method %s parameters: %s" % (command, arg))
         return rv
 
@@ -329,9 +331,9 @@ class runPlugin(BaseHandler):
                 mfile, mpath, mdescr = imp.find_module(pluginName, [moduleDir])
                 pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
-                print '------ import failed for', pluginName
+                print('------ import failed for', pluginName)
                 traceback.print_exc()
-                print '------'
+                print('------')
                 raise web.notfound()
             pluginModule.SESSION = self.igor.session  # xxxjack
             pluginModule.IGOR = self.igor
@@ -362,7 +364,7 @@ class runPlugin(BaseHandler):
         #
         # If there is a user argument also get userData
         #
-        if allArgs.has_key('user'):
+        if 'user' in allArgs:
             user = allArgs['user']
             try:
                 userData = self.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
@@ -376,11 +378,11 @@ class runPlugin(BaseHandler):
         try:
             method = getattr(pluginObject, methodName)
         except AttributeError:
-            print '----- Method', methodName, 'not found in', pluginObject
+            print('----- Method', methodName, 'not found in', pluginObject)
             raise web.notfound()
         try:
             rv = method(**dict(allArgs))
-        except ValueError, arg:
+        except ValueError as arg:
             raise myWebError("400 Error in plugin method %s/%s parameters: %s" % (pluginName, methodName, arg))
         if rv == None:
             rv = ''
@@ -545,11 +547,11 @@ class XmlDatabaseAccess:
             return rv
         except xmlDatabase.DBAccessError:
             raise myWebError("401 Unauthorized")
-        except xpath.XPathError, arg:
+        except xpath.XPathError as arg:
             raise myWebError("400 XPath error: %s" % str(arg))
-        except xmlDatabase.DBKeyError, arg:
+        except xmlDatabase.DBKeyError as arg:
             raise myWebError("400 Database Key Error: %s" % str(arg))
-        except xmlDatabase.DBParamError, arg:
+        except xmlDatabase.DBParamError as arg:
             raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
     def get_value(self, expression, token):
@@ -558,11 +560,11 @@ class XmlDatabaseAccess:
             return self.igor.database.getValue(expression, token=token)
         except xmlDatabase.DBAccessError:
             raise myWebError("401 Unauthorized")
-        except xpath.XPathError, arg:
+        except xpath.XPathError as arg:
             raise myWebError("400 XPath error: %s" % str(arg))
-        except xmlDatabase.DBKeyError, arg:
+        except xmlDatabase.DBKeyError as arg:
             raise myWebError("400 Database Key Error: %s" % str(arg))
-        except xmlDatabase.DBParamError, arg:
+        except xmlDatabase.DBParamError as arg:
             raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
     def put_key(self, key, mimetype, variant, data, datamimetype, token, replace=True):
@@ -649,11 +651,11 @@ class XmlDatabaseAccess:
                 return self.convertto(path, mimetype, variant)
         except xmlDatabase.DBAccessError:
             raise myWebError("401 Unauthorized")
-        except xpath.XPathError, arg:
+        except xpath.XPathError as arg:
             raise myWebError("400 XPath error: %s" % str(arg))
-        except xmlDatabase.DBKeyError, arg:
+        except xmlDatabase.DBKeyError as arg:
             raise myWebError("400 Database Key Error: %s" % str(arg))
-        except xmlDatabase.DBParamError, arg:
+        except xmlDatabase.DBParamError as arg:
             raise myWebError("400 Database Parameter Error: %s" % str(arg))
         
     def delete_key(self, key, token):
@@ -663,9 +665,9 @@ class XmlDatabaseAccess:
             return ''
         except xmlDatabase.DBAccessError:
             raise myWebError("401 Unauthorized")
-        except xpath.XPathError, arg:
+        except xpath.XPathError as arg:
             raise myWebError("400 XPath error: %s" % str(arg))
-        except xmlDatabase.DBKeyError, arg:
+        except xmlDatabase.DBKeyError as arg:
             raise myWebError("400 Database Key Error: %s" % str(arg))
         
     def convertto(self, value, mimetype, variant):

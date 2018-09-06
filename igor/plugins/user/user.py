@@ -1,3 +1,4 @@
+from __future__ import print_function
 import web
 import os
 import sys
@@ -20,9 +21,9 @@ class UserPlugin:
     def add(self, token=None, username=None, password=None, returnTo=None):
         if True:
                 identifiers = token.getIdentifiers()
-                print '\tuser: add: Tokens:'
+                print('\tuser: add: Tokens:')
                 for i in identifiers:
-                    print '\t\t%s' % i
+                    print('\t\t%s' % i)
 
         if not NAME_RE.match(username):
             raise myWebError('400 Illegal name for user')
@@ -62,9 +63,9 @@ class UserPlugin:
     def delete(self, token=None, username=None, returnTo=None):
         if True:
                 identifiers = token.getIdentifiers()
-                print '\tuser: delete: Tokens:'
+                print('\tuser: delete: Tokens:')
                 for i in identifiers:
-                    print '\t\t%s' % i
+                    print('\t\t%s' % i)
         if not NAME_RE.match(username):
             raise myWebError('400 Illegal name for user')
         if not self.igor.databaseAccessor.get_key('identities/%s' % username, 'application/x-python-object', 'multi', token):

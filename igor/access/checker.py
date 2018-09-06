@@ -1,3 +1,4 @@
+from __future__ import print_function
 from .vars import *
 import web
 
@@ -50,7 +51,7 @@ class DefaultAccessChecker(AccessChecker):
         self.destination = "(using default-accesschecker)"
 
     def allowed(self, operation, token, tentative=False):
-        print 'access: no access allowed by DefaultAccessChecker'
+        print('access: no access allowed by DefaultAccessChecker')
         others = {}
         try:
             others['requestPath'] = web.ctx.path

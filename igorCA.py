@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys
 import igor
 import os
@@ -49,10 +50,10 @@ class CAInterface:
         
     def isOK(self):
         if not os.path.exists(self.caDatabase):
-            print >>sys.stderr, "%s: No Igor CA self.database at %s" % (self.parent.argv0, self.caDatabase)
+            print("%s: No Igor CA self.database at %s" % (self.parent.argv0, self.caDatabase), file=sys.stderr)
             return False
         if not (os.path.exists(self.intKeyFile) and os.path.exists(self.intCertFile) and os.path.exists(self.intAllCertFile)):
-            print >>sys.stderr, "%s: Intermediate key, certificate and chain don't exist in %s" % (self.parent.argv0, self.caDatabase)
+            print("%s: Intermediate key, certificate and chain don't exist in %s" % (self.parent.argv0, self.caDatabase), file=sys.stderr)
             return False
         return True
 
@@ -127,7 +128,7 @@ class CARemoteInterface:
         rv = self.igor.get('/plugin/ca/status', format='text/plain')
         rv = rv.strip()
         if rv:
-            print >>sys.stderr, "%s: remote CA: %s" % (self.parent.argv0, rv)
+            print("%s: remote CA: %s" % (self.parent.argv0, rv), file=sys.stderr)
         return not rv
         
     def ca_getRoot(self):
@@ -176,7 +177,7 @@ class IgorCA:
         fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-subject'], stdout=subprocess.PIPE)
         data, _ = fp.communicate()
         if not data.startswith('subject='):
-            print >>sys.stderr, '%s: unexpected openssl x509 output: %s' % (self.argv0, data)
+            print('%s: unexpected openssl x509 output: %s' % (self.argv0, data), file=sys.stderr)
             return None
         data = data[8:]
         data = data.strip()
@@ -204,10 +205,10 @@ class IgorCA:
         
     def runSSLCommand(self, *args):
         args = ('openssl',) + args
-        print >>sys.stderr, '+', ' '.join(args)
+        print('+', ' '.join(args), file=sys.stderr)
         sts = subprocess.call(args)
         if sts != 0:
-            print >>sys.stderr, '%s: openssl returned status %d' % (self.argv0, sts)
+            print('%s: openssl returned status %d' % (self.argv0, sts), file=sys.stderr)
             return False
         return True
     
@@ -217,7 +218,7 @@ class IgorCA:
             sys.exit(0)
 
         if not os.path.exists(self.database):
-            print >>sys.stderr, "%s: No Igor database at %s" % (self.argv0, self.database)
+            print("%s: No Igor database at %s" % (self.argv0, self.database), file=sys.stderr)
             sys.exit(1)
         
         if command == 'initialize':
@@ -230,7 +231,7 @@ class IgorCA:
         
     
         if not hasattr(self, 'cmd_' + command):
-            print >> sys.stderr, '%s: Unknown command "%s". Use help for help.' % (self.argv0, command)
+            print('%s: Unknown command "%s". Use help for help.' % (self.argv0, command), file=sys.stderr)
             sys.exit(1)
         handler = getattr(self, 'cmd_' + command)
         ok = handler(*args)
@@ -271,43 +272,43 @@ class IgorCA:
         
     def cmd_help(self, *args):
         """Show list of available commands"""
-        print USAGE % self.argv0
+        print(USAGE % self.argv0)
         for name in dir(self):
             if not name.startswith('cmd_'): continue
             handler = getattr(self, name)
-            print '%-10s\t%s' % (name[4:], handler.__doc__)
+            print('%-10s\t%s' % (name[4:], handler.__doc__))
         return True
     
     def cmd_initialize(self):
         """create CA infrastructure, root key and certificate and intermediate key and certificate"""
         if not self.ca.isLocal():
-            print >>sys.stderr, "%s: initialize should only be used for local CA" % self.argv0
+            print("%s: initialize should only be used for local CA" % self.argv0, file=sys.stderr)
             return False
         if os.path.exists(self.ca.intKeyFile) and os.path.exists(self.ca.intCertFile) and os.path.exists(self.ca.intAllCertFile):
-            print >>sys.stderr, '%s: Intermediate key and certificate already exist in %s' % (self.argv0, self.ca.caDatabase)
+            print('%s: Intermediate key and certificate already exist in %s' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
             return False
         #
         # Create infrastructure if needed
         #
         if not os.path.exists(self.ca.caDatabase):
             # Old igor, probably: self.ca.caDatabase doesn't exist yet
-            print
-            print '=============== Creating CA directories and infrastructure'
+            print()
+            print('=============== Creating CA directories and infrastructure')
             src = os.path.join(self.igorDir, 'igorDatabase.empty')
             caSrc = os.path.join(src, 'ca')
-            print >>sys.stderr, '%s: Creating %s' % (self.argv0, caSrc)
+            print('%s: Creating %s' % (self.argv0, caSrc), file=sys.stderr)
             shutil.copytree(caSrc, self.ca.caDatabase)
         #
         # Create openssl.cnf files from openssl.cnf.in
         #
         for caGroup in ('root', 'intermediate'):
-            print
-            print '=============== Creating config for', caGroup
+            print()
+            print('=============== Creating config for', caGroup)
             caGroupDir = os.path.join(self.ca.caDatabase, caGroup)
             caGroupConf = os.path.join(caGroupDir, 'openssl.cnf')
             caGroupConfIn = os.path.join(caGroupDir, 'openssl.cnf.in')
             if os.path.exists(caGroupConf):
-                print >> sys.stderr, '%s: %s already exists' % (self.argv0, caGroupConf)
+                print('%s: %s already exists' % (self.argv0, caGroupConf), file=sys.stderr)
                 return False
             # Insert igor directory name into config file
             cfg = SSLConfigParser(allow_no_value=True)
@@ -321,15 +322,15 @@ class IgorCA:
         rootCertFile = os.path.join(self.ca.caDatabase, 'root', 'certs', 'ca.cert.pem')
         rootConfigFile = os.path.join(self.ca.caDatabase, 'root', 'openssl.cnf')
         if  os.path.exists(rootKeyFile) and os.path.exists(rootCertFile) and os.path.exists(rootConfigFile):
-            print
-            print '=============== Root key and certificate already exist'
+            print()
+            print('=============== Root key and certificate already exist')
         else:
-            print
-            print '=============== Creating root key and certificate'
+            print()
+            print('=============== Creating root key and certificate')
             ok = self.runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '2048' if self.keysize is None else self.keysize)
             if not ok:
                 return False
-            os.chmod(rootKeyFile, 0400)
+            os.chmod(rootKeyFile, 0o400)
             ok = self.runSSLCommand('req', 
                 '-config', rootConfigFile, 
                 '-key', rootKeyFile, 
@@ -342,17 +343,17 @@ class IgorCA:
                 )
             if not ok:
                 return False
-            os.chmod(rootCertFile, 0400)
+            os.chmod(rootCertFile, 0o400)
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', rootCertFile)
         if not ok:
             return False
         #
         # Create intermediate key, CSR and certificate
         #
-        print
-        print '=============== Creating intermediate key and certificate'
+        print()
+        print('=============== Creating intermediate key and certificate')
         ok = self.runSSLCommand('genrsa', '-out', self.ca.intKeyFile, '2048' if self.keysize is None else self.keysize)
-        os.chmod(self.ca.intKeyFile, 0400)
+        os.chmod(self.ca.intKeyFile, 0o400)
         if not ok:
             return False
         intCsrFile = os.path.join(self.ca.caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
@@ -376,7 +377,7 @@ class IgorCA:
             )
         if not ok:
             return False
-        os.chmod(self.ca.intCertFile, 0400)
+        os.chmod(self.ca.intCertFile, 0o400)
         #
         # Verify the intermediate certificate
         #
@@ -428,8 +429,8 @@ class IgorCA:
     def do_genCSR(self, keyFile, csrFile, csrConfigFile, *allNames):
         """Create key and CSR for a service. Returns CSR."""
         if len(allNames) < 1:
-            print >>sys.stderr, '%s: genCSR requires ALL names (commonName first) as arguments' % self.argv0
-            print >> sys.stderr, 'for example: %s genCSR igor.local localhost 127.0.0.1' % self.argv0
+            print('%s: genCSR requires ALL names (commonName first) as arguments' % self.argv0, file=sys.stderr)
+            print('for example: %s genCSR igor.local localhost 127.0.0.1' % self.argv0, file=sys.stderr)
             return False
         #
         # Create key
@@ -437,7 +438,7 @@ class IgorCA:
         ok = self.runSSLCommand('genrsa', '-out', keyFile, '2048' if self.keysize is None else self.keysize)
         if not ok:
             return None
-        os.chmod(keyFile, 0400)
+        os.chmod(keyFile, 0o400)
         #
         # Construct commonName and subjectAltNames
         #
@@ -475,7 +476,7 @@ class IgorCA:
     def cmd_genCRL(self):
         """Generate CRL in static/crl.pem"""
         if not self.ca.isLocal():
-            print >>sys.stderr, "%s: genCRL should only be used for local CA" % self.argv0
+            print("%s: genCRL should only be used for local CA" % self.argv0, file=sys.stderr)
             return False
         crlFile = os.path.join(self.database, 'static', 'crl.pem')
         ok = self.runSSLCommand('ca', '-config', self.ca.intConfigFile, '-gencrl', '-out', crlFile)
@@ -484,11 +485,11 @@ class IgorCA:
     def cmd_revoke(self, number):
         """Revoke a certificate. Argument is the number of the certificate to revoke (see list). Regenerates CRL as well."""
         if not self.ca.isLocal():
-            print >>sys.stderr, "%s: revoke should only be used for local CA" % self.argv0
+            print("%s: revoke should only be used for local CA" % self.argv0, file=sys.stderr)
             return False
         certFile = os.path.join(self.ca.caDatabase, 'intermediate', 'newcerts', str(number)+'.pem')
         if not os.path.exists(certFile):
-            print >>sys.stderr, "%s: no such certificate: %s" % (self.argv0, certFile)
+            print("%s: no such certificate: %s" % (self.argv0, certFile), file=sys.stderr)
         ok = self.runSSLCommand('ca', '-config', self.ca.intConfigFile, '-revoke', certFile)
         if not ok:
             return False
@@ -533,7 +534,7 @@ class IgorCA:
         igorCsrConfigFile = os.path.join(self.database, 'igor.csrconfig')
         igorCertFile = os.path.join(self.database, 'igor.crt')
         if os.path.exists(igorKeyFile) and os.path.exists(igorCertFile):
-            print >>sys.stderr, '%s: igor.key and igor.crt already exist in %s' % (self.argv0, self.database)
+            print('%s: igor.key and igor.crt already exist in %s' % (self.argv0, self.database), file=sys.stderr)
             return False
             
         csr = self.do_genCSR(igorKeyFile, igorCsrFile, igorCsrConfigFile, *allNames)
@@ -566,7 +567,7 @@ class IgorCA:
     def cmd_gen(self, prefix=None, *allNames):
         """Generate a a server key and certificate for a named service and sign it with the intermediate Igor CA key."""
         if not prefix or not allNames:
-            print >>sys.stderr, "Usage: %s gen keyfilenameprefix commonName [subjectAltNames ...]" % sys.argv[0]
+            print("Usage: %s gen keyfilenameprefix commonName [subjectAltNames ...]" % sys.argv[0], file=sys.stderr)
             return False
         
         keyFile = prefix + '.key'
@@ -574,7 +575,7 @@ class IgorCA:
         csrConfigFile = prefix + '.csrConfig'
         certFile = prefix + '.crt'
         if os.path.exists(keyFile) and os.path.exists(certFile):
-            print >>sys.stderr, '%s: %s and %s already exist' % (self.argv0, keyFile, certFile)
+            print('%s: %s and %s already exist' % (self.argv0, keyFile, certFile), file=sys.stderr)
             return False
             
         csr = self.do_genCSR(keyFile, csrFile, csrConfigFile, *allNames)

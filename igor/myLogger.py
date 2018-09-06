@@ -1,3 +1,4 @@
+from __future__ import print_function
 import logging
 import logging.handlers
 import sys
@@ -24,7 +25,7 @@ class StreamToLogger(object):
 def install(logSpec=None, nologfile=False, nologstderr=False, logdir='.'):
     rootLogger = logging.getLogger()
     rootLogger.setLevel(logging.INFO)
-    if DEBUG: print 'myLogger: rootLogger=', rootLogger
+    if DEBUG: print('myLogger: rootLogger=', rootLogger)
     if DEBUG: rootLogger.info('myLogger: rootlogger info() rootLogger=%s' % repr(rootLogger))
     if not nologfile:
         oldHandlers = rootLogger.handlers[:]
@@ -32,21 +33,21 @@ def install(logSpec=None, nologfile=False, nologstderr=False, logdir='.'):
         formatter = logging.Formatter("%(name)s:%(levelname)s:%(message)s")
         handler.setFormatter(formatter)
         rootLogger.addHandler(handler)
-        if DEBUG: print 'myLogger: added filehandler'
+        if DEBUG: print('myLogger: added filehandler')
         if DEBUG: rootLogger.info('myLogger: added filehandler info() call')
         if not nologstderr:
             rootLogger.addHandler(logging.StreamHandler())
-            if DEBUG: print 'xxxjack added streamhandler'
+            if DEBUG: print('xxxjack added streamhandler')
             if DEBUG: rootLogger.info('myLogger: added streamhandler info() call')
         sys.stdout = StreamToLogger(logging.getLogger('stdout'), logging.INFO)
-        if DEBUG: print 'myLogger: redirected stdout'
+        if DEBUG: print('myLogger: redirected stdout')
         if DEBUG: rootLogger.info('myLogger: redirected stdout info() call')
         sys.stderr = StreamToLogger(logging.getLogger('stderr'), logging.INFO)
-        if DEBUG: print 'myLogger: redirected stderr'
+        if DEBUG: print('myLogger: redirected stderr')
         if DEBUG: rootLogger.info('myLogger: redirected stderr info() call')
         for h in oldHandlers:
             rootLogger.removeHandler(h)
-        if DEBUG: print 'myLogger: removed old handlers'
+        if DEBUG: print('myLogger: removed old handlers')
         if DEBUG: rootLogger.info('myLogger: removed old handlers info() call')
     if logSpec == None:
         return

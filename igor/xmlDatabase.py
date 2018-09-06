@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import xml.dom
 import xpath
 import sys
@@ -33,7 +35,7 @@ class XPathFunctionExtension(xpath.expr.Function):
     number = xpath.expr.number
     boolean = xpath.expr.boolean
     nodeset = xpath.expr.nodeset
-    function = xpath.expr.Function.function.im_func
+    function = xpath.expr.Function.function.__func__
 
     @function(0, 1, implicit=True, convert=string)
     def f_igor_upper(self, node, pos, size, context, arg):
@@ -257,7 +259,7 @@ class DBSerializer:
         
     def signalNodelist(self, nodelist):
         """Wake up clients waiting for the given nodes"""
-        if DEBUG: print 'signalNodelist(%s)'%repr(nodelist)
+        if DEBUG: print('signalNodelist(%s)'%repr(nodelist))
         for location, cv in self._waiting.items():
             waitnodelist = xpath.find(location, self._doc.documentElement)
             for wn in waitnodelist:
@@ -277,7 +279,7 @@ class DBSerializer:
                     else:
                         tocallback[callback] = [wn]
         for callback, waitnodes in tocallback.items():
-            if DEBUG: print 'signalNodelist calling %s(%s)' % (callback, waitnodes)
+            if DEBUG: print('signalNodelist calling %s(%s)' % (callback, waitnodes))
             callback(*waitnodes)    
         
 class DBImpl(DBSerializer):
@@ -285,7 +287,7 @@ class DBImpl(DBSerializer):
     
     def __init__(self, filename):
         DBSerializer.__init__(self)
-        import access
+        from . import access
         self.access = access.singleton
         self._terminating = False
         self._domimpl = xml.dom.getDOMImplementation()
@@ -418,7 +420,7 @@ class DBImpl(DBSerializer):
         if node is None or node.nodeType == node.DOCUMENT_NODE:
             return ""
         if node.tagName == "_e":
-            print "Warning: getting xpath for escaped json node may not work very well"
+            print("Warning: getting xpath for escaped json node may not work very well")
         count = 0
         sibling = node.previousSibling
         while sibling:

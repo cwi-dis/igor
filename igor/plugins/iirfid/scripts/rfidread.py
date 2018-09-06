@@ -1,3 +1,4 @@
+from __future__ import print_function
 import serial
 import sys
 import argparse
@@ -13,9 +14,9 @@ DEFAULT_TIMEOUT=0.5
 
 class RFIDReader:
     def __init__(self, port, baudrate, timeout):
-        if DEBUG: print 'opening', port
+        if DEBUG: print('opening', port)
         self.port = serial.Serial(port, baudrate=baudrate, timeout=timeout)
-        if DEBUG: print 'open'
+        if DEBUG: print('open')
         time.sleep(2)
         
     def scanForCard(self):
@@ -25,7 +26,7 @@ class RFIDReader:
         crc = '\x01' # XOR of stationID and payload
         packetEnd = '\xbb'
         packet = packetStart + stationID + payload + crc + packetEnd
-        if DEBUG: print '>>>', repr(packet)
+        if DEBUG: print('>>>', repr(packet))
         self.port.write(packet)
         self.port.flush()
         
@@ -33,7 +34,7 @@ class RFIDReader:
         dataReceived = ''
         while True:
             newData = self.port.readline()
-            if DEBUG: print '<<<', repr(newData)
+            if DEBUG: print('<<<', repr(newData))
             if not newData:
                 break
             dataReceived += newData
@@ -51,7 +52,7 @@ class RFIDReader:
             except ValueError:
                 return None
             packet.append(value)
-        if DEBUG: print '...', repr(packet)
+        if DEBUG: print('...', repr(packet))
         if not packet:
             return None
         if packet[0] != 0xaa:   # Packet start
@@ -89,7 +90,7 @@ def main():
         if card:
             foundCard = True
             if not args.quiet:
-                print card
+                print(card)
             if card != lastCard:
                 lastCard = card
                 url = args.url
@@ -98,8 +99,8 @@ def main():
                 try:
                     r = urllib.urlopen(url)
                     r.read()
-                except IOError, arg:
-                    print '%s: %s' % (url, arg)
+                except IOError as arg:
+                    print('%s: %s' % (url, arg))
                 r = None
         else:
             lastCard = None

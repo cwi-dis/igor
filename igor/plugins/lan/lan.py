@@ -27,7 +27,7 @@ class LanPlugin:
         except socket.timeout:
             alive = False
             detail = ' (timeout connecting to %s)' % ip
-        except socket.error, e:
+        except socket.error as e:
             alive = False
             if e.args[1:]:
                 detail = ' (%s)' % e.args[1]

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys
 import igor
 import os
@@ -97,11 +98,11 @@ class IgorSetup:
         else:
             # For the rest of the commands the Igor database should already exist.
             if not os.path.exists(self.database):
-                print >>sys.stderr, "%s: No Igor database at %s" % (self.progname, self.database)
+                print("%s: No Igor database at %s" % (self.progname, self.database), file=sys.stderr)
                 return False
 
             if not hasattr(self, 'cmd_' + cmd):
-                print >> sys.stderr, '%s: Unknown command "%s". Use help for help.' % (self.progname, cmd)
+                print('%s: Unknown command "%s". Use help for help.' % (self.progname, cmd), file=sys.stderr)
                 return False
             handler = getattr(self, 'cmd_' + cmd)
             ok = handler(*args)
@@ -114,29 +115,29 @@ class IgorSetup:
             if run:
                 for cmd in self.runcmds:
                     if verbose:
-                        print >> sys.stderr, '+', cmd
+                        print('+', cmd, file=sys.stderr)
                     subprocess.check_call(cmd, shell=True, **subprocessArgs)
             else:
-                print '# Run the following commands:'
-                print '('
-                for cmd in self.runcmds: print '\t', cmd
-                print ')'
+                print('# Run the following commands:')
+                print('(')
+                for cmd in self.runcmds: print('\t', cmd)
+                print(')')
         self.runcmds = []
         
     def cmd_help(self):
         """help - this message"""
-        print >>sys.stderr, USAGE % dict(prog=self.progname)
+        print(USAGE % dict(prog=self.progname), file=sys.stderr)
         for name in dir(self):
             if not name.startswith('cmd_'): continue
             handler = getattr(self, name)
-            print handler.__doc__
+            print(handler.__doc__)
         return True        
 
     def cmd_initialize(self):
         """initialize - create empty igor database"""
         src = os.path.join(self.igorDir, 'igorDatabase.empty')
         if os.path.exists(self.database):
-            print >>sys.stderr, '%s: %s already exists!' % (self.progname, self.database)
+            print('%s: %s already exists!' % (self.progname, self.database), file=sys.stderr)
             return False
         shutil.copytree(src, self.database)
         return True
@@ -149,17 +150,17 @@ class IgorSetup:
             if name[0] == '.' or name == 'readme.txt': continue
             filename = os.path.join(self.plugindir, name)
             if not os.path.isdir(filename):
-                print filename, '(error: does not exist, or not a directory)'
+                print(filename, '(error: does not exist, or not a directory)')
             elif os.path.islink(filename):
-                print filename, '(symlinked)'
+                print(filename, '(symlinked)')
             else:
-                print filename
+                print(filename)
         return True
 
     def cmd_add(self, *pathnames):
         """add pathname [...] - add plugin (copy) from given pathname"""
         if not pathnames:
-            print >>sys.stderr, "%s: add requires a pathname" % self.progname
+            print("%s: add requires a pathname" % self.progname, file=sys.stderr)
             return False
         for pluginpath in pathnames:
             basedir, pluginname = os.path.split(pluginpath)
@@ -173,7 +174,7 @@ class IgorSetup:
     def cmd_addstd(self, *pluginnames):
         """addstd name [...] - add standard plugin (linked) with given name"""
         if not pluginnames:
-            print >>sys.stderr, "%s: addstd requires a plugin name" % self.progname
+            print("%s: addstd requires a plugin name" % self.progname, file=sys.stderr)
             return False
         for pluginname in pluginnames:
             pluginsrcpath = os.path.join(self.igorDir, 'plugins', pluginname)
@@ -190,7 +191,7 @@ class IgorSetup:
             if name[0] == '.' or name == 'readme.txt': continue
             pluginpath = os.path.join(self.plugindir, name)
             if  os.path.islink(pluginpath):
-                print 'Updating', pluginpath
+                print('Updating', pluginpath)
                 os.unlink(pluginpath)
                 pluginsrcpath = os.path.join(self.igorDir, 'plugins', name)
                 ok = self._installplugin(self.database, pluginsrcpath, name, os.symlink)
@@ -206,7 +207,7 @@ class IgorSetup:
             elif os.path.isdir(pluginpath):
                 shutil.rmtree(pluginpath)
             else:
-                print >> sys.stderr, "%s: not symlink or directory: %s" % (self.progname, pluginpath)
+                print("%s: not symlink or directory: %s" % (self.progname, pluginpath), file=sys.stderr)
                 return False
         return True
                     
@@ -217,13 +218,13 @@ class IgorSetup:
         names.sort()
         for name in names:
             if name[0] == '.' or name == 'readme.txt': continue
-            print name
+            print(name)
         return True
                 
     def cmd_certificate(self, *hostnames):
         """certificate hostname [...] - create https certificate for Igor using Igor as CA"""
         if not hostnames:
-            print >> sys.stderr, "%s: certificate requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % self.progname
+            print("%s: certificate requires all hostnames for igor, for example igor.local localhost 127.0.0.1 ::1" % self.progname, file=sys.stderr)
             return False
         import igorCA
         caName = self.progname + ': ' + 'igorCA'
@@ -240,9 +241,9 @@ class IgorSetup:
     def cmd_certificateSelfsigned(self, subject, *hostnames):
         """certificateSelfSigned subject hostname [...] - create self-signed https certificate for Igor (deprecated)"""
         if not len(hostnames):
-            print >> sys.stderr, "%s: certificateSelfSigned requires DN and all hostnames for igor, for example /C=NL/O=igor/CN=igor.local igor.local localhost 127.0.0.1 ::1" % self.progname
+            print("%s: certificateSelfSigned requires DN and all hostnames for igor, for example /C=NL/O=igor/CN=igor.local igor.local localhost 127.0.0.1 ::1" % self.progname, file=sys.stderr)
             return False
-        altnames = map(lambda (i, n): "DNS.%d = %s" % (i+1, n), zip(range(len(hostnames)), hostnames))
+        altnames = map(lambda i_n: "DNS.%d = %s" % (i_n[0]+1, i_n[1]), zip(range(len(hostnames)), hostnames))
         altnames = '\n'.join(altnames)
         subject = subject.replace('/','\n')
         confData = OPENSSL_CONF % (subject, altnames)
@@ -290,16 +291,16 @@ class IgorSetup:
                 "sudo service igor start"
                 ]
         else:
-            print >>sys.stderr, "%s: don't know how to enable Igor %s for platform %s" % (self.progname, when, sys.platform)
+            print("%s: don't know how to enable Igor %s for platform %s" % (self.progname, when, sys.platform), file=sys.stderr)
             return False
         if os.path.exists(dest):
-            print >> sys.stderr, "%s: already exists: %s" % (self.progname, dest)
+            print("%s: already exists: %s" % (self.progname, dest), file=sys.stderr)
             return False
         templateData = open(template).read()
         bootData = templateData % args
         open(dest, 'w').write(bootData)
         if sys.platform == 'linux2':
-            os.chmod(dest, 0755)
+            os.chmod(dest, 0o755)
         return True
    
     def cmd_start(self):
@@ -330,10 +331,10 @@ class IgorSetup:
         elif sys.platform == 'linux2':
             daemonFile = '/etc/init.d/igor'
         else:
-            print >>sys.stderr, "%s: don't know about daemon mode on platform %s" % (self.progname, sys.platform)
+            print("%s: don't know about daemon mode on platform %s" % (self.progname, sys.platform), file=sys.stderr)
             return False
         if not os.path.exists(daemonFile):
-            print >>sys.stderr, "%s: it seems igor is not configured for runatboot or runatlogin" % self.progname
+            print("%s: it seems igor is not configured for runatboot or runatlogin" % self.progname, file=sys.stderr)
             return False
         if when in ('stop', 'rebuild', 'edit', 'rebuildedit'):
             self.runcmds += ["igorControl save"]
@@ -346,7 +347,7 @@ class IgorSetup:
             self.runcmds += ["$EDITOR %s" % xmlDatabase]
         if when in ('rebuild', 'rebuildedit'):
             if not os.path.exists("setup.py"):
-                print >> sys.stderr, "%s: use 'rebuild' option only in an Igor source directory" % self.progname
+                print("%s: use 'rebuild' option only in an Igor source directory" % self.progname, file=sys.stderr)
             self.runcmds += [
                 "python setup.py build",
                 "sudo python setup.py install"
@@ -361,17 +362,17 @@ class IgorSetup:
     def _installplugin(self, database, src, pluginname, cpfunc):
         dst = os.path.join(database, 'plugins', pluginname)
         if os.path.exists(dst):
-            print >>sys.stderr, "%s: already exists: %s" % (self.progname, dst)
+            print("%s: already exists: %s" % (self.progname, dst), file=sys.stderr)
             return False
         if not os.path.exists(src):
-            print >>sys.stderr, "%s: does not exist: %s" % (self.progname, src)
+            print("%s: does not exist: %s" % (self.progname, src), file=sys.stderr)
             return False
         cpfunc(src, dst)
         # Sometimes (only under travis?) the symlink seems to fail
         try:
             os.listdir(dst)
         except OSError:
-            print >> sys.stderr, "%s: creation of %s failed" % (self.progname, dst)
+            print("%s: creation of %s failed" % (self.progname, dst), file=sys.stderr)
             return False
         xmlfrag = os.path.join(dst, 'database-fragment.xml')
         if os.path.exists(xmlfrag):

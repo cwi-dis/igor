@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import blescan
 import igorServlet
 import copy
@@ -28,7 +29,7 @@ class BleScanServer(threading.Thread):
         self.devices = {}
         self.lock = threading.RLock()
         self.significantChange = False
-        print 'inited', repr(self)
+        print('inited', repr(self))
         
     def initScanner(self):
         self.scanner = blescan.BleScanner()
@@ -84,7 +85,7 @@ class BleScanServer(threading.Thread):
     def processEvent(self, bdaddr=None, **args):
         address = bdaddr
         if not address:
-            print 'event without address'
+            print('event without address')
             return
         with self.lock:
             args['lastSeen'] = time.time()
@@ -151,4 +152,4 @@ def main():
     
 if __name__ == '__main__':
     main()
-    print 'stopped.'
+    print('stopped.')

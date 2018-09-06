@@ -4,6 +4,7 @@ Currently a quick hack using either direct database access or httplib2, synchron
 Should use callUrl, so local/remote becomes similar, and some form
 of callback mechanism so it can run asynchronously.
 """
+from __future__ import print_function
 import requests
 import web
 import json
@@ -34,10 +35,10 @@ class FitbitPlugin:
         self.token = None
         
     def _refresh(self, tokenData):
-        if DEBUG: print 'xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData))
+        if DEBUG: print('xxxjack fitbit._refresh for user %s: tokenData=%s' % (self.user, repr(tokenData)))
         self.igor.databaseAccessor.put_key('identities/%s/plugindata/%s/token' % (self.user, self.pluginName), 'application/x-python-object', None, tokenData, 'application/x-python-object', self.token, replace=True)
         self.igor.internal.queue('save', self.token)
-        if DEBUG: print 'xxxjack queued save call'
+        if DEBUG: print('xxxjack queued save call')
     
     def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
         if not user:
@@ -70,15 +71,15 @@ class FitbitPlugin:
             methods = userData.get('methods', 'get_bodyweight')
         methods = methods.split(',')
         for method in methods:
-            if DEBUG: print 'xxxjack calling method', method, 'with', kwargs
+            if DEBUG: print('xxxjack calling method', method, 'with', kwargs)
             m = getattr(fb, method)
             try:
                 item = m(**kwargs)
             except Exception as ex:
-                print 'Exception in fitbit.%s with args %s' % (method, repr(kwargs))
+                print('Exception in fitbit.%s with args %s' % (method, repr(kwargs)))
                 traceback.print_exc(file=sys.stdout)
                 raise myWebError("501 fitbit error %s" % repr(ex))
-            if DEBUG: print "xxxjack method", method, "returned", m
+            if DEBUG: print("xxxjack method", method, "returned", m)
             results.update(item)
         
         self.igor.databaseAccessor.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)

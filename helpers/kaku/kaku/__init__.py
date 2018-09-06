@@ -1,1 +1,2 @@
-from _kaku import *
+from __future__ import absolute_import
+from ._kaku import *

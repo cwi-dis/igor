@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import json
 import socket
@@ -62,7 +63,7 @@ class IgorPerf(IgorSetupAndControl):
         
     def _perfStop(self, name):
         mean, sigma = _meanAndSigma(self.measurements)
-        print '%-50s %5d %6.3f %6.3f' % (self.__class__.__name__ + '.' + name, len(self.measurements), mean, sigma)
+        print('%-50s %5d %6.3f %6.3f' % (self.__class__.__name__ + '.' + name, len(self.measurements), mean, sigma))
         self.startTime = None
         
     def _measurementStart(self):
@@ -313,7 +314,7 @@ class IgorPerfCaps(IgorPerfHttps):
             rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
             return rv.strip()
         except igorVar.IgorError:
-            if DEBUG_TEST: print '(shared key already exists for %s)' % repr(kwargs)
+            if DEBUG_TEST: print('(shared key already exists for %s)' % repr(kwargs))
         return None
         
     def _create_cap_for_call(self, pAdmin, callee):
@@ -372,7 +373,7 @@ def main():
     MEASUREMENT_MIN_DURATION = args.dur
     for cls in [IgorPerf, IgorPerfHttps, IgorPerfCaps]:
         try:
-            print '%s:' % cls.__name__
+            print('%s:' % cls.__name__)
             cls.setUpClass()
             obj = cls()
             obj.run()

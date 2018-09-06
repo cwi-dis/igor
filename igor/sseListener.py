@@ -1,3 +1,4 @@
+from __future__ import print_function
 import threading
 import requests
 import Queue
@@ -23,7 +24,7 @@ class SSEListener(threading.Thread):
     def openConnection(self):
         assert not self.conn
         self.conn = requests.request(self.method, self.url, stream=True)
-        if DEBUG: print 'opened connection to %s, redirected to %s' % (self.url, self.conn.url)
+        if DEBUG: print('opened connection to %s, redirected to %s' % (self.url, self.conn.url))
         
     def terminate(self):
         self.alive = False
@@ -43,7 +44,7 @@ class SSEListener(threading.Thread):
                     continue
             assert self.conn
             line = self.conn.raw.readline()
-            if DEBUG: print 'Got %s' % repr(line)
+            if DEBUG: print('Got %s' % repr(line))
             if not line:
                 # connection closed, re-open
                 self.conn = None
@@ -52,14 +53,14 @@ class SSEListener(threading.Thread):
             if not line:
                 # Empty line. Dispatch collected event
                 if not self.eventData:
-                    if DEBUG: print 'no event data, skip dispatch'
+                    if DEBUG: print('no event data, skip dispatch')
                     self.eventType = ''
                     continue
                 assert self.eventData[-1] == '\n'
                 self.eventData = self.eventData[:-1]
                 if not self.eventType:
                     self.eventType = 'message'
-                if DEBUG: print 'dispatching %s %s' % (repr(self.eventType), repr(self.eventData))
+                if DEBUG: print('dispatching %s %s' % (repr(self.eventType), repr(self.eventData)))
                 self.dispatch(self.eventType, self.eventData, self.eventID, self.conn.url)
                 self.eventType = ''
                 self.eventData = ''
@@ -79,7 +80,7 @@ class SSEListener(threading.Thread):
                 if fieldValue and fieldValue[0] == ' ':
                     fieldValue = fieldValue[1:]
             # Remember
-            if DEBUG: print 'remember %s %s' % (repr(fieldName), repr(fieldValue))
+            if DEBUG: print('remember %s %s' % (repr(fieldName), repr(fieldValue)))
             if fieldName == 'event':
                 self.eventType = fieldValue
             elif fieldName == 'data':
@@ -88,7 +89,7 @@ class SSEListener(threading.Thread):
                 self.eventID = fieldValue
                 
     def dispatch(self, eventType, data, origin, lastEventId):
-        print 'Event %s data %s' % (repr(eventType), repr(data))
+        print('Event %s data %s' % (repr(eventType), repr(data)))
 
     def log(self, message):
         pass
@@ -110,7 +111,7 @@ class EventSource(SSEListener):
 
     def log(self, message):
         datetime = time.strftime('%d/%b/%Y %H:%M:%S')
-        print >>sys.stderr, '- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message)
+        print('- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message), file=sys.stderr)
     
 class EventSourceCollection:
     def __init__(self, igor):

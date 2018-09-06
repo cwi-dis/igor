@@ -1,13 +1,15 @@
-import webApp
-import xmlDatabase
-import access
-import actions
-import sseListener
-import callUrl
+from __future__ import print_function
+from __future__ import absolute_import
+from . import webApp
+from . import xmlDatabase
+from . import access
+from . import actions
+from . import sseListener
+from . import callUrl
 import os
 import signal
 import argparse
-import besthostname
+from . import besthostname
 import time
 import copy
 import json
@@ -19,8 +21,8 @@ import traceback
 import cProfile
 import pstats
 import shelve
-import myLogger
-from _version import VERSION
+from . import myLogger
+from ._version import VERSION
 
 import sys
 reload(sys)
@@ -31,12 +33,12 @@ def _dump_app_stacks(*args):
     _dump_app_stacks_to(_real_stderr)
     _dump_app_stacks_to(sys.stderr)
 def _dump_app_stacks_to(file):
-    print >> file, "igorServer: QUIT received, dumping all stacks, %d threads:" % len(sys._current_frames())
+    print("igorServer: QUIT received, dumping all stacks, %d threads:" % len(sys._current_frames()), file=file)
     for threadId, stack in sys._current_frames().items():
-        print >> file, "\nThreadID:", threadId
+        print("\nThreadID:", threadId, file=file)
         traceback.print_stack(stack, file=file)
-        print >> file
-    print >> file, "igorServer: End of stack dumps"
+        print(file=file)
+    print("igorServer: End of stack dumps", file=file)
 #
 # Helper for profileing multiple threads
 # 
@@ -52,7 +54,7 @@ def enable_thread_profiling():
     thread_run = threading.Thread.run
 
     def profile_run(self):
-        print 'xxxjack profile_run'
+        print('xxxjack profile_run')
         self._prof = cProfile.Profile()
         self._prof.enable()
         thread_run(self)
@@ -107,7 +109,7 @@ class IgorServer:
         self.certificateFingerprint = None
         keyFile = os.path.join(self.pathnames.datadir, 'igor.key')
         if self._do_ssl and not os.path.exists(keyFile):
-            print >>sys.stderr, 'Warning: Using http in stead of https: no private key file', keyFile
+            print('Warning: Using http in stead of https: no private key file', keyFile, file=sys.stderr)
             self._do_ssl = False
         if self._do_ssl:
             self.pathnames.privateKeyFile = keyFile
@@ -181,12 +183,12 @@ class IgorServer:
         elif sys.platform == 'linux2':
             cmd = ['avahi-publish', '-s', 'igor', proto, str(port)]
         else:
-            print >> sys.stderr, "Cannot do mdns-advertise on platform", sys.platform
+            print("Cannot do mdns-advertise on platform", sys.platform, file=sys.stderr)
             return
         try:
             self._advertiser = subprocess.Popen(cmd)
         except OSError:
-            print >> sys.stderr, "advertisement command failed: %s" % (' '.join(cmd))
+            print("advertisement command failed: %s" % (' '.join(cmd)), file=sys.stderr)
     
     
     def _fillSelfData(self):
@@ -216,15 +218,15 @@ class IgorServer:
             CherryPyWSGIServer.ssl_private_key = self.pathnames.privateKeyFile
         signal.signal(signal.SIGTERM, self._sigterm_caught)
         self.app.run(self.port)
-        print 'Igor terminating'
+        print('Igor terminating')
 
     def _sigterm_caught(self, signum, frame):
-        print 'SIGTERM caught, exiting gracefully...'
+        print('SIGTERM caught, exiting gracefully...')
         self.stop(save=True, token=self.access.tokenForIgor())
                 
     def check(self, fix=False, token=None):
         rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
-        print rv
+        print(rv)
 
     def stop(self, token=None, save=True):
         """Exits igorServer after saving"""
@@ -491,7 +493,7 @@ def main():
     
     myLogger.install(args.logLevel, nologfile=args.nologfile, nologstderr=args.nologstderr, logdir=args.database)
     if args.version:
-        print >>sys.stderr, VERSION
+        print(VERSION, file=sys.stderr)
         sys.exit(0)
     
     useCapabilities = False # Default if neither --capabilities nor --noCapabilities has been specified
@@ -510,15 +512,15 @@ def main():
         elif args.debug in ('webApp', 'all'): webApp.DEBUG = True
         elif args.debug in ('access', 'all'): access.DEBUG.append(True)
         else:
-            print >>sys.stderr, "%s: --debug argument should be modulename or 'all'" % sysargv[0]
+            print("%s: --debug argument should be modulename or 'all'" % sysargv[0], file=sys.stderr)
             sys.eit(1)
     datadir = args.database
-    print >>sys.stderr, 'igorServer %s running from %s' % (VERSION, sys.argv[0])
+    print('igorServer %s running from %s' % (VERSION, sys.argv[0]), file=sys.stderr)
     try:
         igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl, nologger=args.nologfile)
-    except IOError, arg:
-        print >>sys.stderr, '%s: Cannot open database: %s' % (sys.argv[0], arg)
-        print >>sys.stderr, '%s: Use --help option to see command line arguments' % sys.argv[0]
+    except IOError as arg:
+        print('%s: Cannot open database: %s' % (sys.argv[0], arg), file=sys.stderr)
+        print('%s: Use --help option to see command line arguments' % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     if args.fix or args.check:
         igorServer.check(args.fix)

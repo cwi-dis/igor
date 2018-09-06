@@ -1,3 +1,4 @@
+from __future__ import print_function
 import web
 import os
 import sys
@@ -115,7 +116,7 @@ class DevicePlugin:
             parentTokenId = 'admin-action'
         else:
             raise myWebError('400 bad action %s' % obj)
-        print 'xxxjack obj', obj
+        print('xxxjack obj', obj)
         newTokenId = actionTokenId = self.igor.internal.accessControl('newToken',
             token=token,
             tokenId=parentTokenId,

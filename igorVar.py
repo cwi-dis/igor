@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import argparse
 import urlparse
 import urllib
@@ -104,16 +105,16 @@ class IgorServer:
             headers['Authorization'] = 'Basic %s' % base64.b64encode(self.credentials)
         if VERBOSE:
             if self.certificate or self.noverify:
-                print 'certificate=%s, noverify=%s' % (repr(self.certificate), repr(self.noverify))
+                print('certificate=%s, noverify=%s' % (repr(self.certificate), repr(self.noverify)))
         h = httplib2.Http(ca_certs=self.certificate, disable_ssl_certificate_validation=self.noverify)
         if VERBOSE:
-            print >>sys.stderr, ">>> GET", url
-            print >>sys.stderr, "... Headers", headers
+            print(">>> GET", url, file=sys.stderr)
+            print("... Headers", headers, file=sys.stderr)
             if data:
-                print >>sys.stderr, "... Data", repr(data)
+                print("... Data", repr(data), file=sys.stderr)
         try:
             reply, content = h.request(url, method=method, headers=headers, body=data)
-        except socket.error, e:
+        except socket.error as e:
             if e.args[1:]:
                 argstr = e.args[1]
             else:
@@ -121,20 +122,20 @@ class IgorServer:
             raise IgorError("%s: %s" % (url, argstr))
         except socket.gaierror:
             raise IgorError("%s: unknown host" %  url)
-        except httplib2.ServerNotFoundError, e:
+        except httplib2.ServerNotFoundError as e:
             raise IgorError(*e.args)
         except socket.timeout:
             raise IgorError("%s: timeout during connect" % url)
         if VERBOSE:
-            print >>sys.stderr, "<<< Headers", reply
-            print >>sys.stderr, "...", repr(content)
+            print("<<< Headers", reply, file=sys.stderr)
+            print("...", repr(content), file=sys.stderr)
         if not 'status' in reply or reply['status'] != '200':
             msg = "Error %s for %s" % (reply['status'], url)
             if self.printmessages:
                 contentLines = content.splitlines()
                 if len(contentLines) > 1:
-                    print >>sys.stderr, sys.argv[0] + ': ' + msg
-                    print >>sys.stderr, content
+                    print(sys.argv[0] + ': ' + msg, file=sys.stderr)
+                    print(content, file=sys.stderr)
             raise IgorError(msg)
         return content
         
@@ -195,21 +196,21 @@ def main():
                         decodedData = json.loads(data)
                         data = json.dumps(decodedData)
                     except ValueError:
-                        print >>sys.stderr, "%s: no valid JSON data read from stdin" % sys.argv[0]
-                        print >>sys.stderr, data
+                        print("%s: no valid JSON data read from stdin" % sys.argv[0], file=sys.stderr)
+                        print(data, file=sys.stderr)
                         sys.exit(1)
                 elif args.put == 'application/xml':
                     try:
                         decodedData = xml.etree.ElementTree.fromstring(data)
                     except xml.etree.ElementTree.ParseError:
-                        print >> sys.stderr, "%s: no valid XML data read from stdin" % sys.argv[0]
-                        print >>sys.stderr, data
+                        print("%s: no valid XML data read from stdin" % sys.argv[0], file=sys.stderr)
+                        print(data, file=sys.stderr)
                         sys.exit(1)
                 elif args.checkdata:
-                    print >>sys.stderr, "%s: --checkdata only allowed for JSON and XML data"
+                    print("%s: --checkdata only allowed for JSON and XML data", file=sys.stderr)
                     sys.exit(1)
             elif not data and not args.allow_empty:
-                print >>sys.stderr, '%s: no data read from stdin' % sys.argv[0]
+                print('%s: no data read from stdin' % sys.argv[0], file=sys.stderr)
                 sys.exit(1)
             result = server.put(args.var, data, args.put, variant=args.variant, format=args.mimetype)
         elif args.post:
@@ -226,9 +227,9 @@ def main():
                 result = pp.pformat(result)
             else:
                 result = repr(result)
-        print result.strip()
-    except IgorError, e:
-        print >>sys.stderr, "%s: %s" % (sys.argv[0], e.args[0])
+        print(result.strip())
+    except IgorError as e:
+        print("%s: %s" % (sys.argv[0], e.args[0]), file=sys.stderr)
     
 if __name__ == '__main__':
     main()

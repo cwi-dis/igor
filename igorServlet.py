@@ -1,3 +1,4 @@
+from __future__ import print_function
 import web
 import threading
 import time
@@ -80,7 +81,7 @@ class IgorServlet(threading.Thread):
         self.ssl = not nossl
         keyFile = os.path.join(self.datadir, self.sslname + '.key')
         if self.ssl and not os.path.exists(keyFile):
-            print >>sys.stderr, 'Warning: Using http in stead of https: no private key file', keyFile
+            print('Warning: Using http in stead of https: no private key file', keyFile, file=sys.stderr)
             self.ssl = False
         if self.ssl:
             self.privateKeyFile = keyFile
@@ -97,7 +98,7 @@ class IgorServlet(threading.Thread):
         IgorServlet.issuer = issuer
         IgorServlet.issuerSharedKey = issuerSharedKey
         
-        if DEBUG: print 'igorServlet: IgorServlet.__init__ called for', self
+        if DEBUG: print('igorServlet: IgorServlet.__init__ called for', self)
         self.app = MyApplication((), globals(), autoreload=False)
         
     def run(self):
@@ -125,7 +126,7 @@ class IgorServlet(threading.Thread):
         
 class ForwardingClass:
     def __init__(self):
-       if DEBUG: print 'igorServlet: ForwardingClass.__init__ called for', self
+       if DEBUG: print('igorServlet: ForwardingClass.__init__ called for', self)
 
     def GET(self):
         return self._method('get')
@@ -165,7 +166,7 @@ class ForwardingClass:
                     methodArgs = {'data' : data}
         try:
             rv = entry(**methodArgs)
-        except TypeError, arg:
+        except TypeError as arg:
             raise myWebError("400 Error in parameters: %s" % arg)
         if endpoint['mimetype'] == 'text/plain':
             rv = str(rv)
@@ -176,25 +177,25 @@ class ForwardingClass:
         return rv
         
     def _checkRights(self, method, path):
-        if DEBUG:  print 'IgorServlet: check access for method %s on %s' % (method, path)
+        if DEBUG:  print('IgorServlet: check access for method %s on %s' % (method, path))
         if not IgorServlet.issuer: 
-            if DEBUG: print 'IgorServlet: issuer not set, cannot check access'
+            if DEBUG: print('IgorServlet: issuer not set, cannot check access')
             return False
         if not IgorServlet.issuerSharedKey: 
-            if DEBUG: print 'IgorServlet: issuerSharedKey not set, cannot check access'
+            if DEBUG: print('IgorServlet: issuerSharedKey not set, cannot check access')
             return False
         # Get capability from headers
         headers = web.ctx.env
         authHeader = headers.get('HTTP_AUTHORIZATION')
         if not authHeader:
-            if DEBUG: print 'IgorServlet: no Authorization: header'
+            if DEBUG: print('IgorServlet: no Authorization: header')
             return False
         authFields = authHeader.split()
         if authFields[0].lower() != 'bearer':
-            if DEBUG: print 'IgorServlet: no Authorization: bearer header'
+            if DEBUG: print('IgorServlet: no Authorization: bearer header')
             return False
         encoded = authFields[1] # base64.b64decode(authFields[1])
-        if DEBUG: print 'IgorServlet: got bearer token data %s' % encoded
+        if DEBUG: print('IgorServlet: got bearer token data %s' % encoded)
         decoded = self._decodeBearerToken(encoded)
         if not decoded:
             # _decodeBearerToken will return None if the key is not from the right issuer or the signature doesn't match.
@@ -202,35 +203,35 @@ class ForwardingClass:
         capPath = decoded.get('obj')
         capModifier = decoded.get(method)
         if not capPath:
-            if DEBUG: print 'IgorServlet: capability does not contain obj field'
+            if DEBUG: print('IgorServlet: capability does not contain obj field')
             return False
         if not capModifier:
-            if DEBUG: print 'IgorServlet: capability does not have %s right' % method
+            if DEBUG: print('IgorServlet: capability does not have %s right' % method)
             return False
         pathHead = path[:len(capPath)]
         pathTail = path[len(capPath):]
         if pathHead != capPath or (pathTail and pathTail[0] != '/'):
-            if DEBUG: print 'IgorServlet: capability path %s does not match %s' % (capPath, path)
+            if DEBUG: print('IgorServlet: capability path %s does not match %s' % (capPath, path))
             return False
         if capModifier == 'self':
             if capPath != path:
-                if DEBUG: print 'IgorServlet: capability path %s does not match self for %s' % (capPath, path)
+                if DEBUG: print('IgorServlet: capability path %s does not match self for %s' % (capPath, path))
                 return False
         elif capModifier == 'child':
             if pathTail.count('/') != 1:
-                if DEBUG: print 'IgorServlet: capability path %s does not match direct child for %s' % (capPath, path)
+                if DEBUG: print('IgorServlet: capability path %s does not match direct child for %s' % (capPath, path))
                 return False
         elif capModifier == 'descendant':
             if not pathTail.count:
-                if DEBUG: print 'IgorServlet: capability path %s does not match descendant for %s' % (capPath, path)
+                if DEBUG: print('IgorServlet: capability path %s does not match descendant for %s' % (capPath, path))
                 return False
         elif capModifier == 'descendant-or-self':
             pass
         else:
-            if DEBUG: print 'IgorServlet: capability has unkown modifier %s for right %s' % (capModifier, method)
+            if DEBUG: print('IgorServlet: capability has unkown modifier %s for right %s' % (capModifier, method))
             return False
         if DEBUG:
-            print 'IgorServlet: Capability matches'
+            print('IgorServlet: Capability matches')
         return True
         
     def _decodeBearerToken(self, data):
@@ -238,31 +239,31 @@ class ForwardingClass:
             content = jwt.decode(data, IgorServlet.issuerSharedKey, issuer=IgorServlet.issuer, audience=IgorServlet.audience, algorithm='RS256')
         except jwt.DecodeError:
             if DEBUG:
-                print 'IgorServlet: incorrect signature on bearer token %s' % data
-                print 'IgorServlet: content: %s' % jwt.decode(data, verify=False)
+                print('IgorServlet: incorrect signature on bearer token %s' % data)
+                print('IgorServlet: content: %s' % jwt.decode(data, verify=False))
             raise myWebError('401 Unauthorized, Incorrect signature on key')
         except jwt.InvalidIssuerError:
             if DEBUG:
-                print 'IgorServlet: incorrect issuer on bearer token %s' % data
-                print 'IgorServlet: content: %s' % jwt.decode(data, verify=False)
+                print('IgorServlet: incorrect issuer on bearer token %s' % data)
+                print('IgorServlet: content: %s' % jwt.decode(data, verify=False))
             raise myWebError('401 Unauthorized, incorrect issuer on key')
         except jwt.InvalidAudienceError:
             if DEBUG:
-                print 'IgorServlet: incorrect audience on bearer token %s' % data
-                print 'IgorServlet: content: %s' % jwt.decode(data, verify=False)
+                print('IgorServlet: incorrect audience on bearer token %s' % data)
+                print('IgorServlet: content: %s' % jwt.decode(data, verify=False))
             raise myWebError('401 Unauthorized, incorrect audience on key')
         return content
         
 def main():
     global DEBUG
     DEBUG = True
-    if DEBUG: print 'igorServlet: main called'
+    if DEBUG: print('igorServlet: main called')
     
     class HelloClass:
         """Example class that returns static data (which may be recomputed every call)"""
         
         def __init__(self):
-            if DEBUG: print 'HelloClass.__init__ called for', self
+            if DEBUG: print('HelloClass.__init__ called for', self)
 
         def get_hello(self):
             return 'Hello World from test'
@@ -272,7 +273,7 @@ def main():
         
         def __init__(self):
             threading.Thread.__init__(self)
-            if DEBUG: print 'CounterClass.__init__ called for', self
+            if DEBUG: print('CounterClass.__init__ called for', self)
             self.counter = 0
             self.stopped = False
             
@@ -314,13 +315,13 @@ def main():
     try:
         while True:
             time.sleep(10)
-            if DEBUG: print 'IgorServlet: time passing and still serving...'
+            if DEBUG: print('IgorServlet: time passing and still serving...')
     except KeyboardInterrupt:
         pass
     #
     # Stop everything when termination has been requested.
     #
-    if DEBUG: print 'IgorServlet: stopping server'
+    if DEBUG: print('IgorServlet: stopping server')
     counterObject.stop()
     s.stop()
     s = None

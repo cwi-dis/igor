@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import fileinput
 import dateutil.parser
@@ -68,7 +69,7 @@ def main():
     args = parser.parse_args()
     res = dologparse(args.logfile, args.good, args.bad, args.timeparser, args.timeformat)
     for k, v in res.items():
-        print '%s\t%s' % (k, v)
+        print('%s\t%s' % (k, v))
     
 if __name__ == '__main__':
     main()

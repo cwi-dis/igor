@@ -1,3 +1,4 @@
+from __future__ import print_function
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 
 DEBUG = False
@@ -141,24 +142,24 @@ class BleScanner:
 			pkt = self.sock.recv(255)
 			ptype, event, plen = struct.unpack("BBB", pkt[:3])
 			assert ptype == bluez.HCI_EVENT_PKT # We are filtering for those only, so complain if we get anything else.
-			if DEBUG: print "-------------- received", ptype, event, plen 
+			if DEBUG: print("-------------- received", ptype, event, plen) 
 			if event == bluez.EVT_INQUIRY_RESULT_WITH_RSSI:
-					if DEBUG: print "was event EVT_INQUIRY_RESULT_WITH_RSSI"
+					if DEBUG: print("was event EVT_INQUIRY_RESULT_WITH_RSSI")
 			elif event == bluez.EVT_NUM_COMP_PKTS:
-					if DEBUG: print "was event EVT_NUM_COMP_PKTS"
+					if DEBUG: print("was event EVT_NUM_COMP_PKTS")
 			elif event == bluez.EVT_DISCONN_COMPLETE:
-					if DEBUG: print "was event EVT_DISCONN_COMPLETE"
+					if DEBUG: print("was event EVT_DISCONN_COMPLETE")
 					return None
 			elif event == LE_META_EVENT:
 				subevent, = struct.unpack("<B", pkt[3])
-				if DEBUG: print "-------------- subevent", subevent
+				if DEBUG: print("-------------- subevent", subevent)
 				pkt = pkt[4:]
 				if subevent == EVT_LE_CONN_COMPLETE:
 					pass # self.le_handle_connection_complete(pkt)
 				elif subevent == EVT_LE_ADVERTISING_REPORT:
 					num_reports, = struct.unpack("<B", pkt[0])
 					pkt = pkt[1:]
-					if DEBUG: print "-------------- numreports", num_reports
+					if DEBUG: print("-------------- numreports", num_reports)
 					assert num_reports == 1
 					while num_reports > 0:
 						num_reports -= 1
@@ -195,9 +196,9 @@ class BleScanner:
 						        del item['raw_advertisements']
 						return item
 				else:
-					if DEBUG: print "was subevent", subevent
+					if DEBUG: print("was subevent", subevent)
 			else:
-				if DEBUG: print "was event", event
+				if DEBUG: print("was event", event)
 
 def main():
 	scanner = BleScanner()
@@ -208,7 +209,7 @@ def main():
 	try:
 		while True:
 			evt = scanner.parse_advertisement()
-			print evt
+			print(evt)
 			#print json.dumps(evt)
 	finally:
 		scanner.disable_filter()

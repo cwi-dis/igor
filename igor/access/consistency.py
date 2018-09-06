@@ -1,3 +1,4 @@
+from __future__ import print_function
 import random
 
 VERBOSE=False
@@ -18,14 +19,14 @@ class StructuralConsistency:
         
     def _status(self, msg, isError=True):
         if VERBOSE:
-            print msg
+            print(msg)
         self.status += msg + '\n'
         if isError:
             self.nErrors += 1
         
     def _checkExists(self, path, dontfix=False, context=None):
         if VERBOSE:
-            print 'consistency._checkExists(%s)' % path
+            print('consistency._checkExists(%s)' % path)
         if type(context) == type(''):
             contextElements = self.database.getElements(context, 'get', self.token, namespaces=self.namespaces)
             if len(contextElements) != 1:
@@ -54,7 +55,7 @@ class StructuralConsistency:
         
     def _checkUnique(self, path, dontfix=False, context=None):
         if VERBOSE:
-            print 'consistency._checkUnique(%s)' % path
+            print('consistency._checkUnique(%s)' % path)
         if type(context) == type(''):
             contextElements = self.database.getElements(context, 'get', self.token, namespaces=self.namespaces)
             if len(contextElements) != 1:
@@ -72,7 +73,7 @@ class StructuralConsistency:
         
     def _checkSingleton(self, path1, path2, dontfix=False, context=None):
         if VERBOSE:
-            print 'consistency._checkSingleton(%s, %s)' % (path1, path2)
+            print('consistency._checkSingleton(%s, %s)' % (path1, path2))
         self._checkExists(path1 + '/' + path2, dontfix=dontfix, context=context)
         self._checkUnique(path1 + '/' + path2, dontfix=dontfix, context=context)
         if self.extended:
@@ -81,7 +82,7 @@ class StructuralConsistency:
     def _getAllElements(self, path):
         rv = self.database.getElements(path, 'get', self.token, namespaces=self.namespaces)
         if VERBOSE:
-            print 'consistency._getAllElements(%s) returns %d items' % (path, len(rv))
+            print('consistency._getAllElements(%s) returns %d items' % (path, len(rv)))
         return rv
         
     def _getValues(self, path, context=None):

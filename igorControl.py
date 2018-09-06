@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys
 import argparse
 import igorVar
@@ -27,7 +28,7 @@ def main():
     try:
         result = server.get("/internal/%s" % args.action, query=query)
     except httplib2.HttpLib2Error as e:
-        print >> sys.stderr, "%s: %s" % (sys.argv[0], traceback.format_exception_only(type(e), e.message)[0].strip())
+        print("%s: %s" % (sys.argv[0], traceback.format_exception_only(type(e), e.message)[0].strip()), file=sys.stderr)
         sys.exit(1)
     sys.stdout.write(result)
     

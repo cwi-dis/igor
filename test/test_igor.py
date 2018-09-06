@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import os
 import json
@@ -309,7 +310,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         p.put('sandbox/test74/src', 'seventy-four', datatype='text/plain')
         
         duration = self.servlet.waitDuration()
-        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
+        if DEBUG_TEST: print('IgorTest: indirect external action took', duration, 'seconds')
         self.assertNotEqual(duration, None)
 
     def _create_caps_for_action(self, pAdmin, caller, obj, **kwargs):
@@ -334,7 +335,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         
         duration = self.servlet.waitDuration()
         self.assertNotEqual(duration, None)
-        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
+        if DEBUG_TEST: print('IgorTest: indirect external action took', duration, 'seconds')
         result = self.servlet.get()
         self.assertEqual(result, 'seventy-five')
         
@@ -356,7 +357,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         
         duration = self.servlet.waitDuration()
         self.assertNotEqual(duration, None)
-        if DEBUG_TEST: print 'IgorTest: indirect external action took', duration, 'seconds'
+        if DEBUG_TEST: print('IgorTest: indirect external action took', duration, 'seconds')
         result = self.servlet.get()
         self.assertEqual(result, 'seventy-six')
         
@@ -463,7 +464,7 @@ class IgorTestCaps(IgorTestHttps):
             rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
             return rv.strip()
         except igorVar.IgorError:
-            if DEBUG_TEST: print '(shared key already exists for %s)' % repr(kwargs)
+            if DEBUG_TEST: print('(shared key already exists for %s)' % repr(kwargs))
         return None
         
     def test41_newcap_external(self):

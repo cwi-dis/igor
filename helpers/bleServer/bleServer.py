@@ -96,7 +96,7 @@ class BleScanServer(threading.Thread):
                 self.significantChange = True
             else:
                 # Old device, update the data
-                for k, v in args.items():
+                for k, v in list(args.items()):
                     self.devices[address][k] = v
             if not 'firstSeen' in self.devices[address]:
                 # Update timestamp for first time we saw the device (in a sequence)
@@ -107,7 +107,7 @@ class BleScanServer(threading.Thread):
         with self.lock:
             now = time.time()
             toDelete = []
-            for address, data in self.devices.items():
+            for address, data in list(self.devices.items()):
                 available = data['lastSeen'] > now - AVAILABLE_TIMEOUT
                 if available != data['available']:
                     self.significantChange = True
@@ -132,7 +132,7 @@ class BleScanServer(threading.Thread):
     def GET_bleData(self, all=True):
         devices = self.getDevices()
         devList = []
-        for address, values in devices.items():
+        for address, values in list(devices.items()):
             item = {'address':address}
             if all:
                 item.update(values)

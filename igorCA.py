@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import sys
 import igor
 import os
@@ -8,7 +12,7 @@ import shutil
 import getpass
 import tempfile
 import subprocess
-import ConfigParser
+import configparser
 import re
 import json
 import argparse
@@ -18,7 +22,7 @@ import igorVar
 #IS_IP=re.compile(r'^[0-9.:]*$') # Not good enough, but does not match hostnames
 IS_IP=re.compile(r'^[0-9:]*$') # Matches only IPv6 IP addresses so IPv4 addresses are (incorrectly) seen as hostnames
 
-class SSLConfigParser(ConfigParser.RawConfigParser):
+class SSLConfigParser(configparser.RawConfigParser):
     """SSL Configuration files are case-dependent"""
     
     SECTCRE = re.compile(
@@ -36,7 +40,7 @@ Usage: %s command [args]
 Initialize or use igor Certificate Authority.
 """
 
-class CAInterface:
+class CAInterface(object):
     def __init__(self, parent, database):
         self.parent = parent
         self.caDatabase = os.path.join(database, 'ca')
@@ -116,7 +120,7 @@ class CAInterface:
         """Return filename for an openssl config file to be used as a template for new reequests"""
         return self.intConfigFile
         
-class CARemoteInterface:
+class CARemoteInterface(object):
     def __init__(self, parent, igorServer):
         self.parent = parent
         self.igor = igorServer
@@ -150,7 +154,7 @@ class CARemoteInterface:
         open(configFile, 'w').write(rv)
         return configFile
         
-class IgorCA:
+class IgorCA(object):
     def __init__(self, argv0, igorServer=None, keysize=None, database=None):
         self.argv0 = argv0
         self.keysize = keysize
@@ -511,7 +515,7 @@ class IgorCA:
  
         cfg.remove_section('req_distinguished_name')
         cfg.add_section('req_distinguished_name')
-        for k, v in dnDict.items():
+        for k, v in list(dnDict.items()):
             cfg.set('req_distinguished_name', k, v)
         # Set to non-interactive
         cfg.set('req', 'prompt', 'no')

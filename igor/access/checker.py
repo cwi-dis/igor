@@ -1,8 +1,9 @@
 from __future__ import print_function
+from builtins import object
 from .vars import *
 import web
 
-class AccessChecker:
+class AccessChecker(object):
     """An object that checks whether an operation (or request) has the right permission"""
 
     def __init__(self, access, destination):

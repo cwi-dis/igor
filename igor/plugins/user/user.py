@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import object
 import web
 import os
 import sys
@@ -11,7 +12,7 @@ DEBUG=False
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-class UserPlugin:
+class UserPlugin(object):
     def __init__(self, igor):
         self.igor = igor
     

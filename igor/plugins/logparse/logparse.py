@@ -68,7 +68,7 @@ def main():
     parser.add_argument("logfile", help="Log files to search")
     args = parser.parse_args()
     res = dologparse(args.logfile, args.good, args.bad, args.timeparser, args.timeformat)
-    for k, v in res.items():
+    for k, v in list(res.items()):
         print('%s\t%s' % (k, v))
     
 if __name__ == '__main__':

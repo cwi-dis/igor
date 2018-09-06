@@ -1,3 +1,4 @@
+from builtins import object
 import web
 import json
 import igorCA
@@ -35,7 +36,7 @@ INDEX_HTML="""<html lang="en">
 </html>
 """
 
-class CAPlugin:
+class CAPlugin(object):
     def __init__(self, igor):
         self.igor = igor
         self.ca = None

@@ -1,8 +1,12 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import threading
 import requests
-import Queue
-import urlparse
+import queue
+import urllib.parse
 import time
 import sys
 import os
@@ -11,7 +15,7 @@ import json
 
 DEBUG=False
 
-class CheckableQueue(Queue.Queue):
+class CheckableQueue(queue.Queue):
     """We only check to forestall doing double work. So we don't
     really care about the race condition..."""
     
@@ -55,7 +59,7 @@ class URLCallRunner(threading.Thread):
                 resultData = ""
                 errorMessage = ""
                 datetime = time.strftime('%d/%b/%Y %H:%M:%S')
-                parsedUrl = urlparse.urlparse(url)
+                parsedUrl = urllib.parse.urlparse(url)
                 if DEBUG: print('URLCaller.run calling', url, 'method', method, 'headers', headers, 'data', data)
                 if parsedUrl.scheme == '' and parsedUrl.netloc == '':
                     # Local. Call the app directly.
@@ -140,7 +144,7 @@ class URLCallRunner(threading.Thread):
         except RuntimeError:
             pass # This can happen if we are actually running via callUrl ourselves...
         
-class URLCaller:
+class URLCaller(object):
     def __init__(self, igor):
         self.lock = threading.Lock()
         self.flushedCV = threading.Condition(self.lock)
@@ -166,7 +170,7 @@ class URLCaller:
         
     def callURL(self, tocall):
         url = tocall['url']
-        parsedUrl = urlparse.urlparse(url)
+        parsedUrl = urllib.parse.urlparse(url)
         if parsedUrl.scheme:
             self.extRunner.callURL(tocall)
         elif parsedUrl.path.startswith('/data/') or parsedUrl.path.startswith('/internal/') or parsedUrl.path.startswith('/action/'):

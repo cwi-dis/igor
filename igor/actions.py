@@ -1,23 +1,28 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from past.builtins import cmp
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import re
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import time
 import threading
-import Queue
+import queue
 from . import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
 DEBUG=False
 
-class NEVER:
+class NEVER(object):
     """Compares bigger than any number"""
     pass
     
 assert NEVER > 1
 
-class Action:
+class Action(object):
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
     def __init__(self, collection, element):
@@ -153,11 +158,11 @@ class Action:
         nbText = nbElement.firstChild
         if nbText:
             #if DEBUG: print 'Action._willRunNow replace notBefore text data'
-            nbText.data = unicode(earliestNextRun)
+            nbText.data = str(earliestNextRun)
         else:
             #if DEBUG: print 'Action._willRunNow create notBefore text node'
             doc = self.element.ownerDocument
-            nbText = doc.createTextNode(unicode(earliestNextRun))
+            nbText = doc.createTextNode(str(earliestNextRun))
             nbElement.appendChild(nbText)
         
     def _scheduleNextRunIn(self, interval):
@@ -170,7 +175,7 @@ class Action:
     def _evaluate(self, text, node, urlencode):
         """Interpolate {xpathexpr} expressions in a string"""
         if not text: return text
-        text = unicode(text)
+        text = str(text)
         newtext = ''
         while True:
             match = INTERPOLATION.search(text)
@@ -191,7 +196,7 @@ class Action:
                     replacement = 'true' if replacement else ''
                 replacement = str(replacement)
                 if urlencode:
-                    replacement = urllib.quote_plus(replacement)
+                    replacement = urllib.parse.quote_plus(replacement)
             newtext = newtext + text[:match.start()] + replacement
             text = text[match.end():]
         return newtext

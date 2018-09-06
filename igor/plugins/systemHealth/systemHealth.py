@@ -1,4 +1,8 @@
 """Test liveness of hosts"""
+from __future__ import division
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import socket
 import web
 import time
@@ -9,19 +13,19 @@ def myWebError(msg):
 def niceDelta(delta):
     if delta < 60:
         return "%d seconds" % delta
-    delta = (delta+1) / 60
+    delta = old_div((delta+1), 60)
     if delta < 60:
         return "%d minutes" % delta
-    delta = (delta+1) / 60
+    delta = old_div((delta+1), 60)
     if delta < 48:
         return "%d hours" % delta
-    delta = (delta+1) / 24
+    delta = old_div((delta+1), 24)
     if delta < 14:
         return "%d days" % delta
-    delta = (delta+1) / 7
+    delta = old_div((delta+1), 7)
     return "%d weeks" % delta
     
-class SystemHealthPlugin:
+class SystemHealthPlugin(object):
     def __init__(self, igor, pluginData):
         self.igor = igor
         self.pluginData = pluginData
@@ -50,7 +54,7 @@ class SystemHealthPlugin:
             sensorMaxInterval = self.pluginData['sensorMaxInterval']
             sensors = self.igor.databaseAccessor.get_key("status/sensors/*", "application/x-python-object", "multi", token)
             if sensors:
-                for xp, content in sensors.items():
+                for xp, content in list(sensors.items()):
                     if type(content) != type({}):
                         raise myWebError("500 expected nested element for %s in status/sensors" % xp)
                     sensorName = xp[xp.rindex('/')+1:]
@@ -69,7 +73,7 @@ class SystemHealthPlugin:
         # For all sensors and services see whether we have an error condition.
         #
         if statuses:
-            for xp, content in statuses.items():
+            for xp, content in list(statuses.items()):
                 if type(content) != type({}):
                     raise myWebError("500 expected nested element for %s in status/*" % xp)
                 serviceName = xp[xp.rindex('/')+1:]

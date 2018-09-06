@@ -1,4 +1,8 @@
 """Test liveness of hosts"""
+from __future__ import division
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import socket
 import web
 import glob
@@ -12,19 +16,19 @@ def myWebError(msg):
 def niceDelta(delta):
     if delta < 60:
         return "%d seconds" % delta
-    delta = (delta+1) / 60
+    delta = old_div((delta+1), 60)
     if delta < 60:
         return "%d minutes" % delta
-    delta = (delta+1) / 60
+    delta = old_div((delta+1), 60)
     if delta < 48:
         return "%d hours" % delta
-    delta = (delta+1) / 24
+    delta = old_div((delta+1), 24)
     if delta < 14:
         return "%d days" % delta
-    delta = (delta+1) / 7
+    delta = old_div((delta+1), 7)
     return "%d weeks" % delta
     
-class LastFileAccess:
+class LastFileAccess(object):
     def __init__(self, igor):
         self.igor = igor
         

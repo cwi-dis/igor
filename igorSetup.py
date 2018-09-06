@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from builtins import zip
+from builtins import range
+from builtins import object
 import sys
 import igor
 import os
@@ -69,7 +72,7 @@ nsComment           = "OpenSSL Generated Certificate"
 %s
 """
 
-class IgorSetup:
+class IgorSetup(object):
     def __init__(self, database=None, progname='igorSetup'):
         self.progname = progname
         # Find username even when sudoed
@@ -243,7 +246,7 @@ class IgorSetup:
         if not len(hostnames):
             print("%s: certificateSelfSigned requires DN and all hostnames for igor, for example /C=NL/O=igor/CN=igor.local igor.local localhost 127.0.0.1 ::1" % self.progname, file=sys.stderr)
             return False
-        altnames = map(lambda i_n: "DNS.%d = %s" % (i_n[0]+1, i_n[1]), zip(range(len(hostnames)), hostnames))
+        altnames = ["DNS.%d = %s" % (i_n[0]+1, i_n[1]) for i_n in zip(list(range(len(hostnames))), hostnames)]
         altnames = '\n'.join(altnames)
         subject = subject.replace('/','\n')
         confData = OPENSSL_CONF % (subject, altnames)

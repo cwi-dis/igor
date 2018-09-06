@@ -5,11 +5,15 @@ Should use callUrl, so local/remote becomes similar, and some form
 of callback mechanism so it can run asynchronously.
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import requests
 import web
 import json
-import urlparse
-import urllib
+import urllib.parse
+import urllib.request, urllib.parse, urllib.error
 from fitbit import Fitbit
 from requests.packages import urllib3
 urllib3.disable_warnings()
@@ -26,7 +30,7 @@ DEFAULT_METHODS=['get_bodyweight']
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-class FitbitPlugin:
+class FitbitPlugin(object):
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName
@@ -59,11 +63,11 @@ class FitbitPlugin:
         fb = Fitbit(refresh_cb=self._refresh, **oauthSettings)
     
         # Populate kwargs from userData, unless already specified in the parameters
-        for k, v in userData.items():
+        for k, v in list(userData.items()):
             if k != 'token' and k != 'methods' and not k in kwargs:
                 kwargs[k] = v
         # Convert to strings (fitbit library doesn't like unicode)
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             kwargs[k] = v
             
         results = {}
@@ -98,7 +102,7 @@ class FitbitPlugin:
         fb = Fitbit(**oauthSettings)
     
         step2url = self.igor.databaseAccessor.get_key('services/igor/url', 'text/plain', 'content', token)
-        step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
+        step2url = urllib.parse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
         #step2url += '?' + urllib.urlencode(dict(user=user))
         redirectUrl, _ = fb.client.authorize_token_url(redirect_uri=step2url, state=user)
         raise web.seeother(redirectUrl)
@@ -118,7 +122,7 @@ class FitbitPlugin:
             raise myWebError("401 fitbitplugin/auth2 requires 'code' argument")
 
         step2url = self.igor.databaseAccessor.get_key('services/igor/url', 'text/plain', 'content', token)
-        step2url = urlparse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
+        step2url = urllib.parse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
 
         fb = Fitbit(state=state, redirect_uri=step2url, **oauthSettings)
 

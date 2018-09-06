@@ -1,4 +1,6 @@
 from __future__ import print_function
+from builtins import str
+from builtins import object
 import web
 import threading
 import time
@@ -20,7 +22,7 @@ class MyApplication(web.application):
         func = self.wsgifunc(*middleware)
         return web.httpserver.runsimple(func, ('0.0.0.0', port))
 
-class NoLog:
+class NoLog(object):
     def __init__(self, application):
         self.app = application
         self.nullfile = open('/dev/null', 'w')
@@ -124,7 +126,7 @@ class IgorServlet(threading.Thread):
     def hasIssuer(self):
         return not not IgorServlet.issuer and not not IgorServlet.issuerSharedKey
         
-class ForwardingClass:
+class ForwardingClass(object):
     def __init__(self):
        if DEBUG: print('igorServlet: ForwardingClass.__init__ called for', self)
 
@@ -259,7 +261,7 @@ def main():
     DEBUG = True
     if DEBUG: print('igorServlet: main called')
     
-    class HelloClass:
+    class HelloClass(object):
         """Example class that returns static data (which may be recomputed every call)"""
         
         def __init__(self):

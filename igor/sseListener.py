@@ -1,8 +1,11 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import threading
 import requests
-import Queue
-import urlparse
+import queue
+import urllib.parse
 import time
 import sys
 
@@ -113,7 +116,7 @@ class EventSource(SSEListener):
         datetime = time.strftime('%d/%b/%Y %H:%M:%S')
         print('- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message), file=sys.stderr)
     
-class EventSourceCollection:
+class EventSourceCollection(object):
     def __init__(self, igor):
         self.igor = igor
         self.eventSources = []

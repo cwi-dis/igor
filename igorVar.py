@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import argparse
-import urlparse
-import urllib
+import urllib.parse
+import urllib.request, urllib.parse, urllib.error
 import httplib2
 import sys
 import os
@@ -12,13 +15,13 @@ import base64
 import pprint
 import xml.etree.ElementTree
 import socket
-import ConfigParser
+import configparser
 import exceptions
 
 class IgorError(EnvironmentError):
     pass
     
-CONFIG = ConfigParser.ConfigParser(
+CONFIG = configparser.ConfigParser(
     dict(
         url="http://igor.local:9333/data",
         bearer=None,
@@ -42,7 +45,7 @@ for k, _ in CONFIG.items('igor'):
 
 VERBOSE=False
 
-class IgorServer:
+class IgorServer(object):
     def __init__(self, url, bearer_token=None, access_token=None, credentials=None, certificate=None, noverify=False, printmessages=False):
         self.baseUrl = url
         if url[-1] != '/':
@@ -80,7 +83,7 @@ class IgorServer:
         return self._action("POST", item, variant, format, data=data, datatype=datatype)
         
     def _action(self, method, item, variant, format=None, data=None, datatype=None, query=None):
-        url = urlparse.urljoin(self.url, item)
+        url = urllib.parse.urljoin(self.url, item)
         if query is None:
             query = {}
         else:
@@ -91,7 +94,7 @@ class IgorServer:
             query['access_token'] = self.access_token
         if query:
             assert not '?' in url
-            url = url + '?' + urllib.urlencode(query)
+            url = url + '?' + urllib.parse.urlencode(query)
         headers = {}
         if format:
             headers['Accept'] = format

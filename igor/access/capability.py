@@ -1,9 +1,12 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 from .vars import *
 import base64
-import urlparse
+import urllib.parse
 
-class BaseAccessToken:
+class BaseAccessToken(object):
     """An access token (or set of tokens) that can be carried by a request"""
 
     def __init__(self):
@@ -144,7 +147,7 @@ class AccessToken(BaseAccessToken):
         if url.startswith(self.content['aud']):
             if DEBUG: print('access: capability %s matches url %s' % (self, url))
             return True
-        p = urlparse.urlparse(url)
+        p = urllib.parse.urlparse(url)
         if p.netloc == self.content['aud']:
             if DEBUG: print('access: capability %s matches hostname in %s' % (self, url))
             return True
@@ -229,7 +232,7 @@ class AccessToken(BaseAccessToken):
         newIsSelf = subPath == ''
         newIsChild = subPath.count('/') == 1
         # Check that the requested rights match
-        for operation, newCascadingRule in newRights.items():
+        for operation, newCascadingRule in list(newRights.items()):
             if not newCascadingRule:
                 # If we don't want this operation it is always okay.
                 continue

@@ -1,10 +1,13 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import web
 import os
 import sys
 import re
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
@@ -13,7 +16,7 @@ DEBUG=False
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-class DevicePlugin:
+class DevicePlugin(object):
     def __init__(self, igor):
         self.igor = igor
         self.hasCapabilities = self.igor.internal.accessControl('hasCapabilitySupport')
@@ -80,12 +83,12 @@ class DevicePlugin:
             actions = description.get('actions', {})
             if actions:
                 actionResults = {}
-                for actionName in actions.keys():
+                for actionName in list(actions.keys()):
                     actionData = self._addAction(token, subject=hostname, **actions[actionName])
                     actionResults[actionName] = actionData
                 rv['actions'] = actionResults
         if returnTo:
-            queryString = urllib.urlencode(rv)
+            queryString = urllib.parse.urlencode(rv)
             if '?' in returnTo:
                 returnTo = returnTo + '&' + queryString
             else:
@@ -99,7 +102,7 @@ class DevicePlugin:
     def addAction(self, token=None, subject=None, verb='get', obj=None, returnTo=None):
         rv = self._addAction(token, subject, verb, obj)
         if returnTo:
-            queryString = urllib.urlencode(rv)
+            queryString = urllib.parse.urlencode(rv)
             if '?' in returnTo:
                 returnTo = returnTo + '&' + queryString
             else:

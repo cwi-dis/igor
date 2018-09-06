@@ -1,5 +1,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
 import xml.dom
 import xpath
 import sys
@@ -214,7 +217,7 @@ def recursiveNodeSet(node):
         child = child.nextSibling
     return rv
     
-class DBSerializer:
+class DBSerializer(object):
     """Baseclass with methods to provide a mutex and a condition variable"""
     def __init__(self):   
         self._waiting = {}
@@ -260,7 +263,7 @@ class DBSerializer:
     def signalNodelist(self, nodelist):
         """Wake up clients waiting for the given nodes"""
         if DEBUG: print('signalNodelist(%s)'%repr(nodelist))
-        for location, cv in self._waiting.items():
+        for location, cv in list(self._waiting.items()):
             waitnodelist = xpath.find(location, self._doc.documentElement)
             for wn in waitnodelist:
                 if wn in nodelist:
@@ -278,7 +281,7 @@ class DBSerializer:
                         tocallback[callback].append(wn)
                     else:
                         tocallback[callback] = [wn]
-        for callback, waitnodes in tocallback.items():
+        for callback, waitnodes in list(tocallback.items()):
             if DEBUG: print('signalNodelist calling %s(%s)' % (callback, waitnodes))
             callback(*waitnodes)    
         
@@ -355,7 +358,7 @@ class DBImpl(DBSerializer):
     def _createElementWithEscaping(self, tag, namespace=None):
         if namespace:
             assert TAG_PATTERN.match(tag)
-            nsItems = namespace.items()
+            nsItems = list(namespace.items())
             assert len(nsItems) == 1
             nsTag, nsUrl = nsItems[0]
             return self._doc.createElementNS(nsUrl, nsTag + ':' + tag)
@@ -536,12 +539,12 @@ class DBImpl(DBSerializer):
                     data = ''
                 if type(data) is type(True):
                     data = 'true' if data else ''
-                data = unicode(data)
+                data = str(data)
                 # Clean illegal unicode characters
                 data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
                 newnode.appendChild(self._doc.createTextNode(data))
                 return newnode
-            for k, v in data.items():
+            for k, v in list(data.items()):
                 if k == '#text':
                     if not isinstance(v, list):
                         v = [v]

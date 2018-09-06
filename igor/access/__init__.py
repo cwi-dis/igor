@@ -1,15 +1,19 @@
 from __future__ import print_function
 from __future__ import absolute_import
 # Access control
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import web
 import xpath
 import base64
 import random
 import time
-import urlparse
+import urllib.parse
 import jwt
 import sys
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from .vars import *
 from .capability import *
@@ -36,7 +40,7 @@ def _combineTokens(token1, token2):
     return MultiAccessToken(tokenList=[token1, token2])
 
 
-class OTPHandler:
+class OTPHandler(object):
     """Handle implementation of one-time-passwords (for passing tokens to plugins and scripts)"""
     def __init__(self):
         self._otp2token = {}
@@ -64,7 +68,7 @@ class OTPHandler:
         if otp in self._otp2token:
             del self._otp2token[otp]
 
-class TokenStorage:
+class TokenStorage(object):
     """Handle storing and retrieving capabilities"""
     
     def __init__(self):
@@ -120,13 +124,13 @@ class TokenStorage:
         nodelist = xpath.find("au:capability", element, namespaces=NAMESPACES)
         if not nodelist:
             return None
-        tokenDataList = map(lambda e: self.igor.database.tagAndDictFromElement(e)[1], nodelist)
+        tokenDataList = [self.igor.database.tagAndDictFromElement(e)[1] for e in nodelist]
         if len(tokenDataList) > 1:
             return MultiAccessToken(tokenDataList, owner=owner)
         rv = AccessToken(tokenDataList[0], owner=owner)
         return rv       
         
-class RevokeList:
+class RevokeList(object):
     """Handles revocation list"""
     def __init__(self):
         self._revokeList = []
@@ -154,7 +158,7 @@ class RevokeList:
     def _loadRevokeList(self):
         self._revokeList = self.igor.database.getValues('au:access/au:revokedCapabilities/au:revokedCapability/cid', _accessSelfToken, namespaces=NAMESPACES)
      
-class IssuerInterface:
+class IssuerInterface(object):
     """Implement interface to the issuer"""
     def __init__(self):
         self._self_audience = None
@@ -163,12 +167,12 @@ class IssuerInterface:
         """Return an audience identifier that refers to us"""
         if not self._self_audience:
             baseUrl = self.igor.database.getValue('services/igor/url', _accessSelfToken)
-            self._self_audience = urlparse.urljoin(baseUrl, '/')
+            self._self_audience = urllib.parse.urljoin(baseUrl, '/')
         return self._self_audience
 
     def getSelfIssuer(self, token=None):
         """Return URL for ourselves as an issuer"""
-        return urlparse.urljoin(self.getSelfAudience(),  '/issuer')
+        return urllib.parse.urljoin(self.getSelfAudience(),  '/issuer')
 
     def _getSharedKey(self, iss=None, aud=None):
         """Get secret key shared between issuer and audience"""
@@ -227,7 +231,7 @@ class IssuerInterface:
         assert self.igor.database
         # xxxjack this is wrong: it also returns keys shared with other issuers
         subjectValues = self.igor.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
-        subjectValues = map(lambda x : x[1], subjectValues)
+        subjectValues = [x[1] for x in subjectValues]
         subjectValues = list(subjectValues)
         subjectValues.sort()
         return subjectValues
@@ -298,7 +302,7 @@ class IssuerInterface:
         self._save()
         return ''
         
-class UserPasswords:
+class UserPasswords(object):
     """Implements checking of passwords for users"""
     
     def __init__(self):
@@ -517,7 +521,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         newRights = {}
         content = {}
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             # Note delegate right is checked implicitly, below.
             if k in NORMAL_OPERATIONS:
                 newRights[k] = v
@@ -553,7 +557,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         token._addChild(newId)
         tokenData = dict(cid=newId, obj=newPath, parent=tokenId)
         moreData = token._getExternalContent()
-        for k, v in moreData.items():
+        for k, v in list(moreData.items()):
             if not k in tokenData:
                 tokenData[k] = v
         tokenData.update(newRights)
@@ -587,7 +591,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         # Get rights from the args
         #
         newRights = {}
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             # Note delegate right is checked implicitly, below.
             if k in NORMAL_OPERATIONS:
                 newRights[k] = v

@@ -1,9 +1,12 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import serial
 import sys
 import argparse
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import socket
 
 DEBUG=False
@@ -12,7 +15,7 @@ DEFAULT_SERIAL='/dev/tty.usbserial-A700ekiO'
 DEFAULT_BAUD=57600
 DEFAULT_TIMEOUT=0.5
 
-class RFIDReader:
+class RFIDReader(object):
     def __init__(self, port, baudrate, timeout):
         if DEBUG: print('opening', port)
         self.port = serial.Serial(port, baudrate=baudrate, timeout=timeout)
@@ -65,7 +68,7 @@ class RFIDReader:
         if packet[2] != 6:  # Don't know, some kind of flag that there is a card
             return None
         cardID = packet[5:9]
-        return ':'.join(map(lambda x: '%02.2x' % x, cardID))
+        return ':'.join(['%02.2x' % x for x in cardID])
         
 def main():
     global DEBUG
@@ -97,7 +100,7 @@ def main():
                 if '%' in url:
                     url = url % card
                 try:
-                    r = urllib.urlopen(url)
+                    r = urllib.request.urlopen(url)
                     r.read()
                 except IOError as arg:
                     print('%s: %s' % (url, arg))

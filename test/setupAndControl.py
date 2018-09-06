@@ -1,4 +1,6 @@
 from __future__ import print_function
+from builtins import str
+from builtins import object
 import os
 import shutil
 import sys
@@ -15,7 +17,7 @@ if DEBUG_TEST:
     igorServlet.DEBUG=DEBUG_TEST
 COVERAGE=False
 
-class ServletHelper:
+class ServletHelper(object):
     def __init__(self, port, protocol, capabilities, database, audience):
         self.lock = threading.Lock()
         self.requestReceived = threading.Condition(self.lock)

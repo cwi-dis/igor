@@ -1,10 +1,13 @@
 #!/usr/bin/python
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import socket
 import struct
 import select
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import sys
 
 DEBUG=False
@@ -22,7 +25,7 @@ VPMT_DISCOVER=1
 
 VOODOO_DISCOVER = struct.pack('<l28xll16s96s96s96s', VOODOO_VERSION, VPMT_DISCOVER, 0, '1234567890123456', 'Python Control', 'Jack', 'Philips.py')
 
-class JointSpaceRemote:
+class JointSpaceRemote(object):
     def __init__(self, ipaddr=None):
         self.tv = None
         
@@ -64,7 +67,7 @@ class JointSpaceRemote:
         assert self.tv
         url = 'http://%s:1925/1/%s' % (self.tv, path)
         if DEBUG: print('GET', url)
-        data = urllib.urlopen(url).read()
+        data = urllib.request.urlopen(url).read()
         ##print 'RAW', data
         data = json.loads(data)
         ##print 'DECODED', data
@@ -75,7 +78,7 @@ class JointSpaceRemote:
         url = 'http://%s:1925/1/%s' % (self.tv, path)
         data = json.dumps(data)
         if DEBUG: print('POST %s DATA %s' % (url, data))
-        data = urllib.urlopen(url, data).read()
+        data = urllib.request.urlopen(url, data).read()
         if data:
             if DEBUG: print('PUTDATA RETURNED', data)
         
@@ -96,7 +99,7 @@ class JointSpaceRemote:
         """List available input sources"""
         assert self.tv
         data = self.getData('sources')
-        for source, descr in data.items():
+        for source, descr in list(data.items()):
             print('%s\t%s' % (source, descr['name']))
 
     def cmd_channels(self):
@@ -104,7 +107,7 @@ class JointSpaceRemote:
         assert self.tv
         data = self.getData('channels')
         all = []
-        for fingerprint, descr in data.items():
+        for fingerprint, descr in list(data.items()):
             all.append((int(descr['preset']), descr['name']))
         all.sort()
         for preset, name in all:
@@ -124,7 +127,7 @@ class JointSpaceRemote:
         assert self.tv
         if channel:
             data = self.getData('channels')
-            for chID, chDescr in data.items():
+            for chID, chDescr in list(data.items()):
                 if chID == channel or chDescr['preset'] == channel or chDescr['name'] == channel:
                     self.putData('channels/current', { 'id' : chID })
                     self.putData('sources/current', {'id' : 'tv' })

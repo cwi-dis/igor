@@ -1,4 +1,5 @@
 """Test liveness of hosts"""
+from builtins import object
 import socket
 import web
 import time
@@ -8,7 +9,7 @@ import json
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-class LanPlugin:
+class LanPlugin(object):
     def __init__(self, igor):
         self.igor = igor
         

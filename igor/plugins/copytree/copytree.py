@@ -4,16 +4,19 @@ Currently a quick hack using either direct database access or httplib2, synchron
 Should use callUrl, so local/remote becomes similar, and some form
 of callback mechanism so it can run asynchronously.
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import requests
 import web
 import httplib2
-import urlparse
+import urllib.parse
 
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
     
-class CopyTree:
+class CopyTree(object):
     def __init__(self, igor):
         self.igor = igor
 
@@ -23,7 +26,7 @@ class CopyTree:
         if not dst:
             raise myWebError("401 Required argument dst missing")
     
-        srcParsed = urlparse.urlparse(src)
+        srcParsed = urllib.parse.urlparse(src)
         if srcParsed.scheme == '' and srcParsed.netloc == '':
             # Local source
             srcValue = self.igor.databaseAccessor.get_key(srcParsed.path, mimetype, None, token)
@@ -34,7 +37,7 @@ class CopyTree:
             if resp.status != 200:
                 raise myWebError("%d %s (%s)" % (resp.status, resp.reason, src))
     
-        dstParsed = urlparse.urlparse(dst)
+        dstParsed = urllib.parse.urlparse(dst)
         if dstParsed.scheme == '' and dstParsed.netloc == '':
             rv = self.igor.databaseAccessor.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, token, method=='PUT')
         else:

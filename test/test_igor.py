@@ -1,9 +1,11 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 import unittest
 import os
 import json
 import socket
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as ET
 import igorVar
 import igorCA
@@ -70,7 +72,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertTrue(result)
         root = json.loads(result)
         self.assertIsInstance(root, dict)
-        self.assertEqual(root.keys(), ["systemHealth"])
+        self.assertEqual(list(root.keys()), ["systemHealth"])
         
     def test21_put_xml(self):
         """PUT a database variable as XML"""
@@ -437,7 +439,7 @@ class IgorTestCaps(IgorTestHttps):
         
     def _new_capability(self, pAdmin, **kwargs):
         """Create a new capability and return its cid"""
-        argStr = urllib.urlencode(kwargs)
+        argStr = urllib.parse.urlencode(kwargs)
         rv = pAdmin.get('/internal/accessControl/newToken?' + argStr)
         return rv.strip()
         
@@ -459,7 +461,7 @@ class IgorTestCaps(IgorTestHttps):
 
     def _new_sharedkey(self, pAdmin, **kwargs):
         """Create a new secret shared key between the issuer and an audience or subject"""
-        argStr = urllib.urlencode(kwargs)
+        argStr = urllib.parse.urlencode(kwargs)
         try:
             rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
             return rv.strip()

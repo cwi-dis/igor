@@ -1,7 +1,8 @@
 """Sample plugin module for Igor"""
 
 
-class TestPlugin:
+from builtins import object
+class TestPlugin(object):
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

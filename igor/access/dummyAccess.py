@@ -1,11 +1,12 @@
 # Access control
+from builtins import object
 import web
 from .consistency import StructuralConsistency
 
 def myWebError(msg):
     return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
-class AccessToken:
+class AccessToken(object):
     def __init__(self):
         pass
 
@@ -26,7 +27,7 @@ _token = AccessToken()
 class AccessControlError(ValueError):
     pass
           
-class AccessChecker:
+class AccessChecker(object):
     """An object that checks whether an operation (or request) has the right permission"""
 
     def __init__(self):
@@ -37,7 +38,7 @@ class AccessChecker:
         
 _checker = AccessChecker()
 
-class OTPHandler:
+class OTPHandler(object):
 
     def produceOTPForToken(self, token):
         """Produce a one-time-password form of this token, for use internally or for passing to a plugin script (to be used once)"""
@@ -48,13 +49,13 @@ class OTPHandler:
         pass
             
     
-class TokenStorage:
+class TokenStorage(object):
     pass
     
-class RevokeList:
+class RevokeList(object):
     pass
     
-class IssuerInterface:
+class IssuerInterface(object):
 
     def getSelfAudience(self, token=None):
         """Return an audience identifier that refers to us"""
@@ -84,7 +85,7 @@ class IssuerInterface:
         """Delete a shared key"""
         raise myWebError("400 This Igor does not have shared key support")
 
-class UserPasswords:
+class UserPasswords(object):
         
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""

@@ -1,6 +1,7 @@
 from __future__ import print_function
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 
+from builtins import object
 DEBUG = False
 # BLE scanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 # BLE scanner, based on https://code.google.com/p/pybluez/source/browse/trunk/examples/advanced/inquiry-with-rssi.py
@@ -68,7 +69,7 @@ TYPE_TO_NAME = {
 	0x0f : ("ad_pairing_randomizer", noparser),
 	0x10 : ("ad_device_id", noparser),
 }
-class BleScanner:
+class BleScanner(object):
 	def __init__(self):
 		self.sock = None
 		self.old_filter = None

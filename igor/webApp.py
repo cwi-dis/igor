@@ -1,5 +1,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 import web
 import shlex
 import subprocess
@@ -152,7 +155,7 @@ class runScript(BaseHandler):
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
         # Put all other arguments into the environment with an "igor_" prefix
-        for k, v in allArgs.items():
+        for k, v in list(allArgs.items()):
             if k == 'args': continue
             if not v:
                 v = ''
@@ -174,7 +177,7 @@ class runScript(BaseHandler):
         if pluginData:
             env['igor_pluginData'] = json.dumps(pluginData)
             if type(pluginData) == type({}):
-                for k, v in pluginData.items():
+                for k, v in list(pluginData.items()):
                     env['igor_'+k] = str(v)
         # Finally pass the token as an OTP (which has the form user:pass)
         oneTimePassword = self.igor.access.produceOTPForToken(pluginToken)
@@ -522,7 +525,7 @@ class abstractDatabaseAccess(BaseHandler):
             return self.igor.databaseAccessor.MIMETYPES[0]
         return mimetypematch.match(acceptable, self.igor.databaseAccessor.MIMETYPES)
 
-class XmlDatabaseAccess:
+class XmlDatabaseAccess(object):
     """Class to access the database in a somewhat rest-like manner. Instantiated once."""
     
     MIMETYPES = ["application/xml", "application/json", "text/plain"]
@@ -689,9 +692,9 @@ class XmlDatabaseAccess:
             if mimetype == "application/json":
                 return json.dumps(dict(value=value))+'\n'
             elif mimetype == "text/plain":
-                return unicode(value)+'\n'
+                return str(value)+'\n'
             elif mimetype == "application/xml":
-                return u"<value>%s</value>\n" % unicode(value)
+                return u"<value>%s</value>\n" % str(value)
             elif mimetype == "application/x-python-object":
                 return value
             else:

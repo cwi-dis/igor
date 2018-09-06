@@ -1,8 +1,12 @@
 from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from past.utils import old_div
 import os
 import json
 import socket
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import math
 import argparse
 import xml.etree.ElementTree as ET
@@ -20,9 +24,9 @@ MEASUREMENT_MIN_DURATION=2
 MEASUREMENT_MIN_COUNT=10
 
 def _meanAndSigma(measurements):
-    mean = sum(measurements)/len(measurements)
-    sumSquares = sum(map(lambda x: (x-mean)**2, measurements))
-    sigma = math.sqrt(sumSquares/(len(measurements)-1))
+    mean = old_div(sum(measurements),len(measurements))
+    sumSquares = sum([(x-mean)**2 for x in measurements])
+    sigma = math.sqrt(old_div(sumSquares,(len(measurements)-1)))
     return mean, sigma
             
 class IgorPerf(IgorSetupAndControl):
@@ -49,7 +53,7 @@ class IgorPerf(IgorSetupAndControl):
         self.startMeasurement = None
         
     def run(self):
-        allPerf = filter(lambda x: x.startswith('perf'), dir(self))
+        allPerf = [x for x in dir(self) if x.startswith('perf')]
         allPerf.sort()
         for name in allPerf:
             method = getattr(self, name)
@@ -304,12 +308,12 @@ class IgorPerfCaps(IgorPerfHttps):
                 break
 
     def _new_capability(self, pAdmin, **kwargs):
-        argStr = urllib.urlencode(kwargs)
+        argStr = urllib.parse.urlencode(kwargs)
         rv = pAdmin.get('/internal/accessControl/newToken?' + argStr)
         return rv.strip()
         
     def _new_sharedkey(self, pAdmin, **kwargs):
-        argStr = urllib.urlencode(kwargs)
+        argStr = urllib.parse.urlencode(kwargs)
         try:
             rv = pAdmin.get('/internal/accessControl/createSharedKey?' + argStr)
             return rv.strip()

@@ -1,5 +1,9 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 from . import webApp
 from . import xmlDatabase
 from . import access
@@ -34,7 +38,7 @@ def _dump_app_stacks(*args):
     _dump_app_stacks_to(sys.stderr)
 def _dump_app_stacks_to(file):
     print("igorServer: QUIT received, dumping all stacks, %d threads:" % len(sys._current_frames()), file=file)
-    for threadId, stack in sys._current_frames().items():
+    for threadId, stack in list(sys._current_frames().items()):
         print("\nThreadID:", threadId, file=file)
         traceback.print_stack(stack, file=file)
         print(file=file)
@@ -67,7 +71,7 @@ def enable_thread_profiling():
 
     threading.Thread.run = profile_run
     
-class Struct:
+class Struct(object):
     pass
     
 # class IgorLogger(wsgilog.WsgiLog):
@@ -88,7 +92,7 @@ class Struct:
 #             backups = self.IGOR_LOG_BACKUPS
 #             )
 # 
-class IgorServer:
+class IgorServer(object):
     def __init__(self, datadir, port=9333, advertise=False, profile=False, nossl=False, nologger=False):
         #
         # Store all pathnames and such
@@ -263,7 +267,7 @@ class IgorServer:
         """Saves the database to the filesystem"""
         self.database.saveFile()
                 
-class IgorInternal:
+class IgorInternal(object):
     """ Implements all internal commands for Igor"""
     def __init__(self, igor):
         self.igor = igor
@@ -323,7 +327,7 @@ class IgorInternal:
             if not resultData:
                 resultData = '%s failed without error message' % representing
         if type(resultData) == type({}):
-            for k, v in resultData.items():
+            for k, v in list(resultData.items()):
                 _ = self.igor.databaseAccessor.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object', token)
         else:
             _ = self.igor.databaseAccessor.put_key(key + '/errorMessage', 'application/x-python-object', None, resultData, 'application/x-python-object', token)
@@ -334,7 +338,7 @@ class IgorInternal:
             self.accessFailures.append(failureDescription)
             failureDescription = copy.deepcopy(failureDescription)
             failureDescription['timestamp'] = time.time()
-            for k in failureDescription.keys():
+            for k in list(failureDescription.keys()):
                 if not failureDescription[k]:
                     del failureDescription[k]
             token = self.igor.access.tokenForIgor()

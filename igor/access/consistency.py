@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import object
 import random
 
 VERBOSE=False
@@ -6,7 +7,7 @@ VERBOSE=False
 class CannotFix(Exception):
     pass
     
-class StructuralConsistency:
+class StructuralConsistency(object):
     def __init__(self, database, fix, namespaces, token, extended=False):
         self.database = database
         self.fix = fix
@@ -92,7 +93,7 @@ class StructuralConsistency:
                 self._status('Non-singleton context: %s' % context)
                 raise CannotFix
             context = contextElements[0]
-        return map(lambda x: x[1], self.database.getValues(path, token=self.token, namespaces=self.namespaces, context=context))
+        return [x[1] for x in self.database.getValues(path, token=self.token, namespaces=self.namespaces, context=context)]
 
     def _getValue(self, path, context=None):
         values = self._getValues(path, context=context)
@@ -155,7 +156,7 @@ class CapabilityConsistency(StructuralConsistency):
 
     def _hasCapability(self, location, **kwargs):
         expr = location + '/au:capability'
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             subExpr = "[%s='%s']" % (k, v)
             expr += subExpr
         allCaps = self.database.getElements(expr, 'get', token=self.token, namespaces=self.namespaces)
@@ -225,7 +226,7 @@ class CapabilityConsistency(StructuralConsistency):
                     self._status('Multiple /data root elements')
                     raise CannotFix
                 rootElement = rootElements[0]
-                for nsName, nsUrl in self.namespaces.items():
+                for nsName, nsUrl in list(self.namespaces.items()):
                     have = rootElement.getAttribute('xmlns:' + nsName)
                     if have != nsUrl:
                         if self.fix:

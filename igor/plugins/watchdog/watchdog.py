@@ -1,8 +1,11 @@
 """Linux kernel watchdog support"""
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import time
-import thread
+import _thread
 
-class WatchdogClass:
+class WatchdogClass(object):
     _singleton = None
     
     def __init__(self):
@@ -28,7 +31,7 @@ class WatchdogClass:
         if not self.watchdog_device:
             import watchdogdev
             self.watchdog_device = watchdogdev.watchdog(device)
-            thread.start_new_thread(self._feeder, ())
+            _thread.start_new_thread(self._feeder, ())
             rv += "watchdog opened\n"
         # Set the timeout, if needed
         if timeout:

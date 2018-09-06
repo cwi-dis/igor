@@ -1,5 +1,6 @@
 """Match list of supported mimetypes to an Accept: header"""
 from __future__ import print_function
+from __future__ import unicode_literals
 import sys
 
 class MimetypeError(ValueError):

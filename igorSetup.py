@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import zip
 from builtins import range
 from builtins import object

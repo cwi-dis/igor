@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 
 from builtins import object

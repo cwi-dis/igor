@@ -5,6 +5,7 @@ Should use callUrl, so local/remote becomes similar, and some form
 of callback mechanism so it can run asynchronously.
 """
 from __future__ import print_function
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str

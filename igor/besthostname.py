@@ -1,4 +1,5 @@
 """A method to get the best hostname for this machine"""
+from __future__ import unicode_literals
 import socket
 
 def besthostname():

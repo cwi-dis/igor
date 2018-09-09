@@ -30,8 +30,8 @@ from . import myLogger
 from ._version import VERSION
 
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+#reload(sys)
+#sys.setdefaultencoding('utf8')
 
 _real_stderr = sys.stderr
 def _dump_app_stacks(*args):

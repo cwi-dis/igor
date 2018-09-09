@@ -105,7 +105,7 @@ setup(
     install_requires= (
         ["httplib2", "requests", "web.py", "python-dateutil", "py-dom-xpath-redux", "passlib", "pyjwt", "pyopenssl"]
         if sys.version_info[0] < 3 else
-        ["future", "httplib2", "requests", "web.py==0.40.dev0", "python-dateutil",  "passlib", "pyjwt", "pyopenssl"]
+        ["future", "httplib2", "requests", "web.py==0.40.dev1", "python-dateutil",  "passlib", "pyjwt", "pyopenssl"]
         # todo: "py-dom-xpath-redux",
         ),
 

@@ -39,7 +39,12 @@ class XPathFunctionExtension(xpath.expr.Function):
     number = xpath.expr.number
     boolean = xpath.expr.boolean
     nodeset = xpath.expr.nodeset
-    function = xpath.expr.Function.function.__func__
+    try:
+        # Python 2
+        function = xpath.expr.Function.function.__func__
+    except AttributeError:
+        # Python 3
+        function = xpath.expr.Function.function
 
     @function(0, 1, implicit=True, convert=string)
     def f_igor_upper(self, node, pos, size, context, arg):

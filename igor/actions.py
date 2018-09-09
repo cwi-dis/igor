@@ -11,17 +11,25 @@ import urllib.request, urllib.parse, urllib.error
 import time
 import threading
 import queue
+import functools
 from . import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
 DEBUG=False
 
-class NEVER(object):
-    """Compares bigger than any number"""
-    pass
-    
+@functools.total_ordering
+class NeverSmaller(object):
+    def __le__(self, other):
+        return False
+
+class ReallyMaxInt(NeverSmaller, int):
+    def __repr__(self):
+        return 'NEVER'
+
+NEVER = ReallyMaxInt()  
 assert NEVER > 1
+assert 1 < NEVER
 
 class Action(object):
     """Object to implement calling methods on URLs whenever some XPath changes."""

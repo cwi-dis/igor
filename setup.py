@@ -141,4 +141,6 @@ setup(
             'igorCA=igorCA:main'
         ],
     },
+    # And the test suite
+    test_suite="test",
 )

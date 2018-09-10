@@ -150,7 +150,10 @@ class IgorServer(object):
                     print(sys.argv[0] + ': ' + msg, file=sys.stderr)
                     print(r.text, file=sys.stderr)
             raise IgorError(msg)
-        return r.text
+        rv = r.text
+        if type(rv) != type(''):
+            rv = rv.decode('utf-8')
+        return rv
         
 def main():
     global VERBOSE

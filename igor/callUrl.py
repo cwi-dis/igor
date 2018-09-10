@@ -70,6 +70,8 @@ class URLCallRunner(threading.Thread):
                     rep = self.igor.app.request(url, method=method, data=data, headers=headers, env=env)
                     resultStatus = rep.status
                     resultData = rep.data
+                    if resultData and type(resultData) != type(''):
+                        resultData = resultData.decode('utf-8')
                     if not resultData:
                         resultData = resultStatus
                 else:
@@ -90,6 +92,8 @@ class URLCallRunner(threading.Thread):
                         self.igor.internal._accessFailure(failureDescription)
                     resultStatus = str(r.status_code)
                     resultData = r.text
+                    if resultData and type(resultData) != type(''):
+                        resultData = resultData.decode('utf-8')
                     # Stop-gap to get more info in the log, if possible
                     if resultData.count('\n') <= 1 and resultData.startswith(resultStatus):
                         resultStatus = resultData.strip()

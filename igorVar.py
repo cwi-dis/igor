@@ -17,7 +17,6 @@ import pprint
 import xml.etree.ElementTree
 import socket
 import configparser
-import exceptions
 
 class IgorError(EnvironmentError):
     pass

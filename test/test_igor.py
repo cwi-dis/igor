@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 from future import standard_library
@@ -11,7 +12,7 @@ import xml.etree.ElementTree as ET
 import igorVar
 import igorCA
 import igorServlet
-from setupAndControl import *
+from .setupAndControl import *
 
 FIXTURES=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures')
 

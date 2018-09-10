@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import sys
 import argparse
 import igorVar
-import httplib2
 import traceback
 
 def main():
@@ -28,7 +27,7 @@ def main():
     server = igorVar.IgorServer(args.url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
     try:
         result = server.get("/internal/%s" % args.action, query=query)
-    except httplib2.HttpLib2Error as e:
+    except igorVar.IgorError as e:
         print("%s: %s" % (sys.argv[0], traceback.format_exception_only(type(e), e.message)[0].strip()), file=sys.stderr)
         sys.exit(1)
     sys.stdout.write(result)

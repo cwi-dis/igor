@@ -7,7 +7,7 @@ from builtins import object
 import argparse
 import urllib.parse
 import urllib.request, urllib.parse, urllib.error
-import httplib2
+import requests
 import sys
 import os
 import time
@@ -83,6 +83,11 @@ class IgorServer(object):
         return self._action("POST", item, variant, format, data=data, datatype=datatype)
         
     def _action(self, method, item, variant, format=None, data=None, datatype=None, query=None):
+        # Convert to unicode for Python 2
+        try:
+            item = unicode(item)
+        except NameError:
+            pass
         url = urllib.parse.urljoin(self.url, item)
         if query is None:
             query = {}
@@ -109,14 +114,19 @@ class IgorServer(object):
         if VERBOSE:
             if self.certificate or self.noverify:
                 print('certificate=%s, noverify=%s' % (repr(self.certificate), repr(self.noverify)))
-        h = httplib2.Http(ca_certs=self.certificate, disable_ssl_certificate_validation=self.noverify)
+        kwargs = {}
+        if self.noverify:
+            kwargs['verify'] = False
+        elif self.certificate:
+            kwargs['verify'] = self.certificate
         if VERBOSE:
             print(">>> GET", url, file=sys.stderr)
             print("... Headers", headers, file=sys.stderr)
             if data:
                 print("... Data", repr(data), file=sys.stderr)
         try:
-            reply, content = h.request(url, method=method, headers=headers, body=data)
+            r = requests.request(method, url, headers=headers, data=data, **kwargs)
+            # reply, content
         except socket.error as e:
             if e.args[1:]:
                 argstr = e.args[1]
@@ -125,22 +135,22 @@ class IgorServer(object):
             raise IgorError("%s: %s" % (url, argstr))
         except socket.gaierror:
             raise IgorError("%s: unknown host" %  url)
-        except httplib2.ServerNotFoundError as e:
+        except requests.exceptions.RequestException as e:
             raise IgorError(*e.args)
         except socket.timeout:
             raise IgorError("%s: timeout during connect" % url)
         if VERBOSE:
-            print("<<< Headers", reply, file=sys.stderr)
-            print("...", repr(content), file=sys.stderr)
-        if not 'status' in reply or reply['status'] != '200':
-            msg = "Error %s for %s" % (reply['status'], url)
+            print("<<< Headers", r.headers, file=sys.stderr)
+            print("...", r.text, file=sys.stderr)
+        if r.status_code != 200:
+            msg = "Error %s for %s" % (r.status_code, url)
             if self.printmessages:
-                contentLines = content.splitlines()
+                contentLines = r.text.splitlines()
                 if len(contentLines) > 1:
                     print(sys.argv[0] + ': ' + msg, file=sys.stderr)
-                    print(content, file=sys.stderr)
+                    print(r.text, file=sys.stderr)
             raise IgorError(msg)
-        return content
+        return r.text
         
 def main():
     global VERBOSE

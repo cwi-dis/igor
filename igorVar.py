@@ -16,7 +16,10 @@ import base64
 import pprint
 import xml.etree.ElementTree
 import socket
-import configparser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 class IgorError(EnvironmentError):
     pass

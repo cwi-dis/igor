@@ -13,7 +13,10 @@ import shutil
 import getpass
 import tempfile
 import subprocess
-import configparser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import re
 import json
 import argparse

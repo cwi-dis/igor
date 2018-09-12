@@ -133,7 +133,10 @@ class IgorSetupAndControl(object):
 #            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 
         if DEBUG_TEST: print('IgorTest: Check database consistency')
-        cmdHead = [sys.executable]
+        if 'IGOR_TEST_PYTHON' in os.environ:
+            cmdHead = [os.environ['IGOR_TEST_PYTHON']]
+        else:
+            cmdHead = [sys.executable]
         if COVERAGE:
             cmdHead = ["coverage", "run", "--parallel-mode"]
         cmd = cmdHead + ["-m", "igor", "--nologstderr", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]

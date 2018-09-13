@@ -545,7 +545,7 @@ class DBImpl(DBSerializer):
                     data = ''
                 if type(data) is type(True):
                     data = 'true' if data else ''
-                data = str(data)
+                data = "%s" % (data,)
                 # Clean illegal unicode characters
                 data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
                 newnode.appendChild(self._doc.createTextNode(data))

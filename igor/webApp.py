@@ -764,6 +764,8 @@ class XmlDatabaseAccess(object):
         
     def convertfrom(self, value, tag, mimetype):
         if mimetype == 'application/xml':
+            if type(value) != type(''):
+                value = value.decode('utf-8')
             element = self.igor.database.elementFromXML(value)
             if element.tagName != tag:
                 raise web.BadRequest("Bad request, toplevel XML tag %s does not match final XPath element %s" % (element.tagName, tag))
@@ -793,6 +795,8 @@ class XmlDatabaseAccess(object):
             return element
         elif mimetype == 'text/plain':
             # xxxjack should check that value is a string or unicode
+            if type(value) != type(''):
+                value = value.decode('utf-8')
             element = self.igor.database.elementFromTagAndData(tag, value)
             return element
         elif mimetype == 'application/x-python-object':

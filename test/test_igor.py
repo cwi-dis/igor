@@ -201,7 +201,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     def test62_call_external(self):
         """GET an action on the external servlet directly"""
         pAdmin = self._igorVar(credentials='admin:')
-        newCapID = self._create_caps_for_action(pAdmin, None, obj='/api/get', get='self', delegate='external')
+        newCapID = self._create_caps_for_action(pAdmin, None, obj='/api', get='child', put='child', delegate='external')
         optBearerToken = self._export_cap_for_servlet(pAdmin, newCapID)
         p = self._igorVar(server=self.servletUrl, **optBearerToken)
         # Set internally, get externally

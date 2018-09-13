@@ -204,12 +204,17 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         newCapID = self._create_caps_for_action(pAdmin, None, obj='/api/get', get='self', delegate='external')
         optBearerToken = self._export_cap_for_servlet(pAdmin, newCapID)
         p = self._igorVar(server=self.servletUrl, **optBearerToken)
+        # Set internally, get externally
         self.servlet.set('sixtytwo')
         self.servlet.startTimer()
         value = p.get('/api/get')
         duration = self.servlet.waitDuration()
         self.assertEqual(value, '"sixtytwo"')
         self.assertNotEqual(duration, None)
+        # Set externally, get internally
+        p.put('/api/set', 'sixty-two', datatype='text/plain')
+        value = self.servlet.get()
+        self.assertEqual(value, 'sixty-two')
         
     def _export_cap_for_servlet(self, pAdmin, newCapID):
         """Export a capability for the servlet audience"""

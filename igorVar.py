@@ -91,7 +91,7 @@ class IgorServer(object):
             item = unicode(item)
         except NameError:
             pass
-        url = urllib.parse.urljoin(self.url, item)
+        url = urllib.parse.urljoin(str(self.url), str(item))
         if query is None:
             query = {}
         else:
@@ -127,6 +127,8 @@ class IgorServer(object):
             print("... Headers", headers, file=sys.stderr)
             if data:
                 print("... Data", repr(data), file=sys.stderr)
+        if data != None:
+            data = data.encode('utf-8')
         try:
             r = requests.request(method, url, headers=headers, data=data, **kwargs)
             # reply, content

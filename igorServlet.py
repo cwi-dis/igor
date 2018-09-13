@@ -163,6 +163,9 @@ class ForwardingClass(object):
         else:
             data = web.data()
             if data:
+                if type(data) != type(''):
+                    # Assume its bytes, and decode as utf-8
+                    data = data.decode('utf-8')
                 try:
                     methodArgs = json.loads(data)
                 except ValueError:
@@ -172,11 +175,13 @@ class ForwardingClass(object):
         except TypeError as arg:
             raise myWebError("400 Error in parameters: %s" % arg)
         if endpoint['mimetype'] == 'text/plain':
-            rv = str(rv)
+            rv = "%s" % (rv,)
         elif endpoint['mimetype'] == 'application/json':
             rv = json.dumps(rv)
         else:
             assert 0, 'Unsupported mimetype %s' % endpoint['mimetype']
+        # Finally ensure we send utf8 bytes back
+        rv = rv.encode('utf-8')
         return rv
         
     def _checkRights(self, method, path):

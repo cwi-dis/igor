@@ -101,7 +101,7 @@ class IgorSetupAndControl(object):
     
     @classmethod
     def setUpIgor(cls):
-        if DEBUG_TEST: print('xxxjack setupIgor', cls)
+        if DEBUG_TEST: print('IgorTest: setupIgor', cls)
         if DEBUG_TEST: print('IgorTest: Delete old database and logfile')
         shutil.rmtree(cls.igorDir, True)
         cls.igorUrl = "%s://%s:%d/data/" % (cls.igorProtocol, cls.igorHostname, cls.igorPort)

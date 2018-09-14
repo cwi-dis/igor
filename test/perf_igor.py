@@ -6,6 +6,7 @@ from future import standard_library
 standard_library.install_aliases()
 from past.utils import old_div
 import os
+import sys
 import json
 import socket
 import urllib.request, urllib.parse, urllib.error
@@ -377,7 +378,11 @@ def main():
     args = parser.parse_args()
     MEASUREMENT_MIN_COUNT = args.count
     MEASUREMENT_MIN_DURATION = args.dur
-    for cls in [IgorPerf, IgorPerfHttps, IgorPerfCaps]:
+    if sys.version_info[0] <3:
+        perfClasses = [IgorPerf, IgorPerfHttps, IgorPerfCaps]
+    else:
+        perfClasses = [IgorPerf]
+    for cls in perfClasses:
         try:
             print('%s:' % cls.__name__)
             cls.setUpClass()

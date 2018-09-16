@@ -3,6 +3,7 @@
 build
 _build
 dist
+.eggs
 *.egg-info
 test/fixtures/testIgor
 test/fixtures/testIgorHttps

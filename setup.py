@@ -68,10 +68,6 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
         'Development Status :: 3 - Alpha',
 
         # Indicate who your project is intended for
@@ -80,11 +76,12 @@ setup(
         'Topic :: Home Automation',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: MIT License',
+        "License :: OSI Approved :: MIT License",
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2.7',
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
     ],
 
     # What does your project relate to?
@@ -103,10 +100,9 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires= (
-        ["future", "httplib2", "requests", "web.py", "python-dateutil", "py-dom-xpath-redux", "passlib", "pyjwt", "pyopenssl"]
+        ["future", "httplib2", "requests", "web.py", "python-dateutil", "py-dom-xpath-six", "passlib", "pyjwt", "pyopenssl"]
         if sys.version_info[0] < 3 else
-        ["future", "httplib2", "requests", "web.py==0.40.dev1", "python-dateutil",  "passlib", "pyjwt", "pyopenssl"]
-        # todo: "py-dom-xpath-redux",
+        ["future", "httplib2", "requests", "web.py==0.40.dev1", "python-dateutil", "py-dom-xpath-six",  "passlib", "pyjwt", "pyopenssl"]
         ),
 
     # List additional groups of dependencies here (e.g. development

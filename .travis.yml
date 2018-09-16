@@ -3,6 +3,7 @@ python:
     - "2.7"
 #    - "3.6"
 install:
+    - pip install future
     - python setup.py -q install
 script:
     - python setup.py test

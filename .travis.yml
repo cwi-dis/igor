@@ -8,6 +8,6 @@ install:
 script:
     - python setup.py test
     - python -m test.perf_igor
-    - cat fixtures/testIgor/igor.log
+    - cat test/fixtures/testIgor/igor.log
     
     

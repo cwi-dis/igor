@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-You need to have Python v2.7 installed, and that should also have `setuptools` installed.
+You need to have Python v2.7 installed, and that should also have `setuptools` installed. Python 3 is in principle supported, but Igor uses _web.py_ and its support for Python 3 is not complete, currently.
 
 Installing Python's package installation program `pip` will also install `setuptools`.
 

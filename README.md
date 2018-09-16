@@ -15,7 +15,7 @@ This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS 
 
 ## Prerequisites
 
-You need to have Python v2.7 installed, and that should also have _setuptools_ installed.
+You need to have Python v2.7 installed, and that should also have _setuptools_ installed. Python 3.6 or later is partially supported (but not completely).
 
 Installing Python's package installation program _pip_ will also install _setuptools_.
 
@@ -59,7 +59,7 @@ without giving them the MAC address of his phone.
 
 ## Server Implementation
 
-Igor is implemented in Python 2. At the core of Igor is an XML datastore (using
+Igor is implemented in Python (2 or 3). At the core of Igor is an XML datastore (using
 ``xml.dom``, so the underlying datastore can be replaced by a more efficient 
 one if needed) with locking for concurrent access. Only elements (and text data)
 are used for normal storage, no attributes, so the data structures can easily 

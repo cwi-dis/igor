@@ -26,6 +26,22 @@ DEBUG=False
 
 _WEBAPP = None
 
+def monkeypatch_cgi():
+    """The Python cgi module has an error under py3 that makes web.py not work. See https://bugs.python.org/issue27777"""
+    def read_single(self):
+        """Internal: read an atomic part."""
+        if self.length >= 0 and self._binary_file:
+            self.read_binary()
+            self.skip_lines()
+        else:
+            self.read_lines()
+        self.file.seek(0)
+    import cgi
+    cgi.FieldStorage.read_single = read_single
+
+if sys.version_info[0] == 3:
+    monkeypatch_cgi()
+
 urls = (
     '/pluginscript/([^/]+)/([^/]+)', 'runScript',
     '/data/(.*)', 'abstractDatabaseAccess',

@@ -21,6 +21,7 @@ from . import xmlDatabase
 import mimetypes
 from . import access
 import traceback
+import shelve
 
 DEBUG=False
 
@@ -56,15 +57,77 @@ urls = (
     '/([^/]*)', 'static',
 )
 class MyApplication(web.application):
+    """This class is a wrapper with some extra functionality (setting the port) as well as a
+    somewhat-micro-framework-independent interface to the framework"""
+    
     def run(self, port=8080, *middleware):
         func = self.wsgifunc(*middleware)
         return web.httpserver.runsimple(func, ('0.0.0.0', port))
+        
+    def setSSLInfo(self, certfile, keyfile):
+        """Signal that https is to be used and set key and cert"""
+        from web.wsgiserver import CherryPyWSGIServer
+        CherryPyWSGIServer.ssl_certificate = certfile
+        CherryPyWSGIServer.ssl_private_key = keyfile
 
+    def getSession(self, backingstorefile=None):
+        """Create persistent session object"""
+        return web.session.Session(self, web.session.ShelfStore(shelve.open(backingstorefile, flag="n")))
+        
+    def getHTTPError(self):
+        """Return excpetion raised by other methods below (for catching)"""
+        return web.HTTPError
+        
+    def resetHTTPError(self):
+        """Clear exception"""
+        web.ctx.status = "200 OK"
+        
+    def raiseNotfound(self):
+        """404 not found"""
+        raise web.notfound()
+        
+    def raiseSeeother(self, url):
+        """303 See Other"""
+        raise web.seeother(url)
+        
+    def raiseHTTPError(self, status, headers={}, data=""):
+        """General http errors"""
+        if headers == {} and data == "":
+            headers = {"Content-type":"text/plain"}
+            data = status +'\n\n'
+        raise web.HTTPError(status, headers, data)
+        
+    def addHeaders(self, headers):
+        """Add headers to the reply (to be returned shortly)"""
+        for k, v in headers.items():
+            web.header(k, v)
+            
+    def getOperationTraceInfo(self):
+        """Return information that helps debugging access control errors in current operation"""
+        rv = {}
+        try:
+            rv['requestPath'] = web.ctx.path
+        except AttributeError:
+            pass
+        try:
+            rv['action'] = web.ctx.env.get('original_action')
+        except AttributeError:
+            pass
+        try:
+            rv['representing'] = web.ctx.env.get('representing')
+        except AttributeError:
+            pass
+        return rv
+        
 web.config.debug = DEBUG
 
 def WebApp(igor):
     global _WEBAPP
     assert not _WEBAPP
+    #
+    # Disable debug
+    #
+    web.config.debug = False
     _WEBAPP = MyApplication(urls, globals(), autoreload=False)
     _WEBAPP.igor = igor
     return _WEBAPP

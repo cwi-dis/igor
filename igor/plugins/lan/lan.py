@@ -2,13 +2,8 @@
 from __future__ import unicode_literals
 from builtins import object
 import socket
-import web
 import time
 import json
-
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class LanPlugin(object):
     def __init__(self, igor):
@@ -16,7 +11,7 @@ class LanPlugin(object):
         
     def index(self, name=None, service='services/%s', ip=None, port=80, timeout=5, token=None):
         if not name:
-            raise myWebError("401 Required argument name missing")
+            self.igor.app.raiseHTTPError("401 Required argument name missing")
         if not ip:
             ip = name
         alive = True

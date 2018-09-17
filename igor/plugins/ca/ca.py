@@ -1,15 +1,11 @@
 from __future__ import unicode_literals
 from builtins import object
-import web
 import json
 import igorCA
 import os
 import sys
 
 DEBUG=False
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 INDEX_HTML="""<html lang="en">
 <head>
@@ -53,43 +49,41 @@ class CAPlugin(object):
     def list(self, token=None):
         self.initCA()
         listData = self.ca.do_list()
-        web.header('Content-type', 'text/plain')
+        self.igor.app.addHeaders({'Content-type':'text/plain'})
         return listData
         
     def status(self, token=None):
         self.initCA()
         statusData = self.ca.do_status()
-        web.header('Content-type', 'text/plain')
+        self.igor.app.addHeaders({'Content-type':'text/plain'})
         return statusData
 
     def dn(self, token=None):
         self.initCA()
         dnData = self.ca.do_dn()
-        web.header('Content-type', 'application/json')
+        self.igor.app.addHeaders({'Content-type':'application/json'})
         return dnData
         
     def csrtemplate(self, token=None):
         self.initCA()
         tmplData = self.ca.do_csrtemplate()
-        web.header('Content-type', 'text/plain')
+        self.igor.app.addHeaders({'Content-type':'text/plain'})
         return tmplData
         
     def sign(self, csr, token=None):
         self.initCA()
         cert = self.ca.do_signCSR(csr)
         if not cert:
-            raise myWebError('Could not sign certificate')
-        web.header('Content-type', 'application/x-pem-file')
-        web.header('Content-Disposition', 'attachment; filename="certificate.pem"')
+            self.igor.app.raiseHTTPError('500 Could not sign certificate')
+        self.igor.app.addHeaders({'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="certificate.pem"'})
         return cert
         
     def root(self, token=None):
         self.initCA()
         chain = self.ca.do_getRoot()
         if not chain:
-            raise myWebError('Could not obtain root certificate chain')
-        web.header('Content-type', 'application/x-pem-file')
-        web.header('Content-Disposition', 'attachment; filename="igor-root-certificate-chain.pem"')
+            self.igor.app.raiseHTTPError('500 Could not obtain root certificate chain')
+        self.igor.app.addHeaders({'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="igor-root-certificate-chain.pem"'})
         return chain
 
 def igorPlugin(igor, pluginName, pluginData):

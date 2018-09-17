@@ -2,7 +2,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import object
 from .vars import *
-import web
 
 class AccessChecker(object):
     """An object that checks whether an operation (or request) has the right permission"""
@@ -16,33 +15,21 @@ class AccessChecker(object):
         if not token:
             return self._failed(operation, token, tentative)
         if not operation in ALL_OPERATIONS:
-            raise myWebError("500 Access: unknown operation '%s'" % operation)
+            self.access.igor.app.raiseHTTPError("500 Access: unknown operation '%s'" % operation)
         ok = token._allows(operation, self)
         if not ok:
             ok = self._failed(operation, token, tentative)
         return ok
         
     def _failed(self, operation, token, tentative):
-            others = {}
-            try:
-                others['requestPath'] = web.ctx.path
-            except AttributeError:
-                pass
-            try:
-                others['action'] = web.ctx.env.get('original_action')
-            except AttributeError:
-                pass
-            try:
-                others['representing'] = web.ctx.env.get('representing')
-            except AttributeError:
-                pass
-            ok = self.access._checkerDisallowed(
-                operation=operation,
-                path=self.destination,
-                capID=token.getIdentifiers(),
-                tentative=tentative,
-                **others)
-            return ok
+        traceInfo = self.access.igor.app.getOperationTraceInfo()
+        ok = self.access._checkerDisallowed(
+            operation=operation,
+            path=self.destination,
+            capID=token.getIdentifiers(),
+            tentative=tentative,
+            **traceInfo)
+        return ok
     
 class DefaultAccessChecker(AccessChecker):
     """An object that checks whether an operation (or request) has the right permission"""
@@ -54,23 +41,11 @@ class DefaultAccessChecker(AccessChecker):
 
     def allowed(self, operation, token, tentative=False):
         print('access: no access allowed by DefaultAccessChecker')
-        others = {}
-        try:
-            others['requestPath'] = web.ctx.path
-        except AttributeError:
-            pass
-        try:
-            others['action'] = web.ctx.env.get('original_action')
-        except AttributeError:
-            pass
-        try:
-            others['representing'] = web.ctx.env.get('representing')
-        except AttributeError:
-            pass
+        traceInfo = self.access.igor.app.getOperationTraceInfo()
         ok = self.access._checkerDisallowed(
             operation=operation,
             defaultChecker=True,
             capabilities=token.getIdentifiers(),
             tentative=tentative,
-            **others)
+            **traceinfo)
         return ok

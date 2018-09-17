@@ -5,11 +5,7 @@ from builtins import str
 from builtins import object
 from past.utils import old_div
 import socket
-import web
 import time
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 def niceDelta(delta):
     if delta < 60:
@@ -44,8 +40,8 @@ class SystemHealthPlugin(object):
             else:
                 try:
                     self.igor.databaseAccessor.delete_key(targetPath, token)
-                except web.HTTPError:
-                    web.ctx.status = "200 OK"
+                except self.igor.app.getHTTPError():
+                    self.igor.app.resetHTTPError()
         #
         # Determine whether any sensors have been inactive for too long and set an
         # error message if so.
@@ -57,7 +53,7 @@ class SystemHealthPlugin(object):
             if sensors:
                 for xp, content in list(sensors.items()):
                     if type(content) != type({}):
-                        raise myWebError("500 expected nested element for %s in status/sensors" % xp)
+                        self.igor.app.raiseHTTPError("500 expected nested element for %s in status/sensors" % xp)
                     sensorName = xp[xp.rindex('/')+1:]
                     lastActivity = content.get('lastActivity', None)
                     if lastActivity and sensorName in sensorMaxInterval:
@@ -76,7 +72,7 @@ class SystemHealthPlugin(object):
         if statuses:
             for xp, content in list(statuses.items()):
                 if type(content) != type({}):
-                    raise myWebError("500 expected nested element for %s in status/*" % xp)
+                    self.igor.app.raiseHTTPError("500 expected nested element for %s in status/*" % xp)
                 serviceName = xp[xp.rindex('/')+1:]
                 hasError = content.get('errorMessage')
                 hasIgnore = content.get('ignoreErrorUntil')
@@ -96,11 +92,10 @@ class SystemHealthPlugin(object):
                     # Remove error from environment/systemHealth if it is there currently
                     try:
                         self.igor.databaseAccessor.delete_key(targetPath, token)
-                    except web.HTTPError:
-                        web.ctx.status = "200 OK"
-                        pass
+                    except self.igor.app.getHTTPError():
+                        self.igor.app.resetHTTPError()
         if returnTo:
-            raise web.seeother(returnTo)
+            raise self.igor.app.raiseSeeother(returnTo)
 
 def igorPlugin(igor, pluginName, pluginData):
     return SystemHealthPlugin(igor, pluginData)

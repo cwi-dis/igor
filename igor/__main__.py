@@ -18,14 +18,12 @@ from . import besthostname
 import time
 import copy
 import json
-import web
 import subprocess
 import imp
 import threading
 import traceback
 import cProfile
 import pstats
-import shelve
 from . import myLogger
 from ._version import VERSION
 
@@ -141,7 +139,7 @@ class IgorServer(object):
         
         self.app = webApp.WebApp(self)
         
-        self.session = web.session.Session(self.app, web.session.ShelfStore(shelve.open(self.pathnames.sessionfile, flag="n")))
+        self.session = self.app.getSession(self.pathnames.sessionfile)
 
         access.createSingleton() # Has probably been done in main() already
         self.access = access.singleton
@@ -168,10 +166,6 @@ class IgorServer(object):
         self.internal.updateActions()
         self.internal.updateEventSources()
         self.internal.updateTriggers()
-        #
-        # Disable debug
-        #
-        web.config.debug = False
         #
         # Send start action to start any plugins
         #
@@ -219,9 +213,7 @@ class IgorServer(object):
         
     def run(self):
         if self._do_ssl:
-            from web.wsgiserver import CherryPyWSGIServer
-            CherryPyWSGIServer.ssl_certificate = self.pathnames.certificateFile
-            CherryPyWSGIServer.ssl_private_key = self.pathnames.privateKeyFile
+            self.app.setSSLInfo(self.pathnames.certificateFile, self.pathnames.privateKeyFile)
         signal.signal(signal.SIGTERM, self._sigterm_caught)
         self.app.run(self.port)
         print('Igor terminating')
@@ -289,7 +281,7 @@ class IgorInternal(object):
         logfn = os.path.join(self.igor.pathnames.datadir, 'igor.log')
         if os.path.exists(logfn):
             return open(logfn).read()
-        raise web.HTTPError('404 Log file not available')
+        raise self.app.raiseHTTPError('404 Log file not available')
         
     def updateStatus(self, subcommand=None, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None, token=None):
         """Update status field of some service/sensor/actuator after an action. Not intended for human use"""
@@ -312,8 +304,8 @@ class IgorInternal(object):
         # Check whether record exists, otherwise create it (empty)
         try:
             _ = self.igor.databaseAccessor.get_key(key, 'application/x-python-object', 'content', token)
-        except web.HTTPError:
-            web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+        except self.igor.app.getHTTPError():
+            self.igor.app.resetHTTPError() # Clear error, otherwise it is forwarded from this request
             _ = self.igor.databaseAccessor.put_key(key, 'application/x-python-object', None, '', 'text/plain', token)
             
         # Fill only entries we want
@@ -349,13 +341,13 @@ class IgorInternal(object):
     def accessControl(self, subcommand=None, returnTo=None, **kwargs):
         """Low-level access control, key and capability interface. Not intended for human use"""
         if not subcommand:
-            raise web.notfound()
+            self.igor.app.raiseNotfound()
         method = getattr(self.igor.access, subcommand, None)
         if not method:
-            raise web.notfound()
+            self.igor.app.raiseNotfound()
         rv = method(**kwargs)
         if returnTo and not rv:
-            raise web.seeother(returnTo)
+            self.igor.app.raiseSeeother(returnTo)
         return rv
         
     def updateActions(self, token=None):
@@ -363,7 +355,7 @@ class IgorInternal(object):
         startupActions = self.igor.database.getElements('actions', 'get', self.igor.access.tokenForIgor())
         if len(startupActions):
             if len(startupActions) > 1:
-                raise web.HTTPError('401 only one <actions> element allowed')
+                self.igor.app.raiseHTTPError('401 only one <actions> element allowed')
             if not self.igor.actionHandler:
                 self.igor.actionHandler = actions.ActionCollection(self.igor)
             self.igor.actionHandler.updateActions(startupActions[0])
@@ -376,7 +368,7 @@ class IgorInternal(object):
         eventSources = self.igor.database.getElements('eventSources', 'get', self.igor.access.tokenForIgor())
         if len(eventSources):
             if len(eventSources) > 1:
-                raise web.HTTPError('401 only one <eventSources> element allowed')
+                self.igor.app.raiseHTTPError('401 only one <eventSources> element allowed')
             if not self.igor.eventSources:
                 self.igor.eventSources = sseListener.EventSourceCollection(self.igor.database, )
             self.igor.eventSources.updateEventSources(eventSources[0])
@@ -391,24 +383,24 @@ class IgorInternal(object):
     def runAction(self, actionname, token):
         """Mechanism behind running actions. Not intended for human use."""
         if not self.igor.actionHandler:
-            raise web.notfound()
+            self.igor.app.raiseNotfound()
         nodes = self.igor.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
         if not nodes:
-            raise web.notfound()
+            self.igor.app.raiseNotfound()
         for node in nodes:
             self.igor.actionHandler.triggerAction(node)
         return 'OK'
     
     def runTrigger(self, triggername, token):
         """Mechanism behind running triggers. Unimplemented. Not intended for human use"""
-        raise web.HTTPError("502 triggers not yet implemented")
+        self.igor.app.raiseHTTPError("502 triggers not yet implemented")
         if not self.igor.triggerHandler:
-            raise web.notfound()
+            self.igor.app.raiseNotfound()
         triggerNodes = self.igor.database.getElements('triggers/%s' % triggername, 'get', self.igor.access.tokenForIgor())
         if not triggerNodes:
-            raise web.notfound()
+            self.igor.app.raiseNotfound()
         if len(triggerNodes) > 1:
-            raise web.HTTPError("502 multiple triggers %s in database" % triggername)
+            self.igor.app.raiseHTTPError("502 multiple triggers %s in database" % triggername)
         triggerNode = triggerNodes[0]
         self.igor.triggerHandler.triggerTrigger(triggerNode)
         

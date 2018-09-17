@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-import web
 import os
 import sys
 import re
@@ -14,26 +13,23 @@ NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
 DEBUG=False
 
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
-
 class DevicePlugin(object):
     def __init__(self, igor):
         self.igor = igor
         self.hasCapabilities = self.igor.internal.accessControl('hasCapabilitySupport')
     
     def index(self, token=None):
-        raise web.notfound()
+        raise self.igor.app.raiseNotfound()
     
     def add(self, token=None, name=None, description=None, returnTo=None, **kwargs):
         if not NAME_RE.match(name):
-            raise myWebError('400 Illegal name for device')
+            self.igor.app.raiseHTTPError('400 Illegal name for device')
         if not description:
             description = kwargs
         elif type(description) != type({}):
             description = json.loads(description)
         if type(description) != type({}):
-            raise myWebError('400 description must be dictionary or json object')
+            self.igor.app.raiseHTTPError('400 description must be dictionary or json object')
         isDevice = description.get('isDevice', False)
         isSensor = description.get('isSensor', False)
         hostname = description.get('hostname')
@@ -41,16 +37,16 @@ class DevicePlugin(object):
             hostname = name + '.local'
 
         if not hostname:
-            raise myWebError('400 hostname must be set')
+            self.igor.app.raiseHTTPError('400 hostname must be set')
         if isDevice:
             databaseEntry = 'devices/%s' % name
         elif isSensor:
             databaseEntry = 'sensors/%s' % name
         else:
-            raise myWebError('400 either isDevice or isSensor must be set')
+            self.igor.app.raiseHTTPError('400 either isDevice or isSensor must be set')
             
         if self.igor.databaseAccessor.get_key(databaseEntry, 'application/x-python-object', 'multi', token):
-            raise myWebError('400 %s already exists' % name)
+            self.igor.app.raiseHTTPError('400 %s already exists' % name)
             
         # Create item
         entryValues = {}
@@ -94,7 +90,7 @@ class DevicePlugin(object):
                 returnTo = returnTo + '&' + queryString
             else:
                 returnTo = returnTo + '?' + queryString
-            raise web.seeother(returnTo)
+            self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
 
     def _genSecretKey(self, token=None, aud=None, sub=None):
@@ -108,18 +104,18 @@ class DevicePlugin(object):
                 returnTo = returnTo + '&' + queryString
             else:
                 returnTo = returnTo + '?' + queryString
-            raise web.seeother(returnTo)
+            self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
 
     def _addAction(self, token=None, subject=None, verb='get', obj=None):
         if not self.hasCapabilities:
             return{}
         if not obj:
-            raise myWebError('400 missing obj for action')
+            self.igor.app.raiseHTTPError('400 missing obj for action')
         if obj.startswith('/action/'):
             parentTokenId = 'admin-action'
         else:
-            raise myWebError('400 bad action %s' % obj)
+            self.igor.app.raiseHTTPError('400 bad action %s' % obj)
         print('xxxjack obj', obj)
         newTokenId = actionTokenId = self.igor.internal.accessControl('newToken',
             token=token,
@@ -138,7 +134,7 @@ class DevicePlugin(object):
         
     def delete(self, name, hostname=None, token=None, returnTo=None):
         if not NAME_RE.match(name):
-            raise myWebError('400 Illegal name for user')
+            self.igor.app.raiseHTTPError('400 Illegal name for user')
         if not hostname:
             hostname = name + '.local'
         if self.hasCapabilities:
@@ -152,7 +148,7 @@ class DevicePlugin(object):
         self.igor.databaseAccessor.delete_key('status/sensors/%s' % name, token)
         self.igor.internal.save(token)
         if returnTo:
-            raise web.seeother(returnTo)
+            self.igor.app.raiseSeeother(returnTo)
         return ''
         
     def _delSecretKey(self, token=None, aud=None, sub=None):

@@ -9,23 +9,18 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 import requests
-import web
 import httplib2
 import urllib.parse
 
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
-    
 class CopyTree(object):
     def __init__(self, igor):
         self.igor = igor
 
     def index(self, src=None, dst=None, mimetype="text/plain", method='PUT', token=None):
         if not src:
-            raise myWebError("401 Required argument name missing")
+            self.igor.app.raiseHTTPError("401 Required argument name missing")
         if not dst:
-            raise myWebError("401 Required argument dst missing")
+            self.igor.app.raiseHTTPError("401 Required argument dst missing")
     
         srcParsed = urllib.parse.urlparse(src)
         if srcParsed.scheme == '' and srcParsed.netloc == '':
@@ -36,7 +31,7 @@ class CopyTree(object):
             h = httplib2.Http()
             resp, srcValue = h.request(src, headers=dict(Accept=mimetype))
             if resp.status != 200:
-                raise myWebError("%d %s (%s)" % (resp.status, resp.reason, src))
+                self.igor.app.raiseHTTPError("%d %s (%s)" % (resp.status, resp.reason, src))
     
         dstParsed = urllib.parse.urlparse(dst)
         if dstParsed.scheme == '' and dstParsed.netloc == '':
@@ -46,7 +41,7 @@ class CopyTree(object):
             h = httplib2.Http()
             resp, rv = h.request(dst, method=method, headers=headers, data=srcValue)
             if resp.status != 200:
-                raise myWebError("%d %s (%s)" % (resp.status, resp.reason, dst))
+                self.igor.app.raiseHTTPError("%d %s (%s)" % (resp.status, resp.reason, dst))
 
         return rv
 

@@ -1,11 +1,7 @@
 from __future__ import unicode_literals
 # Access control
 from builtins import object
-import web
 from .consistency import StructuralConsistency
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class AccessToken(object):
     def __init__(self):
@@ -80,11 +76,11 @@ class IssuerInterface(object):
                 
     def createSharedKey(self, sub=None, aud=None, token=None):
         """Create a secret key that is shared between issues and audience"""
-        raise myWebError("400 This Igor does not have shared key support")
+        self.igor.app.raiseHTTPError("400 This Igor does not have shared key support")
         
     def deleteSharedKey(self, sub=None, aud=None, token=None):
         """Delete a shared key"""
-        raise myWebError("400 This Igor does not have shared key support")
+        self.igor.app.raiseHTTPError("400 This Igor does not have shared key support")
 
 class UserPasswords(object):
         
@@ -143,25 +139,25 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
 
     def newToken(self, token, tokenId, newOwner, newPath=None, **kwargs):
         """Create a new token based on an existing token. Returns ID of new token."""
-        raise myWebError("400 This Igor does not have token support")
+        self.igor.app.raiseHTTPError("400 This Igor does not have token support")
         
     def findCompatibleTokens(self, token, newPath, **kwargs):
         return []
 
     def passToken(self, token, tokenId, newOwner):
         """Pass token ownership to a new owner. Token must be in the set of tokens that can be passed."""
-        raise myWebError("400 This Igor does not have token support")
+        self.igor.app.raiseHTTPError("400 This Igor does not have token support")
         
     def revokeToken(self, token, parentId, tokenId):
         """Revoke a token"""
-        raise myWebError("400 This Igor does not have token support")
+        self.igor.app.raiseHTTPError("400 This Igor does not have token support")
         
     def exportToken(self, token, tokenId, subject=None, lifetime=None, **kwargs):
         """Create an external representation of this token, destined for the given subject"""
-        raise myWebError("400 This Igor does not have token support")
+        self.igor.app.raiseHTTPError("400 This Igor does not have token support")
 
     def externalRepresentation(self, token, tokenId):
-        raise myWebError("400 This Igor does not have token support")
+        self.igor.app.raiseHTTPError("400 This Igor does not have token support")
 
     def consistency(self, token=None, fix=False, restart=False):
         assert self.igor

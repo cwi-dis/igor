@@ -5,14 +5,10 @@ from builtins import str
 from builtins import object
 from past.utils import old_div
 import socket
-import web
 import glob
 import os
 import time
 import json
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 def niceDelta(delta):
     if delta < 60:
@@ -35,7 +31,7 @@ class LastFileAccess(object):
         
     def index(self, name=None, service='services/%s', path=None, stamp="mtime", max=0, token=None):
         if not name or not path:
-            raise myWebError("401 Required arguments (name or path) missing")
+            self.igor.app.raiseHTTPError("401 Required arguments (name or path) missing")
         message = None
         latest = -1
         alive = None
@@ -48,7 +44,7 @@ class LastFileAccess(object):
             elif stamp == 'atime':
                 timestamp = st.st_atime
             else:
-                raise myWebError("401 unknown timestamp type stamp=%s" % stamp)
+                self.igor.app.raiseHTTPError("401 unknown timestamp type stamp=%s" % stamp)
             if timestamp > latest:
                 latest = timestamp
         if latest < 0:

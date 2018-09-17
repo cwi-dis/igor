@@ -11,7 +11,6 @@ standard_library.install_aliases()
 from builtins import str
 from builtins import object
 import requests
-import web
 import json
 import urllib.parse
 import urllib.request, urllib.parse, urllib.error
@@ -27,9 +26,6 @@ DEBUG=False
 KEYS_PER_APP=['client_id', 'client_secret']
 KEYS_PER_USER = ['access_token', 'refresh_token']
 DEFAULT_METHODS=['get_bodyweight']
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class FitbitPlugin(object):
     def __init__(self, igor, pluginName, pluginData):
@@ -47,18 +43,18 @@ class FitbitPlugin(object):
     
     def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
         if not user:
-            raise myWebError("401 Fitbitplugin requires user argument")
+            self.igor.app.raiseHTTPError("401 Fitbitplugin requires user argument")
         self.user = user
         self.token = token
         if not 'token' in userData:
-            raise myWebError("401 Fitbitplugin requires 'token' plugindata for user '%s'" % user)
+            self.igor.app.raiseHTTPError("401 Fitbitplugin requires 'token' plugindata for user '%s'" % user)
         oauthSettings = userData['token']
         for k in KEYS_PER_USER:
             if not k in oauthSettings:
-                raise myWebError("401 Fitbitplugin 'token' plugindata for user '%s' misses '%s'" % (user, k))
+                self.igor.app.raiseHTTPError("401 Fitbitplugin 'token' plugindata for user '%s' misses '%s'" % (user, k))
         for k in KEYS_PER_APP:
             if not k in self.pluginData:
-                raise myWebError("401 Fitbitplugin requires global plugindata '%s'" % k)
+                self.igor.app.raiseHTTPError("401 Fitbitplugin requires global plugindata '%s'" % k)
             oauthSettings[k] = self.pluginData[k]
         
         fb = Fitbit(refresh_cb=self._refresh, **oauthSettings)
@@ -83,7 +79,7 @@ class FitbitPlugin(object):
             except Exception as ex:
                 print('Exception in fitbit.%s with args %s' % (method, repr(kwargs)))
                 traceback.print_exc(file=sys.stdout)
-                raise myWebError("501 fitbit error %s" % repr(ex))
+                self.igor.app.raiseHTTPError("501 fitbit error %s" % repr(ex))
             if DEBUG: print("xxxjack method", method, "returned", m)
             results.update(item)
         
@@ -92,11 +88,11 @@ class FitbitPlugin(object):
     
     def auth1(self, user=None, userData={}, token=None, **kwargs):
         if not user:
-            raise myWebError("401 fitbitplugin/auth1 requires 'user' argument")
+            self.igor.app.raiseHTTPError("401 fitbitplugin/auth1 requires 'user' argument")
         oauthSettings = {}
         for k in KEYS_PER_APP:
             if not k in self.pluginData:
-                raise myWebError("401 fitbitplugin/auth1 requires global plugindata '%s'" % k)
+                self.igor.app.raiseHTTPError("401 fitbitplugin/auth1 requires global plugindata '%s'" % k)
             oauthSettings[k] = self.pluginData[k]
     
         
@@ -106,7 +102,7 @@ class FitbitPlugin(object):
         step2url = urllib.parse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
         #step2url += '?' + urllib.urlencode(dict(user=user))
         redirectUrl, _ = fb.client.authorize_token_url(redirect_uri=step2url, state=user)
-        raise web.seeother(redirectUrl)
+        self.igor.app.raiseSeeother(redirectUrl)
     
     def auth2(self, code=None, state=None, token=None, **kwargs):
         oauthSettings = {}
@@ -114,13 +110,13 @@ class FitbitPlugin(object):
         self.token = token
         for k in KEYS_PER_APP:
             if not k in self.pluginData:
-                raise myWebError("401 fitbitplugin/auth2 requires global plugindata '%s'" % k)
+                self.igor.app.raiseHTTPError("401 fitbitplugin/auth2 requires global plugindata '%s'" % k)
             oauthSettings[k] = self.pluginData[k]
 
         if not state:
-            raise myWebError("401 fitbitplugin/auth2 requires 'state' argument")
+            self.igor.app.raiseHTTPError("401 fitbitplugin/auth2 requires 'state' argument")
         if not code:
-            raise myWebError("401 fitbitplugin/auth2 requires 'code' argument")
+            self.igor.app.raiseHTTPError("401 fitbitplugin/auth2 requires 'code' argument")
 
         step2url = self.igor.databaseAccessor.get_key('services/igor/url', 'text/plain', 'content', token)
         step2url = urllib.parse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)

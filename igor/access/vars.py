@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import web
 
 NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
 
@@ -21,10 +20,6 @@ DEBUG_DELEGATION=True
 # For the time being: define this to have the default token checker allow everything
 # the dummy token allows
 DEFAULT_IS_ALLOW_ALL=True
-
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
 
 class AccessControlError(ValueError):
     pass

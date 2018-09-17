@@ -370,7 +370,7 @@ class IgorInternal(object):
             if len(eventSources) > 1:
                 self.igor.app.raiseHTTPError('401 only one <eventSources> element allowed')
             if not self.igor.eventSources:
-                self.igor.eventSources = sseListener.EventSourceCollection(self.igor.database, )
+                self.igor.eventSources = sseListener.EventSourceCollection(self.igor)
             self.igor.eventSources.updateEventSources(eventSources[0])
         elif self.igor.eventSources:
             self.igor.eventSources.updateEventSources([])

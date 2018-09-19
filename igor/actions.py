@@ -235,6 +235,7 @@ class ActionCollection(threading.Thread):
         self.igor = igor
         self.daemon = True
         self.actions = []
+        self.nothingBefore = NEVER
         self.lock = threading.RLock()
         self.actionsChanged = threading.Condition(self.lock)
         self.database = self.igor.database
@@ -243,10 +244,11 @@ class ActionCollection(threading.Thread):
         self.start()
         
     def dump(self):
-        rv = 'ActionCollection %s:\n' % repr(self)
-        self.actions.sort()
-        for a in self.actions:
-            rv += '\t' + a.dump() + '\n'
+        rv = 'ActionCollection %s, nothingBefore %s:\n' % (repr(self), self.nothingBefore)
+        with self.lock:
+            self.actions.sort()
+            for a in self.actions:
+                rv += '\t' + a.dump() + '\n'
         return rv
         
     def run(self):
@@ -258,13 +260,13 @@ class ActionCollection(threading.Thread):
                 # and remember the earliest future action time
                 #
                 if DEBUG: print('ActionCollection.run(t=%d)' % time.time())
-                nothingBefore = NEVER
+                self.nothingBefore = NEVER
                 toCall = []
                 for a in self.actions:
                     if a.nextTime <= time.time():
                         toCall.append(a)
-                    if a.nextTime < nothingBefore:
-                        nothingBefore = a.nextTime
+                    if a.nextTime < self.nothingBefore:
+                        self.nothingBefore = a.nextTime
                         
                 # Release the lock while we're doing the callbacks
                 self.lock.release()
@@ -273,17 +275,19 @@ class ActionCollection(threading.Thread):
                 self.lock.acquire()
                 
                 # Repeat the loop if the earliest future time is in the past, by now.
-                if nothingBefore < time.time():
+                if self.nothingBefore < time.time():
                     continue
-                if nothingBefore == NEVER:
+                if self.nothingBefore == NEVER:
                     waitTime = None
                 else:
-                    waitTime = nothingBefore - time.time()
+                    waitTime = self.nothingBefore - time.time()
+                if DEBUG: print('ActionCollection.run wait(%s)' % waitTime)
                 self.actionsChanged.wait(waitTime)
         
     def actionTimeChanged(self, action):
         """Called by an Action when its nextTime has changed"""
         with self.lock:
+            self.nothingBefore = time.time()
             self.actionsChanged.notify()
         
     def updateActions(self, node):
@@ -292,8 +296,9 @@ class ActionCollection(threading.Thread):
         if DEBUG: print(self.dump())
         assert node.tagName == 'actions'
         with self.lock:
-            alreadyExists = []
+            unchanged = []
             new = []
+            removed = []
             #
             # Pass one - check which action elements already exist (and are unchanged) and which are new
             #
@@ -302,18 +307,18 @@ class ActionCollection(threading.Thread):
                 if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
                     for action in self.actions:
                         if action.matches(child):
-                            alreadyExists.append(action)
+                            unchanged.append(action)
+                            break
                     else:
                         new.append(child)
                 child = child.nextSibling
             #
             # Pass two - determine which old actions no longer exist (or are changed)
             #
-            removed = []
             for action in self.actions:
-                if not action in alreadyExists:
+                if not action in unchanged:
                     removed.append(action)
-            if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(alreadyExists), len(removed)))
+            if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(unchanged), len(removed)))
             #
             # Pass three - remove old actions
             #
@@ -333,12 +338,16 @@ class ActionCollection(threading.Thread):
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""
-        if DEBUG: print('ActionCollection.triggerAction(%s)' % node)   
-        for a in self.actions:
-            if a.element == node:
-                a.callback()
-                return
-        print('ERROR: triggerAction called for unknown element', repr(node))
+        if DEBUG: print('ActionCollection.triggerAction(%s)' % node)
+        tocall = None
+        with self.lock:
+            for a in self.actions:
+                if a.element == node:
+                    tocall = a
+                    break
+            else:
+                print('ERROR: triggerAction called for unknown element', repr(node))
+        tocall.callback()
             
     def stop(self):
         with self.lock:

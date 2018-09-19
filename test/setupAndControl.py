@@ -112,7 +112,7 @@ class IgorSetupAndControl(object):
         ok = setup.cmd_initialize()
         assert ok
         setup.postprocess(run=True)
-        ok = setup.cmd_addstd('copytree')
+        ok = setup.cmd_addstd('copytree', 'testPlugin')
         assert ok
         setup.postprocess(run=True)
 

@@ -54,6 +54,29 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.get, '/nonexistent.html')
         
+    def test03_get_internal(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        result = pAdmin.get('/internal/version')
+        self.assertTrue(result)
+        
+    def test04_get_internal_fail(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        self.assertRaises(igorVar.IgorError, pAdmin.get, '/internal/fail')
+
+    def test05_get_plugin(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        result = pAdmin.get('/plugin/testPlugin')
+        self.assertTrue(result)
+            
+    def test06_get_plugin_subpath(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        result = pAdmin.get('/plugin/testPlugin/method2')
+        self.assertTrue(result)
+            
+    def test07_get_plugin_fail(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        self.assertRaises(igorVar.IgorError, pAdmin.get, '/plugin/nonexistent')
+            
     def test11_get_xml(self):
         """GET a database variable as XML"""
         p = self._igorVar()

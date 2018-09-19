@@ -1,1 +1,24 @@
 include README.md
+include LICENSE.txt
+include requirements.txt
+include igor-icon.svg
+
+include doc/Makefile doc/conf.py doc/*.md
+
+include test/*.py
+
+recursive-include igor/bootScripts *
+recursive-include igor/igorDatabase.empty *
+recursive-include igor/plugins *
+recursive-include igor/scripts *
+recursive-include igor/static *
+recursive-include igor/template *
+
+include helpers/readme.md
+include helpers/bleServer/*.py helpers/bleServer/*.txt helpers/bleServer/initscript-bleServer
+exclude helpers/bleServer/build helpers/bleServer/dist
+include helpers/kaku/*.py helpers/kaku/kaku/*.py helpers/kaku/*.txt helpers/kaku/99-kaku.rules
+exclude helpers/kaku/build helpers/kaku/dist
+
+global-exclude *.pyc __pycache__ .DS_Store
+

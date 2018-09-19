@@ -514,6 +514,7 @@ def main():
             sys.eit(1)
     datadir = args.database
     print('igorServer %s running from %s' % (VERSION, sys.argv[0]), file=sys.stderr)
+    print('igorServer from %s' % __file__, file=sys.stderr)
     print('igorServer using python %d.%d.%d' % sys.version_info[:3], file=sys.stderr)
     try:
         igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl, nologger=args.nologfile)

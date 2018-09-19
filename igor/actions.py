@@ -192,7 +192,7 @@ class Action(object):
         nextTime = interval + time.time()
         self.nextTime = self._earliestRunTimeAfter(nextTime)
         if self.collection:
-            self.collection.actionTimeChanged(self)
+            self.collection.actionTimeChanged()
         
     def _evaluate(self, text, node, urlencode):
         """Interpolate {xpathexpr} expressions in a string"""
@@ -284,8 +284,8 @@ class ActionCollection(threading.Thread):
                 if DEBUG: print('ActionCollection.run wait(%s)' % waitTime)
                 self.actionsChanged.wait(waitTime)
         
-    def actionTimeChanged(self, action):
-        """Called by an Action when its nextTime has changed"""
+    def actionTimeChanged(self):
+        """Called by an Action when its nextTime has changed, or when the actions have changed"""
         with self.lock:
             self.nothingBefore = time.time()
             self.actionsChanged.notify()
@@ -334,7 +334,7 @@ class ActionCollection(threading.Thread):
             #
             # Signal the runner thread
             #
-            self.actionsChanged.notify()
+            self.actionTimeChanged()
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""
@@ -352,6 +352,6 @@ class ActionCollection(threading.Thread):
     def stop(self):
         with self.lock:
             self.stopping = True
-            self.actionsChanged.notify()
+            self.actionTimeChanged()
         self.join()
         

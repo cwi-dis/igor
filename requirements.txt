@@ -1,0 +1,10 @@
+future
+httplib2
+requests
+web.py==0.40.dev1; python_version >= '3'
+web.py
+python-dateutil
+py-dom-xpath-six
+passlib
+pyjwt
+pyopenssl

@@ -127,6 +127,6 @@ class FitbitPlugin(object):
         self._refresh(fbToken)
         return 'ok\n'
 
-def igorPlugin(pluginName, pluginData):
+def igorPlugin(igor, pluginName, pluginData):
     return FitbitPlugin(igor, pluginName, pluginData)
     

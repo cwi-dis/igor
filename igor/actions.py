@@ -38,23 +38,24 @@ class Action(object):
         self.collection = collection
         self.element = element
         self.actionXPath = self.collection.igor.database.getXPathForElement(self.element)
-        tag, content = self.collection.igor.database.tagAndDictFromElement(self.element)
+        tag, self.content = self.collection.igor.database.tagAndDictFromElement(self.element)
+        self.content.pop('notBefore', None)
         assert tag == 'action'
-        assert 'url' in content
-        self.interval = content.get('interval')
-        self.minInterval = content.get('minInterval', 0)
-        xpaths = content.get('xpath',[])
+        assert 'url' in self.content
+        self.interval = self.content.get('interval')
+        self.minInterval = self.content.get('minInterval', 0)
+        xpaths = self.content.get('xpath',[])
         if type(xpaths) != type([]):
             xpaths = [xpaths]
         self.xpaths = xpaths
-        self.multiple = content.get('multiple')
-        self.aggregate = content.get('aggregate')
-        self.url = content.get('url')
-        self.method = content.get('method')
-        self.data = content.get('data')
-        self.mimetype = content.get('mimetype','text/plain')
-        self.condition = content.get('condition')
-        self.representing = content.get('representing')
+        self.multiple = self.content.get('multiple')
+        self.aggregate = self.content.get('aggregate')
+        self.url = self.content.get('url')
+        self.method = self.content.get('method')
+        self.data = self.content.get('data')
+        self.mimetype = self.content.get('mimetype','text/plain')
+        self.condition = self.content.get('condition')
+        self.representing = self.content.get('representing')
         self.accessChecker = self.collection.igor.access.checkerForElement(self.element)
         self.token = self.collection.igor.access.tokenForAction(self.element)
         self.nextTime = NEVER
@@ -62,7 +63,19 @@ class Action(object):
             self._scheduleNextRunIn(0)
         self.install()
         
+    def __repr__(self):
+        return 'Action(0x%x, %s)' % (id(self), repr(self.content))
+        
+    def matches(self, element):
+        """Check to see whether this action matches the given element (used during update)"""
+        if not self.collection: return False
+        tag, content = self.collection.igor.database.tagAndDictFromElement(element)
+        content.pop('notBefore', None)
+        rv = (content == self.content)
+        return rv
+        
     def delete(self):
+        """Called when an action has been removed (or replaced) in the database"""
         self.uninstall()
         self.collection = None
         
@@ -88,7 +101,7 @@ class Action(object):
     def callback(self, *nodelist):
         """Schedule the action, if it is runnable at this time, and according to the condition"""
         if not self.collection:
-            print('ERROR: Action.callback called without actionCollection:', self)
+            print('ERROR: %s.callback() called but it is already deleted' % repr(self))
             return
         # Test whether we are allowed to run, depending on minInterval
         now = time.time()
@@ -275,22 +288,47 @@ class ActionCollection(threading.Thread):
         
     def updateActions(self, node):
         """Called by upper layers when something has changed in the actions in the database"""
-        if DEBUG: print('ActionCollection.updateActions(t=%d)' % time.time())
+        if DEBUG: print('ActionCollection(%s).updateActions(t=%d)' % (repr(self), time.time()))
+        if DEBUG: print(self.dump())
         assert node.tagName == 'actions'
         with self.lock:
-            # Clear out old queue
-            for a in self.actions:
-                a.delete()
-            self.actions = []
-            # Fill the queue with the new actions
-            # Now create new triggers
+            alreadyExists = []
+            new = []
+            #
+            # Pass one - check which action elements already exist (and are unchanged) and which are new
+            #
             child = node.firstChild
             while child:
                 if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
-                    action = Action(self, child)
-                    self.actions.append(action)
+                    for action in self.actions:
+                        if action.matches(child):
+                            alreadyExists.append(action)
+                    else:
+                        new.append(child)
                 child = child.nextSibling
+            #
+            # Pass two - determine which old actions no longer exist (or are changed)
+            #
+            removed = []
+            for action in self.actions:
+                if not action in alreadyExists:
+                    removed.append(action)
+            if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(alreadyExists), len(removed)))
+            #
+            # Pass three - remove old actions
+            #
+            for action in removed:
+                action.delete()
+                self.actions.remove(action)
+            #
+            # Pass four - install new actions
+            #
+            for elt in new:
+                action = Action(self, elt)
+                self.actions.append(action)
+            #
             # Signal the runner thread
+            #
             self.actionsChanged.notify()
         
     def triggerAction(self, node):

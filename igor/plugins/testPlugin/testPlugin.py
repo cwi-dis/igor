@@ -11,7 +11,7 @@ class TestPlugin(object):
         
     def index(self, *args, **kwargs):
         rv = "test-plugin index\n"
-        rv += "pluginName=%s, pluginData=%s" % (repr(pluginName), repr(pluginData))
+        rv += "pluginName=%s, pluginData=%s" % (repr(self.pluginName), repr(self.pluginData))
         rv += "args=%s, kwargs=%s\n" % (repr(args), repr(kwargs))
         rv += "self.igor.database=%s\n" % repr(self.igor.database)
         rv += "self.igor.databaseAccessor=%s\n" % repr(self.igor.databaseAccessor)
@@ -21,7 +21,7 @@ class TestPlugin(object):
     
     def method2(self, *args, **kwargs):
         rv = "test-plugin method2\n"
-        rv += "pluginName=%s, pluginData=%s" % (repr(pluginName), repr(pluginData))
+        rv += "pluginName=%s, pluginData=%s" % (repr(self.pluginName), repr(self.pluginData))
         rv += "args=%s, kwargs=%s\n" % (repr(args), repr(kwargs))
         rv += "self.igor.database=%s\n" % repr(self.igor.database)
         rv += "self.igor.databaseAccessor=%s\n" % repr(self.igor.databaseAccessor)

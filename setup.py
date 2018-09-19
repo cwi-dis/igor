@@ -45,6 +45,11 @@ package_data={
         package_files('igor/igorDatabase.empty')
 }
 
+if sys.version_info[0] < 3:
+    WEBPY="web.py"
+else:
+    WEBPY="web.py==0.40.dev1"
+
 setup(
     name='igor',
 
@@ -99,11 +104,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires= (
-        ["future", "httplib2", "requests", "web.py", "python-dateutil", "py-dom-xpath-six", "passlib", "pyjwt", "pyopenssl"]
-        if sys.version_info[0] < 3 else
-        ["future", "httplib2", "requests", "web.py==0.40.dev1", "python-dateutil", "py-dom-xpath-six",  "passlib", "pyjwt", "pyopenssl"]
-        ),
+    install_requires= ["future", "httplib2", "requests", WEBPY, "python-dateutil", "py-dom-xpath-six", "passlib", "pyjwt", "pyopenssl"],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

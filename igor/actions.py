@@ -22,14 +22,21 @@ DEBUG=False
 class NeverSmaller(object):
     def __le__(self, other):
         return False
+        
+    def __eq__(self, other):
+        return type(other) == NeverSmaller
 
-class ReallyMaxInt(NeverSmaller, int):
     def __repr__(self):
         return 'NEVER'
 
-NEVER = ReallyMaxInt()  
+NEVER = NeverSmaller()  
 assert NEVER > 1
 assert 1 < NEVER
+assert NEVER != 0
+assert NEVER > 0
+assert not (NEVER == 0)
+assert time.time() < NEVER
+assert not (NEVER < time.time())
 
 class Action(object):
     """Object to implement calling methods on URLs whenever some XPath changes."""

@@ -487,6 +487,8 @@ def main():
     parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
     parser.add_argument('--check', action="store_true", help="Do not run the server, only check the database for consistency")
     parser.add_argument('--fix', action="store_true", help="Do not run the server, only check the database for consistency and possibly fix it if needed")
+    parser.add_argument('--rootCertificates', metavar='FILE', help='Use root certificates from FILE')
+    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use what requests package has')
     args = parser.parse_args()
     
     myLogger.install(args.logLevel, nologfile=args.nologfile, nologstderr=args.nologstderr, logdir=args.database)
@@ -516,6 +518,17 @@ def main():
     print('igorServer %s running from %s' % (VERSION, sys.argv[0]), file=sys.stderr)
     print('igorServer from %s' % __file__, file=sys.stderr)
     print('igorServer using python %d.%d.%d' % sys.version_info[:3], file=sys.stderr)
+    
+    if args.rootCertificates:
+        os.putenv('REQUESTS_CA_BUNDLE', args.rootCertificates)
+        os.environ['REQUESTS_CA_BUNDLE'] = args.rootCertificates
+    elif not args.noSystemRootCertificates:
+        for cf in ["/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ca-certificates.crt"]:
+            if os.path.exists(cf):
+                os.putenv('REQUESTS_CA_BUNDLE', cf)
+                os.environ['REQUESTS_CA_BUNDLE'] = cf
+                break
+                
     try:
         igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl, nologger=args.nologfile)
     except IOError as arg:

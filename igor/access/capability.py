@@ -287,6 +287,7 @@ class AccessToken(BaseAccessToken):
         if not externalRepresentation:
             return
         headers['Authorization'] = 'Bearer ' + externalRepresentation
+        return self.identifier
 
     def _addChild(self, childId):
         """Register a new child token to this one"""
@@ -422,7 +423,7 @@ class MultiAccessToken(BaseAccessToken):
         if self._hasExternalRepresentationFor(url):
             t = self.externalTokenCache[url]
             # xxxjack should cache
-            t.addToHeadersFor(headers, url)
+            return t.addToHeadersFor(headers, url)
         else:
             if DEBUG: print('access: %s has no token for %s' % (self, url))
 

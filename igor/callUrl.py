@@ -76,7 +76,7 @@ class URLCallRunner(threading.Thread):
                         resultData = resultStatus
                 else:
                     # Remote.
-                    token.addToHeadersFor(headers, url)
+                    addedTokenId = token.addToHeadersFor(headers, url)
                     if headers == {}: headers = None
                     kwargs = {}
                     if os.environ.get('IGOR_TEST_NO_SSL_VERIFY'):
@@ -84,6 +84,7 @@ class URLCallRunner(threading.Thread):
                     r = requests.request(method, url, data=data, headers=headers, **kwargs)
                     if r.status_code == 401:
                         # If we get a 401 Unauthorized error we also report it through the access control errors
+                        print('401 error from external call, was carrying capability %s' % addedTokenId)
                         failureDescription = dict(operation=method.lower(), path=url, external=True, capID=token.getIdentifiers())
                         if 'representing' in env:
                             failureDescription['representing'] = env['representing']

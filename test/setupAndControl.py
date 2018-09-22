@@ -61,6 +61,7 @@ class ServletHelper(object):
         
     def startTimer(self):
         with self.lock:
+            self.duration = None
             self.timerStart = time.time()
         
     def getDuration(self):

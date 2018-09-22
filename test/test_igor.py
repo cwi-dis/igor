@@ -256,6 +256,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         optBearerToken = self._create_cap_for_call(pAdmin, 'test63action')
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
         p = self._igorVar(**optBearerToken)
         
         self.servlet.startTimer()

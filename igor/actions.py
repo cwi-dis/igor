@@ -323,9 +323,13 @@ class ActionCollection(threading.Thread):
             # Pass two - determine which old actions no longer exist (or are changed)
             #
             for action in self.actions:
-                if not action in unchanged:
+                for u in unchanged:
+                    if action is u:
+                        break
+                else:
                     removed.append(action)
             if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(unchanged), len(removed)))
+            assert len(self.actions) == len(unchanged) + len(removed)
             #
             # Pass three - remove old actions
             #

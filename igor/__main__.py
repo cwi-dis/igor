@@ -488,7 +488,7 @@ def main():
     parser.add_argument('--check', action="store_true", help="Do not run the server, only check the database for consistency")
     parser.add_argument('--fix', action="store_true", help="Do not run the server, only check the database for consistency and possibly fix it if needed")
     parser.add_argument('--rootCertificates', metavar='FILE', help='Use root certificates from FILE')
-    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use what requests package has')
+    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has')
     args = parser.parse_args()
     
     myLogger.install(args.logLevel, nologfile=args.nologfile, nologstderr=args.nologstderr, logdir=args.database)
@@ -522,7 +522,7 @@ def main():
     if args.rootCertificates:
         os.putenv('REQUESTS_CA_BUNDLE', args.rootCertificates)
         os.environ['REQUESTS_CA_BUNDLE'] = args.rootCertificates
-    elif not args.noSystemRootCertificates:
+    elif not args.noSystemRootCertificates and not os.environ.get('REQUESTS_CA_BUNDLE', None):
         for cf in ["/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ca-certificates.crt"]:
             if os.path.exists(cf):
                 os.putenv('REQUESTS_CA_BUNDLE', cf)

@@ -16,7 +16,7 @@ from . import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
-DEBUG=False
+DEBUG=True
 
 @functools.total_ordering
 class NeverSmaller(object):
@@ -72,6 +72,9 @@ class Action(object):
         
     def __repr__(self):
         return 'Action(0x%x, %s)' % (id(self), repr(self.content))
+        
+    def __eq__(self, other):
+        return id(self) == id(other)
         
     def matches(self, element):
         """Check to see whether this action matches the given element (used during update)"""
@@ -323,10 +326,7 @@ class ActionCollection(threading.Thread):
             # Pass two - determine which old actions no longer exist (or are changed)
             #
             for action in self.actions:
-                for u in unchanged:
-                    if action is u:
-                        break
-                else:
+                if not action in unchanged:
                     removed.append(action)
             if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(unchanged), len(removed)))
             assert len(self.actions) == len(unchanged) + len(removed)
@@ -334,8 +334,10 @@ class ActionCollection(threading.Thread):
             # Pass three - remove old actions
             #
             for action in removed:
+                assert action in self.actions
                 action.delete()
                 self.actions.remove(action)
+                assert not action in self.actions
             #
             # Pass four - install new actions
             #

@@ -256,7 +256,6 @@ class ActionCollection(threading.Thread):
     def dump(self):
         rv = 'ActionCollection %s, nothingBefore %s:\n' % (repr(self), self.nothingBefore)
         with self.lock:
-            self.actions.sort()
             for a in self.actions:
                 rv += '\t' + a.dump() + '\n'
         return rv

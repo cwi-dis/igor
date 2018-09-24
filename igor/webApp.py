@@ -411,7 +411,7 @@ class runPlugin(BaseHandler):
             # New. Try to import.
             moduleDir = os.path.join(self.igor.pathnames.plugindir, pluginName)
             try:
-                mfile, mpath, mdescr = imp.find_module(pluginName, [moduleDir])
+                mfile, mpath, mdescr = imp.find_module('igorplugin', [moduleDir])
                 pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
                 print('------ import failed for', pluginName)

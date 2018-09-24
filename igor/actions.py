@@ -16,7 +16,7 @@ from . import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
-DEBUG=True
+DEBUG=False
 
 @functools.total_ordering
 class NeverSmaller(object):

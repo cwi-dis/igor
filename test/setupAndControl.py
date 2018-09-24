@@ -129,7 +129,7 @@ class IgorSetupAndControl(object):
             certFile = os.path.join(cls.igorDir, 'igor.crt')
             cls.igorVarArgs['certificate'] = certFile
 #            cls.igorVarArgs['noverify'] = True
-            os.putenv('SSL_CERT_FILE', certFile)
+#            os.putenv('SSL_CERT_FILE', certFile)
             os.putenv('REQUESTS_CA_BUNDLE', certFile)
 #            os.putenv('IGOR_TEST_NO_SSL_VERIFY', '1')
 

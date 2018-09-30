@@ -88,6 +88,7 @@ class IgorSetup(object):
         self.igorDir = os.path.abspath(os.path.dirname(igor.__file__))
         # Default database directory
         self.plugindir = os.path.join(self.database, 'plugins')
+        self.stdplugindir = os.path.join(self.database, 'std-plugins')
         self.runcmds = []
         
     def main(self, cmd=None, args=None):
@@ -144,6 +145,7 @@ class IgorSetup(object):
             print('%s: %s already exists!' % (self.progname, self.database), file=sys.stderr)
             return False
         shutil.copytree(src, self.database)
+        os.symlink(os.path.join(self.igorDir, 'std-plugins'), os.path.join(self.database, 'std-plugins'))
         return True
 
     def cmd_list(self):
@@ -181,14 +183,14 @@ class IgorSetup(object):
             print("%s: addstd requires a plugin name" % self.progname, file=sys.stderr)
             return False
         for pluginname in pluginnames:
-            pluginsrcpath = os.path.join(self.igorDir, 'plugins', pluginname)
+            pluginsrcpath = os.path.join('..', 'std-plugins', pluginname)
             ok = self._installplugin(self.database, pluginsrcpath, pluginname, os.symlink)
             if not ok:
                 return False
         return True
 
     def cmd_updatestd(self):
-        """updatestd - update all standard plugins to newest version"""
+        """updatestd - update all standard plugins to newest version (for igor < 0.85)"""
         names = os.listdir(self.plugindir)
         names.sort()
         for name in names:
@@ -197,7 +199,7 @@ class IgorSetup(object):
             if  os.path.islink(pluginpath):
                 print('Updating', pluginpath)
                 os.unlink(pluginpath)
-                pluginsrcpath = os.path.join(self.igorDir, 'plugins', name)
+                pluginsrcpath = os.path.join('..', 'std-plugins', name)
                 ok = self._installplugin(self.database, pluginsrcpath, name, os.symlink)
                 if not ok: return False
         return True
@@ -217,7 +219,7 @@ class IgorSetup(object):
                     
     def cmd_liststd(self):
         """liststd - list all available standard plugins"""
-        stdplugindir = os.path.join(self.igorDir, 'plugins')
+        stdplugindir = os.path.join(self.database, 'std-plugins')
         names = os.listdir(stdplugindir)
         names.sort()
         for name in names:
@@ -364,11 +366,12 @@ class IgorSetup(object):
         return True
     
     def _installplugin(self, database, src, pluginname, cpfunc):
-        dst = os.path.join(database, 'plugins', pluginname)
+        dstdir = os.path.join(database, 'plugins')
+        dst = os.path.join(dstdir, pluginname)
         if os.path.exists(dst):
             print("%s: already exists: %s" % (self.progname, dst), file=sys.stderr)
             return False
-        if not os.path.exists(src):
+        if not os.path.exists(os.path.join(dstdir, src)):
             print("%s: does not exist: %s" % (self.progname, src), file=sys.stderr)
             return False
         cpfunc(src, dst)

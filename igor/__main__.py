@@ -100,11 +100,20 @@ class IgorServer(object):
         self.pathnames = Struct()
         self.pathnames.datadir = datadir
         self.pathnames.scriptdir = os.path.join(datadir, 'scripts')
+        self.pathnames.stdplugindir = os.path.join(datadir, 'std-plugins')
         self.pathnames.plugindir = os.path.join(datadir, 'plugins')
         self.pathnames.staticdir = os.path.join(datadir, 'static')
         self.pathnames.sessionfile = os.path.join(self.pathnames.datadir, 'igorSessions')
         self.pathnames.privateKeyFile = None
         self.pathnames.certificateFile = None
+        #
+        # Make sure std-plugins points to the correct place
+        #
+        if os.path.exists(self.pathnames.stdplugindir):
+            os.unlink(self.pathnames.stdplugindir)
+        stdplugindirsrc = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'std-plugins')
+        os.symlink(stdplugindirsrc, self.pathnames.stdplugindir)
+        assert os.path.isdir(self.pathnames.stdplugindir)
         #
         # Determine parameters for SSL handling
         #

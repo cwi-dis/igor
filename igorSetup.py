@@ -178,12 +178,19 @@ class IgorSetup(object):
         return True
 
     def cmd_addstd(self, *pluginnames):
-        """addstd name [...] - add standard plugin (linked) with given name"""
+        """addstd name[=srcname] [...] - add standard plugin srcname (linked) with given name"""
         if not pluginnames:
             print("%s: addstd requires a plugin name" % self.progname, file=sys.stderr)
             return False
         for pluginname in pluginnames:
-            pluginsrcpath = os.path.join('..', 'std-plugins', pluginname)
+            if type(pluginname) == type(()):
+                pluginname, pluginsrcname = pluginname
+            elif '=' in pluginname:
+                pluginname = tuple(pluginname.split('='))
+                pluginname, pluginsrcname = pluginname
+            else:
+                pluginsrcname = pluginname
+            pluginsrcpath = os.path.join('..', 'std-plugins', pluginsrcname)
             ok = self._installplugin(self.database, pluginsrcpath, pluginname, os.symlink)
             if not ok:
                 return False

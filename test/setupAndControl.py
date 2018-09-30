@@ -115,6 +115,8 @@ class IgorSetupAndControl(object):
         setup.postprocess(run=True)
         ok = setup.cmd_addstd('copytree', 'testPlugin')
         assert ok
+        ok = setup.cmd_addstd(('test2plugin', 'testPlugin'))
+        assert ok
         setup.postprocess(run=True)
 
         logFile = os.path.join(cls.igorDir, 'igor.log')

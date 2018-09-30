@@ -40,6 +40,7 @@ package_data={
         package_files('igor/static')+
         package_files('igor/template')+ 
         package_files('igor/bootScripts') +
+        package_files('igor/plugins') +
         package_files('igor/std-plugins') +
         package_files('igor/ca') +
         package_files('igor/igorDatabase.empty')

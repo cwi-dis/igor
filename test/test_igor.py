@@ -77,6 +77,11 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         pAdmin = self._igorVar(credentials='admin:')
         self.assertRaises(igorVar.IgorError, pAdmin.get, '/plugin/nonexistent')
             
+    def test09_get_plugin_othername(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        result = pAdmin.get('/plugin/test2plugin')
+        self.assertTrue(result)
+            
     def test11_get_xml(self):
         """GET a database variable as XML"""
         p = self._igorVar()

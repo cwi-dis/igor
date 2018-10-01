@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<xpath>/data/environment/messages/*</xpath>
 			<condition>not(data/environment/night)</condition>
-			<url>/pluginscript/say/message?args={.}</url>
+			<url>/pluginscript/{plugin}/message?args={.}</url>
 		</action>
 	</actions>
 </data>

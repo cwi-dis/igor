@@ -1,14 +1,17 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
+	<sensors>
+		<{plugin} own:plugin="{plugin}"/>
+	</sensors>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60</interval>
-			<url>/pluginscript/smartmeter_iotsa/pull</url>
-			<representing>sensors/smartmeter_iotsa</representing>
+			<url>/pluginscript/{plugin}/pull</url>
+			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>
 		<action>
-			<xpath>/data/sensors/smartMeter</xpath>
+			<xpath>/data/sensors/{plugin}</xpath>
 			<method>PUT</method>
 			<url>/data/environment/energy/electricity</url>
 			<mimetype>text/plain</mimetype>
@@ -16,13 +19,12 @@
 		</action>
 	</actions>
 	<plugindata>
-		<smartmeter_iotsa>
-			<host>smartmeter.local</host>
+		<{plugin} own:plugin="{plugin}">
+			<host>{plugin}.local</host>
 			<protocol>https</protocol>
-		</smartmeter_iotsa>
+		</{plugin}>
 	</plugindata>
 	<environment>
-		<energy>
-		</energy>
+		<energy own:plugin="{plugin}"/>
 	</environment>
 </data>

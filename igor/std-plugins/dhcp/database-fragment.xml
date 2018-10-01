@@ -1,19 +1,19 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<devices>
-		<dhcp/>
+		<{plugin} own:plugin="{plugin}"/>
 	</devices>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60</interval>
-			<url>/pluginscript/dhcp/pull</url>
-			<representing>sensors/dhcp</representing>
+			<url>/pluginscript/{plugin}/pull</url>
+			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>
-        <action>
-            <xpath>/data/sensors/dhcp/lease</xpath>
-            <condition>/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name</condition>
-            <url>/data/environment/wifiDevices/{/data/plugindata/wifiDevices/wifiDevice[id=string($originalContext/hardware)]/name}</url>
+        <action own:plugin="{plugin}">
+            <xpath>/data/sensors/{plugin}/lease</xpath>
+            <condition>/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name</condition>
+            <url>/data/environment/{plugin}Devices/{/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name}</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{alive}</data>
@@ -21,11 +21,11 @@
         </action>
 	</actions>
 	<plugindata>
-		<wifiDevices>
-			<wifiDevice>
+		<{plugin}Devices own:plugin="{plugin}">
+			<{plugin}Device>
 				<id>00:11:22:33:44:55</id>
-				<name>wifiDeviceName</name>
-			</wifiDevice>
-		</wifiDevices>
+				<name>{plugin}DeviceName</name>
+			</{plugin}Device>
+		</{plugin}Devices>
 	</plugindata>
 </data>

@@ -1,13 +1,13 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<devices>
-		<lcd/>
+		<{plugin} own:plugin="{plugin}"/>
 	</devices>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<xpath>/data/environment/messages/*</xpath>
-			<url>/pluginscript/lcd/message?args={.}</url>
-			<representing>devices/lcd</representing>
+			<url>/pluginscript/{plugin}/message?args={.}</url>
+			<representing>devices/{plugin}</representing>
 		</action>
 	</actions>
 </data>

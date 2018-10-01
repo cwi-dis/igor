@@ -1,35 +1,35 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<sensors>
-		<buienradar/>
+		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>300</interval>
-			<url>/pluginscript/buienradar/pull</url>
+			<url>/pluginscript/{plugin}/pull</url>
 			<aggregate>true</aggregate>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<name>start</name>
 			<xpath>/data/environment/location/lon</xpath>
-			<url>/data/plugindata/buienradar/lon</url>
+			<url>/data/plugindata/{plugin}/lon</url>
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{/data/environment/location/lon}</data>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<name>start</name>
 			<xpath>/data/environment/location/lat</xpath>
-			<url>/data/plugindata/buienradar/lat</url>
+			<url>/data/plugindata/{plugin}/lat</url>
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{/data/environment/location/lat}</data>
 		</action>
 	</actions>
 	<plugindata>
-	    <buienradar>
+	    <{plugin} own:plugin="{plugin}">
 	        <lat>52.3566777</lat>
 	        <lon>4.9496814</lon>
-	    </buienradar>
-	</plugindata>
+	    </{plugin}>
+	</{plugin}>
 </data>

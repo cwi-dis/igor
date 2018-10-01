@@ -1,35 +1,32 @@
 <?xml version="1.0" ?>
-<data>
-	<environment>
-		<devices/>
-	</environment>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<sensors>
-		<ble/>
+		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60/interval>
-			<url>/pluginscript/ble/pull</url>
-			<representing>sensors/ble</representing>
+			<url>/pluginscript/{plugin}/pull</url>
+			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>
-        <action>
-            <xpath>/data/sensors/ble/bleDevice</xpath>
-            <condition>/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name</condition>
-            <url>/data/environment/devices/{/data/plugindata/bleDevices/bleDevice[id=string($originalContext/address)]/name}</url>
+        <action own:plugin="{plugin}">
+            <xpath>/data/sensors/{plugin}/{plugin}Device</xpath>
+            <condition>/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/address)]/name</condition>
+            <url>/data/environment/devices/{/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/address)]/name}</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
-            <data>{available}</data>
+            <data>{availa{plugin}}</data>
             <multiple>True</multiple>
         </action>
 	</actions>
 	<plugindata>
-		<bleDevices>
+		<{plugin}Devices own:plugin="{plugin}">
 			<!-- example: -->
-			<bleDevice>
+			<{plugin}Device>
 				<id>00:11:22:33:44:55</id>
-				<name>bleDeviceName</name>
-			</bleDevice>
-		</bleDevices>
+				<name>{plugin}DeviceName</name>
+			</{plugin}Device>
+		</{plugin}Devices>
 	</plugindata>
 </data>

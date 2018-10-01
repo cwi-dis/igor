@@ -1,20 +1,20 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<devices>
-		<tv/>
+		<tv own:plugin="{plugin}"/>
 	</devices>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<xpath>/data/devices/tv/power</xpath>
 			<url>/pluginscript/philips/power?power={.}</url>
 			<representing>devices/tv</representing>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<xpath>/data/devices/tv/*[name()!='power']</xpath>
 			<url>/pluginscript/philips/push?{name()}={.}</url>
 			<representing>devices/tv</representing>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60</interval>
 			<url>/pluginscript/philips/pull</url>
 			<aggregate>true</aggregate>

@@ -1,14 +1,17 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
+	<sensors>
+		<{plugin} own:plugin="{plugin}"/>
+	</sensors>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60</interval>
 			<url>/pluginscript/smartmeter_rfduino/pull</url>
 			<aggregate>true</aggregate>
-			<representing>sensors/smartmeter_rfduino</representing>
+			<representing>sensors/{plugin}</representing>
 		</action>
-		<action>
-			<xpath>/data/sensors/smartMeter</xpath>
+		<action own:plugin="{plugin}">
+			<xpath>/data/sensors/{plugin}</xpath>
 			<method>PUT</method>
 			<url>/data/environment/energy/electricity</url>
 			<mimetype>text/plain</mimetype>
@@ -16,7 +19,6 @@
 		</action>
 	</actions>
 	<environment>
-		<energy>
-		</energy>
+		<energy own:plugin="{plugin}"/>
 	</environment>
 </data>

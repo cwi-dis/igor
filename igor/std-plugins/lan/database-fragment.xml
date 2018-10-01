@@ -1,21 +1,21 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<services>
 		<router/>
 		<internet/>
 	</services>
 	<actions>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60</interval>
 			<url>/plugin/lan?name=router&amp;ip=192.168.1.1</url>
 			<aggregate>true</aggregate>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60</interval>
 			<url>/plugin/lan?name=internet&amp;ip=google.com.</url>
 			<aggregate>true</aggregate>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>60</interval>
 			<url>/plugin/lan?name=igor&amp;service=igor/web&amp;ip={/data/services/igor/host}&amp;port={/data/services/igor/port}</url>
 			<aggregate>true</aggregate>

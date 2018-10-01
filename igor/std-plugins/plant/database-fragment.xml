@@ -1,35 +1,35 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<devices>
-		<plant/>
+		<{plugin} own:plugin="{plugin}"/>
 	</devices>
 	<actions>
-		<action>
-			<xpath>/data/devices/plant/pos</xpath>
-			<url>{/data/plugindata/plant/protocol}://{/data/plugindata/plant/host}/stepper/0?pos={.}</url>
-			<representing>devices/plant</representing>
+		<action own:plugin="{plugin}">
+			<xpath>/data/devices/{plugin}/pos</xpath>
+			<url>{/data/plugindata/{plugin}/protocol}://{/data/plugindata/{plugin}/host}/stepper/0?pos={.}</url>
+			<representing>devices/{plugin}</representing>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<xpath>/data/environment/energy/electricity</xpath>
-			<url>/data/devices/plant/pos</url>
+			<url>/data/devices/{plugin}/pos</url>
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{700-(number(.)*700 div 5)}</data>
 			<minInterval>60</minInterval>
 			<condition>not(/data/environment/night)</condition>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<interval>600</interval>
-			<url>/pluginscript/plant/pull</url>
-			<representing>devices/plant</representing>
+			<url>/pluginscript/{plugin}/pull</url>
+			<representing>devices/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>			
 	</actions>
 	<plugindata>
-		<plant>
-			<host>plant.local</host>
+		<{plugin} own:plugin="{plugin}">
+			<host>{plugin}.local</host>
 			<protocol>https</protocol>
-		</plant>
+		</{plugin}>
 	</plugindata>
 	<environment>
 		<energy/>

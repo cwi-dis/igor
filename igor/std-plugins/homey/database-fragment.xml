@@ -1,24 +1,24 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<sensors>
 		<rfid/>
 		<tags/>
 	</sensors>
 	<devices>
-		<homey/>
+		<{plugin} own:plugin="{plugin}"/>
 	</devices>
     <actions>
-        <action>
+        <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
             <url>/data/sensors/rfid/rfidtag[position()<last()]</url>
         </action>
-        <action>
+        <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
             <url>/data/sensors/tags/tag[position()<last()]</url>
         </action>
-        <action>
+        <action own:plugin="{plugin}">
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
             <method>POST</method>
@@ -28,7 +28,7 @@
         </action>
     </actions>
     <plugindata>
-        <rfid>
+        <rfid own:plugin="{plugin}">
             <tag>
                 <id>00:11:22:33</id>
                 <name>sampleTag</name>

@@ -390,7 +390,15 @@ class IgorSetup(object):
             return False
         xmlfrag = os.path.join(dst, 'database-fragment.xml')
         if os.path.exists(xmlfrag):
-            runcmd = '"%s" "%s" "%s"' % (os.environ.get("EDITOR", "edit"), xmlfrag, os.path.join(database, 'database.xml'))
+            fp = open(xmlfrag)
+            fragData = fp.read()
+            fp.close()
+            fragData = fragData.replace('{plugin}', pluginname)
+            fragDest = dst + '.xml'
+            fp = open(fragDest, 'w')
+            fp.write(fragData)
+            fp.close()
+            runcmd = '"%s" "%s" "%s"' % (os.environ.get("EDITOR", "edit"), fragDest, os.path.join(database, 'database.xml'))
             self.runcmds.append(runcmd)
         return True
     

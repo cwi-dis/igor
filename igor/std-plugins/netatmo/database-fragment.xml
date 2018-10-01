@@ -1,10 +1,13 @@
 <?xml version="1.0" ?>
-<data>
-	<actions>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
+	<sensors>
+		<{plugin own:plugin="{plugin}"}/>
+	</sensors>
+	<actions own:plugin="{plugin}">
 		<action>
 			<interval>900</interval>
-			<url>/pluginscript/netatmo/pull</url>
-			<representing>sensors/netatmo</representing>
+			<url>/pluginscript/{plugin}/pull</url>
+			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>
 	</actions>

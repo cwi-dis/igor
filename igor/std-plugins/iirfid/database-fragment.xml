@@ -1,25 +1,25 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<sensors>
 		<rfid/>
 		<tags/>
 	</sensors>
     <actions>
-        <action>
+        <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
             <url>/data/sensors/rfid/rfidtag[position()<last()]</url>
         </action>
-        <action>
+        <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
             <url>/data/sensors/tags/tag[position()<last()]</url>
         </action>
-        <action>
+        <action own:plugin="{plugin}">
             <name>start</name>
             <url>/pluginscript/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
         </action>
-        <action>
+        <action own:plugin="{plugin}">
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/sensors/tags/tag</url>
             <method>POST</method>
@@ -27,7 +27,7 @@
             <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
             <notBefore>1457647462</notBefore>
         </action>
-        <action>
+        <action own:plugin="{plugin}">
             <xpath>/data/sensors/rfid/rfidtag</xpath>
             <url>/data/environment/introspection/lastActivity/rfid</url>
             <method>PUT</method>
@@ -36,11 +36,11 @@
         </action>
     </actions>
     <plugindata>
-        <iirfid>
+        <{plugin} own:plugin="{plugin}">
             <serial>/dev/tty.usbserial-A700ekiO</serial>
             <baud>57600</baud>
             <host/>
-        </iirfid>
+        </{plugin}>
         <rfid>
             <tag>
                 <id>00:11:22:33</id>

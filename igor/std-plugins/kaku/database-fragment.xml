@@ -1,22 +1,22 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<devices>
-		<kaku/>
+		<{plugin} own:plugin="{plugin}"/>
 	</devices>
     <actions>
-        <action>
+        <action own:plugin="{plugin}">
             <xpath>/data/environment/lights/*</xpath>
-            <url>/scripts/pluginscript/kaku/switch?state={.}&switch={/data/plugindata/kaku/switch[name=name($originalContext)]/id}</url>
-			<representing>devices/kaku</representing>
+            <url>/scripts/pluginscript/{plugin}/switch?state={.}&switch={/data/plugindata/{plugin}/switch[name=name($originalContext)]/id}</url>
+			<representing>devices/{plugin}</representing>
         </action>
     </actions>
     <plugindata>
-        <kaku>
+        <{plugin}>
             <host>malakoff.local</host>
             <switch>
                 <id>0</id>
                 <name>sampleSwitch</name>
             </switch>
-        </kaku>
+        </{plugin}>
     </plugindata>
 </data>

@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
-<data>
+<data xmlns:own="http://jackjansen.nl/igor/owner">
 	<actions>
-		<action>
+		<action own:plugin="{owner}">
 			<interval>36000</interval>
-			<url>/pluginscript/fitbit/pull?user=jack</url>
-			<representing>sensors/fitbit</representing>
+			<url>/pluginscript/{owner}/pull?user=jack</url>
+			<representing>sensors/{owner}</representing>
 		</action>
 	</actions>
 </data>

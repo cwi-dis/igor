@@ -419,6 +419,7 @@ class IgorInternal(object):
         pluginTree = self.igor.database.elementFromXML(pluginData)
         self.igor.database.mergeElement('/', pluginTree, token=self.igor.access.tokenForIgor(), plugin=True)
         os.unlink(pluginFile)
+        self.save(token=self.igor.access.tokenForIgor())
         return True
          
     def runAction(self, actionname, token):

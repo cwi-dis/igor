@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 
-NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
+NAMESPACES = { 
+    "au":"http://jackjansen.nl/igor/authentication",
+    "own":"http://jackjansen.nl/igor/owner",
+     }
 
 NORMAL_OPERATIONS = {'get', 'put', 'post', 'delete'}
 AUTH_OPERATIONS = {'delegate'}

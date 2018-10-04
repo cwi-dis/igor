@@ -3,6 +3,11 @@ from __future__ import unicode_literals
 from builtins import object
 from .consistency import StructuralConsistency
 
+NAMESPACES = { 
+    "own":"http://jackjansen.nl/igor/owner",
+     }
+
+
 class AccessToken(object):
     def __init__(self):
         pass
@@ -165,7 +170,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert self.igor.internal
         if fix:
             self.igor.internal.save(token)
-        checker = StructuralConsistency(self.igor.database, fix, None, _token)
+        checker = StructuralConsistency(self.igor.database, fix, NAMESPACES, _token)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
             self.igor.internal.save(token)

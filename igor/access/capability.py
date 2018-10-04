@@ -320,7 +320,7 @@ class AccessToken(BaseAccessToken):
             print('access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList)))
             raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
         oldCapElement = capNodeList[0]
-        newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
+        newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=AU_NAMESPACE)
         parentElement = oldCapElement.parentNode
         parentElement.replaceChild(newCapElement, oldCapElement)
               
@@ -347,7 +347,7 @@ class AccessToken(BaseAccessToken):
             print('access: cannot setOwner %s because it occurs multiple times in the database')
             raise myWebError("401 Multiple new token owner %s" % newOwner)
         newParentElement = newParentElementList[0]
-        newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=NAMESPACES)
+        newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=AU_NAMESPACE)
         newParentElement.appendChild(oldCapElement) # This also removes it from where it is now...
         self.owner = newOwner
         return True

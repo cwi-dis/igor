@@ -144,7 +144,7 @@ class RevokeList(object):
             revokeData = dict(cid=tokenId)
             if nva:
                 revokeData['nva'] = nva
-            element = self.igor.database.elementFromTagAndData("revokedCapability", revokeData, namespace=NAMESPACES)
+            element = self.igor.database.elementFromTagAndData("revokedCapability", revokeData, namespace=AU_NAMESPACE)
             parents = self.igor.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
             assert len(parents) == 1
             parents[0].appendChild(element)
@@ -284,7 +284,7 @@ class IssuerInterface(object):
             if DEBUG_DELEGATION: print('access: createSharedKey: no unique destination au:access/au:sharedKeys')
             self.igor.app.raiseNotfound()
         parentElement = parentElement[0]
-        element = self.igor.database.elementFromTagAndData("sharedKey", keyData, namespace=NAMESPACES)
+        element = self.igor.database.elementFromTagAndData("sharedKey", keyData, namespace=AU_NAMESPACE)
         parentElement.appendChild(element)
         self._save()
         return keyBits
@@ -562,7 +562,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         tokenData.update(newRights)
         tokenData.update(content)
 
-        element = self.igor.database.elementFromTagAndData("capability", tokenData, namespace=NAMESPACES)
+        element = self.igor.database.elementFromTagAndData("capability", tokenData, namespace=AU_NAMESPACE)
         #
         # Insert into the tree
         #

@@ -172,6 +172,7 @@ class IgorServer(object):
         self.triggerHandler = None
         
     def preRun(self):
+        self.internal.updatePlugins()
         self.internal.updateActions()
         self.internal.updateEventSources()
         self.internal.updateTriggers()
@@ -389,6 +390,37 @@ class IgorInternal(object):
         """Recreate trigger handlers. Unimplemented. Not intended for human use"""
         pass
         
+    def updatePlugins(self, token=None):
+        """Install (or re-install) plugin-specific portions of the database"""
+        allOK = True
+        allFNs = os.listdir(self.igor.pathnames.plugindir)
+        allNewPlugins = []
+        for fn in allFNs:
+            if fn[-4:] == '.xml':
+                pluginName = fn[:-4]
+                if os.path.exists(os.path.join(self.igor.pathnames.plugindir, pluginName)):
+                    allNewPlugins.append(pluginName)
+                else:
+                    print('Warning: found XML fragment but no corresponding plugin: %s' % fn)
+        for newPlugin in allNewPlugins:
+            ok = self._installPluginFragment(newPlugin)
+            if not ok:
+                allOK = False
+        if allOK:
+            return 'OK'
+        return 'Error during plugin fragment installation, please check logfile'
+       
+    def _installPluginFragment(self, pluginName):
+        pluginFile = os.path.join(self.igor.pathnames.plugindir, pluginName + '.xml')
+        print('Merging plugin fragment %s' % pluginFile)
+        fp = open(pluginFile)
+        pluginData = fp.read()
+        fp.close()
+        pluginTree = self.igor.database.elementFromXML(pluginData)
+        self.igor.database.mergeElement('/', pluginTree, token=self.igor.access.tokenForIgor(), plugin=True)
+        os.unlink(pluginFile)
+        return True
+         
     def runAction(self, actionname, token):
         """Mechanism behind running actions. Not intended for human use."""
         if not self.igor.actionHandler:

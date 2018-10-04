@@ -21,7 +21,7 @@ TAG_PATTERN_WITH_NS = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9:]*$')
 ILLEGAL_XML_CHARACTERS_PATTERN = re.compile(u'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf\ufffe-\uffff]')
 
 #NAMESPACES = { "au":"http://jackjansen.nl/igor/authentication" }
-NAMESPACES = { }
+NAMESPACES = { "own" : "http://jackjansen.nl/igor/owner"}
 
 class DBKeyError(KeyError):
     pass
@@ -637,3 +637,49 @@ class DBImpl(DBSerializer):
             for node in nodelist:
                 rv.append((self.getXPathForElement(node), xpath.expr.string_value(node)))
             return rv
+            
+    def mergeElement(self, location, tree, token, plugin=False, context=None):
+        assert plugin # No other merges implemented yet
+        assert location == '/'
+        assert context == None
+        if context == None and location == '/':
+            context = self._doc.documentElement
+        if not self._elementsMatch(context, tree):
+            raise DBParamError('mergeElement: root elements do not match')
+        self._mergeTree(context, tree, token, plugin)
+        
+    def _elementsMatch(self, elt1, elt2):
+        return elt1.tagName == elt2.tagName
+        
+    def _constructXPathForNewChild(self, elt, plugin):
+        assert plugin
+        rv = elt.tagName
+        if elt.hasAttributeNS(NAMESPACES["own"], "plugin"):
+            pluginName = elt.getAttributeNS(NAMESPACES["own"], "plugin")
+            rv += '[@own:plugin="%s"]' % pluginName
+        return rv
+        
+    def _mergeTree(self, context, newTree, token, plugin):
+        newChild = newTree.firstChild
+        toAdd = []
+        while newChild:
+            # Ignore non-element children
+            if newChild.nodeType != newChild.ELEMENT_NODE:
+                newChild = newChild.nextSibling
+                continue
+            # Check whether the old tree has an element corresponding to this one
+            xp = self._constructXPathForNewChild(newChild, plugin)
+            matches = xpath.find(xp, context, namespaces=NAMESPACES)
+            if not matches:
+                # No child exists that matches this child
+                toAdd.append(newChild)
+            elif len(matches) == 1:
+                # A single child in the old tree matches. Recursively descend.
+                newContext = matches[0]
+                self._mergeTree(newContext, newChild, token, plugin)
+            else:
+                raise DBParamError('mergeElement: multiple matches for %s at %s' % (xp, self.getXPathForElement(context)))
+            newChild = newChild.nextSibling
+        for newChild in toAdd:
+            newTree.removeChild(newChild)
+            context.appendChild(newChild)

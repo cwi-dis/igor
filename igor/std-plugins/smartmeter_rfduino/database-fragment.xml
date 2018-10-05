@@ -19,6 +19,6 @@
 		</action>
 	</actions>
 	<environment>
-		<energy own:plugin="{plugin}"/>
+		<energy/>
 	</environment>
 </data>

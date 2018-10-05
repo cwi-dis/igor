@@ -5,7 +5,7 @@
 	</sensors>
 	<actions>
 		<action own:plugin="{plugin}">
-			<interval>60/interval>
+			<interval>60</interval>
 			<url>/pluginscript/{plugin}/pull</url>
 			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>

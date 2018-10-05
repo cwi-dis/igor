@@ -6,7 +6,7 @@
     <actions>
         <action own:plugin="{plugin}">
             <xpath>/data/environment/lights/*</xpath>
-            <url>/scripts/pluginscript/{plugin}/switch?state={.}&switch={/data/plugindata/{plugin}/switch[name=name($originalContext)]/id}</url>
+            <url>/scripts/pluginscript/{plugin}/switch?state={.}&amp;switch={/data/plugindata/{plugin}/switch[name=name($originalContext)]/id}</url>
 			<representing>devices/{plugin}</representing>
         </action>
     </actions>

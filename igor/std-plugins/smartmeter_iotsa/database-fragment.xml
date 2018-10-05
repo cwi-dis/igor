@@ -10,7 +10,7 @@
 			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>
-		<action>
+		<action own:plugin="{plugin}">
 			<xpath>/data/sensors/{plugin}</xpath>
 			<method>PUT</method>
 			<url>/data/environment/energy/electricity</url>
@@ -25,6 +25,6 @@
 		</{plugin}>
 	</plugindata>
 	<environment>
-		<energy own:plugin="{plugin}"/>
+		<energy/>
 	</environment>
 </data>

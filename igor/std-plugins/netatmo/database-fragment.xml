@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <data xmlns:own="http://jackjansen.nl/igor/owner">
 	<sensors>
-		<{plugin own:plugin="{plugin}"}/>
+		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
-	<actions own:plugin="{plugin}">
-		<action>
+	<actions>
+		<action own:plugin="{plugin}">
 			<interval>900</interval>
 			<url>/pluginscript/{plugin}/pull</url>
 			<representing>sensors/{plugin}</representing>

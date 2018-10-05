@@ -11,12 +11,12 @@
         <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
-            <url>/data/sensors/rfid/rfidtag[position()<last()]</url>
+            <url>/data/sensors/rfid/rfidtag[position()&lt;last()]</url>
         </action>
         <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
-            <url>/data/sensors/tags/tag[position()<last()]</url>
+            <url>/data/sensors/tags/tag[position()&lt;last()]</url>
         </action>
         <action own:plugin="{plugin}">
             <xpath>/data/sensors/rfid/rfidtag</xpath>

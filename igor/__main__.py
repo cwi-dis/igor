@@ -562,7 +562,9 @@ class IgorPlugins(object):
             return
         dst = os.path.join(self.igor.pathnames.plugindir, pluginName)
         os.unlink(dst)
-        # xxxx remove plugin data from database
+        # And remove all elements pertaining to the plugin
+        xp = '//*[@own:plugin="%s"]' % pluginName
+        self.igor.database.delValues(xp, token)
         return ''
         
     def list(self, token=None):

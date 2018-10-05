@@ -444,9 +444,13 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         pluginsInstalled = eval(txtInstalled)
         txtStandard = pAdmin.get('/internal/pluginControl/liststd')
         pluginsAvailable = eval(txtStandard)
+        added = []
         for p in pluginsAvailable:
             if not p in pluginsInstalled:
                 ok = pAdmin.get('/internal/pluginControl/installstd', query=dict(pluginName=p))
+                added.append(p)
+        for p in added:
+            ok = pAdmin.get('/internal/pluginControl/uninstall', query=dict(pluginName=p))
 
     def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
         pass

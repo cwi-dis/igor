@@ -438,6 +438,16 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         wantedContent = {'test82':{'src':'eighty-two', 'sink':'eighty-two'}}
         self.assertEqual(resultDict, wantedContent)
 
+    def test_83_install_all_stdplugins(self):
+        pAdmin = self._igorVar(credentials='admin:')
+        txtInstalled = pAdmin.get('/internal/pluginControl/list')
+        pluginsInstalled = eval(txtInstalled)
+        txtStandard = pAdmin.get('/internal/pluginControl/liststd')
+        pluginsAvailable = eval(txtStandard)
+        for p in pluginsAvailable:
+            if not p in pluginsInstalled:
+                ok = pAdmin.get('/internal/pluginControl/installstd', query=dict(pluginName=p))
+
     def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
         pass
                 

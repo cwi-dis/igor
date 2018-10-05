@@ -160,6 +160,7 @@ class IgorServer(object):
         self.urlCaller = callUrl.URLCaller(self)
         self.urlCaller.start()
         
+        self.plugins = IgorPlugins(self)
         #
         # Fill self data
         #        
@@ -172,7 +173,7 @@ class IgorServer(object):
         self.triggerHandler = None
         
     def preRun(self):
-        self.internal.updatePlugins()
+        self.plugins.update(token=self.access.tokenForIgor())
         self.internal.updateActions()
         self.internal.updateEventSources()
         self.internal.updateTriggers()
@@ -291,7 +292,7 @@ class IgorInternal(object):
         logfn = os.path.join(self.igor.pathnames.datadir, 'igor.log')
         if os.path.exists(logfn):
             return open(logfn).read()
-        raise self.app.raiseHTTPError('404 Log file not available')
+        self.app.raiseHTTPError('404 Log file not available')
         
     def updateStatus(self, subcommand=None, representing=None, alive=None, resultData=None, lastActivity=None, lastSuccess=None, token=None):
         """Update status field of some service/sensor/actuator after an action. Not intended for human use"""
@@ -360,6 +361,18 @@ class IgorInternal(object):
             self.igor.app.raiseSeeother(returnTo)
         return rv
         
+    def pluginControl(self, subcommand=None, returnTo=None, token=None, **kwargs):
+        """Low-level plugin control. Not intended for human use"""
+        if not subcommand:
+            self.igor.app.raiseNotfound()
+        method = getattr(self.igor.plugins, subcommand, None)
+        if not method:
+            self.igor.app.raiseNotfound()
+        rv = method(token=token, **kwargs)
+        if returnTo and not rv:
+            self.igor.app.raiseSeeother(returnTo)
+        return rv
+        
     def updateActions(self, token=None):
         """Recreate event handlers defined in the database. Not intended for human use"""
         startupActions = self.igor.database.getElements('actions', 'get', self.igor.access.tokenForIgor())
@@ -390,38 +403,6 @@ class IgorInternal(object):
         """Recreate trigger handlers. Unimplemented. Not intended for human use"""
         pass
         
-    def updatePlugins(self, token=None):
-        """Install (or re-install) plugin-specific portions of the database"""
-        allOK = True
-        allFNs = os.listdir(self.igor.pathnames.plugindir)
-        allNewPlugins = []
-        for fn in allFNs:
-            if fn[-4:] == '.xml':
-                pluginName = fn[:-4]
-                if os.path.exists(os.path.join(self.igor.pathnames.plugindir, pluginName)):
-                    allNewPlugins.append(pluginName)
-                else:
-                    print('Warning: found XML fragment but no corresponding plugin: %s' % fn)
-        for newPlugin in allNewPlugins:
-            ok = self._installPluginFragment(newPlugin)
-            if not ok:
-                allOK = False
-        if allOK:
-            return 'OK'
-        return 'Error during plugin fragment installation, please check logfile'
-       
-    def _installPluginFragment(self, pluginName):
-        pluginFile = os.path.join(self.igor.pathnames.plugindir, pluginName + '.xml')
-        print('Merging plugin fragment %s' % pluginFile)
-        fp = open(pluginFile)
-        pluginData = fp.read()
-        fp.close()
-        pluginTree = self.igor.database.elementFromXML(pluginData)
-        self.igor.database.mergeElement('/', pluginTree, token=self.igor.access.tokenForIgor(), plugin=True)
-        os.unlink(pluginFile)
-        self.save(token=self.igor.access.tokenForIgor())
-        return True
-         
     def runAction(self, actionname, token):
         """Mechanism behind running actions. Not intended for human use."""
         if not self.igor.actionHandler:
@@ -504,6 +485,104 @@ class IgorInternal(object):
             rv += '%s - %s\n' % (name, doc)
         return rv
     
+class IgorPlugins(object):
+    def __init__(self, igor):
+        self.igor = igor
+
+    def update(self, token=None):
+        """Install (or re-install) plugin-specific portions of the database"""
+        checker = self.igor.access.checkerForEntrypoint('/filesystem')
+        if not checker.allowed('get', token):
+            return
+        allOK = True
+        allFNs = os.listdir(self.igor.pathnames.plugindir)
+        allNewPlugins = []
+        for fn in allFNs:
+            if fn[-4:] == '.xml':
+                pluginName = fn[:-4]
+                if os.path.exists(os.path.join(self.igor.pathnames.plugindir, pluginName)):
+                    allNewPlugins.append(pluginName)
+                else:
+                    print('Warning: found XML fragment but no corresponding plugin: %s' % fn)
+        for newPlugin in allNewPlugins:
+            ok = self._installPluginFragment(newPlugin, token)
+            if not ok:
+                allOK = False
+        if allOK:
+            return 'OK'
+        return 'Error during plugin fragment installation, please check logfile'
+       
+    def _installPluginFragment(self, pluginName, token):
+        """Install XML fragment for a specific plugin"""
+        pluginFile = os.path.join(self.igor.pathnames.plugindir, pluginName + '.xml')
+        print('Merging plugin fragment %s' % pluginFile)
+        fp = open(pluginFile)
+        pluginData = fp.read()
+        fp.close()
+        pluginTree = self.igor.database.elementFromXML(pluginData)
+        self.igor.database.mergeElement('/', pluginTree, token=token, plugin=True)
+        os.unlink(pluginFile)
+        self.igor.save(token=self.igor.access.tokenForIgor())
+        return True
+        
+    def installstd(self, pluginName=None, stdName=None, token=None):
+        checker = self.igor.access.checkerForEntrypoint('/filesystem')
+        if not checker.allowed('get', token):
+            return
+        if not pluginName:
+            self.igor.app.raiseNotFound()
+        if not stdName:
+            stdName = pluginName
+        if not os.path.exists(os.path.join(self.igor.pathnames.stdplugindir, stdName)):
+            self.igor.app.raiseNotFound()
+        # Create the symlink to the plugin
+        dst = os.path.join(self.igor.pathnames.plugindir, pluginName)
+        src = os.path.join('..', 'std-plugins', stdName)
+        os.symlink(src, dst)
+        # Create the xmlfragment, if needed
+        xmlfrag = os.path.join(dst, 'database-fragment.xml')
+        if os.path.exists(xmlfrag):
+            fp = open(xmlfrag)
+            fragData = fp.read()
+            fp.close()
+            fragData = fragData.replace('{plugin}', pluginName)
+            fragDest = dst + '.xml'
+            fp = open(fragDest, 'w')
+            fp.write(fragData)
+            fp.close()
+            self._installPluginFragment(pluginName, token)
+        return ''
+        
+    def install(self, pluginname=None, zipfile=None, token=None):
+        self.igor.app.raiseHTTPError('500 Not yet implemented')
+    
+    def uninstall(self, pluginName=None, token=None):
+        checker = self.igor.access.checkerForEntrypoint('/filesystem')
+        if not checker.allowed('get', token):
+            return
+        dst = os.path.join(self.igor.pathnames.plugindir, pluginName)
+        os.unlink(dst)
+        # xxxx remove plugin data from database
+        return ''
+        
+    def list(self, token=None):
+        allFNs = os.listdir(self.igor.pathnames.plugindir)
+        allPlugins = []
+        for fn in allFNs:
+            if '.' in fn or '@' in fn or '~' in fn or fn[:2] == '__':
+                continue
+            allPlugins.append(fn)
+        return allPlugins
+        
+    def liststd(self, token=None):
+        allFNs = os.listdir(self.igor.pathnames.stdplugindir)
+        allPlugins = []
+        for fn in allFNs:
+            if '.' in fn or '@' in fn or '~' in fn or fn[:2] == '__':
+                continue
+            allPlugins.append(fn)
+        return allPlugins
+        
 def main():
     signal.signal(signal.SIGQUIT, _dump_app_stacks)
     DEFAULTDIR=os.path.join(os.path.expanduser('~'), '.igor')

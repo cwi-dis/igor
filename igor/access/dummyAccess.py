@@ -170,7 +170,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert self.igor.internal
         if fix:
             self.igor.internal.save(token)
-        checker = StructuralConsistency(self.igor.database, fix, NAMESPACES, _token)
+        checker = StructuralConsistency(self.igor, fix, NAMESPACES, _token)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
             self.igor.internal.save(token)

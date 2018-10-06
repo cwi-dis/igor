@@ -5,12 +5,15 @@ import random
 
 VERBOSE=False
 
+OWN_NAMESPACE="http://jackjansen.nl/igor/owner" # Shoulnd't be here, really...
+
 class CannotFix(Exception):
     pass
     
 class StructuralConsistency(object):
-    def __init__(self, database, fix, namespaces, token, extended=False):
-        self.database = database
+    def __init__(self, igor, fix, namespaces, token, extended=False):
+        self.igor = igor
+        self.database = self.igor.database
         self.fix = fix
         self.namespaces = namespaces
         self.token = token
@@ -116,6 +119,47 @@ class StructuralConsistency(object):
         for subItem in itemContent:
             self._checkInfrastructureItem(itemPath, subItem)
             
+    def _checkNamespaces(self):
+        rootElements = self.database.getElements('/data', 'get', token=self.token)
+        if len(rootElements) != 1:
+            self._status('Multiple /data root elements')
+            raise CannotFix
+        rootElement = rootElements[0]
+        for nsName, nsUrl in list(self.namespaces.items()):
+            have = rootElement.getAttribute('xmlns:' + nsName)
+            if have != nsUrl:
+                if self.fix:
+                    rootElement.setAttribute('xmlns:' + nsName, nsUrl)
+                    self._status('Added namespace declaration for xmlns:%s=%s' % (nsName, nsUrl), isError=False)
+                    self.nChanges += 1
+                else:
+                    self._status('Missing namespace declaration xmlns:%s=%s' % (nsName, nsUrl))
+                    raise CannotFix
+
+    def _checkPlugins(self):
+        installedPlugins = set(self.igor.plugins.list())
+        allPluginOwnedElements = self.database.getElements('//*[@own:plugin]', 'get', token=self.token)
+        mentionedPlugins = set()
+        for elt in allPluginOwnedElements:
+            owner = elt.getAttributeNS(OWN_NAMESPACE, "plugin")
+            if not owner:
+                continue
+            if owner in installedPlugins:
+                mentionedPlugins.add(owner)
+                continue
+            # The plugin owning this element doesn't exist
+            xp = self.database.getXPathForElement(elt)
+            if self.fix:
+                self.database.delValues(xp, self.token)
+                self._status('Deleted %s, belonged to missing plugin %s' % (xp, owner), isError=False)
+                self.nChanges += 1
+            else:
+                self._status('Missing plugin "%s" owns %s' % (owner, xp))
+        for plugin in installedPlugins:
+            if plugin in mentionedPlugins:
+                continue
+            self._status('Warning: plugin "%s" does not own anything in the database' % plugin, isError=False)
+        
     def do_check(self):
         databaseTemplate = (
             '/data',
@@ -149,21 +193,10 @@ class StructuralConsistency(object):
             #
             # Very first check: see whether we have the correct namespace declarations
             #
-            rootElements = self.database.getElements('/data', 'get', token=self.token)
-            if len(rootElements) != 1:
-                self._status('Multiple /data root elements')
-                raise CannotFix
-            rootElement = rootElements[0]
-            for nsName, nsUrl in list(self.namespaces.items()):
-                have = rootElement.getAttribute('xmlns:' + nsName)
-                if have != nsUrl:
-                    if self.fix:
-                        rootElement.setAttribute('xmlns:' + nsName, nsUrl)
-                        self._status('Added namespace declaration for xmlns:%s=%s' % (nsName, nsUrl), isError=False)
-                        self.nChanges += 1
-                    else:
-                        self._status('Missing namespace declaration xmlns:%s=%s' % (nsName, nsUrl))
-                        raise CannotFix
+            self._checkNamespaces()
+            #
+            # Check plugins and corresponding own:plugin attributes
+            self._checkPlugins()
             #
             # Now check that we have all the needed infrastructural items
             #

@@ -21,6 +21,8 @@
         </action>
 	</actions>
 	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
 		<{plugin}Devices own:plugin="{plugin}">
 			<!-- example: -->
 			<{plugin}Device>

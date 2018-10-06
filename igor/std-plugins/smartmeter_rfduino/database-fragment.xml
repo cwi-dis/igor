@@ -21,4 +21,8 @@
 	<environment>
 		<energy/>
 	</environment>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
+	</plugindata>
 </data>

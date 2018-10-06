@@ -7,4 +7,8 @@
 			<url>/pluginscript/{plugin}/message?args={.}</url>
 		</action>
 	</actions>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
+	</plugindata>
 </data>

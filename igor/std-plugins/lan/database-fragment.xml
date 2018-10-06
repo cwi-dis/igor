@@ -22,4 +22,8 @@
 			<notBefore>1512862407</notBefore>
 		</action>
 	</actions>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
+	</plugindata>
 </data>

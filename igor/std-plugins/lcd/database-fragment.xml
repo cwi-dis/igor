@@ -10,4 +10,8 @@
 			<representing>devices/{plugin}</representing>
 		</action>
 	</actions>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
+	</plugindata>
 </data>

@@ -11,4 +11,8 @@
 			<aggregate>true</aggregate>
 		</action>
 	</actions>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
+	</plugindata>
 </data>

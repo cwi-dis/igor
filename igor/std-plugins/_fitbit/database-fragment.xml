@@ -7,4 +7,8 @@
 			<representing>sensors/{owner}</representing>
 		</action>
 	</actions>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
+	</plugindata>
 </data>

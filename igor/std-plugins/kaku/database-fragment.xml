@@ -11,7 +11,7 @@
         </action>
     </actions>
     <plugindata>
-        <{plugin}>
+        <{plugin} own:plugin="{plugin}">
             <host>malakoff.local</host>
             <switch>
                 <id>0</id>

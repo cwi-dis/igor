@@ -398,8 +398,7 @@ class IgorSetup(object):
             fp = open(fragDest, 'w')
             fp.write(fragData)
             fp.close()
-            runcmd = '"%s" "%s" "%s"' % (os.environ.get("EDITOR", "edit"), fragDest, os.path.join(database, 'database.xml'))
-            self.runcmds.append(runcmd)
+            print("%s: igor will install %s on the next restart" % (self.progname, fragDest), file=sys.stderr)
         return True
     
 def main():

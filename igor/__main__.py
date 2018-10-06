@@ -565,6 +565,7 @@ class IgorPlugins(object):
         # And remove all elements pertaining to the plugin
         xp = '//*[@own:plugin="%s"]' % pluginName
         self.igor.database.delValues(xp, token)
+        self.igor.save(token=self.igor.access.tokenForIgor())
         return ''
         
     def list(self, token=None):
@@ -584,6 +585,9 @@ class IgorPlugins(object):
                 continue
             allPlugins.append(fn)
         return allPlugins
+        
+    def exists(self, pluginName, token=None):
+        return os.path.isdir(os.path.join(self.igor.pathnames.plugindir, pluginName))
         
 def main():
     signal.signal(signal.SIGQUIT, _dump_app_stacks)

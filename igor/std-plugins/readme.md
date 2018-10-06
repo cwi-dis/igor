@@ -19,7 +19,7 @@ Various plugins should be considered standard to Igor operations and usually ins
 
 ## Plugin Structure
 
-### pluginname.py
+### igorplugin.py
 
 A plugin can be implemented in Python. Then it must define a class (or factory function)
 
@@ -30,7 +30,11 @@ igorPlugin(igor, pluginName, pluginData)
 which is called whenever any method of the plugin is to be called. This function should return an object on which the individual methods are looked up. The `igorPlugin` function is called every time a plugin method needs to be called, but it can of course return a singleton object. See the _watchdog_ plugin for an example. _igor_ is a pointer to the global Igor object (see below), _PluginName_
 is the name under which the plugin has been installed, and _PluginData_ is filled from `/data/plugindata/_pluginname_`.
 
-Accessing `/plugin/pluginname` will call the `index()` method. Accessing `/plugin/pluginname/methodname` will call `methodname()`.  The method is called with `**kwargs` encoding the plugin arguments, and if there is a `user` argument there will be an additional argument `userData` which is filled from `/data/identities/_user_/plugindata/_pluginname_`.
+Accessing `/plugin/pluginname` will call the `index()` method. 
+
+Accessing `/plugin/pluginname/methodname` will call `methodname()`.  
+
+The methods are called with `**kwargs` encoding the plugin arguments, and if there is a `user` argument there will be an additional argument `userData` which is filled from `/data/identities/_user_/plugindata/_pluginname_`.
 
 The _igor_ object has a number of attributes that allow access to various aspects of Igor:
 
@@ -63,7 +67,11 @@ Usually these entries are explained in the plugin readme file, in the _schema_ s
 
 Usually there is a file `database-fragment.xml` that show the entries needed. Basically this file is the minimal set of elements that should be in the database for the plugin to function. 
 
-Installation of these entries into the database is not automatic, when you install the plugin you should manually insert them into the database. This requires a bit of knowledge, because you may have to modify some elements (such as hostname fields) and you may need to duplicate some (with modifications) for example if you want the _lan_ plugin to test different services.
+This database fragment is overlayed onto the database when installing the plugin. Every occurrence of the exact string `{plugin}` is replaced by the name of the plugin before installing into the database.
+
+The fragment overlay installation may be delayed until the next time the Igor server is restarted.
+
+It may be necessary to do some hand editing of the database after installing, because you may have to modify some elements (such as hostname fields) and you may need to duplicate some (with modifications) for example if you want the _lan_ plugin to test different services.
 
 ## Included Igor Standard Plugins
 

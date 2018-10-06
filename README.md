@@ -91,8 +91,7 @@ There are a number of command-line utilities and Python modules, such as ``igorV
 
 ## Plugins
 
-A number of plugins is included. Some of these are generally useful, some should be considered
-example code to help you develop your own plugins. See [igor/plugins/readme.md](igor/plugins/readme.md) for a description of the plugins.
+A number of plugins is included. Some of these are generally useful, some should be considered example code to help you develop your own plugins. See [igor/std-plugins/readme.md](igor/std-plugins/readme.md) for a description of the standard plugins.
 
 ## Helpers
 

@@ -183,8 +183,10 @@ The `~/.igor` directory can contain the following files and subdirectories:
 
 - `database.xml` The main XML database.
 - `database.xml.YYYYMMDDHHMMSS` Backups of the database (created automatically).
-- `plugins` directory with installed plugins.
+- `plugins` directory with installed plugins. Many will be symlinks into `std-plugins` directory.
+- `std-plugins` symlink to standard plugins directory in the igor package (will be re-created on every startup).
 - `igor.log` if _igorServer_ is started at system boot this is the _httpd-style_ log of all Igor activity.
+- `igor.log.*` Older logfiles.
 - `igor.crt` and `igor.key` if Igor is run in _https_ mode these are the certificate and key used. `igor.crt` is also used by _igorVar_ and _igorControl_ to check the server identity.
 - `ca` certificate authority data such as signing keys and certificates.
 - `igorSessions.db` may be available to store igor user sessions.

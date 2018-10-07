@@ -14,6 +14,7 @@
 			<xpath>/data/sensors/{plugin}</xpath>
 			<method>PUT</method>
 			<url>/data/environment/energy/electricity</url>
+			<!-- Needs capability for the URL -->
 			<mimetype>text/plain</mimetype>
 			<data>{current_kw}</data>
 		</action>

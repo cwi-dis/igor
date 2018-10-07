@@ -7,9 +7,12 @@
 		<action own:plugin="{plugin}">
 			<xpath>/data/devices/{plugin}/pos</xpath>
 			<url>{/data/plugindata/{plugin}/protocol}://{/data/plugindata/{plugin}/host}/stepper/0?pos={.}</url>
+			<!-- needs capability for /data/plugindata/plant -->
+			<!-- needs capability for /data/devices/plant -->
 			<representing>devices/{plugin}</representing>
 		</action>
 		<action own:plugin="{plugin}">
+			<!-- needs capability for data/devices/plant -->
 			<xpath>/data/environment/energy/electricity</xpath>
 			<url>/data/devices/{plugin}/pos</url>
 			<method>PUT</method>

@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <data xmlns:own="http://jackjansen.nl/igor/owner">
-	<devices>
+	<sensors>
 		<{plugin} own:plugin="{plugin}"/>
-	</devices>
+	</sensors>
 	<actions>
 		<action own:plugin="{plugin}">
 			<interval>60</interval>
@@ -14,6 +14,8 @@
             <xpath>/data/sensors/{plugin}/lease</xpath>
             <condition>/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name</condition>
             <url>/data/environment/{plugin}Devices/{/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name}</url>
+            <!-- needs capability for /data/plugindata/{plugin}Devices -->
+            <!-- needs capability for /data/sensors/dhcp -->
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
             <data>{alive}</data>
@@ -22,6 +24,7 @@
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
+			<!-- needs capability for /data/plugindata/{plugin}Devices -->
 		</{plugin}>
 		<{plugin}Devices own:plugin="{plugin}">
 			<{plugin}Device>

@@ -22,6 +22,8 @@
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
+			<!-- needs capability for /data/sensors/{plugin} -->
+			<!-- needs capability for /data/plugindata/{plugin}Devices -->
 		</{plugin}>
 		<{plugin}Devices own:plugin="{plugin}">
 			<!-- example: -->

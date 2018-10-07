@@ -15,6 +15,7 @@
 			<method>PUT</method>
 			<url>/data/environment/energy/electricity</url>
 			<mimetype>text/plain</mimetype>
+			<!-- Needs capability for the URL -->
 			<data>{current_kw}</data>
 		</action>
 	</actions>

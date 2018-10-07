@@ -7,6 +7,7 @@
 		<action own:plugin="{plugin}">
 			<interval>36000</interval>
 			<url>/pluginscript/{plugin}/get?name=backup.desktop&amp;remoteHost=localhost</url>
+			<representing>services/backup.desktop</representing>
 			<aggregate>true</aggregate>
 		</action>
 	</actions>

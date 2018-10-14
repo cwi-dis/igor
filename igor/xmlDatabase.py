@@ -459,6 +459,10 @@ class DBImpl(DBSerializer):
             """Helper method to check whether anything is namespaced in the subtree"""
             if e.namespaceURI:
                 return True
+            if e.attributes:
+                for a in e.attributes.values():
+                    if a.namespaceURI:
+                        return True
             c = e.firstChild
             while c:
                 if c.namespaceURI:
@@ -473,6 +477,13 @@ class DBImpl(DBSerializer):
         def _stripNS(e):
             """Helper method to strip all namespaced items from a subtree"""
             assert not e.namespaceURI
+            if e.attributes:
+                toRemoveAttrs =[]
+                for av in e.attributes.values():
+                    if av.namespaceURI:
+                        toRemoveAttrs.append(av)
+                for av in toRemoveAttrs:
+                    e.removeAttributeNode(av)
             toRemove = []
             for c in e.childNodes:
                 if c.namespaceURI:
@@ -493,6 +504,13 @@ class DBImpl(DBSerializer):
         v = {}
         texts = []
         child = element.firstChild
+        # It seems in xml.dom the attributes are not in the children list (??!?).
+        # Get them from the attributes map
+        if element.attributes:
+            for attrName, attrValue in element.attributes.items():
+                if stripHidden and ':' in attrName:
+                    continue
+                v['@'+attrName] = attrValue
         while child:
             if stripHidden and child.namespaceURI:
                 child = child.nextSibling
@@ -507,6 +525,7 @@ class DBImpl(DBSerializer):
                 else:
                     v[newt] = newv
             elif child.nodeType == child.ATTRIBUTE_NODE:
+                # Note: it seems attributes are not in the children, so this code may be non-functional
                 v['@' + child.name] = child.value
             elif child.nodeType == child.TEXT_NODE:
                 # Remove leading and trailing whitespace, and only add text node if it is not empty

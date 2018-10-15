@@ -27,12 +27,12 @@ class IgorError(EnvironmentError):
 CONFIG = configparser.ConfigParser(
     dict(
         url="http://igor.local:9333/data",
-        bearer=None,
-        access=None,
-        credentials=None,
-        certificate=None,
-        noverify=None,
-        verbose=None,
+        bearer='',
+        access='',
+        credentials='',
+        certificate='',
+        noverify='',
+        verbose='',
     ))
 CONFIG.add_section('igor')
 CONFIG.read(os.path.expanduser('~/.igor/igor.cfg'))

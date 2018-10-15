@@ -1,6 +1,8 @@
 future
 httplib2
 requests
+flask
+gevent
 web.py==0.40.dev1; python_version >= '3'
 web.py; python_version < '3'
 python-dateutil

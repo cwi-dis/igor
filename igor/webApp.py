@@ -378,8 +378,8 @@ def get_trigger(triggername):
     except xmlDatabase.DBAccessError:
         myWebError("401 Unauthorized (while running trigger)", 401)
         
-@_WEBAPP.route('/plugin/<string:pluginname>', defaults={'methodName':'index'})
-@_WEBAPP.route('/plugin/<string:pluginname>/<string:methodName>')
+@_WEBAPP.route('/plugin/<string:pluginName>', defaults={'methodName':'index'})
+@_WEBAPP.route('/plugin/<string:pluginName>/<string:methodName>')
 def get_plugin(pluginName, methodName='index'):
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])

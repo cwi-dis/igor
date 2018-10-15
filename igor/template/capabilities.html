@@ -19,9 +19,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		$if not igor.internal.accessControl('hasCapabilitySupport'):
 			<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
 	
-		$if 'user' in igor.session and igor.session.user:
+		$if igor.app.getSessionItem('user', None):
 			<p>
-				You are logged in as $igor.session.user.
+				You are logged in as ${igor.igor.app.getSessionItem('user')}.
 				$if cid == None:
 					Here is the list of all capabilities assigned to your user identity.
 				$else:

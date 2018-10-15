@@ -479,9 +479,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                         self.igor.app.raiseHTTPError('401 Unauthorized', headers={'WWW_Authenticate' : 'Basic realm="igor"'})
             # Add more here for other methods
             return _combineTokens(token, self._defaultToken())
-        if self.igor.session and 'user' in self.igor.session and self.igor.session.user:
-            if DEBUG: print('access: tokenForRequest: returning token for session.user %s' % self.igor.session.user)
-            return self._tokenForUser(self.igor.session.user)
+        user = self.igor.app.getSessionItem('user')
+        if user:
+            if DEBUG: print('access: tokenForRequest: returning token for session.user %s' % user)
+            return self._tokenForUser(user)
         # xxxjack should we allow carrying tokens in cookies?
         if DEBUG: print('access: no token found for request %s' % headers.get('PATH_INFO', '???'), 'returning', self._defaultToken())
         return self._defaultToken()

@@ -61,11 +61,11 @@ $code:
 
 	$if action == None or action == 'list':
 		<h1>Igor Devices and Sensors</h1>
-	
-		$if 'user' in igor.session and igor.session.user:
+		$ user = igor.app.getSessionItem('user', None)
+		$if user:
 			<p>
-				You are logged in as $igor.session.user.
-				$if igor.session.user != 'admin':
+				You are logged in as $user.
+				$if user != 'admin':
 					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
 			</p>
 		$else:

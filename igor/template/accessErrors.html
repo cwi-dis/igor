@@ -22,8 +22,8 @@ $code:
 	$if not igor.internal.accessControl('hasCapabilitySupport'):
 		<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
 
-	$if 'user' in igor.session and igor.session.user:
-		$ user = igor.session.user
+	$if igor.app.getSessionItem('user', None):
+		$ user = igor.app.getSessionItem('user')
 		<p>You are logged in as $user.</p>
 	$else:
 		$ user = "admin"

@@ -24,9 +24,10 @@ $def with (**kwargs)
 	
 	<h1>Access Control</h1>
 	
-	$if 'user' in igor.session and igor.session.user:
+	$ user = igor.app.getSessionItem('user', None)
+	$if user:
 		<p>
-			You are logged in as $igor.session.user. To log out (or log in with different credentials) please visit the <a href="/login">login page</a>.
+			You are logged in as $user. To log out (or log in with different credentials) please visit the <a href="/login">login page</a>.
 		</p>
 	$else:
 		<p>

@@ -151,8 +151,6 @@ class IgorServer(object):
         
         self.app = webApp.WebApp(self)
         
-        self.session = self.app.getSession(self.pathnames.sessionfile)
-
         access.createSingleton() # Has probably been done in main() already
         self.access = access.singleton
         self.access.setIgor(self)
@@ -361,7 +359,7 @@ class IgorInternal(object):
             self.igor.app.raiseNotfound()
         rv = method(**kwargs)
         if returnTo and not rv:
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return rv
         
     def pluginControl(self, subcommand=None, returnTo=None, token=None, **kwargs):
@@ -373,7 +371,7 @@ class IgorInternal(object):
             self.igor.app.raiseNotfound()
         rv = method(token=token, **kwargs)
         if returnTo and not rv:
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return rv
         
     def updateActions(self, token=None):

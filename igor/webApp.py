@@ -77,9 +77,12 @@ class MyServer:
         appKey = fp.read(8)
         _SERVER.secret_key = appKey
 
-    def getSession(self, backingstorefile=None):
+    def getSessionItem(self, name, default=None):
         """Create persistent session object"""
-        return session
+        return session.get(name, default)
+        
+    def setSessionItem(self, name, value):
+        session[name] = value
         
     def getHTTPError(self):
         """Return excpetion raised by other methods below (for catching)"""
@@ -91,11 +94,11 @@ class MyServer:
         
     def raiseNotfound(self):
         """404 not found"""
-        abort(404)
+        return abort(404)
         
     def raiseSeeother(self, url):
         """303 See Other"""
-        redirect(url, 303)
+        return redirect(url, 303)
         
     def raiseHTTPError(self, status, headers={}, data=""):
         """General http errors"""
@@ -103,7 +106,7 @@ class MyServer:
         if headers:
             for k, v in headers.items():
                 resp.headers[k] = v
-        abort(resp)
+        return abort(resp)
         
     def addHeaders(self, headers):
         """Add headers to the reply (to be returned shortly)"""
@@ -245,11 +248,12 @@ def get_pluginscript(pluginName, scriptName):
             v = ''
         env['igor_'+k] = v
     # If a user is logged in we use that as default for a user argument
-    if 'user' in _SERVER.igor.session and not 'user' in allArgs:
-        allArgs.user = _SERVER.igor.session.user
+    user = _server.igor.app.getSessionItem('user')
+    if user and not 'user' in allArgs:
+        allArgs['user'] = user
     # If there's a user argument see if we need to add per-user data
     if 'user' in allArgs:
-        user = allArgs.user
+        user = allArgs['user']
         try:
             userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', token)
         except werkzeug.exceptions.HTTPError:
@@ -397,7 +401,6 @@ def get_plugin(pluginName, methodName='index'):
             traceback.print_exc()
             print('------')
             abort(404)
-        pluginModule.SESSION = _SERVER.igor.session  # xxxjack
         pluginModule.IGOR = _SERVER.igor
     allArgs = request.values.to_dict()
 
@@ -462,15 +465,16 @@ def get_evaluate(command):
 def getOrPost_login():
     allArgs = request.values.to_dict()
     if 'logout' in allArgs:
-        _SERVER.igor.session.user = None
-        redirect('/')
+        _SERVER.igor.app.setSessionItem('user', None)
+        return redirect('/')
     message = None
     username = allArgs.get('username')
     password = allArgs.get('password')
+    print('xxxjack', (username, password))
     if username:
         if _SERVER.igor.access.userAndPasswordCorrect(username, password):
-            _SERVER.igor.session.user = username
-            redirect('/')
+            _SERVER.igor.app.setSessionItem('user', username)
+            return redirect('/')
         message = "Password and/or username incorrect."
     form = web.form.Form(
         web.form.Textbox('username'),
@@ -479,7 +483,7 @@ def getOrPost_login():
         )
     programDir = os.path.dirname(__file__)
     template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
-    return str(template(form, _SERVER.igor.session.get('user'), message))
+    return str(template(form, _SERVER.igor.app.getSessionItem('user'), message))
 
 
 @_WEBAPP.route('/data/', defaults={'name':''})

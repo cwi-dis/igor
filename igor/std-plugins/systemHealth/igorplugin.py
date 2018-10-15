@@ -95,7 +95,7 @@ class SystemHealthPlugin(object):
                     except self.igor.app.getHTTPError():
                         self.igor.app.resetHTTPError()
         if returnTo:
-            raise self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
 
 def igorPlugin(igor, pluginName, pluginData):
     return SystemHealthPlugin(igor, pluginData)

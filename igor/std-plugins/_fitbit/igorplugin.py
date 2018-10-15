@@ -102,7 +102,7 @@ class FitbitPlugin(object):
         step2url = urllib.parse.urljoin(step2url, '/plugin/%s/auth2' % self.pluginName)
         #step2url += '?' + urllib.urlencode(dict(user=user))
         redirectUrl, _ = fb.client.authorize_token_url(redirect_uri=step2url, state=user)
-        self.igor.app.raiseSeeother(redirectUrl)
+        return self.igor.app.raiseSeeother(redirectUrl)
     
     def auth2(self, code=None, state=None, token=None, **kwargs):
         oauthSettings = {}

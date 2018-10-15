@@ -55,7 +55,7 @@ class UserPlugin(object):
             delegate=True)
         self.igor.internal.save(token)
         if returnTo:
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return ''
         
     def delete(self, token=None, username=None, returnTo=None):
@@ -74,7 +74,7 @@ class UserPlugin(object):
         self.igor.databaseAccessor.delete_key('identities/%s' % username, token)
         self.igor.internal.save(token)
         if returnTo:
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return ''
         
     def password(self, token=None, username=None, password=None, returnTo=None):
@@ -85,7 +85,7 @@ class UserPlugin(object):
         self.igor.internal.accessControl('setUserPassword', token=token, username=username, password=password)
         self.igor.internal.save(token)
         if returnTo:
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return ''
     
 

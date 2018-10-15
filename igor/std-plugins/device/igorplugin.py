@@ -90,7 +90,7 @@ class DevicePlugin(object):
                 returnTo = returnTo + '&' + queryString
             else:
                 returnTo = returnTo + '?' + queryString
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
 
     def _genSecretKey(self, token=None, aud=None, sub=None):
@@ -104,7 +104,7 @@ class DevicePlugin(object):
                 returnTo = returnTo + '&' + queryString
             else:
                 returnTo = returnTo + '?' + queryString
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
 
     def _addAction(self, token=None, subject=None, verb='get', obj=None):
@@ -148,7 +148,7 @@ class DevicePlugin(object):
         self.igor.databaseAccessor.delete_key('status/sensors/%s' % name, token)
         self.igor.internal.save(token)
         if returnTo:
-            self.igor.app.raiseSeeother(returnTo)
+            return self.igor.app.raiseSeeother(returnTo)
         return ''
         
     def _delSecretKey(self, token=None, aud=None, sub=None):

@@ -42,7 +42,6 @@ The _igor_ object has a number of attributes that allow access to various aspect
 - `igor.databaseAccessor` is a higher level, more REST-like interface to the database.
 - `igor.internal` gives access to the set of commands implemented by `igor.__main__.IgorInternal`.
 - `igor.app` is the web application (from `igor.webApp.WebApp`).
-- `igor.session` is the session data, from `web.session.Session`.
 
 ### scripts
 

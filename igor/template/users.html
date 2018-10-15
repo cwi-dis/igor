@@ -16,7 +16,7 @@ $def with (action=None, username=None, **kwargs)
 	$if action == None or action == 'list':
 		<h1>Igor Users</h1>
 	
-		$ currentUser = igor.session.user if 'user' in igor.session else ''
+		$ currentUser = igor.app.getSessionItem('user','')
 		$if currentUser:
 			<p>
 				You are logged in as $currentUser.

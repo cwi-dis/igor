@@ -2,7 +2,7 @@ future
 httplib2
 requests
 web.py==0.40.dev1; python_version >= '3'
-web.py
+web.py; python_version < '3'
 python-dateutil
 py-dom-xpath-six
 passlib

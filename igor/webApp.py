@@ -8,6 +8,7 @@ import gevent.pywsgi
 from flask import Flask, Response, request, abort, redirect, jsonify, make_response, after_this_request, session
 import werkzeug.exceptions
 import web.template
+import web.form
 import shlex
 import subprocess
 import os
@@ -122,7 +123,7 @@ class MyServer:
             pass
         return rv
         
-web.config.debug = DEBUG
+# web.config.debug = DEBUG
 
 def WebApp(igor):
     global _SERVER
@@ -134,10 +135,11 @@ def myWebError(msg, code=400):
     resp = make_response(msg, code)
     abort(resp)
 
-@routing
+@_SERVER.route('/', defaults={'name':'index.html'})
+@_SERVER.route('/<path:name>')    
 def get_static(self, name):
-    allArgs = web.input()
-    token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
+    allArgs = dict(request.args)
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
     if not name:
         name = 'index.html'
     checker = _SERVER.igor.access.checkerForEntrypoint('/static/' + name)
@@ -150,19 +152,18 @@ def get_static(self, name):
     filename = os.path.join(databaseDir, name)
     if os.path.exists(filename):
         mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        web.header('Content-type', mimetype)
-        return open(filename, 'rb').read()
+        data = open(filename, 'rb').read()
+        return Response(data, mimetype=mimetype)
     # Next try static files in the programdir/static
     filename = os.path.join(programDir, 'static', name)
     if os.path.exists(filename):
         mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        web.header('Content-type', mimetype)
-        return open(filename, 'rb').read()
+        data = open(filename, 'rb').read()
+        return Response(data, mimetype=mimetype)
     # Otherwise try a template
     filename = os.path.join(programDir, 'template', name)
     if os.path.exists(filename):
         mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        web.header('Content-type', mimetype)
         #
         # xxxjack note that the following set of globals basically exports the
         # whole object hierarchy to templates. This means that a template has
@@ -180,17 +181,18 @@ def get_static(self, name):
             )                
         template = web.template.frender(filename, globals=globals)
         try:
-            return template(**dict(allArgs))
+            data = template(**dict(allArgs))
         except xmlDatabase.DBAccessError:
             myWebError("401 Unauthorized (template rendering)", 401)
-    raise web.notfound()
+        return Response(data, mimetype-mimetype)
+    abort(404)
 
 
 @_SERVER.route('/pluginscript/<string:pluginName>/<string:scriptName>')    
 def get_pluginscript(pluginName, scriptName):
-    allArgs = request.args
-    token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
-    checker = _SERVER.igor.access.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+    allArgs = dict(request.args)
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
 
@@ -214,12 +216,12 @@ def get_pluginscript(pluginName, scriptName):
         env['IGORSERVER_URL'] = myUrl
         if myUrl[:6] == 'https:':
             env['IGORSERVER_NOVERIFY'] = 'true'
-    except web.HTTPError:
-        web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+    except werkzeug.exceptions.HTTPError:
+        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
     try:
         pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except web.HTTPError:
-        web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+    except werkzeug.exceptions.HTTPError:
+        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         pluginData = {}
     # Put all other arguments into the environment with an "igor_" prefix
     for k, v in list(allArgs.items()):
@@ -235,8 +237,8 @@ def get_pluginscript(pluginName, scriptName):
         user = allArgs.user
         try:
             userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', token)
-        except web.HTTPError:
-            web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+        except werkzeug.exceptions.HTTPError:
+            pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             userData = {}
         if userData:
             pluginData.update(userData)
@@ -278,7 +280,7 @@ def get_pluginscript(pluginName, scriptName):
         if len(argOutputLines) == 2 and argOutputLines[1] == '':
             msg += ': ' + argOutputLines[0]
             output = ''
-        raise web.HTTPError(msg, {"Content-type": "text/plain"}, output)
+        raise myWebError(msg + '\n' + output, 502)
     except OSError as arg:
         _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
         myWebError("502 Error running command: %s: %s" % (scriptName, arg.strerror), 502)
@@ -286,16 +288,16 @@ def get_pluginscript(pluginName, scriptName):
 
 @routing
 def get_command(self, command, subcommand=None):
-    allArgs = web.input()
-    token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
-    checker = _SERVER.igor.access.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+    allArgs = dict(request.args)
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
 
     try:
         method = getattr(_SERVER.igor.internal, command)
     except AttributeError:
-        raise web.notfound()
+        abort(404)
     if subcommand:
         allArgs['subcommand'] = subcommand
     try:
@@ -306,19 +308,15 @@ def get_command(self, command, subcommand=None):
 
 @routing
 def post_command(self, command, subcommand=None):
-    token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
     try:
         method = getattr(_SERVER.igor.internal, command)
     except AttributeError:
-        raise web.notfound()
-    argData = web.data()
-    if not argData:
-        allArgs = {}
+        abort(404)
+    if request.is_json:
+        allArgs = request.get_json()
     else:
-        try:
-            allArgs = json.loads(argData)
-        except ValueError:
-            myWebError("400 POST to /internal/... expects JSON data", 400)
+        allArgs = {}
     if subcommand:
         allArgs['subcommand'] = subcommand
     try:
@@ -329,8 +327,8 @@ def post_command(self, command, subcommand=None):
 
 @routing
 def get_action(self, actionname):
-    token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
-    checker = _SERVER.igor.access.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
 
@@ -341,8 +339,8 @@ def get_action(self, actionname):
         
 @routing
 def get_trigger(self, triggername):
-    token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
-    checker = _SERVER.igor.access.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
 
@@ -353,8 +351,8 @@ def get_trigger(self, triggername):
         
 @routing
 def get_trigger(self, pluginName, methodName='index'):
-    token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
-    checker = _SERVER.igor.access.checkerForEntrypoint(web.ctx.env['PATH_INFO'])
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
 
@@ -376,10 +374,10 @@ def get_trigger(self, pluginName, methodName='index'):
             print('------ import failed for', pluginName)
             traceback.print_exc()
             print('------')
-            raise web.notfound()
+            abort(404)
         pluginModule.SESSION = _SERVER.igor.session  # xxxjack
         pluginModule.IGOR = _SERVER.igor
-    allArgs = web.input()
+    allArgs = dict(request.args)
 
     # xxxjack need to check that the incoming action is allowed on this plugin
     # Get the token for the plugin itself
@@ -389,8 +387,8 @@ def get_trigger(self, pluginName, methodName='index'):
     # Find plugindata and per-user plugindata
     try:
         pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except web.HTTPError:
-        web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+    except werkzeug.exceptions.HTTPError:
+        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         pluginData = {}
     try:
         factory = getattr(pluginModule, 'igorPlugin')
@@ -410,8 +408,8 @@ def get_trigger(self, pluginName, methodName='index'):
         user = allArgs['user']
         try:
             userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
-        except web.HTTPError:
-            web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+        except werkzeug.exceptions.HTTPError:
+            pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         else:
             allArgs['userData'] = userData
     #
@@ -421,7 +419,7 @@ def get_trigger(self, pluginName, methodName='index'):
         method = getattr(pluginObject, methodName)
     except AttributeError:
         print('----- Method', methodName, 'not found in', pluginObject)
-        raise web.notfound()
+        abort(404)
     try:
         rv = method(**dict(allArgs))
     except ValueError as arg:
@@ -435,7 +433,7 @@ def get_trigger(self, pluginName, methodName='index'):
 class abstractDatabaseEvaluate(BaseHandler):
     """Evaluate an XPath expression and return the result as plaintext"""
     def GET(self, command):
-        token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
+        token = _SERVER.igor.access.tokenForRequest(request.environ)
         return _SERVER.igor.databaseAccessor.get_value(command, token)
     
 class runLogin(BaseHandler):
@@ -448,17 +446,17 @@ class runLogin(BaseHandler):
         return self.getOrPost()
         
     def getOrPost(self):
-        allArgs = web.input()
+        allArgs = dict(request.args)
         if 'logout' in allArgs:
             _SERVER.igor.session.user = None
-            raise web.seeother('/')
+            redirect('/')
         message = None
         username = allArgs.get('username')
         password = allArgs.get('password')
         if username:
             if _SERVER.igor.access.userAndPasswordCorrect(username, password):
                 _SERVER.igor.session.user = username
-                raise web.seeother('/')
+                redirect('/')
             message = "Password and/or username incorrect."
         form = web.form.Form(
             web.form.Textbox('username'),
@@ -472,16 +470,10 @@ class runLogin(BaseHandler):
 class abstractDatabaseAccess(BaseHandler):
     """Abstract database that handles the high-level HTTP primitives.
     """
-    def OPTIONS(self, *args):
-        web.ctx.headers.append(('Allow', 'GET,PUT,POST,DELETE'))
-        web.ctx.headers.append(('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE'))
-        web.ctx.headers.append(('Access-Control-Allow-Origin', '*'))
-        return ''
-        
     def GET(self, name):
         """If no query get the content of a section of the database.
         If there is a query can be used as a 1-url shortcut for POST."""
-        optArgs = web.input()
+        optArgs = dict(request.args)
 
         # See whether we have a variant request
         variant = None
@@ -498,25 +490,22 @@ class abstractDatabaseAccess(BaseHandler):
                 method = getattr(self, optArgs['.METHOD'])
                 del optArgs['.METHOD']
             rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded")
-            web.header("Content-Length", str(len(rv)))
             return rv
             
-        token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
+        token = _SERVER.igor.access.tokenForRequest(request.environ)
 
         returnType = self.best_return_mimetype()
         if not returnType:
-            raise web.NotAcceptable()
-        web.header("Content-Type", returnType)
+            abort(406)
         rv = _SERVER.igor.databaseAccessor.get_key(name, self.best_return_mimetype(), variant, token)
-        web.header("Content-Length", str(len(rv)))
-        return rv
+        return Response(rv, mimetype=returnType)
 
     def PUT(self, name, data=None, mimetype=None, replace=True):
         """Replace part of the document with new data, or inster new data
         in a specific location.
         """
-        optArgs = web.input()
-        token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
+        optArgs = dict(request.args)
+        token = _SERVER.igor.access.tokenForRequest(request.environ)
 
         # See whether we have a variant request
         variant = None
@@ -526,23 +515,22 @@ class abstractDatabaseAccess(BaseHandler):
         
         if not data:
             # We either have a url-encoded query in optArgs or read raw data
-            if optArgs:
-                data = dict(optArgs)
+            if request.args:
+                data = dict(request.args)
                 mimetype = "application/x-www-form-urlencoded"
             else:
-                data = web.data()
-                mimetype = web.ctx.env.get('CONTENT_TYPE', 'application/unknown')
-        rv = _SERVER.igor.databaseAccessor.put_key(name, self.best_return_mimetype(), variant, data, mimetype, token, replace=replace)
-        web.header("Content-Length", str(len(rv)))
-        return rv
+                data = request.text
+                mimetype = request.environ.get('CONTENT_TYPE', 'application/unknown')
+        returnType = self.best_return_mimetype()
+        rv = _SERVER.igor.databaseAccessor.put_key(name, returnType, variant, data, mimetype, token, replace=replace)
+        return Response(rv, mimetype=returnType)
 
     def POST(self, name, data=None, mimetype=None):
         return self.PUT(name, data, mimetype, replace=False)
 
     def DELETE(self, name, data=None, mimetype=None):
-        token = _SERVER.igor.access.tokenForRequest(web.ctx.env)
+        token = _SERVER.igor.access.tokenForRequest(request.environ)
         rv = _SERVER.igor.databaseAccessor.delete_key(name, token)
-        web.header("Content-Length", str(len(rv)))
         return rv
 
     def is_acceptable_mimetype(self, mimetype=None):
@@ -550,7 +538,7 @@ class abstractDatabaseAccess(BaseHandler):
         if not self.MIMETYPES:
             return True
         if not mimetype:
-            mimetype = web.ctx.env.get("CONTENT_TYPE")
+            mimetype = request.environ.get("CONTENT_TYPE")
         if not mimetype:
             return True
         return mimetype in self.MIMETYPES
@@ -559,7 +547,7 @@ class abstractDatabaseAccess(BaseHandler):
         """Return the best mimetype in which to encode the return data, or None"""
         if not self.igor.databaseAccessor.MIMETYPES:
             return None
-        acceptable = web.ctx.env.get("HTTP_ACCEPT")
+        acceptable = request.environ.get("HTTP_ACCEPT")
         if not acceptable:
             return self.igor.databaseAccessor.MIMETYPES[0]
         return mimetypematch.match(acceptable, self.igor.databaseAccessor.MIMETYPES)
@@ -618,9 +606,10 @@ class XmlDatabaseAccess(object):
             if not variant: variant = 'ref'
             nodesToSignal = []
             with self.igor.database:
+                unchanged = False
                 parentPath, tag = self.igor.database.splitXPath(key)
                 if not tag:
-                    raise web.BadRequest("PUT path must and with an element tag")
+                    myWebError("400 PUT path must end with an element tag", 400)
                 element = self.convertfrom(data, tag, datamimetype)
                 oldElements = self.igor.database.getElements(key, 'put' if replace else 'post', token)
                 if not oldElements:
@@ -628,7 +617,7 @@ class XmlDatabaseAccess(object):
                     # Does not exist yet. See if we can create it
                     #
                     if not parentPath or not tag:
-                        raise web.notfound("404 Not Found, parent or tag missing")
+                        myWebError("404 Not Found, parent or tag missing", 404)
                     #
                     # Find parent
                     #
@@ -636,9 +625,9 @@ class XmlDatabaseAccess(object):
                     # child that does not exist yet can be checked.
                     parentElements = self.igor.database.getElements(parentPath, 'post', token, postChild=tag)
                     if not parentElements:
-                        raise web.notfound("404 Parent not found: %s" % parentPath)
+                        myWebError("404 Parent not found: %s" % parentPath, 404)
                     if len(parentElements) > 1:
-                        raise web.BadRequest("Bad request, XPath parent selects multiple items")
+                        myWebError("400 Bad request, XPath parent selects multiple items", 400)
                     parent = parentElements[0]
                     #
                     # Add new node to the end of the parent
@@ -657,12 +646,12 @@ class XmlDatabaseAccess(object):
                         parent1 = oldElements[0].parentNode
                         for otherNode in oldElements[1:]:
                             if otherNode.parentNode != parent1:
-                                raise web.BadRequest("Bad Request, XPath selects multiple items from multiple parents")
+                                myWebError("400 Bad Request, XPath selects multiple items from multiple parents", 400)
                             
                     oldElement = oldElements[0]
                     if replace:
                         if len(oldElements) > 1:
-                            raise web.BadRequest("Bad PUT Request, XPath selects multiple items")
+                            myWebError("400 Bad PUT Request, XPath selects multiple items", 400)
                         #
                         # We should really do a selective replace here: change only the subtrees that need replacing.
                         # That will make the signalling much more fine-grained. Will do so, at some point in the future.
@@ -671,7 +660,7 @@ class XmlDatabaseAccess(object):
                         # is not identical to the old
                         #
                         if self.igor.database.identicalSubTrees(oldElement, element):
-                            web.ctx.status = "200 Unchanged"
+                            unchanged = True
                         else:
                             parent = oldElement.parentNode
                             parent.replaceChild(element, oldElement)
@@ -690,7 +679,11 @@ class XmlDatabaseAccess(object):
                 
                 if nodesToSignal: self.igor.database.signalNodelist(nodesToSignal)
                 path = self.igor.database.getXPathForElement(element)
-                return self.convertto(path, mimetype, variant)
+                rv = self.convertto(path, mimetype, variant)
+                resp = Response(rv, mimetype=mimetype)
+                if unchanged:
+                    resp.status_code = 200
+                return resp
         except xmlDatabase.DBAccessError:
             myWebError("401 Unauthorized", 401)
         except xpath.XPathError as arg:
@@ -715,7 +708,7 @@ class XmlDatabaseAccess(object):
     def convertto(self, value, mimetype, variant):
         if variant == 'ref':
             if not isinstance(value, basestring):
-                raise web.BadRequest("Bad request, cannot use .VARIANT=ref for this operation")
+                myWebError("400 Bad request, cannot use .VARIANT=ref for this operation", 400)
             if mimetype == "application/json":
                 return json.dumps({"ref":value})+'\n'
             elif mimetype == "text/plain":
@@ -725,7 +718,7 @@ class XmlDatabaseAccess(object):
             elif mimetype == "application/x-python-object":
                 return value
             else:
-                raise web.InternalError("Unimplemented mimetype %s for ref" % mimetype)
+                myWebError("500 Unimplemented mimetype %s for ref" % mimetype, 500)
         # Only nodesets need different treatment for default and multi
         if not isinstance(value, list):
             if mimetype == "application/json":
@@ -737,7 +730,7 @@ class XmlDatabaseAccess(object):
             elif mimetype == "application/x-python-object":
                 return value
             else:
-                raise web.InternalError("Unimplemented mimetype %s for default or multi, simple value" % mimetype)
+                myWebError("500 Unimplemented mimetype %s for default or multi, simple value" % mimetype, 500)
         if variant in ('multi', 'multiraw'):
             if mimetype == "application/json":
                 rv = []
@@ -747,7 +740,7 @@ class XmlDatabaseAccess(object):
                     rv.append({"ref":r, t:v})
                 return json.dumps(rv)+'\n'
             elif mimetype == "text/plain":
-                raise web.BadRequest("Bad request, cannot use .VARIANT=multi for mimetype text/plain")
+                myWebError("400 Bad request, cannot use .VARIANT=multi for mimetype text/plain", 400)
             elif mimetype == "application/xml":
                 rv = "<items>\n"
                 for item in value:
@@ -766,13 +759,13 @@ class XmlDatabaseAccess(object):
                     rv[r] = v
                 return rv
             else:
-                raise web.InternalError("Unimplemented mimetype %s for multi, nodeset" % mimetype)
+                myWebError("500 Unimplemented mimetype %s for multi, nodeset" % mimetype, 500)
         # Final case: single node return (either no variant or variant='raw')
         if len(value) == 0:
-            raise web.notfound()
+            abort(404)
         if mimetype == "application/json":
             if len(value) > 1:
-                raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
+                myWebError("400 Bad request, cannot return multiple items without .VARIANT=multi", 400)
             t, v = self.igor.database.tagAndDictFromElement(value[0], stripHidden=(variant != 'raw'))
             if variant == "content":
                 rv = json.dumps(v)
@@ -789,16 +782,16 @@ class XmlDatabaseAccess(object):
             return rv
         elif mimetype == "application/xml":
             if len(value) > 1:
-                raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
+                myWebError("400 Bad request, cannot return multiple items without .VARIANT=multi", 400)
             return self.igor.database.xmlFromElement(value[0], stripHidden=(variant != 'raw'))+'\n'
         elif mimetype == 'application/x-python-object':
             if len(value) > 1:
-                raise web.BadRequest("Bad request, cannot return multiple items without .VARIANT=multi")
+                myWebError("400 Bad request, cannot return multiple items without .VARIANT=multi", 400)
             t, v = self.igor.database.tagAndDictFromElement(value[0], stripHidden=(variant != 'raw'))
             return v
 
         else:
-            raise web.InternalError("Unimplemented mimetype %s for default, single node" % mimetype)            
+            myWebError("500 Unimplemented mimetype %s for default, single node" % mimetype, 500)
         
     def convertfrom(self, value, tag, mimetype):
         if mimetype == 'application/xml':
@@ -806,7 +799,7 @@ class XmlDatabaseAccess(object):
                 value = value.decode('utf-8')
             element = self.igor.database.elementFromXML(value)
             if element.tagName != tag:
-                raise web.BadRequest("Bad request, toplevel XML tag %s does not match final XPath element %s" % (element.tagName, tag))
+                myWebError("400 Bad request, toplevel XML tag %s does not match final XPath element %s" % (element.tagName, tag), 400)
             return element
         elif mimetype == 'application/x-www-form-urlencoded':
             # xxxjack here comes a special case, and I don't like it.
@@ -820,9 +813,9 @@ class XmlDatabaseAccess(object):
             try:
                 valueDict = json.loads(value)
             except ValueError:
-                raise web.BadRequest("No JSON object could be decoded from body")
+                myWebError("400 No JSON object could be decoded from body", 400)
             if not isinstance(valueDict, dict):
-                raise web.BadRequest("Bad request, JSON toplevel object must be object")
+                myWebError("400 Bad request, JSON toplevel object must be object", 400)
             # xxxjack here comes a special case, and I don't like it.
             # if the JSON dictionary contains exactly one element and its name is the same as the
             # tag name we don't encode.
@@ -841,5 +834,5 @@ class XmlDatabaseAccess(object):
             element = self.igor.database.elementFromTagAndData(tag, value)
             return element
         else:
-            raise web.InternalError("Conversion from %s not implemented" % mimetype)
+            myWebError("500 Conversion from %s not implemented" % mimetype, 500)
         

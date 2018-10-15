@@ -199,7 +199,7 @@ def get_static(name):
             data = template(**dict(allArgs))
         except xmlDatabase.DBAccessError:
             myWebError("401 Unauthorized (template rendering)", 401)
-        return Response(data, mimetype=mimetype)
+        return Response(str(data), mimetype=mimetype)
     abort(404)
 
 
@@ -320,7 +320,11 @@ def get_command(command, subcommand=None):
         rv = method(token=token, **dict(allArgs))
     except TypeError as arg:
         raise #myWebError("400 Error in command method %s parameters: %s" % (command, arg))
-    return rv
+    if rv == None:
+        return ''
+    if isinstance(rv, str):
+        return Response(rv, mimetype='text/plain')
+    return Response(json.dumps(rv), mimetype='application/json')
 
 @_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None}, methods=["POST"])
 @_WEBAPP.route('/internal/<string:command>/<string:subcommand>', methods=["POST"]) 
@@ -475,8 +479,10 @@ def getOrPost_login():
         )
     programDir = os.path.dirname(__file__)
     template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
-    return template(form, _SERVER.igor.session.get('user'), message)
-          
+    return str(template(form, _SERVER.igor.session.get('user'), message))
+
+
+@_WEBAPP.route('/data/', defaults={'name':''})
 @_WEBAPP.route('/data/<path:name>')
 def get_data(name):
     """Abstract database that handles the high-level HTTP GET.

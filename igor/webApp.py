@@ -547,7 +547,7 @@ def putOrPost_data(name, data=None, mimetype=None, replace=True):
             data = request.values.to_dict()
             mimetype = "application/x-www-form-urlencoded"
         else:
-            data = request.text
+            data = request.data
             mimetype = request.environ.get('CONTENT_TYPE', 'application/unknown')
     returnType = _best_return_mimetype()
     rv = _SERVER.igor.databaseAccessor.put_key(name, returnType, variant, data, mimetype, token, replace=replace)

@@ -153,7 +153,7 @@ def myWebError(msg, code=400):
 @_WEBAPP.route('/', defaults={'name':'index.html'})
 @_WEBAPP.route('/<path:name>')    
 def get_static(name):
-    allArgs = dict(request.args)
+    allArgs = request.values.to_dict()
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     if not name:
         name = 'index.html'
@@ -205,7 +205,7 @@ def get_static(name):
 
 @_WEBAPP.route('/pluginscript/<string:pluginName>/<string:scriptName>')    
 def get_pluginscript(pluginName, scriptName):
-    allArgs = dict(request.args)
+    allArgs = request.values.to_dict()
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
@@ -304,7 +304,7 @@ def get_pluginscript(pluginName, scriptName):
 @_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None})
 @_WEBAPP.route('/internal/<string:command>/<string:subcommand>') 
 def get_command(command, subcommand=None):
-    allArgs = dict(request.args)
+    allArgs = request.values.to_dict()
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
@@ -399,7 +399,7 @@ def get_plugin(pluginName, methodName='index'):
             abort(404)
         pluginModule.SESSION = _SERVER.igor.session  # xxxjack
         pluginModule.IGOR = _SERVER.igor
-    allArgs = dict(request.args)
+    allArgs = request.values.to_dict()
 
     # xxxjack need to check that the incoming action is allowed on this plugin
     # Get the token for the plugin itself
@@ -460,7 +460,7 @@ def get_evaluate(command):
     
 @_WEBAPP.route('/login', methods=["GET", "POST"])
 def getOrPost_login():
-    allArgs = dict(request.args)
+    allArgs = request.values.to_dict()
     if 'logout' in allArgs:
         _SERVER.igor.session.user = None
         redirect('/')
@@ -488,8 +488,7 @@ def get_data(name):
     """Abstract database that handles the high-level HTTP GET.
     If no query get the content of a section of the database.
     If there is a query can be used as a 1-url shortcut for POST."""
-    optArgs = dict(request.args)
-
+    optArgs = request.values.to_dict()
     # See whether we have a variant request
     variant = None
     if '.VARIANT' in optArgs:
@@ -525,7 +524,7 @@ def putOrPost_data(name, data=None, mimetype=None, replace=True):
     """Replace part of the document with new data, or inster new data
     in a specific location.
     """
-    optArgs = dict(request.args)
+    optArgs = request.values.to_dict()
     token = _SERVER.igor.access.tokenForRequest(request.environ)
 
     # See whether we have a variant request
@@ -536,8 +535,8 @@ def putOrPost_data(name, data=None, mimetype=None, replace=True):
     
     if not data:
         # We either have a url-encoded query in optArgs or read raw data
-        if request.args:
-            data = dict(request.args)
+        if request.values:
+            data = request.values.to_dict()
             mimetype = "application/x-www-form-urlencoded"
         else:
             data = request.text

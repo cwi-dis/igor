@@ -69,6 +69,10 @@ class MyServer:
         except KeyboardInterrupt:
             pass
             
+    def stop(self):
+        if self.server:
+            self.server.stop()
+        
     def setSSLInfo(self, certfile, keyfile):
         """Signal that https is to be used and set key and cert"""
         self.certfile = certfile

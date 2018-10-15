@@ -31,20 +31,20 @@ DEBUG=False
 
 _SERVER = None
 _WEBAPP = Flask(__name__)
-_SERVER.secret_key = b'geheimpje'   # Overridden by setSSLInfo in cases where it really matters
+_WEBAPP.secret_key = b'geheimpje'   # Overridden by setSSLInfo in cases where it really matters
 # 
 # urls = (
-#     '/pluginscript/([^/]+)/([^/]+)', 'runScript',
+##     '/pluginscript/([^/]+)/([^/]+)', 'runScript',
 #     '/data/(.*)', 'abstractDatabaseAccess',
-#     '/evaluate/(.*)', 'abstractDatabaseEvaluate',
-#     '/internal/([^/]+)', 'runCommand',
-#     '/internal/([^/]+)/(.+)', 'runCommand',
-#     '/action/(.+)', 'runAction',
-#     '/trigger/(.+)', 'runTrigger',
-#     '/plugin/([^/]+)', 'runPlugin',
-#     '/plugin/([^/]+)/([^/_]+)', 'runPlugin',
-#     '/login', 'runLogin',
-#     '/([^/]*)', 'static',
+##     '/evaluate/(.*)', 'abstractDatabaseEvaluate',
+##     '/internal/([^/]+)', 'runCommand',
+##     '/internal/([^/]+)/(.+)', 'runCommand',
+##     '/action/(.+)', 'runAction',
+##     '/trigger/(.+)', 'runTrigger',
+##     '/plugin/([^/]+)', 'runPlugin',
+##     '/plugin/([^/]+)/([^/_]+)', 'runPlugin',
+##     '/login', 'runLogin',
+##     '/([^/]*)', 'static',
 # )
 
 class MyServer:
@@ -135,9 +135,9 @@ def myWebError(msg, code=400):
     resp = make_response(msg, code)
     abort(resp)
 
-@_SERVER.route('/', defaults={'name':'index.html'})
-@_SERVER.route('/<path:name>')    
-def get_static(self, name):
+@_WEBAPP.route('/', defaults={'name':'index.html'})
+@_WEBAPP.route('/<path:name>')    
+def get_static(name):
     allArgs = dict(request.args)
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     if not name:
@@ -188,7 +188,7 @@ def get_static(self, name):
     abort(404)
 
 
-@_SERVER.route('/pluginscript/<string:pluginName>/<string:scriptName>')    
+@_WEBAPP.route('/pluginscript/<string:pluginName>/<string:scriptName>')    
 def get_pluginscript(pluginName, scriptName):
     allArgs = dict(request.args)
     token = _SERVER.igor.access.tokenForRequest(request.environ)
@@ -286,8 +286,9 @@ def get_pluginscript(pluginName, scriptName):
         myWebError("502 Error running command: %s: %s" % (scriptName, arg.strerror), 502)
     return rv
 
-@routing
-def get_command(self, command, subcommand=None):
+@_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None})
+@_WEBAPP.route('/internal/<string:command>/<string:subcommand>') 
+def get_command(command, subcommand=None):
     allArgs = dict(request.args)
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
@@ -306,8 +307,9 @@ def get_command(self, command, subcommand=None):
         raise #myWebError("400 Error in command method %s parameters: %s" % (command, arg))
     return rv
 
-@routing
-def post_command(self, command, subcommand=None):
+@_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None}, methods=["POST"])
+@_WEBAPP.route('/internal/<string:command>/<string:subcommand>', methods=["POST"]) 
+def post_command(command, subcommand=None):
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     try:
         method = getattr(_SERVER.igor.internal, command)
@@ -325,8 +327,8 @@ def post_command(self, command, subcommand=None):
         myWebError("400 Error in command method %s parameters: %s" % (command, arg), 400)
     return rv
 
-@routing
-def get_action(self, actionname):
+@_WEBAPP.route('/action/<string:actionname>')
+def get_action(actionname):
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
@@ -337,8 +339,8 @@ def get_action(self, actionname):
     except xmlDatabase.DBAccessError:
         myWebError("401 Unauthorized (while running action)", 401)
         
-@routing
-def get_trigger(self, triggername):
+@_WEBAPP.route('/trigger/<string:triggername>')
+def get_trigger(triggername):
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
@@ -349,8 +351,9 @@ def get_trigger(self, triggername):
     except xmlDatabase.DBAccessError:
         myWebError("401 Unauthorized (while running trigger)", 401)
         
-@routing
-def get_trigger(self, pluginName, methodName='index'):
+@_WEBAPP.route('/plugin/<string:pluginname>', defaults={'methodName':'index'})
+@_WEBAPP.route('/plugin/<string:pluginname>/<string:methodName>')
+def get_plugin(pluginName, methodName='index'):
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
@@ -430,130 +433,115 @@ def get_trigger(self, pluginName, methodName='index'):
         rv = str(rv)
     return rv
 
-class abstractDatabaseEvaluate(BaseHandler):
+@_WEBAPP.route('/evaluate/<path:command>')
+def get_evaluate(command):
     """Evaluate an XPath expression and return the result as plaintext"""
-    def GET(self, command):
-        token = _SERVER.igor.access.tokenForRequest(request.environ)
-        return _SERVER.igor.databaseAccessor.get_value(command, token)
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    return _SERVER.igor.databaseAccessor.get_value(command, token)
     
-class runLogin(BaseHandler):
-    """Login or logout"""
-    
-    def GET(self):
-        return self.getOrPost()
-        
-    def POST(self):
-        return self.getOrPost()
-        
-    def getOrPost(self):
-        allArgs = dict(request.args)
-        if 'logout' in allArgs:
-            _SERVER.igor.session.user = None
+@_WEBAPP.route('/login', methods=["GET", "POST"])
+def getOrPost_login():
+    allArgs = dict(request.args)
+    if 'logout' in allArgs:
+        _SERVER.igor.session.user = None
+        redirect('/')
+    message = None
+    username = allArgs.get('username')
+    password = allArgs.get('password')
+    if username:
+        if _SERVER.igor.access.userAndPasswordCorrect(username, password):
+            _SERVER.igor.session.user = username
             redirect('/')
-        message = None
-        username = allArgs.get('username')
-        password = allArgs.get('password')
-        if username:
-            if _SERVER.igor.access.userAndPasswordCorrect(username, password):
-                _SERVER.igor.session.user = username
-                redirect('/')
-            message = "Password and/or username incorrect."
-        form = web.form.Form(
-            web.form.Textbox('username'),
-            web.form.Password('password'),
-            web.form.Button('login'),
-            )
-        programDir = os.path.dirname(__file__)
-        template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
-        return template(form, _SERVER.igor.session.get('user'), message)
-              
-class abstractDatabaseAccess(BaseHandler):
-    """Abstract database that handles the high-level HTTP primitives.
-    """
-    def GET(self, name):
-        """If no query get the content of a section of the database.
-        If there is a query can be used as a 1-url shortcut for POST."""
-        optArgs = dict(request.args)
+        message = "Password and/or username incorrect."
+    form = web.form.Form(
+        web.form.Textbox('username'),
+        web.form.Password('password'),
+        web.form.Button('login'),
+        )
+    programDir = os.path.dirname(__file__)
+    template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
+    return template(form, _SERVER.igor.session.get('user'), message)
+          
+@_WEBAPP.route('/data/<path:name>')
+def get_data(name):
+    """Abstract database that handles the high-level HTTP GET.
+    If no query get the content of a section of the database.
+    If there is a query can be used as a 1-url shortcut for POST."""
+    optArgs = dict(request.args)
 
-        # See whether we have a variant request
-        variant = None
-        if '.VARIANT' in optArgs:
-            variant = optArgs['.VARIANT']
-            del optArgs['.VARIANT']
-            
-        if optArgs:
-            # GET with a query is treated as POST with the query as JSON data,
-            # unless the .METHOD argument states it should be treaded as another method.
-            optArgs = dict(optArgs)
-            method = self.POST
-            if '.METHOD' in optArgs:
-                method = getattr(self, optArgs['.METHOD'])
-                del optArgs['.METHOD']
-            rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded")
-            return rv
-            
-        token = _SERVER.igor.access.tokenForRequest(request.environ)
-
-        returnType = self.best_return_mimetype()
-        if not returnType:
-            abort(406)
-        rv = _SERVER.igor.databaseAccessor.get_key(name, self.best_return_mimetype(), variant, token)
-        return Response(rv, mimetype=returnType)
-
-    def PUT(self, name, data=None, mimetype=None, replace=True):
-        """Replace part of the document with new data, or inster new data
-        in a specific location.
-        """
-        optArgs = dict(request.args)
-        token = _SERVER.igor.access.tokenForRequest(request.environ)
-
-        # See whether we have a variant request
-        variant = None
-        if '.VARIANT' in optArgs:
-            variant = optArgs['.VARIANT']
-            del optArgs['.VARIANT']
+    # See whether we have a variant request
+    variant = None
+    if '.VARIANT' in optArgs:
+        variant = optArgs['.VARIANT']
+        del optArgs['.VARIANT']
         
-        if not data:
-            # We either have a url-encoded query in optArgs or read raw data
-            if request.args:
-                data = dict(request.args)
-                mimetype = "application/x-www-form-urlencoded"
-            else:
-                data = request.text
-                mimetype = request.environ.get('CONTENT_TYPE', 'application/unknown')
-        returnType = self.best_return_mimetype()
-        rv = _SERVER.igor.databaseAccessor.put_key(name, returnType, variant, data, mimetype, token, replace=replace)
-        return Response(rv, mimetype=returnType)
-
-    def POST(self, name, data=None, mimetype=None):
-        return self.PUT(name, data, mimetype, replace=False)
-
-    def DELETE(self, name, data=None, mimetype=None):
-        token = _SERVER.igor.access.tokenForRequest(request.environ)
-        rv = _SERVER.igor.databaseAccessor.delete_key(name, token)
+    if optArgs:
+        # GET with a query is treated as POST with the query as JSON data,
+        # unless the .METHOD argument states it should be treaded as another method.
+        optArgs = dict(optArgs)
+        method = putOrPost_data
+        if '.METHOD' in optArgs:
+            methods = {
+                'PUT' : putOrPost_data,
+                'POST' : putOrPost_data,
+                'DELETE' : delete_data,
+                }
+            method = getattr(methods, optArgs['.METHOD'])
+            del optArgs['.METHOD']
+        rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded")
         return rv
-
-    def is_acceptable_mimetype(self, mimetype=None):
-        """Test whether the mimetype in the request is of an acceptable type"""
-        if not self.MIMETYPES:
-            return True
-        if not mimetype:
-            mimetype = request.environ.get("CONTENT_TYPE")
-        if not mimetype:
-            return True
-        return mimetype in self.MIMETYPES
         
-    def best_return_mimetype(self):
-        """Return the best mimetype in which to encode the return data, or None"""
-        if not self.igor.databaseAccessor.MIMETYPES:
-            return None
-        acceptable = request.environ.get("HTTP_ACCEPT")
-        if not acceptable:
-            return self.igor.databaseAccessor.MIMETYPES[0]
-        return mimetypematch.match(acceptable, self.igor.databaseAccessor.MIMETYPES)
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+
+    returnType = _best_return_mimetype()
+    if not returnType:
+        abort(406)
+    rv = _SERVER.igor.databaseAccessor.get_key(name, _best_return_mimetype(), variant, token)
+    return Response(rv, mimetype=returnType)
+
+@_WEBAPP.route('/data/<path:name>', methods=["PUT", "POST"])
+def putOrPost_data(name, data=None, mimetype=None, replace=True):
+    """Replace part of the document with new data, or inster new data
+    in a specific location.
+    """
+    optArgs = dict(request.args)
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+
+    # See whether we have a variant request
+    variant = None
+    if '.VARIANT' in optArgs:
+        variant = optArgs['.VARIANT']
+        del optArgs['.VARIANT']
+    
+    if not data:
+        # We either have a url-encoded query in optArgs or read raw data
+        if request.args:
+            data = dict(request.args)
+            mimetype = "application/x-www-form-urlencoded"
+        else:
+            data = request.text
+            mimetype = request.environ.get('CONTENT_TYPE', 'application/unknown')
+    returnType = _best_return_mimetype()
+    rv = _SERVER.igor.databaseAccessor.put_key(name, returnType, variant, data, mimetype, token, replace=replace)
+    return Response(rv, mimetype=returnType)
+
+@_WEBAPP.route('/data/<path:name>', methods=["DELETE"])
+def delete_data(name, data=None, mimetype=None):
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    rv = _SERVER.igor.databaseAccessor.delete_key(name, token)
+    return rv
+
+def _best_return_mimetype():
+    """Return the best mimetype in which to encode the return data, or None"""
+    if not _SERVER.igor.databaseAccessor.MIMETYPES:
+        return None
+    acceptable = request.environ.get("HTTP_ACCEPT")
+    if not acceptable:
+        return _SERVER.igor.databaseAccessor.MIMETYPES[0]
+    return mimetypematch.match(acceptable, _SERVER.igor.databaseAccessor.MIMETYPES)
 
 class XmlDatabaseAccess(object):
-    """Class to access the database in a somewhat rest-like manner. Instantiated once."""
+    """Class to access the database in a somewhat rest-like manner. Instantiated once, in the igor object."""
     
     MIMETYPES = ["application/xml", "application/json", "text/plain"]
     

@@ -59,9 +59,16 @@ class MyServer:
     
     def run(self, port=8080):
         self.port = port
-        self.server = gevent.pywsgi.WSGIServer(("0.0.0.0", self.port), app, keyfile=self.keyfile, certfile=self.certfile)
-        self.server.serve_forever()
-        
+        if self.keyfile or self.certfile:
+            kwargs = dict(keyfile=self.keyfile, certfile=self.certfile)
+        else:
+            kwargs = {}
+        self.server = gevent.pywsgi.WSGIServer(("0.0.0.0", self.port), _WEBAPP, **kwargs)
+        try:
+            self.server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+            
     def setSSLInfo(self, certfile, keyfile):
         """Signal that https is to be used and set key and cert"""
         self.certfile = certfile
@@ -123,6 +130,14 @@ class MyServer:
             pass
         return rv
         
+    def request(self, url, method='GET', data=None, headers={}, env={}):
+        print('xxxjack request.%s(%s, data=%s, headers=%s, env=%s)' % (method, url, data, headers, env))
+        return _DummyReply()
+        
+class _DummyReply:
+    def __init__(self):
+        self.status = '500 Not Implemented Yet'
+        self.data = ''    
 # web.config.debug = DEBUG
 
 def WebApp(igor):
@@ -184,7 +199,7 @@ def get_static(name):
             data = template(**dict(allArgs))
         except xmlDatabase.DBAccessError:
             myWebError("401 Unauthorized (template rendering)", 401)
-        return Response(data, mimetype-mimetype)
+        return Response(data, mimetype=mimetype)
     abort(404)
 
 

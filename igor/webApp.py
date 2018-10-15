@@ -525,7 +525,9 @@ def get_data(name):
     if not returnType:
         abort(406)
     rv = _SERVER.igor.databaseAccessor.get_key(name, _best_return_mimetype(), variant, token)
-    return Response(rv, mimetype=returnType)
+    if not isinstance(rv, Response):
+        rv = Response(rv, mimetype=returnType)
+    return rv
 
 @_WEBAPP.route('/data/<path:name>', methods=["PUT", "POST"])
 def putOrPost_data(name, data=None, mimetype=None, replace=True):
@@ -551,7 +553,9 @@ def putOrPost_data(name, data=None, mimetype=None, replace=True):
             mimetype = request.environ.get('CONTENT_TYPE', 'application/unknown')
     returnType = _best_return_mimetype()
     rv = _SERVER.igor.databaseAccessor.put_key(name, returnType, variant, data, mimetype, token, replace=replace)
-    return Response(rv, mimetype=returnType)
+    if not isinstance(rv, Response):
+        rv = Response(rv, mimetype=returnType)
+    return rv
 
 @_WEBAPP.route('/data/<path:name>', methods=["DELETE"])
 def delete_data(name, data=None, mimetype=None):
@@ -696,10 +700,11 @@ class XmlDatabaseAccess(object):
                 if nodesToSignal: self.igor.database.signalNodelist(nodesToSignal)
                 path = self.igor.database.getXPathForElement(element)
                 rv = self.convertto(path, mimetype, variant)
-                resp = Response(rv, mimetype=mimetype)
+                if not isinstance(rv, Response):
+                    rv = Response(rv, mimetype=mimetype)
                 if unchanged:
-                    resp.status_code = 200
-                return resp
+                    rv.status_code = 200
+                return rv
         except xmlDatabase.DBAccessError:
             myWebError("401 Unauthorized", 401)
         except xpath.XPathError as arg:

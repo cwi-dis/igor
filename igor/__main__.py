@@ -129,7 +129,10 @@ class IgorServer(object):
             import OpenSSL.crypto
             certificateData = open(self.pathnames.certificateFile, 'rb').read()
             certificate = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificateData)
-            fingerprint = certificate.digest("sha1".encode('ascii'))
+            digestMethod = "sha1"
+            if sys.version_info[0] < 3:
+                digestMethod = digestMethod.encode("ascii")
+            fingerprint = certificate.digest(digestMethod)
             self.certificateFingerprint = fingerprint.decode('ascii') # This lines works because sha1 returns ASCII hex byte values
         #
         # Create some objects that are not intended to be accessed by other objects

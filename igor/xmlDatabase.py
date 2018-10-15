@@ -82,7 +82,7 @@ class XPathFunctionExtension(xpath.expr.Function):
         
     @function(0, 1)
     def f_igor_dateTime(self, node, pos, size, context, timestamp=None):
-        if timestamp is None:
+        if not timestamp:
             timestamp = time.time()
         else:
             strtimestamp = xpath.expr.string(timestamp)

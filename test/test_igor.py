@@ -455,13 +455,11 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
         pass
                 
-@unittest.skipIf(sys.version_info[0] >= 3, "https not yet supported in web.py for Python 3")
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorPort = 29333
     igorProtocol = "https"
     
-@unittest.skipIf(sys.version_info[0] >= 3, "https not yet supported in web.py for Python 3")
 class IgorTestCaps(IgorTestHttps):
     igorDir = os.path.join(FIXTURES, 'testIgorCaps')
     igorPort = 39333

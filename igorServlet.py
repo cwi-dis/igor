@@ -154,6 +154,8 @@ class IgorServlet(threading.Thread):
         if endpoint['mimetype'] == 'text/plain':
             rv = "%s" % (rv,)
         elif endpoint['mimetype'] == 'application/json':
+            if isinstance(rv, bytes):
+                rv = rv.decode('utf8')
             rv = json.dumps(rv)
         else:
             assert 0, 'Unsupported mimetype %s' % endpoint['mimetype']

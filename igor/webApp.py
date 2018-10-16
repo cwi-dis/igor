@@ -508,15 +508,19 @@ def get_data(name):
         # unless the .METHOD argument states it should be treaded as another method.
         optArgs = dict(optArgs)
         method = putOrPost_data
+        kwargs = {}
         if '.METHOD' in optArgs:
+            methodName = optArgs['.METHOD']
+            del optArgs['.METHOD']
             methods = {
                 'PUT' : putOrPost_data,
                 'POST' : putOrPost_data,
                 'DELETE' : delete_data,
                 }
-            method = getattr(methods, optArgs['.METHOD'])
-            del optArgs['.METHOD']
-        rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded")
+            method = getattr(methods, methodName)
+            if methodName == 'POST':
+                mwargs['replace'] = False
+        rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded", **kwargs)
         return rv
         
     token = _SERVER.igor.access.tokenForRequest(request.environ)
@@ -534,6 +538,8 @@ def putOrPost_data(name, data=None, mimetype=None, replace=True):
     """Replace part of the document with new data, or inster new data
     in a specific location.
     """
+    if request.method == 'POST':
+        replace = False
     optArgs = request.values.to_dict()
     token = _SERVER.igor.access.tokenForRequest(request.environ)
 

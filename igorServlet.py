@@ -2,7 +2,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 from builtins import object
-import web
+from flask import Flask, request, abort, make_response
+import gevent.pywsgi
 import threading
 import time
 import json
@@ -10,51 +11,15 @@ import argparse
 import os
 import sys
 import jwt
+import logging
 
 DEBUG=False
 
-def monkeypatch_cgi():
-    """The Python cgi module has an error under py3 that makes web.py not work. See https://bugs.python.org/issue27777"""
-    def read_single(self):
-        """Internal: read an atomic part."""
-        if self.length >= 0 and self._binary_file:
-            self.read_binary()
-            self.skip_lines()
-        else:
-            self.read_lines()
-        self.file.seek(0)
-    import cgi
-    cgi.FieldStorage.read_single = read_single
+def myWebError(msg, code=400):
+    resp = make_response(msg, code)
+    abort(resp)
 
-if sys.version_info[0] == 3:
-    monkeypatch_cgi()
-
-web.config.debug = False
-
-def myWebError(msg):
-    return web.HTTPError(msg, {"Content-type": "text/plain"}, msg+'\n\n')
-
-class MyApplication(web.application):
-    def run(self, port=8080, *middleware):
-        func = self.wsgifunc(*middleware)
-        return web.httpserver.runsimple(func, ('0.0.0.0', port))
-
-class NoLog(object):
-    def __init__(self, application):
-        self.app = application
-        self.nullfile = open('/dev/null', 'w')
-        
-    def __call__(self, environ, start_response):
-        environ['wsgi.errors'] = self.nullfile
-        return self.app(environ, start_response)
-            
 class IgorServlet(threading.Thread):
-    # The following class variables are actually also used by ForwardingClass, below
-    endpoints = {}
-    useCapabilities = False # Default-default
-    issuer = None
-    issuerSharedKey = None
-    audience = None
     
     @staticmethod
     def argumentParser(parser=None, description=None, port=None, name=None):
@@ -86,12 +51,16 @@ class IgorServlet(threading.Thread):
         
     def __init__(self, port=8080, name='igorServlet', nossl=False, capabilities=None, noCapabilities=None, database=".", sslname='igor', nolog=False, audience=None, issuer=None, issuerSharedKey=None, **kwargs):
         threading.Thread.__init__(self)
+        self.endpoints = {}
+        self.useCapabilities = False # Default-default
+        self.issuer = None
+        self.issuerSharedKey = None
+        self.audience = None
+        self.server = None
         self.port = port
         self.name = name
-        self.middleware = ()
+#        self.middleware = ()
         self.nolog = nolog
-        if nolog:
-            self.middleware = (NoLog,)
         self.sslname = sslname
         if not self.sslname:
             self.sslname = self.name
@@ -110,86 +79,78 @@ class IgorServlet(threading.Thread):
             self.certificateFile = None
 
         if capabilities != None:
-            IgorServlet.useCapabilities = capabilities
+            self.useCapabilities = capabilities
         elif noCapabilities != None:
-            IgorServlet.useCapabilities = not noCapabilities
-        IgorServlet.audience = audience
-        IgorServlet.issuer = issuer
-        IgorServlet.issuerSharedKey = issuerSharedKey
+            self.useCapabilities = not noCapabilities
+        self.audience = audience
+        self.issuer = issuer
+        self.issuerSharedKey = issuerSharedKey
         
         if DEBUG: print('igorServlet: IgorServlet.__init__ called for', self)
-        self.app = MyApplication((), globals(), autoreload=False)
+        self.app = Flask(__name__)
+        
+    def setIssuer(self, issuer, issuerSharedKey):
+        self.issuer = issuer
+        self.issuerSharedKey = issuerSharedKey
+
+    def hasIssuer(self):
+        return not not self.issuer and not not self.issuerSharedKey
         
     def run(self):
         if self.ssl:
-            from web.wsgiserver import CherryPyWSGIServer
-            CherryPyWSGIServer.ssl_certificate = self.certificateFile
-            CherryPyWSGIServer.ssl_private_key = self.privateKeyFile
-        keepStdout = sys.stdout
-        self.app.run(self.port, *self.middleware)
+            kwargs = dict(keyfile=self.privateKeyFile, certfile=self.certificateFile)
+        else:
+            kwargs = {}
+        if self.nolog:
+            kwargs['log'] = None
+        self.server = gevent.pywsgi.WSGIServer(("0.0.0.0", self.port), self.app, **kwargs)
+        self.server.serve_forever()
         
     def stop(self):
-        self.app.stop()
+        if self.server:
+            self.server.stop()
         return self.join()
         
     def addEndpoint(self, path, mimetype='application/json', get=None, put=None, post=None, delete=None):
         self.endpoints[path] = dict(mimetype=mimetype, get=get, put=put, post=post, delete=delete)
-        self.app.add_mapping(path, 'ForwardingClass')
+        methods = []
+        if get:
+            methods.append("GET")
+        if put:
+            methods.append("PUT")
+        if post:
+            methods.append("POST")
+        if delete:
+            methods.append("DELETE")
+        self.app.add_url_rule(path, path, self._forward, methods=methods)
         
-    def setIssuer(self, issuer, issuerSharedKey):
-        IgorServlet.issuer = issuer
-        IgorServlet.issuerSharedKey = issuerSharedKey
-
-    def hasIssuer(self):
-        return not not IgorServlet.issuer and not not IgorServlet.issuerSharedKey
-        
-class ForwardingClass(object):
-    def __init__(self):
-       if DEBUG: print('igorServlet: ForwardingClass.__init__ called for', self)
-
-    def GET(self):
-        return self._method('get')
-        
-    def PUT(self):
-        return self._method('put')
-        
-    def POST(self):
-        return self._method('post')
-        
-    def DELETE(self):
-        return self._method('delete')
-        
-    def _method(self, method):
-        path = web.ctx.path
-        endpoint = IgorServlet.endpoints.get(path)
+    def _forward(self):
+        method = request.method.lower()
+        path = request.path
+        endpoint = self.endpoints.get(path)
         if not path:
-            raise web.notfound()
+            abort(404)
         entry = endpoint[method]
         if not entry:
-            raise web.notfound()
-        if IgorServlet.useCapabilities:
+            abort(404)
+        if self.useCapabilities:
             # We are using capability-based access control Check that the caller has the correct
             # rights.
             if not self._checkRights(method, path):
-                raise myWebError('401 Unauthorized')
+                abort(401)
         methodArgs = {}
-        optArgs = web.input()
-        if optArgs:
-            methodArgs = dict(optArgs)
-        else:
-            data = web.data()
-            if data:
-                if type(data) != type(''):
-                    # Assume its bytes, and decode as utf-8
-                    data = data.decode('utf-8')
-                try:
-                    methodArgs = json.loads(data)
-                except ValueError:
-                    methodArgs = {'data' : data}
+        methodArgs = request.values.to_dict()
+        if not methodArgs:
+            if request.is_json:
+                methodArgs = request.json
+            elif request.data:
+                methodArgs = dict(data=request.data)
+            else:
+                methodArgs = {}
         try:
             rv = entry(**methodArgs)
         except TypeError as arg:
-            raise myWebError("400 Error in parameters: %s" % arg)
+            return myWebError("400 Error in parameters: %s" % arg)
         if endpoint['mimetype'] == 'text/plain':
             rv = "%s" % (rv,)
         elif endpoint['mimetype'] == 'application/json':
@@ -199,18 +160,18 @@ class ForwardingClass(object):
         # Finally ensure we send utf8 bytes back
         rv = rv.encode('utf-8')
         return rv
-        
+
     def _checkRights(self, method, path):
         if DEBUG:  print('IgorServlet: check access for method %s on %s' % (method, path))
-        if not IgorServlet.issuer: 
+        if not self.issuer: 
             if DEBUG: print('IgorServlet: issuer not set, cannot check access')
             return False
-        if not IgorServlet.issuerSharedKey: 
+        if not self.issuerSharedKey: 
             if DEBUG: print('IgorServlet: issuerSharedKey not set, cannot check access')
             return False
         # Get capability from headers
-        headers = web.ctx.env
-        authHeader = headers.get('HTTP_AUTHORIZATION')
+        headers = request.headers
+        authHeader = headers.get('Authorization')
         if not authHeader:
             if DEBUG: print('IgorServlet: no Authorization: header')
             return False
@@ -260,23 +221,24 @@ class ForwardingClass(object):
         
     def _decodeBearerToken(self, data):
         try:
-            content = jwt.decode(data, IgorServlet.issuerSharedKey, issuer=IgorServlet.issuer, audience=IgorServlet.audience, algorithm='RS256')
+            content = jwt.decode(data, self.issuerSharedKey, issuer=self.issuer, audience=self.audience, algorithm='RS256')
         except jwt.DecodeError:
             if DEBUG:
                 print('IgorServlet: incorrect signature on bearer token %s' % data)
                 print('IgorServlet: content: %s' % jwt.decode(data, verify=False))
-            raise myWebError('401 Unauthorized, Incorrect signature on key')
+            return myWebError('401 Unauthorized, Incorrect signature on key', 401)
         except jwt.InvalidIssuerError:
             if DEBUG:
                 print('IgorServlet: incorrect issuer on bearer token %s' % data)
                 print('IgorServlet: content: %s' % jwt.decode(data, verify=False))
-            raise myWebError('401 Unauthorized, incorrect issuer on key')
+            return myWebError('401 Unauthorized, incorrect issuer on key', 401)
         except jwt.InvalidAudienceError:
             if DEBUG:
                 print('IgorServlet: incorrect audience on bearer token %s' % data)
                 print('IgorServlet: content: %s' % jwt.decode(data, verify=False))
-            raise myWebError('401 Unauthorized, incorrect audience on key')
+            return myWebError('401 Unauthorized, incorrect audience on key', 401)
         return content
+
         
 def main():
     global DEBUG

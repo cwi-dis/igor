@@ -48,6 +48,61 @@ _WEBAPP.secret_key = b'geheimpje'   # Overridden by setSSLInfo in cases where it
 ##     '/([^/]*)', 'static',
 # )
 
+class MyWSGICaller:
+    """Encapsulates WSGI app call and reply"""
+    
+    def __init__(self, app, url, method='GET', data=None, headers=None, env=None):
+        self.status = None
+        self.data = None
+        self.headers = {}
+
+        if data and not isinstance(data, str) and not isinstance(data, bytes):
+            data = json.dumps(data)
+        environ = self._buildRequestEnviron(url, method, data, headers, env)
+
+        rv = app(environ, self._start_response)
+        
+        self._feed(rv)
+        
+    def _start_response(self, status, headers):
+        self.status = status
+        for k, v in headers:
+            self.headers[k] = v
+            
+    def _feed(self, iter):
+        for i in iter:
+            if self.data == None:
+                self.data = i
+            self.data += i
+            
+    def _buildRequestEnviron(self, url, method, data, headers, env):
+        assert not '?' in url
+        assert url[0] == '/'
+        rv = {
+            'REQUEST_METHOD' : method,
+            'PATH_INFO' : url,
+            'QUERY_STRING' : '',
+#            'SCRIPT_NAME' : '',
+#            'REMOTE_ADDR' : '',
+#            'REMOTE_PORT' : '',
+#            'SERVER_PROTOCOL' : '',           
+            'SERVER_NAME' : '',
+            'SERVER_PORT' : '',
+            'wsgi.url_scheme' : '',
+            }
+        if headers:
+            for k, v in headers.items():
+                cgiKey = k.upper()
+                cgiKey = cgiKey.replace('-', '_')
+                if cgiKey == 'CONTENT_TYPE':
+                    rv[cgiKey] = v
+                else:
+                    rv['HTTP_' + cgiKey] = v
+        if env:
+            rv.update(env)
+        rv['wsgi.input'] = io.StringIO(data)
+        return rv
+                    
 class MyServer:
     """This class is a wrapper with some extra functionality (setting the port) as well as a
     somewhat-micro-framework-independent interface to the framework"""
@@ -139,44 +194,12 @@ class MyServer:
         return rv
         
     def request(self, url, method='GET', data=None, headers=None, env=None):
-        print('xxxjack request.%s(%s, data=%s, headers=%s, env=%s)' % (method, url, data, headers, env))
-        environ = self._buildRequestEnviron(url, method, data, headers, env)
-        rv = _WEBAPP.wsgi_app(environ, self._start_response)
-        print('xxxjack wsgi_app returned %s' % repr(rv))
-        return _DummyReply()
+#        print('xxxjack request.%s(%s, data=%s, headers=%s, env=%s)' % (method, url, data, headers, env))
+        resp = MyWSGICaller(_WEBAPP.wsgi_app, url=url, method=method, data=data, headers=headers, env=env)
+#        print('xxxjack wsgi_app returned %s' % repr(resp.data))
+        return resp
         
-    def _buildRequestEnviron(self, url, method, data, headers, env):
-        assert not '?' in url
-        assert url[0] == '/'
-        rv = {
-            'REQUEST_METHOD' : method,
-            'PATH_INFO' : url,
-            'QUERY_STRING' : '',
-#            'SCRIPT_NAME' : '',
-#            'REMOTE_ADDR' : '',
-#            'REMOTE_PORT' : '',
-#            'SERVER_PROTOCOL' : '',           
-            'SERVER_NAME' : '',
-            'SERVER_PORT' : '',
-            'wsgi.url_scheme' : '',
-            }
-        if headers:
-            for k, v in headers.items():
-                cgiKey = k.upper()
-                cgiKey.replace('-', '_')
-                if cgiKey == 'CONTENT_TYPE':
-                    rv[cgiKey] = v
-                else:
-                    rv['HTTP_' + cgiKey] = v
-        if env:
-            rv.update(env)
-        rv['wsgi.input'] = io.StringIO(data)
-        print('xxxjack _buildRequestEnviron', rv)
-        return rv
-        
-    def _start_response(self, *args, **kwargs):
-        print('xxxjack start_reposne', args, kwargs)
-        
+
 class _DummyReply:
     def __init__(self):
         self.status = '500 Not Implemented Yet'

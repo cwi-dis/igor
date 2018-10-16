@@ -26,6 +26,7 @@ import mimetypes
 from . import access
 import traceback
 import shelve
+import io
 
 DEBUG=False
 
@@ -137,9 +138,44 @@ class MyServer:
             pass
         return rv
         
-    def request(self, url, method='GET', data=None, headers={}, env={}):
+    def request(self, url, method='GET', data=None, headers=None, env=None):
         print('xxxjack request.%s(%s, data=%s, headers=%s, env=%s)' % (method, url, data, headers, env))
+        environ = self._buildRequestEnviron(url, method, data, headers, env)
+        rv = _WEBAPP.wsgi_app(environ, self._start_response)
+        print('xxxjack wsgi_app returned %s' % repr(rv))
         return _DummyReply()
+        
+    def _buildRequestEnviron(self, url, method, data, headers, env):
+        assert not '?' in url
+        assert url[0] == '/'
+        rv = {
+            'REQUEST_METHOD' : method,
+            'PATH_INFO' : url,
+            'QUERY_STRING' : '',
+#            'SCRIPT_NAME' : '',
+#            'REMOTE_ADDR' : '',
+#            'REMOTE_PORT' : '',
+#            'SERVER_PROTOCOL' : '',           
+            'SERVER_NAME' : '',
+            'SERVER_PORT' : '',
+            'wsgi.url_scheme' : '',
+            }
+        if headers:
+            for k, v in headers.items():
+                cgiKey = k.upper()
+                cgiKey.replace('-', '_')
+                if cgiKey == 'CONTENT_TYPE':
+                    rv[cgiKey] = v
+                else:
+                    rv['HTTP_' + cgiKey] = v
+        if env:
+            rv.update(env)
+        rv['wsgi.input'] = io.StringIO(data)
+        print('xxxjack _buildRequestEnviron', rv)
+        return rv
+        
+    def _start_response(self, *args, **kwargs):
+        print('xxxjack start_reposne', args, kwargs)
         
 class _DummyReply:
     def __init__(self):

@@ -358,7 +358,8 @@ class ActionCollection(threading.Thread):
                     tocall = a
                     break
             else:
-                print('ERROR: triggerAction called for unknown element', repr(node))
+                print('ERROR: triggerAction called for unknown element %s %s' % (repr(node), self.igor.database.getXPathForElement(node)))
+                return
         tocall.callback()
             
     def stop(self):

@@ -27,6 +27,14 @@ from . import access
 import traceback
 import shelve
 import io
+import urllib.parse
+
+if sys.version_info[0] < 3:
+    def str23compat(item):
+        return unicode(str(item))
+else:
+    def str23compat(item):
+        return str(item)
 
 DEBUG=False
 
@@ -80,15 +88,21 @@ class MyWSGICaller:
         assert url[0] == '/'
         rv = {
             'REQUEST_METHOD' : method,
-            'PATH_INFO' : url,
+            'SCRIPT_NAME' : '',
+            'PATH_INFO' : str23compat(url),
             'QUERY_STRING' : '',
-#            'SCRIPT_NAME' : '',
-#            'REMOTE_ADDR' : '',
-#            'REMOTE_PORT' : '',
-#            'SERVER_PROTOCOL' : '',           
-            'SERVER_NAME' : '',
-            'SERVER_PORT' : '',
-            'wsgi.url_scheme' : '',
+            # CONTENT_TYPE comes later
+            'SERVER_NAME' : '0.0.0.0',
+            'SERVER_PORT' : '8080',
+            'HTTP_HOST' : '0.0.0.0:8080',
+            'SERVER_PROTOCOL' : 'HTTP/1.1',
+            'wsgi.version' : (1, 0),
+            'wsgi.url_scheme' : 'http',
+            # wsgi.input comes later
+            'wsgi.errors' : sys.stderr,
+            'wsgi.multithread' : True,
+            'wsgi.multiprocess' : True,
+            'wsgi.run_once' : False,
             }
         if headers:
             for k, v in headers.items():
@@ -100,7 +114,13 @@ class MyWSGICaller:
                     rv['HTTP_' + cgiKey] = v
         if env:
             rv.update(env)
-        rv['wsgi.input'] = io.StringIO(data)
+        data = data or ''
+        if isinstance(data, dict):
+            data = urllib.parse.urlencode(data)
+        if isinstance(data, str):
+            data = data.encode('utf8')
+            rv['CONTENT_LENGTH'] = len(data)
+        rv['wsgi.input'] = io.BytesIO(data)
         return rv
                     
 class MyServer:
@@ -899,6 +919,7 @@ class XmlDatabaseAccess(object):
             try:
                 valueDict = json.loads(value)
             except ValueError:
+                import pdb ; pdb.set_trace()
                 myWebError("400 No JSON object could be decoded from body", 400)
             if not isinstance(valueDict, dict):
                 myWebError("400 Bad request, JSON toplevel object must be object", 400)

@@ -84,13 +84,15 @@ class MyWSGICaller:
             self.data += i
             
     def _buildRequestEnviron(self, url, method, data, headers, env):
-        assert not '?' in url
+        url = str23compat(url)
         assert url[0] == '/'
+        url, query = urllib.parse.splitquery(url)
+        query = query or ""
         rv = {
             'REQUEST_METHOD' : method,
             'SCRIPT_NAME' : '',
-            'PATH_INFO' : str23compat(url),
-            'QUERY_STRING' : '',
+            'PATH_INFO' : url,
+            'QUERY_STRING' : query,
             # CONTENT_TYPE comes later
             'SERVER_NAME' : '0.0.0.0',
             'SERVER_PORT' : '8080',

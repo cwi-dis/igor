@@ -168,7 +168,7 @@ class MyServer:
         
     def getHTTPError(self):
         """Return excpetion raised by other methods below (for catching)"""
-        return werkzeug.exceptions.HTTPError
+        return werkzeug.exceptions.HTTPException
         
     def resetHTTPError(self):
         """Clear exception"""
@@ -316,11 +316,11 @@ def get_pluginscript(pluginName, scriptName):
         env['IGORSERVER_URL'] = myUrl
         if myUrl[:6] == 'https:':
             env['IGORSERVER_NOVERIFY'] = 'true'
-    except werkzeug.exceptions.HTTPError:
+    except werkzeug.exceptions.HTTPException:
         pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
     try:
         pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except werkzeug.exceptions.HTTPError:
+    except werkzeug.exceptions.HTTPException:
         pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         pluginData = {}
     # Put all other arguments into the environment with an "igor_" prefix
@@ -338,7 +338,7 @@ def get_pluginscript(pluginName, scriptName):
         user = allArgs['user']
         try:
             userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', token)
-        except werkzeug.exceptions.HTTPError:
+        except werkzeug.exceptions.HTTPException:
             pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             userData = {}
         if userData:
@@ -494,7 +494,7 @@ def get_plugin(pluginName, methodName='index'):
     # Find plugindata and per-user plugindata
     try:
         pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except werkzeug.exceptions.HTTPError:
+    except werkzeug.exceptions.HTTPException:
         pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         pluginData = {}
     try:
@@ -515,7 +515,7 @@ def get_plugin(pluginName, methodName='index'):
         user = allArgs['user']
         try:
             userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
-        except werkzeug.exceptions.HTTPError:
+        except werkzeug.exceptions.HTTPException:
             pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         else:
             allArgs['userData'] = userData

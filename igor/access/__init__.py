@@ -688,7 +688,6 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert tokenToExport
         assert tokenToExport._hasExternalRepresentationFor(audience)
         externalRepresentation = tokenToExport._getExternalRepresentation()
-        print('xxxjack externalRepresentation %s' % repr(externalRepresentation))
         #
         # Save
         #

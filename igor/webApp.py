@@ -918,7 +918,6 @@ class XmlDatabaseAccess(object):
             try:
                 valueDict = json.loads(value)
             except ValueError:
-                import pdb ; pdb.set_trace()
                 myWebError("400 No JSON object could be decoded from body", 400)
             if not isinstance(valueDict, dict):
                 myWebError("400 Bad request, JSON toplevel object must be object", 400)

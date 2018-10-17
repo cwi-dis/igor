@@ -144,7 +144,11 @@ class IgorServlet(threading.Thread):
             if request.is_json:
                 methodArgs = request.json
             elif request.data:
-                methodArgs = dict(data=request.data)
+                data = request.data
+                if not isinstance(data, str):
+                    assert isinstance(data, bytes)
+                    data = data.decode('utf8')
+                methodArgs = dict(data=data)
             else:
                 methodArgs = {}
         try:
@@ -152,7 +156,8 @@ class IgorServlet(threading.Thread):
         except TypeError as arg:
             return myWebError("400 Error in parameters: %s" % arg)
         if endpoint['mimetype'] == 'text/plain':
-            rv = "%s" % (rv,)
+            if type(rv) != type(str):
+                rv = "%s" % (rv,)
         elif endpoint['mimetype'] == 'application/json':
             rv = json.dumps(rv)
         else:

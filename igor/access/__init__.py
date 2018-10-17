@@ -470,7 +470,6 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                     # OTP-token should already include the default set, so just return
                     return self._consumeOTPForToken(decoded)
                 else:
-                    decoded = decoded.decode('utf8')
                     username, password = decoded.split(':')
                     if DEBUG: print('access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username)
                     if self.userAndPasswordCorrect(username, password):

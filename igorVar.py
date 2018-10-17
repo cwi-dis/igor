@@ -113,7 +113,7 @@ class IgorServer(object):
         if self.bearer_token:
             headers['Authorization'] = 'Bearer %s' % self.bearer_token
         if self.credentials:
-            headers['Authorization'] = 'Basic %s' % base64.b64encode(self.credentials.encode('utf-8'))
+            headers['Authorization'] = 'Basic %s' % base64.b64encode(self.credentials.encode('utf-8')).decode('ascii')
         if VERBOSE:
             if self.certificate or self.noverify:
                 print('certificate=%s, noverify=%s' % (repr(self.certificate), repr(self.noverify)))

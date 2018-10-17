@@ -86,7 +86,7 @@ class BaseAccessToken(object):
     def addToHeadersAsOTP(self, headers):
         """Add this token to the (http request) headers in one-time-password form, for internal Igor use only"""
         otp = singleton.produceOTPForToken(self)
-        headers['Authorization'] = 'Basic ' + base64.b64encode(otp.encode('utf-8'))
+        headers['Authorization'] = 'Basic ' + str(base64.b64encode(otp.encode('utf-8')))
         
 class IgorAccessToken(BaseAccessToken):
     """A token without an external representation that allows everything everywhere.

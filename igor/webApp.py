@@ -199,7 +199,6 @@ class MyServer:
             
     def getOperationTraceInfo(self):
         """Return information that helps debugging access control errors in current operation"""
-        assert 0
         rv = {}
         try:
             rv['requestPath'] = request.path
@@ -216,9 +215,7 @@ class MyServer:
         return rv
         
     def request(self, url, method='GET', data=None, headers=None, env=None):
-#        print('xxxjack request.%s(%s, data=%s, headers=%s, env=%s)' % (method, url, data, headers, env))
         resp = MyWSGICaller(_WEBAPP.wsgi_app, url=url, method=method, data=data, headers=headers, env=env)
-#        print('xxxjack wsgi_app returned %s' % repr(resp.data))
         return resp
         
 

@@ -226,7 +226,7 @@ class IgorServlet(threading.Thread):
         
     def _decodeBearerToken(self, data):
         try:
-            content = jwt.decode(data, self.issuerSharedKey, issuer=self.issuer, audience=self.audience, algorithm='RS256')
+            content = jwt.decode(data, self.issuerSharedKey, issuer=self.issuer, audience=self.audience, algorithms=['RS256', 'HS256'])
         except jwt.DecodeError:
             if DEBUG:
                 print('IgorServlet: incorrect signature on bearer token %s' % data)

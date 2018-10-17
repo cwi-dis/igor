@@ -193,7 +193,7 @@ class IssuerInterface(object):
             print('access._decodeIncomingData: %s: externalRepresentation %s' % (self, data))
             print('access._decodeIncomingData: %s: externalKey %s' % (self, sharedKey))
         try:
-            content = jwt.decode(data, sharedKey, issuer=singleton.getSelfIssuer(), audience=singleton.getSelfAudience(), algorithm='RS256')
+            content = jwt.decode(data, sharedKey, issuer=singleton.getSelfIssuer(), audience=singleton.getSelfAudience(), algorithms=['RS256', 'HS256'])
         except jwt.DecodeError:
             print('access: ERROR: incorrect signature on bearer token %s' % data)
             print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
@@ -219,6 +219,7 @@ class IssuerInterface(object):
             self.igor.app.raiseHTTPError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
         externalKey = singleton._getSharedKey(iss, aud)
         externalRepresentation = jwt.encode(tokenContent, externalKey, algorithm='HS256')
+        externalRepresentation = externalRepresentation.decode('ascii')
         if DEBUG: 
             print('access._encodeOutgoingData: %s: tokenContent %s' % (self, tokenContent))
             print('access._encodeOutgoingData: %s: externalKey %s' % (self, externalKey))
@@ -687,6 +688,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert tokenToExport
         assert tokenToExport._hasExternalRepresentationFor(audience)
         externalRepresentation = tokenToExport._getExternalRepresentation()
+        print('xxxjack externalRepresentation %s' % repr(externalRepresentation))
         #
         # Save
         #

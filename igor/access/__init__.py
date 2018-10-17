@@ -463,13 +463,14 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                 if DEBUG: print('access: tokenForRequest: returning token found in Authorization: Bearer header')
                 token = self._externalAccessToken(decoded)
             elif authFields[0].lower() == 'basic':
-                decoded = base64.b64decode(authFields[1])
+                decoded = base64.b64decode(authFields[1]).decode('utf8')
                 if decoded.startswith('-otp-'):
                     # This is a one time pad, not a username/password combination
                     if DEBUG: print('access: tokenForRequest: found OTP in Authorization: Basic header')
                     # OTP-token should already include the default set, so just return
                     return self._consumeOTPForToken(decoded)
                 else:
+                    decoded = decoded.decode('utf8')
                     username, password = decoded.split(':')
                     if DEBUG: print('access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username)
                     if self.userAndPasswordCorrect(username, password):

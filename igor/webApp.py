@@ -223,7 +223,7 @@ class MyServer:
     def getJinjaTemplate(self, name):
         """Return a Jinja2 template"""
         if self.jinjaEnv == None:
-            self.jinjaEnv = jinja2.Environment(loader=jinja2.PackageLoader('igor', 'template'))
+            self.jinjaEnv = jinja2.Environment(loader=jinja2.PackageLoader('igor', 'template'), extensions=['jinja2.ext.do'])
             self.jinjaEnv.globals['igor'] = _SERVER.igor
             self.jinjaEnv.globals['json'] = json
             self.jinjaEnv.globals['time'] = time

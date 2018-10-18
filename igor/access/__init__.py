@@ -193,7 +193,7 @@ class IssuerInterface(object):
             print('access._decodeIncomingData: %s: externalRepresentation %s' % (self, data))
             print('access._decodeIncomingData: %s: externalKey %s' % (self, sharedKey))
         try:
-            content = jwt.decode(data, sharedKey, issuer=singleton.getSelfIssuer(), audience=singleton.getSelfAudience(), algorithm='RS256')
+            content = jwt.decode(data, sharedKey, issuer=singleton.getSelfIssuer(), audience=singleton.getSelfAudience(), algorithms=['RS256', 'HS256'])
         except jwt.DecodeError:
             print('access: ERROR: incorrect signature on bearer token %s' % data)
             print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
@@ -219,6 +219,7 @@ class IssuerInterface(object):
             self.igor.app.raiseHTTPError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
         externalKey = singleton._getSharedKey(iss, aud)
         externalRepresentation = jwt.encode(tokenContent, externalKey, algorithm='HS256')
+        externalRepresentation = externalRepresentation.decode('ascii')
         if DEBUG: 
             print('access._encodeOutgoingData: %s: tokenContent %s' % (self, tokenContent))
             print('access._encodeOutgoingData: %s: externalKey %s' % (self, externalKey))
@@ -463,7 +464,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                 if DEBUG: print('access: tokenForRequest: returning token found in Authorization: Bearer header')
                 token = self._externalAccessToken(decoded)
             elif authFields[0].lower() == 'basic':
-                decoded = base64.b64decode(authFields[1])
+                decoded = base64.b64decode(authFields[1]).decode('utf8')
                 if decoded.startswith('-otp-'):
                     # This is a one time pad, not a username/password combination
                     if DEBUG: print('access: tokenForRequest: found OTP in Authorization: Basic header')

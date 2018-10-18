@@ -13,28 +13,32 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 </head>
 <body>
 
-	$if action == None or action == 'list':
+	{% if action == None or action == 'list' %}
 		<h1>Igor Capabilities</h1>
 
-		$if not igor.internal.accessControl('hasCapabilitySupport'):
+		{% if not igor.internal.accessControl('hasCapabilitySupport') %}
 			<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
+		{% endif %}
 	
-		$if igor.app.getSessionItem('user', None):
+		{% if igor.app.getSessionItem('user', None) %}
 			<p>
-				You are logged in as ${igor.igor.app.getSessionItem('user')}.
-				$if cid == None:
+				You are logged in as {{igor.igor.app.getSessionItem('user')}}.
+				{% if cid == None %}
 					Here is the list of all capabilities assigned to your user identity.
 				$else:
-					Here is the information on capability ${cid}.
+					Here is the information on capability {{cid}}.
+				{% endif %}
 			</p>
 		$else:
 			<p>
 				You are not logged in.
-				$if cid == None:
+				{% if cid == None %}
 					Here is the set of default capabilities you have access to.
 				$else:
-					Here is the information on capability ${cid}.
+					Here is the information on capability {{cid}}.
+				{% endif %}
 			</p>
+		{% endif %}
 		
 		<table style="width:100%">
 			<tr>
@@ -48,56 +52,64 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 			</tr>
 		
 			$ capList = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)
-			$for cap in capList:
+			{% for cap in capList %}
 				$ cid = cap.pop('cid', '')
 				$ comment = cap.pop('comment', '')
 				$ childIDs = cap.pop('child', [])
 				$ if type(childIDs) != type([]): childIDs = [childIDs]
 				<tr>
-					<td>${cid}
-					$if comment:
-						<br><i>(${comment}</i>)
+					<td>{{cid}}
+					{% if comment %}
+						<br><i>({{comment}}</i>)
+					{% endif %}
 					</td>
-					<td>${cap.pop('obj', '')}</td>
+					<td>{{cap.pop('obj', '')}}</td>
 					<td align="center">
-						${cap.pop('get', '-')}<br>
-						${cap.pop('put', '-')}<br>
-						${cap.pop('post', '-')}<br>
-						${cap.pop('delete', '-')}
+						{{cap.pop('get', '-')}}<br>
+						{{cap.pop('put', '-')}}<br>
+						{{cap.pop('post', '-')}}<br>
+						{{cap.pop('delete', '-')}}
 					</td>
-					<td>${cap.pop('parent', '')}</td>
+					<td>{{cap.pop('parent', '')}}</td>
 					<td>
-						$for c in childIDs:
-							<a href="/capabilities.html?action=list&cid=${c}">${c}</a>
-							<a href="/capabilities.html?action=revoke&cid=${cid}&childCid=${c}">(revoke)</a>
+						{% for c in childIDs %}
+							<a href="/capabilities.html?action=list&cid={{c}}">{{c}}</a>
+							<a href="/capabilities.html?action=revoke&cid={{cid}}&childCid={{c}}">(revoke)</a>
 							<br>
+						{% endfor %}
 					</td>
 					<td>
-						$if cap.pop('owner', ''):
-							<a href="/capabilities.html?action=transfer&cid=${cid}">transfer</a>
+						{% if cap.pop('owner', '') %}
+							<a href="/capabilities.html?action=transfer&cid={{cid}}">transfer</a>
+						{% endif %}
 						$ delegate = cap.pop('delegate', '')
-						$if delegate:
+						{% if delegate %}
 							<br>
-							<a href="/capabilities.html?action=delegate&cid=${cid}">delegate</a>
-							$if delegate == 'external':
+							<a href="/capabilities.html?action=delegate&cid={{cid}}">delegate</a>
+							{% if delegate == 'external' %}
 								<i>(ext)</i>
 							<br>
-							<a href="/capabilities.html?action=export&cid=${cid}">export</a>
-						$if 'iss' in cap and 'aud' in cap:
+							<a href="/capabilities.html?action=export&cid={{cid}}">export</a>
+						{% endif %}
+						{% if 'iss' in cap and 'aud' in cap %}
 							<br>
-							<a href="/internal/accessControl/externalRepresentation?tokenId=${cid}">external repr</a>
+							<a href="/internal/accessControl/externalRepresentation?tokenId={{cid}}">external repr</a>
+						{% endif %}
 					</td>
 					<td>
-						$for k,v in cap.items():
-							${k}=${v}<br>
+						{% for k,v in cap.items() %}
+							{{k}}={{v}}<br>
+						{% endfor %}
 					</td>
 				</tr>
+			{% endfor %}
 		</table>
-		$if cid != None:
+		{% if cid != None %}
 			<p><a href="/capabilities.html">Return to full listing</a></p>
 			<p><a href="/capabilities.html?action=listKeys">View shared key listing</a></p>
-	$elif action == "delegate":
-		<h1>Delegate capability ${cid}</h1>
+		{% endif %}
+	{% elif action == "delegate" %}
+		<h1>Delegate capability {{cid}}</h1>
 		
 		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		
@@ -109,7 +121,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<th>New</th>
 					<th>Old</th>
 				</tr>
-				<input name="tokenId" type="hidden" value="${cid}">
+				<input name="tokenId" type="hidden" value="{{cid}}">
 				<tr>
 					<td>Owner</td>
 					<td><input name="newOwner" type="text" value="/data/identities/EDIT"></td>
@@ -117,41 +129,43 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				</tr>
 				<tr>
 					<td>Path</td>
-					<td><input name="newPath" type="text" value="${cap.get('obj','')}"></td>
-					<td>${cap.get('obj','')}</td>
+					<td><input name="newPath" type="text" value="{{cap.get('obj','')}}"></td>
+					<td>{{cap.get('obj','')}}</td>
 				</tr>
 				<tr>
 					<td>Can Delegate</td>
 					<td>
-						$if cap.get('delegate'):
-						<input name="delegate" type="checkbox" value="true" checked>
+						{% if cap.get('delegate') %}
+							<input name="delegate" type="checkbox" value="true" checked>
+						{% endif %}
 					</td>
-					<td>${'yes' if cap.get('delegate') else 'no'}</td>
+					<td>{{'yes' if cap.get('delegate') else 'no'}}</td>
 				</tr>			
-				$for right in ['get', 'put', 'post', 'delete']:
+				{% for right in ['get', 'put', 'post', 'delete'] %}
 					<tr>
-						<td>${right}</td>
+						<td>{{right}}</td>
 						$ disabled = '' if cap.get(right, None) else ' disabled'
 						<td>
-							<select name="${right}" ${disabled}>
+							<select name="{{right}}" {{disabled}}>
 								$ selected = ' selected' if not cap.get(right) else ''
-								<option value="" ${selected}>No access</option>
+								<option value="" {{selected}}>No access</option>
 								$ selected = ' selected' if cap.get(right) == 'self' else ''
-								<option value="self" ${selected}>self</option>
+								<option value="self" {{selected}}>self</option>
 								$ selected = ' selected' if cap.get(right) == 'descendant-or-self' else ''
-								<option value="descendant-or-self" ${selected}>descendant-or-self</option>
+								<option value="descendant-or-self" {{selected}}>descendant-or-self</option>
 								$ selected = ' selected' if cap.get(right) == 'descendant' else ''
-								<option value="descendant" ${selected}>descendant</option>
+								<option value="descendant" {{selected}}>descendant</option>
 								$ selected = ' selected' if cap.get(right) == 'child' else ''
-								<option value="child" ${selected}>child</option>
+								<option value="child" {{selected}}>child</option>
 							</select>
 						</td>
-						<td>${cap.get(right, 'no access')}</td>
+						<td>{{cap.get(right, 'no access')}}</td>
 					</tr>
+				{% endfor %}
 				<tr>
 					<td>Comment</td>
 					<td><input name="comment" type="text"></td>
-					<td>${cap.get('comment', '')}</td>
+					<td>{{cap.get('comment', '')}}</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -161,10 +175,10 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 			</table>
 		</form>
 		<p><a href="/capabilities.html">Return to listing</a></p>
-	$elif action == "create":
-		<p>Cannot do yet. Should create ${repr(kwargs)}.</p>
+	{% elif action == "create" %}
+		<p>Cannot do yet. Should create {{repr(kwargs)}}.</p>
 		<form action="/internal/accessControl/newToken">
-			<input name="returnTo" type="hidden" value="${kwargs.get('returnTo', '/capabilities.html')}">
+			<input name="returnTo" type="hidden" value="{{kwargs.get('returnTo', '/capabilities.html')}}">
 			<table>
 				<tr>
 					<th>Field</th>
@@ -174,50 +188,54 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<td>Delegate from</td>
 					<td>
 						<select name="tokenId">
-							$for cid in kwargs.get('parentList', '').split('/'):
+							{% for cid in kwargs.get('parentList', '').split('/') %}
 								<option value="$cid">$cid</option>
+							{% endfor %}
 						</select>
 					</td>
 				</tr>
 				<tr>
 					<td>New owner</td>
-					<td><input name="newOwner" type="text" value="${kwargs.get('newOwner','')}"></td>
+					<td><input name="newOwner" type="text" value="{{kwargs.get('newOwner','')}}"></td>
 				</tr>
 				<tr>
 					<td>Path</td>
-					<td><input name="newPath" type="text" value="${kwargs.get('obj','')}"></td>
+					<td><input name="newPath" type="text" value="{{kwargs.get('obj','')}}"></td>
 				</tr>
-				$if 'aud' in kwargs:
+				{% if 'aud' in kwargs %}
 					<tr>
 						<td>Audience</td>
-						<td><input name="aud" type="text" value="${kwargs.get('aud', '')}"></td>
+						<td><input name="aud" type="text" value="{{kwargs.get('aud', '')}}"></td>
 					</tr>
+				{% endif %}
 				<tr>
 					<td>Can Delegate</td>
 					<td>
-						$if kwargs.get('delegate'):
-						<input name="delegate" type="checkbox" value="true" checked>
+						{% if kwargs.get('delegate') %}
+							<input name="delegate" type="checkbox" value="true" checked>
+						{% endif %}
 					</td>
 				</tr>			
-				$for right in ['get', 'put', 'post', 'delete']:
+				{% for right in ['get', 'put', 'post', 'delete'] %}
 					<tr>
-						<td>${right}</td>
+						<td>{{right}}</td>
 						$ rightValue = kwargs.get(right, '')
 						<td>
-							<select name="${right}">
+							<select name="{{right}}">
 								$ selected = ' selected' if not rightValue else ''
-								<option value="" ${selected}>No access</option>
+								<option value="" {{selected}}>No access</option>
 								$ selected = ' selected' if rightValue == 'self' else ''
-								<option value="self" ${selected}>self</option>
+								<option value="self" {{selected}}>self</option>
 								$ selected = ' selected' if rightValue == 'descendant-or-self' else ''
-								<option value="descendant-or-self" ${selected}>descendant-or-self</option>
+								<option value="descendant-or-self" {{selected}}>descendant-or-self</option>
 								$ selected = ' selected' if rightValue == 'descendant' else ''
-								<option value="descendant" ${selected}>descendant</option>
+								<option value="descendant" {{selected}}>descendant</option>
 								$ selected = ' selected' if rightValue == 'child' else ''
-								<option value="child" ${selected}>child</option>
+								<option value="child" {{selected}}>child</option>
 							</select>
 						</td>
 					</tr>
+				{% endfor %}
 				<tr>
 					<td>Comment</td>
 					<td><input name="comment" type="text"></td>
@@ -231,11 +249,12 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		</form>		
 		<p>
 			<a href="/capabilities.html">List my capabilities.</a>
-			$if 'returnTo' in kwargs:
-				<br><a href="${kwargs['returnTo']}">Return to ${kwargs['returnTo']}.</a>
+			{% if 'returnTo' in kwargs %}
+				<br><a href="{{kwargs['returnTo']}}">Return to {{kwargs['returnTo']}}.</a>
+			{% endif %}
 		</p>
-	$elif action == "transfer":
-		<h1>Delegate capability ${cid}</h1>
+	{% elif action == "transfer" %}
+		<h1>Delegate capability {{cid}}</h1>
 		
 		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		
@@ -247,7 +266,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<th>New</th>
 					<th>Old</th>
 				</tr>
-				<input name="tokenId" type="hidden" value="${cid}">
+				<input name="tokenId" type="hidden" value="{{cid}}">
 				<tr>
 					<td>Owner</td>
 					<td><input name="newOwner" type="text" value="/data/identities/EDIT"></td>
@@ -255,19 +274,20 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				</tr>
 				<tr>
 					<td>Path</td>
-					<td>${cap['obj']}</td>
-					<td>${cap['obj']}</td>
+					<td>{{cap['obj']}}</td>
+					<td>{{cap['obj']}}</td>
 				</tr>				
-				$for right in ['get', 'put', 'post', 'delete']:
+				{% for right in ['get', 'put', 'post', 'delete'] %}
 					<tr>
-						<td>${right}</td>
-						<td>${cap.get(right, 'no access')}</td>
-						<td>${cap.get(right, 'no access')}</td>
+						<td>{{right}}</td>
+						<td>{{cap.get(right, 'no access')}}</td>
+						<td>{{cap.get(right, 'no access')}}</td>
 					</tr>
+				{% endfor %}
 				<tr>
 					<td>Comment</td>
-					<td>${cap.get('comment', '')}</td>
-					<td>${cap.get('comment', '')}</td>
+					<td>{{cap.get('comment', '')}}</td>
+					<td>{{cap.get('comment', '')}}</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -277,8 +297,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 			</table>
 		</form>
 		<p><a href="/capabilities.html">Return to listing</a></p>
-	$elif action == "export":
-		<h1>Export capability ${cid}</h1>
+	{% elif action == "export" %}
+		<h1>Export capability {{cid}}</h1>
 		
 		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
 		$ cap.pop('owner', None)
@@ -291,24 +311,26 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<th>New</th>
 					<th>Old</th>
 				</tr>
-				<input name="tokenId" type="hidden" value="${cap.pop('cid')}">
+				<input name="tokenId" type="hidden" value="{{cap.pop('cid')}}">
 				<tr>
 					<td>Subject</td>
 					<td>
 						$ subjectList = igor.internal.accessControl(subcommand='getSubjectList')
-						$if subjectList:
+						{% if subjectList %}
 							<select name="subject" required>
-							$for sub in subjectList:
+							{% for sub in subjectList %}
 								<option value="$sub">$sub</option>
+							{% endfor %}
 							</select>
 						$else:
 							<input name="subject" type="text" value="">
+						{% endif %}
 					</td>
 					<td>n.a.</td>
 				</tr>
 				<tr>
 					<td>Object</td>
-					<td colspan="2">${cap.pop('obj')}</td>
+					<td colspan="2">{{cap.pop('obj')}}</td>
 				</tr>
 				<tr>
 					<td>Lifetime (seconds)</td>
@@ -318,41 +340,44 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 						<td>Can Delegate</td>
 						<td>
-							$if cap.pop('delegate', None):
+							{% if cap.pop('delegate', None) %}
 								<input name="delegate" type="checkbox" value="false">
+							{% endif %}
 						</td>
-						<td>${'yes' if cap.get('delegate') else 'no'}</td>
+						<td>{{'yes' if cap.get('delegate') else 'no'}}</td>
 				</tr>			
-				$for right in ['get', 'put', 'post', 'delete']:
+				{% for right in ['get', 'put', 'post', 'delete'] %}
 					$ rvalue = cap.pop(right, None)
 					<tr>
-						<td>${right}</td>
+						<td>{{right}}</td>
 						$ disabled = '' if rvalue else ' disabled'
 						<td>
-							<select name="${right}" ${disabled}>
+							<select name="{{right}}" {{disabled}}>
 								$ selected = ' selected' if not rvalue else ''
-								<option value="" ${selected}>No access</option>
+								<option value="" {{selected}}>No access</option>
 								$ selected = ' selected' if rvalue == 'self' else ''
-								<option value="self" ${selected}>self</option>
+								<option value="self" {{selected}}>self</option>
 								$ selected = ' selected' if rvalue == 'descendant-or-self' else ''
-								<option value="descendant-or-self" ${selected}>descendant-or-self</option>
+								<option value="descendant-or-self" {{selected}}>descendant-or-self</option>
 								$ selected = ' selected' if rvalue == 'descendant' else ''
-								<option value="descendant" ${selected}>descendant</option>
+								<option value="descendant" {{selected}}>descendant</option>
 								$ selected = ' selected' if rvalue == 'child' else ''
-								<option value="child" ${selected}>child</option>
+								<option value="child" {{selected}}>child</option>
 							</select>
 						</td>
-						<td>${cap.get(right, 'no access')}</td>
+						<td>{{cap.get(right, 'no access')}}</td>
 					</tr>
-				$for k,v in cap.items():
+				{% endfor %}
+				{% for k,v in cap.items() %}
 					<tr>
-						<td>${k}</td>
-						<td colspan="2">${v}</td>
+						<td>{{k}}</td>
+						<td colspan="2">{{v}}</td>
 					</tr>
+				{% endfor %}
 				<tr>
 					<td>Comment</td>
 					<td><input name="comment" type="text"></td>
-					<td>${cap.get('comment', '')}</td>
+					<td>{{cap.get('comment', '')}}</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -362,8 +387,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 			</table>
 		</form>
 		<p><a href="/capabilities.html">Return to listing</a></p>
-	$elif action == "revoke":
-		<h1>Revoke capability ${childCid}</h1>
+	{% elif action == "revoke" %}
+		<h1>Revoke capability {{childCid}}</h1>
 		
 		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=childCid)[0]
 		
@@ -374,40 +399,43 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<th>Field</th>
 					<th>Value</th>
 				</tr>
-				<input name="parentId" type="hidden" value="${cid}">
-				<input name="tokenId" type="hidden" value="${childCid}">
+				<input name="parentId" type="hidden" value="{{cid}}">
+				<input name="tokenId" type="hidden" value="{{childCid}}">
 				<tr>
 					<td>ID</td>
-					<td>${childCid}</td>
+					<td>{{childCid}}</td>
 				</tr>				
 				<tr>
 					<td>Parent</td>
-					<td>${cid}</td>
+					<td>{{cid}}</td>
 				</tr>				
-				$for right in ['get', 'put', 'post', 'delete']:
+				{% for right in ['get', 'put', 'post', 'delete'] %}
 					<tr>
-						<td>${right}</td>
-						<td>${cap.pop(right, 'no access')}</td>
+						<td>{{right}}</td>
+						<td>{{cap.pop(right, 'no access')}}</td>
 					</tr>
+				{% endfor %}
 				<tr>
 					<td>Comment</td>
-					<td>${cap.pop('comment', '')}</td>
+					<td>{{cap.pop('comment', '')}}</td>
 				</tr>
 				<tr>
 					<td>Children</td>
 					<td>
 						$  childIDs = cap.pop('child', [])
 						$ if type(childIDs) != type([]): childIDs = [childIDs]
-						$for gcid in childIDs:
-							${gcid}
+						{% for gcid in childIDs %}
+							{{gcid}}
 							<br>
+						{% endfor %}
 					</td>
 				</tr>
-				$for k, v in cap.items():
+				{% for k, v in cap.items() %}
 					<tr>
-						<td>${k}</td>
-						<td>${v}</td>
+						<td>{{k}}</td>
+						<td>{{v}}</td>
 					</tr>
+				{% endfor %}
 				<tr>
 					<td></td>
 					<td><input type="submit" value="Revoke"></td>
@@ -416,7 +444,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		</form>
 		
 		<p><a href="/capabilities.html">Return to listing</a></p>
-	$elif action == "listKeys":
+	{% elif action == "listKeys" %}
 		<h1>Shared secret keys issued by this Igor</h1>
 		
 		$ keys = igor.internal.accessControl(subcommand='getKeyList', token=token)
@@ -428,26 +456,28 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<th>...</th>
 				<th>Action:</th>
 			</tr>
-			$for key in keys:
+			{% for key in keys %}
 				$ iss = key.pop('iss')
 				$ sub = key.pop('sub', '')
 				$ aud = key.pop('aud', '')
 				<tr>
-					<td>${iss}</td>
-					<td>${sub}</td>
-					<td>${aud}</td>
+					<td>{{iss}}</td>
+					<td>{{sub}}</td>
+					<td>{{aud}}</td>
 					<td>
-						$for k, v in key.items():
-							${k}=${v}
+						{% for k, v in key.items() %}
+							{{k}}={{v}}
+						{% endfor %}
 					</td>
-					<td><a href="capabilities.html?action=deleteKey&iss=${iss}&sub=${sub}&aud=${aud}">delete</a></td>
+					<td><a href="capabilities.html?action=deleteKey&iss={{iss}}&sub={{sub}}&aud={{aud}}">delete</a></td>
 				</tr>
+			{% endfor %}
 		</table>
 
 		<p><a href="/capabilities.html?action=addKey">Add a new secret key</a></p>
 		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
 		<p><a href="/capabilities.html">Return to capability listing</a></p>
-	$elif action == "addKey":
+	{% elif action == "addKey" %}
 		<h1>Issue new shared key</h1>
 
 		<p>Createing a secret key here will return the verbatim secret key, this will be done <b>only once</b>, after that the secret
@@ -461,24 +491,25 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 
 		<p><a href="/capabilities.html">Return to capability listing</a></p>
 		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
-	$elif action == "deleteKey":
+	{% elif action == "deleteKey" %}
 		<h1>Delete old shared key</h1>
 		
 		<form action="/internal/accessControl/deleteSharedKey">
 			<input name="returnTo" type="hidden" value="/capabilities.html?action=listKeys">
-			<input type="hidden" name="iss" value="${kwargs.get('iss', '')}">
-			<input type="hidden" name="aud" value="${kwargs.get('aud', '')}">
-			<input type="hidden" name="sub" value="${kwargs.get('sub', '')}">
+			<input type="hidden" name="iss" value="{{kwargs.get('iss', '')}}">
+			<input type="hidden" name="aud" value="{{kwargs.get('aud', '')}}">
+			<input type="hidden" name="sub" value="{{kwargs.get('sub', '')}}">
 			<table>
 				<tr>
 					<th>Item</>
 					<th>Value</>
 				</tr>
-				$for k, v in kwargs.items():
+				{% for k, v in kwargs.items() %}
 					<tr>
-						<td>${k}</td>
-						<td>${v}</td>
+						<td>{{k}}</td>
+						<td>{{v}}</td>
 					</tr>
+				{% endfor %}
 				<tr>
 					<td colspan="2"><input type="submit" value="Delete"></td>
 				</tr>

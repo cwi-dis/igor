@@ -59,19 +59,21 @@ $code:
 </head>
 <body>
 
-	$if action == None or action == 'list':
+	{% if action == None or action == 'list' %}
 		<h1>Igor Devices and Sensors</h1>
 		$ user = igor.app.getSessionItem('user', None)
-		$if user:
+		{% if user %}
 			<p>
 				You are logged in as $user.
-				$if user != 'admin':
+				{% if user != 'admin' %}
 					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
+				{% endif %}
 			</p>
 		$else:
 			<p>
 				You are not logged in. This page will probably not render correctly.
 			</p>
+		{% endif %}
 		
 		<h2>Igor Devices</h2>
 		
@@ -98,76 +100,86 @@ $code:
 			$ allKeyAudiences = set([k.get('aud') for k in allKeys])
 			$ allKeySubjects = set([k.get('sub') for k in allKeys])
 			$ deviceList = doList(token)
-			$for device in deviceList:
+			{% for device in deviceList %}
 				$ name=device.get('name')
 				$ defaultHostname = ('%s.local' % name) if (device.get('isDevice') or device.get('isSensor')) else ''
 				$ hostName = device.get('hostname', defaultHostname)
 				$ hasAudSecretKey = hostName in allKeyAudiences or ('http://%s' % hostName) in allKeyAudiences or ('https://%s' % hostName) in allKeyAudiences
 				$ hasSubSecretKey = hostName in allKeySubjects
 				<tr>
-					<td>${name}</td>
-					<td>${hostName}</td>
+					<td>{{name}}</td>
+					<td>{{hostName}}</td>
 					<td>
-						$if device.get('isDevice'):
+						{% if device.get('isDevice') %}
 							Yes
+						{% endif %}
 					</td>
 					<td>
-						$if device.get('isSensor'):
+						{% if device.get('isSensor') %}
 							Yes
+						{% endif %}
 					</td>
 					<td>
-						$if device.get('isDevice'):
-							<a href="/data/devices/${name}">devices/${name}</a>
-						$elif device.get('isSensor'):
-							<a href="/data/sensors/${name}">sensors/${name}</a>
+						{% if device.get('isDevice') %}
+							<a href="/data/devices/{{name}}">devices/{{name}}</a>
+						{% elif device.get('isSensor') %}
+							<a href="/data/sensors/{{name}}">sensors/{{name}}</a>
+						{% endif %}
 					</td>
 					<td>
 						$ statusEntry = device.get('status')
-						$if statusEntry:
-							<a href="${statusEntry}">${statusEntry}</a>
+						{% if statusEntry %}
+							<a href="{{statusEntry}}">{{statusEntry}}</a>
+						{% endif %}
 					</td>
 					<td>
-						$if hasAudSecretKey:
-							aud=${hostName}<br>
-						$if hasSubSecretKey:
-							sub=${hostName}<br>
+						{% if hasAudSecretKey %}
+							aud={{hostName}}<br>
+						{% endif %}
+						{% if hasSubSecretKey %}
+							sub={{hostName}}<br>
+						{% endif %}
 					</td>
 					<td>
-						$for action in device.get('actions', []):
+						{% for action in device.get('actions', []) %}
 							$ actionName = igor.database.getValues(action+'/name', token=token)
 							$ if actionName: actionName = actionName[0][1]
 							$ if not actionName: actionName = actionName.split('/')[-1]
-							<a href=${action}>${actionName}</a><br>
+							<a href={{action}}>{{actionName}}</a><br>
 					</td>
 					<td>
-						$if device.get('isDevice') and not hasAudSecretKey:
+						{% if device.get('isDevice') and not hasAudSecretKey %}
 							<form action="/devices.html">
 							<input type="hidden" name="action" value="addKey">
-							<input type="hidden" name="aud" value="${hostName}">
+							<input type="hidden" name="aud" value="{{hostName}}">
 							<input type="submit" value="Create Audience Key">
 							</form>
-						$if (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey:
+						{% endif %}
+						{% if (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey %}
 							<form action="/devices.html">
 							<input type="hidden" name="action" value="addKey">
-							<input type="hidden" name="sub" value="${hostName}">
+							<input type="hidden" name="sub" value="{{hostName}}">
 							<input type="submit" value="Create Subject Key">
 							</form>
-						$if device.get('isSensor') or device.get('isDevice'):
+						{% endif %}
+						{% if device.get('isSensor') or device.get('isDevice') %}
 							<form action="/devices.html">
 								<input type="hidden" name="action" value="addActionCap">
-								<input type="hidden" name="name" value="${name}">
-								<input type="hidden" name="hostname" value="${hostName}">
-								<input type="hidden" name="representing" value="${device.get('representing')}">
+								<input type="hidden" name="name" value="{{name}}">
+								<input type="hidden" name="hostname" value="{{hostName}}">
+								<input type="hidden" name="representing" value="{{device.get('representing')}}">
 								<input type="submit" value="Add Action Capability">
 							</form>
+						{% endif %}
 						<form action="/devices.html">
 							<input type="hidden" name="action" value="deleteDevice">
-							<input type="hidden" name="name" value="${name}">
-							<input type="hidden" name="hostname" value="${hostName}">
+							<input type="hidden" name="name" value="{{name}}">
+							<input type="hidden" name="hostname" value="{{hostName}}">
 							<input type="submit" value="Delete Device">
 						</form>
 					</td>
 				</tr>
+			{% endfor %}
 		</table>
 		
 		<h2>Add Device</h2>
@@ -225,25 +237,26 @@ $code:
 				<th>Subject</th>
 				<th>OP</th>
 			</tr>
-			$for iss, aud, sub in allKeysAsTuples:
+			{% for iss, aud, sub in allKeysAsTuples %}
 				<tr>
-					<td>${iss}</td>
-					<td>${aud}</td>
-					<td>${sub}</td>
+					<td>{{iss}}</td>
+					<td>{{aud}}</td>
+					<td>{{sub}}</td>
 					<td>
 						<form action="/devices.html">
 						<input type="hidden" name="action" value="deleteKey">
-						<input type="hidden" name="iss" value="${iss}">
-						<input type="hidden" name="aud" value="${aud}">
-						<input type="hidden" name="sub" value="${sub}">
+						<input type="hidden" name="iss" value="{{iss}}">
+						<input type="hidden" name="aud" value="{{aud}}">
+						<input type="hidden" name="sub" value="{{sub}}">
 						<input type="submit" value="Delete Key">
 						</form>
 					</td>
 				</tr>
+			{% endfor %}
 			
 		</table>
 		
-	$elif action == "newDevice":
+	{% elif action == "newDevice" %}
 		<h1>New Device</h1>
 
 		<table>
@@ -251,55 +264,61 @@ $code:
 				<th>Key</th>
 				<th>Value</th>
 			</tr>
-			$for k, v in kwargs.items():
+			{% for k, v in kwargs.items() %}
 				<tr>
-					<td>${k}</td>
-					<td>${v}</td>
+					<td>{{k}}</td>
+					<td>{{v}}</td>
 				</tr>
+			{% endfor %}
 		</table>
-		$if kwargs.get('deviceTokenId'):
-			<p>If the device is accessed over <i>https://${kwargs.get('hostname')}</i>	you may still need to create a certificate
+		{% if kwargs.get('deviceTokenId') %}
+			<p>If the device is accessed over <i>https://{{kwargs.get('hostname')}}</i>	you may still need to create a certificate
 			using the <a href="/plugin/ca">CA plugin</a>. </p>
+		{% endif %}
 			
-		$if kwargs.get('isSensor'):
+		{% if kwargs.get('isSensor') %}
 			<p>You may want to add actions triggered by this sensor. No GUI for that yet.</p>
 			
 			$ representing = ('devices/%s' % kwargs['name']) if kwargs.get('isDevice') else 'sensors/%s' % kwargs['name']
 			
-			<p>You may want to <a href="/devices.html?action=addActionCap&name=${kwargs['name']}&hostname=${kwargs['hostname']}&representing=${representing}">add an action capability</a> if this sensors triggers actions that are already in the database.</p>
+			<p>You may want to <a href="/devices.html?action=addActionCap&name={{kwargs['name']}}&hostname={{kwargs['hostname']}}&representing={{representing}}">add an action capability</a> if this sensors triggers actions that are already in the database.</p>
+		{% endif %}
 			
 		<p><a href="/devices.html">Return to device listing</a>.</p>
 		
-	$elif action == "addActionCap":
+	{% elif action == "addActionCap" %}
 		<h1>Add action capability for sensor</h1>
 		
 		<p>
-		If device <i>${kwargs['name']}</i> 
-		$if 'hostname' in kwargs:
-			(hostname <i>${kwargs['hostname']}</i>)
+		If device <i>{{kwargs['name']}}</i> 
+		{% if 'hostname' in kwargs %}
+			(hostname <i>{{kwargs['hostname']}}</i>)
+		{% endif %}
 		needs a capability to emit http(s) GET requests to trigger an Igor action use this form:
 		</p>
 
 		<form action="/plugin/device/addAction">
 			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
-			<input type="hidden" name="subject" value="/${kwargs['hostname']}">
+			<input type="hidden" name="subject" value="/{{kwargs['hostname']}}">
 			Action: <select name="obj">
-				$for _, actionName in igor.database.getValues('actions/action/name', token=token):
-					<option value="/action/${actionName}">${actionName}</option>
+				{% for _, actionName in igor.database.getValues('actions/action/name', token=token) %}
+					<option value="/action/{{actionName}}">{{actionName}}</option>
+				{% endfor %}
 			</select>
 			<input type="submit" value="Add Action">
 		</form>
 
 		<p>
-		If device <i>${kwargs['name']}</i> 
-		$if 'hostname' in kwargs:
-			(hostname <i>${kwargs['hostname']}</i>)
+		If device <i>{{kwargs['name']}}</i> 
+		{% if 'hostname' in kwargs %}
+			(hostname <i>{{kwargs['hostname']}}</i>)
+		{% endif %}
 		needs a capability to emit other http(s) requests to Igor action use this form:
 		</p>
 
 		<form action="/plugin/device/addAction">
 			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
-			<input type="hidden" name="subject" value="/${kwargs['hostname']}">
+			<input type="hidden" name="subject" value="/{{kwargs['hostname']}}">
 			Verb: <select name="verb">
 				<option value="get">get</option>
 				<option value="put">put</option>
@@ -311,7 +330,7 @@ $code:
 		</form>
 
 		<p><a href="/devices.html">Return to device listing</a>.</p>
-	$elif action == "addActionResult":
+	{% elif action == "addActionResult" %}
 		<h1>New Action</h1>
 
 		<table>
@@ -319,62 +338,65 @@ $code:
 				<th>Key</th>
 				<th>Value</th>
 			</tr>
-			$for k, v in kwargs.items():
+			{% for k, v in kwargs.items() %}
 				<tr>
-					<td>${k}</td>
-					<td>${v}</td>
+					<td>{{k}}</td>
+					<td>{{v}}</td>
 				</tr>
+			{% endfor %}
 		</table>		
 		<p><a href="/devices.html">Return to device listing</a>.</p>
-	$elif action == "addKey":
+	{% elif action == "addKey" %}
 		<h1>Add Secret Shared Key</h1>
 		
 		<p>Do you want to add a shared secret key for signing capabilities with subject (source)
-		<i>${kwargs.get('sub', 'Igor itself')}</i> and audience (destination) <i>${kwargs.get('aud', 'Igor itself')}</i>?
+		<i>{{kwargs.get('sub', 'Igor itself')}}</i> and audience (destination) <i>{{kwargs.get('aud', 'Igor itself')}}</i>?
 		</p>
 		
 		<form action="/internal/accessControl/createSharedKey">
-			$if kwargs.get('aud'):
-				<input type="hidden" name="aud" value="${kwargs['aud']}">
-			$if kwargs.get('sub'):
-				<input type="hidden" name="sub" value="${kwargs['sub']}">
+			{% if kwargs.get('aud') %}
+				<input type="hidden" name="aud" value="{{kwargs['aud']}}">
+			{% endif %}
+			{% if kwargs.get('sub') %}
+				<input type="hidden" name="sub" value="{{kwargs['sub']}}">
+			{% endif %}
 			<input type="hidden" name="returnTo" value="/devices.html">
 			<input type="submit" value="Create Secret Shared Key">
 		</form>
 		
 		<p><a href="/devices.html">Return to device listing</a>.</p>		
 		
-	$elif action == "deleteKey":
+	{% elif action == "deleteKey" %}
 		<h1>Delete Secret Shared Key</h1>
 		
 		<p>
-		Are you sure you want to delete the secret key that allows subject <em>"${kwargs['sub']}"</em> to contact audience <em>"${kwargs['aud']}"</em> signed by
-		issuer <em>"${kwargs['iss']}"</em>? This action cannot be undone.
+		Are you sure you want to delete the secret key that allows subject <em>"{{kwargs['sub']}}"</em> to contact audience <em>"{{kwargs['aud']}}"</em> signed by
+		issuer <em>"{{kwargs['iss']}}"</em>? This action cannot be undone.
 		</p>
 		
 		<form action="/internal/accessControl/deleteSharedKey">
-			<input type="hidden" name="iss" value="${kwargs['iss']}">
-			<input type="hidden" name="aud" value="${kwargs['aud']}">
-			<input type="hidden" name="sub" value="${kwargs['sub']}">
+			<input type="hidden" name="iss" value="{{kwargs['iss']}}">
+			<input type="hidden" name="aud" value="{{kwargs['aud']}}">
+			<input type="hidden" name="sub" value="{{kwargs['sub']}}">
 			<input type="hidden" name="returnTo" value="/devices.html">
 			<input type="submit" value="Delete Secret Shared Key">
 		</form>
 		
 		<p><a href="/devices.html">Return to device listing</a>.</p>
-	$elif action == "deleteDevice":
+	{% elif action == "deleteDevice" %}
 		<h1>Delete Device</h1>
 		
-		<p>Are you sure you want to delete device <em>${kwargs['name']}</em> completely? This action cannot be undone.</p>
+		<p>Are you sure you want to delete device <em>{{kwargs['name']}}</em> completely? This action cannot be undone.</p>
 		<form action="/plugin/device/delete">
 			<input name="returnTo" type="hidden" value="/devices.html">
-			<input type="hidden" name="name" value="${kwargs['name']}"><br>
-			<input type="hidden" name="hostname" value="${kwargs['hostname']}"><br>
+			<input type="hidden" name="name" value="{{kwargs['name']}}"><br>
+			<input type="hidden" name="hostname" value="{{kwargs['hostname']}}"><br>
 			<input type="submit" value="Delete Device">
 		</form>
 		
 		<p><a href="/devices.html">Return to device listing</a></p>
 
-		
+	{% endif %}
 
 </body>
 </html>

@@ -19,14 +19,16 @@ $code:
 </head>
 <body>
 	<h1>Igor Access Control Failures</h1>
-	$if not igor.internal.accessControl('hasCapabilitySupport'):
+	{% if not igor.internal.accessControl('hasCapabilitySupport') %}
 		<p>This Igor runs without capability support. It is unlikely you see anything interesting here.</p>
+	{% endif %}
 
-	$if igor.app.getSessionItem('user', None):
+	{% if igor.app.getSessionItem('user', None) %}
 		$ user = igor.app.getSessionItem('user')
 		<p>You are logged in as $user.</p>
 	$else:
 		$ user = "admin"
+	{% endif %}
 		
 	<p>
 		This page lists all access control failures (missing capabilities) encountered by Igor in the current invocation.
@@ -41,11 +43,12 @@ $code:
 	</p>
 	
 	$ errors = igor.databaseAccessor.get_key('services/igor/accessFailures', 'application/x-python-object', 'content', token)
-	$if 'accessFailure' in errors:
+	{% if 'accessFailure' in errors %}
 		$ errors = errors['accessFailure']
 		$ if type(errors) != type([]): errors = [errors]
 	$else:
 		$ errors = []
+	{% endif %}
 	
 	<table style="width:100%">
 		<tr>
@@ -58,48 +61,50 @@ $code:
 			<th>...</th>
 			<th>Can fix?</th>
 		</tr>
-		$for error in errors:
+		{% for error in errors %}
 			$ keep = dict(error)
 			<tr>
-				<td>${showtime(error.pop('timestamp', ''))}</td>
+				<td>{{showtime(error.pop('timestamp', ''))}}</td>
 				<td>
-					${error.pop('action', '')}
-					$if 'representing' in error:
-						<br><i>representing ${error.pop('representing', '')}</i>
+					{{error.pop('action', '')}}
+					{% if 'representing' in error %}
+						<br><i>representing {{error.pop('representing', '')}}</i>
 				</td>
-				<td>${error.pop('requestPath', '')}</td>
-				<td>${error.pop('operation', '')}</td>
+				<td>{{error.pop('requestPath', '')}}</td>
+				<td>{{error.pop('operation', '')}}</td>
 				<td>
-					${error.pop('path', '')}
-					$if 'external' in error:
-						<br><i>external=${error.pop('external','')}</i>
-				</td>
-				<td>
-					$for cid in error.pop('capID', []):
-						${cid}<br>
+					{{error.pop('path', '')}}
+					{% if 'external' in error %}
+						<br><i>external={{error.pop('external','')}}</i>
 				</td>
 				<td>
-					$for k, v in error.items():
-						${k}=${str(v)}<br>
+					{% for cid in error.pop('capID', []) %}
+						{{cid}}<br>
+					{% endfor %}
 				</td>
 				<td>
-					$if 'path' in keep and 'operation' in keep:
+					{% for k, v in error.items() %}
+						{{k}}={{str(v)}}<br>
+					{% endfor %}
+				</td>
+				<td>
+					{% if 'path' in keep and 'operation' in keep %}
 						$ kwargs = {keep['operation']:'self'}
-						$if keep.get('external', ''):
+						{% if keep.get('external', '') %}
 							$ kwargs['aud'] = 'to-be-provided'
 						$ myCaps = igor.access.findCompatibleTokens(token, keep['path'], **kwargs)
-						$if myCaps:
+						{% if myCaps %}
 							$ myCaps = '/'.join(myCaps)
-							$if 'action' in keep:
+							{% if 'action' in keep %}
 								<form action="/capabilities.html">
 									<input name="returnTo" type="hidden" value="/accessErrors.html">
 									<input name="action" type="hidden" value="create">
-									<input name="newOwner" type="hidden" value="${keep.get('action','')}">
-									<input name="obj" type="hidden" value="${keep.get('path','')}">
-									$if 'external' in keep:
+									<input name="newOwner" type="hidden" value="{{keep.get('action','')}}">
+									<input name="obj" type="hidden" value="{{keep.get('path','')}}">
+									{% if 'external' in keep %}
 										<input name="aud" type="hidden" value="cut-and-paste-from-obj">
-									<input name="${keep.get('operation', 'unknownOperation')}" type="hidden" value="self">
-									<input name="parentList" type="hidden" value="${myCaps}">
+									<input name="{{keep.get('operation', 'unknownOperation')}}" type="hidden" value="self">
+									<input name="parentList" type="hidden" value="{{myCaps}}">
 									<input type="submit" value="Fix">
 								</form>
 							$else:
@@ -107,16 +112,20 @@ $code:
 									<input name="returnTo" type="hidden" value="/accessErrors.html">
 									<input name="action" type="hidden" value="create">
 									<input name="newOwner" type="hidden" value="/data/identities/$user">
-									<input name="obj" type="hidden" value="${keep.get('path','')}">
-									$if 'external' in keep:
+									<input name="obj" type="hidden" value="{{keep.get('path','')}}">
+									{% if 'external' in keep %}
 										<input name="aud" type="hidden" value="cut-and-paste-from-obj">
-									<input name="${keep.get('operation', 'unknownOperation')}" type="hidden" value="self">
+									<input name="{{keep.get('operation', 'unknownOperation')}}" type="hidden" value="self">
 									<input name="delegate" type="hidden" value="true">
-									<input name="parentList" type="hidden" value="${myCaps}">
+									<input name="parentList" type="hidden" value="{{myCaps}}">
 									<input type="submit" value="Create">
 								</form>
+							{% endif %}
+						{% endif %}
+					{% endif %}
 				</td>
 			</tr>
+		{% endfor %}
 	</table>
 	
 </body>

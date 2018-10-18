@@ -7,6 +7,7 @@ from builtins import object
 import gevent.pywsgi
 from flask import Flask, Response, request, abort, redirect, jsonify, make_response, after_this_request, session
 import werkzeug.exceptions
+import jinja2
 import web.template
 import web.form
 import shlex
@@ -27,6 +28,14 @@ from . import access
 import traceback
 import shelve
 import io
+import urllib.parse
+
+if sys.version_info[0] < 3:
+    def str23compat(item):
+        return unicode(str(item))
+else:
+    def str23compat(item):
+        return str(item)
 
 DEBUG=False
 
@@ -76,19 +85,27 @@ class MyWSGICaller:
             self.data += i
             
     def _buildRequestEnviron(self, url, method, data, headers, env):
-        assert not '?' in url
+        url = str23compat(url)
         assert url[0] == '/'
+        url, query = urllib.parse.splitquery(url)
+        query = query or ""
         rv = {
             'REQUEST_METHOD' : method,
+            'SCRIPT_NAME' : '',
             'PATH_INFO' : url,
-            'QUERY_STRING' : '',
-#            'SCRIPT_NAME' : '',
-#            'REMOTE_ADDR' : '',
-#            'REMOTE_PORT' : '',
-#            'SERVER_PROTOCOL' : '',           
-            'SERVER_NAME' : '',
-            'SERVER_PORT' : '',
-            'wsgi.url_scheme' : '',
+            'QUERY_STRING' : query,
+            # CONTENT_TYPE comes later
+            'SERVER_NAME' : '0.0.0.0',
+            'SERVER_PORT' : '8080',
+            'HTTP_HOST' : '0.0.0.0:8080',
+            'SERVER_PROTOCOL' : 'HTTP/1.1',
+            'wsgi.version' : (1, 0),
+            'wsgi.url_scheme' : 'http',
+            # wsgi.input comes later
+            'wsgi.errors' : sys.stderr,
+            'wsgi.multithread' : True,
+            'wsgi.multiprocess' : True,
+            'wsgi.run_once' : False,
             }
         if headers:
             for k, v in headers.items():
@@ -100,7 +117,13 @@ class MyWSGICaller:
                     rv['HTTP_' + cgiKey] = v
         if env:
             rv.update(env)
-        rv['wsgi.input'] = io.StringIO(data)
+        data = data or ''
+        if isinstance(data, dict):
+            data = urllib.parse.urlencode(data)
+        if isinstance(data, str):
+            data = data.encode('utf8')
+        rv['CONTENT_LENGTH'] = len(data)
+        rv['wsgi.input'] = io.BytesIO(data)
         return rv
                     
 class MyServer:
@@ -146,7 +169,7 @@ class MyServer:
         
     def getHTTPError(self):
         """Return excpetion raised by other methods below (for catching)"""
-        return werkzeug.exceptions.HTTPError
+        return werkzeug.exceptions.HTTPException
         
     def resetHTTPError(self):
         """Clear exception"""
@@ -177,7 +200,6 @@ class MyServer:
             
     def getOperationTraceInfo(self):
         """Return information that helps debugging access control errors in current operation"""
-        assert 0
         rv = {}
         try:
             rv['requestPath'] = request.path
@@ -194,9 +216,7 @@ class MyServer:
         return rv
         
     def request(self, url, method='GET', data=None, headers=None, env=None):
-#        print('xxxjack request.%s(%s, data=%s, headers=%s, env=%s)' % (method, url, data, headers, env))
         resp = MyWSGICaller(_WEBAPP.wsgi_app, url=url, method=method, data=data, headers=headers, env=env)
-#        print('xxxjack wsgi_app returned %s' % repr(resp.data))
         return resp
         
 
@@ -244,28 +264,44 @@ def get_static(name):
     # Otherwise try a template
     filename = os.path.join(programDir, 'template', name)
     if os.path.exists(filename):
-        mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        #
-        # xxxjack note that the following set of globals basically exports the
-        # whole object hierarchy to templates. This means that a template has
-        # unlimited powers. This needs to be fixed at some time, so templates
-        # can come from untrusted sources.
-        #
-        globals = dict(
-            igor=_SERVER.igor,
-            token=token,
-            json=json,
-            str=str,
-            repr=repr,
-            time=time,
-            type=type
-            )                
-        template = web.template.frender(filename, globals=globals)
-        try:
-            data = template(**dict(allArgs))
-        except xmlDatabase.DBAccessError:
-            myWebError("401 Unauthorized (template rendering)", 401)
-        return Response(str(data), mimetype=mimetype)
+        # See whether it is a Templetor template
+        fp = open(filename)
+        firstLine = fp.readline()
+        fp.close()
+        if firstLine[:5] == '$def ':
+            mimetype = mimetypes.guess_type(filename)[0] or 'text/html'
+            #
+            # xxxjack note that the following set of globals basically exports the
+            # whole object hierarchy to templates. This means that a template has
+            # unlimited powers. This needs to be fixed at some time, so templates
+            # can come from untrusted sources.
+            #
+            globals = dict(
+                igor=_SERVER.igor,
+                token=token,
+                json=json,
+                str=str,
+                repr=repr,
+                time=time,
+                type=type
+                )                
+            template = web.template.frender(filename, globals=globals)
+            try:
+                data = template(**dict(allArgs))
+            except xmlDatabase.DBAccessError:
+                myWebError("401 Unauthorized (template rendering)", 401)
+            return Response(str(data), mimetype=mimetype)
+        elif filename.endswith('.html'):
+            # Presume its a Jinja2 template
+            env = jinja2.Environment(loader=jinja2.PackageLoader('igor', 'template'))
+            env.globals['igor'] = _SERVER.igor
+            env.globals['json'] = json
+            env.globals['time'] = time
+            template = env.get_template(name)
+            allArgs['token'] = token
+            data = template.render(**dict(allArgs))
+            return Response(data, mimetype="text/html")
+            
     abort(404)
 
 
@@ -297,11 +333,11 @@ def get_pluginscript(pluginName, scriptName):
         env['IGORSERVER_URL'] = myUrl
         if myUrl[:6] == 'https:':
             env['IGORSERVER_NOVERIFY'] = 'true'
-    except werkzeug.exceptions.HTTPError:
+    except werkzeug.exceptions.HTTPException:
         pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
     try:
         pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except werkzeug.exceptions.HTTPError:
+    except werkzeug.exceptions.HTTPException:
         pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         pluginData = {}
     # Put all other arguments into the environment with an "igor_" prefix
@@ -319,7 +355,7 @@ def get_pluginscript(pluginName, scriptName):
         user = allArgs['user']
         try:
             userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', token)
-        except werkzeug.exceptions.HTTPError:
+        except werkzeug.exceptions.HTTPException:
             pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             userData = {}
         if userData:
@@ -475,7 +511,7 @@ def get_plugin(pluginName, methodName='index'):
     # Find plugindata and per-user plugindata
     try:
         pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except werkzeug.exceptions.HTTPError:
+    except werkzeug.exceptions.HTTPException:
         pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         pluginData = {}
     try:
@@ -496,7 +532,7 @@ def get_plugin(pluginName, methodName='index'):
         user = allArgs['user']
         try:
             userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
-        except werkzeug.exceptions.HTTPError:
+        except werkzeug.exceptions.HTTPException:
             pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
         else:
             allArgs['userData'] = userData

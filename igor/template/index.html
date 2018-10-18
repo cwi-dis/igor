@@ -22,10 +22,10 @@
 	</p>
 	
 	<h1>Access Control</h1>
-	
-	{% if igor.app.getSessionItem('user', None) %}
+	{% set user = igor.app.getSessionItem('user', None) %}
+	{% if user %}
 		<p>
-			You are logged in as {{igor.app.getSessionItem('user', None)}}. To log out (or log in with different credentials) please visit the <a href="/login">login page</a>.
+			You are logged in as {{user}}. To log out (or log in with different credentials) please visit the <a href="/login">login page</a>.
 		</p>
 	{% else %}
 		<p>

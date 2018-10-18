@@ -25,16 +25,16 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				You are logged in as {{igor.igor.app.getSessionItem('user')}}.
 				{% if cid == None %}
 					Here is the list of all capabilities assigned to your user identity.
-				$else:
+				{% else %}
 					Here is the information on capability {{cid}}.
 				{% endif %}
 			</p>
-		$else:
+		{% else %}
 			<p>
 				You are not logged in.
 				{% if cid == None %}
 					Here is the set of default capabilities you have access to.
-				$else:
+				{% else %}
 					Here is the information on capability {{cid}}.
 				{% endif %}
 			</p>
@@ -51,11 +51,11 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<th>...</th>
 			</tr>
 		
-			$ capList = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)
+			{% set capList = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid) %}
 			{% for cap in capList %}
-				$ cid = cap.pop('cid', '')
-				$ comment = cap.pop('comment', '')
-				$ childIDs = cap.pop('child', [])
+				{% set cid = cap.pop('cid', '') %}
+				{% set comment = cap.pop('comment', '') %}
+				{% set childIDs = cap.pop('child', []) %}
 				$ if type(childIDs) != type([]): childIDs = [childIDs]
 				<tr>
 					<td>{{cid}}
@@ -82,7 +82,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 						{% if cap.pop('owner', '') %}
 							<a href="/capabilities.html?action=transfer&cid={{cid}}">transfer</a>
 						{% endif %}
-						$ delegate = cap.pop('delegate', '')
+						{% set delegate = cap.pop('delegate', '') %}
 						{% if delegate %}
 							<br>
 							<a href="/capabilities.html?action=delegate&cid={{cid}}">delegate</a>
@@ -111,7 +111,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	{% elif action == "delegate" %}
 		<h1>Delegate capability {{cid}}</h1>
 		
-		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		{% set cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0] %}
 		
 		<form action="/internal/accessControl/newToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
@@ -219,7 +219,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				{% for right in ['get', 'put', 'post', 'delete'] %}
 					<tr>
 						<td>{{right}}</td>
-						$ rightValue = kwargs.get(right, '')
+						{% set rightValue = kwargs.get(right, '') %}
 						<td>
 							<select name="{{right}}">
 								$ selected = ' selected' if not rightValue else ''
@@ -256,7 +256,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	{% elif action == "transfer" %}
 		<h1>Delegate capability {{cid}}</h1>
 		
-		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
+		{% set cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0] %}
 		
 		<form action="/internal/accessControl/passToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
@@ -300,9 +300,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	{% elif action == "export" %}
 		<h1>Export capability {{cid}}</h1>
 		
-		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0]
-		$ cap.pop('owner', None)
-		$ cap.pop('parent', None)
+		{% set cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0] %}
+		{% set cap.pop('owner', None) %}
+		{% set cap.pop('parent', None) %}
 		<form action="/internal/accessControl/exportToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
 			<table>
@@ -315,14 +315,14 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td>Subject</td>
 					<td>
-						$ subjectList = igor.internal.accessControl(subcommand='getSubjectList')
+						{% set subjectList = igor.internal.accessControl(subcommand='getSubjectList') %}
 						{% if subjectList %}
 							<select name="subject" required>
 							{% for sub in subjectList %}
 								<option value="$sub">$sub</option>
 							{% endfor %}
 							</select>
-						$else:
+						{% else %}
 							<input name="subject" type="text" value="">
 						{% endif %}
 					</td>
@@ -347,7 +347,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 						<td>{{'yes' if cap.get('delegate') else 'no'}}</td>
 				</tr>			
 				{% for right in ['get', 'put', 'post', 'delete'] %}
-					$ rvalue = cap.pop(right, None)
+					{% set rvalue = cap.pop(right, None) %}
 					<tr>
 						<td>{{right}}</td>
 						$ disabled = '' if rvalue else ' disabled'
@@ -390,7 +390,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	{% elif action == "revoke" %}
 		<h1>Revoke capability {{childCid}}</h1>
 		
-		$ cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=childCid)[0]
+		{% set cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=childCid)[0] %}
 		
 		<form action="/internal/accessControl/revokeToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
@@ -422,7 +422,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<tr>
 					<td>Children</td>
 					<td>
-						$  childIDs = cap.pop('child', [])
+						{% set  childIDs = cap.pop('child', []) %}
 						$ if type(childIDs) != type([]): childIDs = [childIDs]
 						{% for gcid in childIDs %}
 							{{gcid}}
@@ -447,7 +447,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 	{% elif action == "listKeys" %}
 		<h1>Shared secret keys issued by this Igor</h1>
 		
-		$ keys = igor.internal.accessControl(subcommand='getKeyList', token=token)
+		{% set keys = igor.internal.accessControl(subcommand='getKeyList', token=token) %}
 		<table>
 			<tr>
 				<th>Issuer</th>
@@ -457,9 +457,9 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				<th>Action:</th>
 			</tr>
 			{% for key in keys %}
-				$ iss = key.pop('iss')
-				$ sub = key.pop('sub', '')
-				$ aud = key.pop('aud', '')
+				{% set iss = key.pop('iss') %}
+				{% set sub = key.pop('sub', '') %}
+				{% set aud = key.pop('aud', '') %}
 				<tr>
 					<td>{{iss}}</td>
 					<td>{{sub}}</td>

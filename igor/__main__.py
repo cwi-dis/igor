@@ -326,7 +326,7 @@ class IgorInternal(object):
         if lastSuccess:
             _ = self.igor.databaseAccessor.put_key(key + '/lastSuccess', 'application/x-python-object', None, lastSuccess, 'application/x-python-object', token)
         if alive:
-            _ = self.igor.databaseAccessor.put_key(key + '/ignoreErrorsUntil', 'application/x-python-object', None, None, 'application/x-python-object', token)
+            _ = self.igor.databaseAccessor.put_key(key + '/ignoreErrorUntil', 'application/x-python-object', None, None, 'application/x-python-object', token)
             resultData = ''
         else:
             _ = self.igor.databaseAccessor.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)

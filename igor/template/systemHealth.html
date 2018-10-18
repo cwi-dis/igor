@@ -10,25 +10,39 @@
 	}
 	</style>
 </head>
-{#
-$code:
-	def ago(path):
-		value = igor.database.getValue(path, token)
-		if not value: return ''
-		value = igor.database.getValue('igor_timestamp()-igor_timestamp('+path+')', token)
-		rv = float(value)
-		if rv < 60: return str(int(rv)) + 's'
-		rv /= 60
-		if rv < 60: return str(int(rv)) + 'm'
-		rv /= 60
-		if rv < 24: return str(int(rv)) + 'h'
-		rv /= 24
-		if rv < 7: return str(int(rv)) + 'd'
-		rv /= 7
-		if rv < 52: return str(int(rv)) + 'w'
-		rv /= 52
-		return str(int(rv))+'y'
-#}
+{% macro ago(path) -%}
+		{% set value = igor.database.getValue(path, token) %}
+		{% if value %}
+			{% set value = int(float(igor.database.getValue('igor_timestamp()-igor_timestamp('+path+')', token))) %}
+			{% if value < 60 %}
+				{{value}}s
+			{% else %}
+				{% set value = value // 60 %}
+				{% if value < 60 %}
+					{{value}}m
+				{% else %}
+					{% set value = value // 60 %}
+					{% if value < 60 %}
+						{{value}}h
+					{% else %}
+						{% set value = value // 24 %}
+						{% if value < 60 %}
+							{{value}}d
+						{% else %}
+							{% set value = value // 7 %}
+							{{value}}w
+						{% endif %}
+					{% endif %}
+				{% endif %}
+			{% endif %}
+		{% endif %}
+{%- endmacro %}
+{% macro muted(entry) -%}
+	{% set m = igor.database.getValue(entry, token) %}
+	{% if m %}
+		{{igor.database.getValue('igor_dateTime(' + entry + ')', token)}}
+	{% endif %}
+{%- endmacro %}
 <body>
 	<h1>Igor System Health</h1>
 	
@@ -75,13 +89,7 @@ $code:
 				
 				{% set msg = igor.database.getValue('/data/status/igor/' + s.tagName + '/errorMessage', token) %}
 				<td>{{msg}}</td>
-{#				
-				$code:
-					muted = igor.database.getValue('/data/status/igor/' + s.tagName + '/ignoreErrorUntil', token)
-					if muted:
-						muted = igor.database.getValue('igor_dateTime(/data/status/igor/' + s.tagName + '/ignoreErrorUntil)', token)
-#}
-				<td>{{muted}}</td>
+				<td>{{muted('/data/status/igor/' + s.tagName + '/ignoreErrorUntil')}}</td>
 				
 				{% if msg %}
 					<td>
@@ -122,13 +130,7 @@ $code:
 
 				{% set msg = igor.database.getValue('/data/status/services/' + s.tagName + '/errorMessage', token) %}
 				<td>{{msg}}</td>
-{#
-				$code:
-					muted = igor.database.getValue('/data/status/services/' + s.tagName + '/ignoreErrorUntil', token)
-					if muted:
-						muted = igor.database.getValue('igor_dateTime(/data/status/services/' + s.tagName + '/ignoreErrorUntil)', token)
-#}
-				<td>{{muted}}</td>
+				<td>{{muted('/data/status/services/' + s.tagName + '/ignoreErrorUntil')}}</td>
 
 				{% if msg %}
 					<td>
@@ -170,13 +172,7 @@ $code:
 
 				{% set msg = igor.database.getValue('/data/status/sensors/' + s.tagName + '/errorMessage', token) %}
 				<td>{{msg}}</td>
-{#
-				$code:
-					muted = igor.database.getValue('/data/status/sensors/' + s.tagName + '/ignoreErrorUntil', token)
-					if muted:
-						muted = igor.database.getValue('igor_dateTime(/data/status/sensors/' + s.tagName + '/ignoreErrorUntil)', token)
-#}
-				<td>{{muted}}</td>
+				<td>{{muted('/data/status/sensors/' + s.tagName + '/ignoreErrorUntil')}}</td>
 
 				{% if msg %}
 					<td>
@@ -217,13 +213,7 @@ $code:
 
 				{% set msg = igor.database.getValue('/data/status/devices/' + s.tagName + '/errorMessage', token) %}
 				<td>{{msg}}</td>
-{#
-				$code:
-					muted = igor.database.getValue('/data/status/devices/' + s.tagName + '/ignoreErrorUntil', token)
-					if muted:
-						muted = igor.database.getValue('igor_dateTime(/data/status/devices/' + s.tagName + '/ignoreErrorUntil)', token)
-#}					
-				<td>{{muted}}</td>
+				<td>{{muted('/data/status/devices/' + s.tagName + '/ignoreErrorUntil')}}</td>
 
 				{% if msg %}
 					<td>

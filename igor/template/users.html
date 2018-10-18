@@ -12,7 +12,7 @@
 </head>
 <body>
 
-	{% if action == None or action == 'list' %}
+	{% if not action or action == 'list' %}
 		<h1>Igor Users</h1>
 	
 		{% set currentUser = igor.app.getSessionItem('user','') %}
@@ -90,6 +90,8 @@
 		</form>
 		
 		<p><a href="/users.html">Return to user listing</a></p>
+	{% else %}
+		<p><em>Error</em> Unknown action {{action}}</p>
 	{% endif %}
 		
 

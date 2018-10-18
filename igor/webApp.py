@@ -227,6 +227,8 @@ class MyServer:
             self.jinjaEnv.globals['igor'] = _SERVER.igor
             self.jinjaEnv.globals['json'] = json
             self.jinjaEnv.globals['time'] = time
+            self.jinjaEnv.globals['float'] = float
+            self.jinjaEnv.globals['int'] = int
         template = self.jinjaEnv.get_template(name)
         return template
 

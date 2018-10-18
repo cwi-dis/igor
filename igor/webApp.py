@@ -121,7 +121,7 @@ class MyWSGICaller:
             data = urllib.parse.urlencode(data)
         if isinstance(data, str):
             data = data.encode('utf8')
-            rv['CONTENT_LENGTH'] = len(data)
+        rv['CONTENT_LENGTH'] = len(data)
         rv['wsgi.input'] = io.BytesIO(data)
         return rv
                     

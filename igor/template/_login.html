@@ -8,18 +8,19 @@ $def with (form, user, message)
 <body>
 	<h1>Igor Login</h1>
 	
-	$if user:
+	{% if user %}
 		<p>
 			You are currently logged in as $user.
 		</p>
 		<form action="/login">
 			<input type="submit" name="logout" value="logout">
 		</form>
-
-	$if message:
+	{% endif %}
+	{% if message %}
 		<p>
 			<em>$message</em>
 		</p>
+	{% endif %}
 		
 	<form action="/login" method="post">
 		$:form.render()

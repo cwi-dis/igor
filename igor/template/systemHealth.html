@@ -1,4 +1,3 @@
-$def with (**kwargs)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,6 +10,7 @@ $def with (**kwargs)
 	}
 	</style>
 </head>
+{#
 $code:
 	def ago(path):
 		value = igor.database.getValue(path, token)
@@ -28,29 +28,32 @@ $code:
 		if rv < 52: return str(int(rv)) + 'w'
 		rv /= 52
 		return str(int(rv))+'y'
+#}
 <body>
 	<h1>Igor System Health</h1>
 	
 	<p>
-		Igor has been running since ${igor.database.getValue('igor_dateTime(/data/services/igor/startTime)', token)},
-		and was rebooted ${igor.database.getValue('/data/services/igor/rebootCount', token)} times during its lifetime.
+		Igor has been running since {{igor.database.getValue('igor_dateTime(/data/services/igor/startTime)', token)}},
+		and was rebooted {{igor.database.getValue('/data/services/igor/rebootCount', token)}} times during its lifetime.
 	</p>
 	
 	<h2>Exceptional conditions</h2>
 	
-	$ messages = igor.database.getValues('/data/environment/systemHealth/messages/*', token)
-	$if messages:
+	{% set messages = igor.database.getValues('/data/environment/systemHealth/messages/*', token) %}
+	{% if messages %}
 		<p>The following exceptional conditions (for services, sensors and actuators) are currently noted:</p>
 		<ul>
-			$for xp, msg in messages:
-				<li>$msg</li>
+			{% for xp, msg in messages %}
+				<li>{{msg}}</li>
+			{% endfor %}
 		</ul>
-	$else:
+	{% else %}
 		<p>Igor is currently not aware of any exceptional conditions (for services, sensors and actuators). </p>
+	{% endif %}
 		
 	<h2>Igor selfcheck status</h2>
 	
-	$ functionalities = igor.database.getElements('/data/status/igor/*', 'get', token)
+	{% set functionalities = igor.database.getElements('/data/status/igor/*', 'get', token) %}
 	<table style="width:100%">
 		<tr>
 			<th>Functionality</th>
@@ -62,38 +65,41 @@ $code:
 			<th>Ignored until</th>
 			<th>Ignore for:</th>
 		</tr>
-		$for s in functionalities:
+		{% for s in functionalities %}
 			<tr>
-				<td>$s.tagName</td>
-				<td>${igor.database.getValue('/data/status/igor/' + s.tagName + '/alive', token)}</td>
-				<td>$ago('/data/status/igor/' + s.tagName + '/lastActivity')</td>
-				<td>$ago('/data/status/igor/' + s.tagName + '/lastSuccess')</td>
-				<td>$ago('/data/status/igor/' + s.tagName + '/lastFailure')</td>
+				<td>{{s.tagName}}</td>
+				<td>{{igor.database.getValue('/data/status/igor/' + s.tagName + '/alive', token)}}</td>
+				<td>{{ago('/data/status/igor/' + s.tagName + '/lastActivity')}}</td>
+				<td>{{ago('/data/status/igor/' + s.tagName + '/lastSuccess')}}</td>
+				<td>{{ago('/data/status/igor/' + s.tagName + '/lastFailure')}}</td>
 				
-				$ msg = igor.database.getValue('/data/status/igor/' + s.tagName + '/errorMessage', token)
-				<td>$msg</td>
-				
+				{% set msg = igor.database.getValue('/data/status/igor/' + s.tagName + '/errorMessage', token) %}
+				<td>{{msg}}</td>
+{#				
 				$code:
 					muted = igor.database.getValue('/data/status/igor/' + s.tagName + '/ignoreErrorUntil', token)
 					if muted:
 						muted = igor.database.getValue('igor_dateTime(/data/status/igor/' + s.tagName + '/ignoreErrorUntil)', token)
-				<td>$muted</td>
+#}
+				<td>{{muted}}</td>
 				
-				$if msg:
+				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=86400&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=604800&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=igor/${s.tagName}&duration=2592000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=86400&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=604800&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=2592000&returnTo=/systemHealth.html">1m</a>
 					</td>
-				$else:
+				{% else %}
 					<td></td>
+				{% endif %}
 			</tr>
+		{% endfor %}
 	</table>
 		
 	<h2>Service status</h2>
 	
-	$ services = igor.database.getElements('/data/status/services/*', 'get', token)
+	{% set services = igor.database.getElements('/data/status/services/*', 'get', token) %}
 	<table style="width:100%">
 		<tr>
 			<th>Service</th>
@@ -105,40 +111,43 @@ $code:
 			<th>Ignored until</th>
 			<th>Ignore for:</th>
 		</tr>
-		$for s in services:
+		{% for s in services %}
 			<tr>
-				<td>$s.tagName</td>
-				<td>${igor.database.getValue('/data/status/services/' + s.tagName + '/alive', token)}</td>
+				<td>{{s.tagName}}</td>
+				<td>{{igor.database.getValue('/data/status/services/' + s.tagName + '/alive', token)}}</td>
 				
-				<td>$ago('/data/status/services/' + s.tagName + '/lastActivity')</td>
-				<td>$ago('/data/status/services/' + s.tagName + '/lastSuccess')</td>
-				<td>$ago('/data/status/services/' + s.tagName + '/lastFailure')</td>
+				<td>{{ago('/data/status/services/' + s.tagName + '/lastActivity')}}</td>
+				<td>{{ago('/data/status/services/' + s.tagName + '/lastSuccess')}}</td>
+				<td>{{ago('/data/status/services/' + s.tagName + '/lastFailure')}}</td>
 
-				$ msg = igor.database.getValue('/data/status/services/' + s.tagName + '/errorMessage', token)
-				<td>$msg</td>
-
+				{% set msg = igor.database.getValue('/data/status/services/' + s.tagName + '/errorMessage', token) %}
+				<td>{{msg}}</td>
+{#
 				$code:
 					muted = igor.database.getValue('/data/status/services/' + s.tagName + '/ignoreErrorUntil', token)
 					if muted:
 						muted = igor.database.getValue('igor_dateTime(/data/status/services/' + s.tagName + '/ignoreErrorUntil)', token)
-				<td>$muted</td>
+#}
+				<td>{{muted}}</td>
 
-				$if msg:
+				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=36000&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=864000&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=services/${s.tagName}&duration=25920000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=36000&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=864000&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=25920000&returnTo=/systemHealth.html">1m</a>
 					</td>
-				$else:
+				{% else %}
 					<td></td>
+				{% endif %}
 			</tr>
+		{% endfor %}
 	</table>
 		
 		
 	<h2>Sensor status</h2>
 	
-	$ sensors = igor.database.getElements('/data/status/sensors/*', 'get', token)
+	{% set sensors = igor.database.getElements('/data/status/sensors/*', 'get', token) %}
 	<table style="width:100%">
 		<tr>
 			<th>Sensor Class</th>
@@ -150,39 +159,42 @@ $code:
 			<th>Ignored until</th>
 			<th>Ignore for:</th>
 		</tr>
-		$for s in sensors:
+		{% for s in sensors %}
 			<tr>
-				<td>$s.tagName</td>
-				<td>${igor.database.getValue('/data/status/sensors/' + s.tagName + '/alive', token)}</td>
+				<td>{{s.tagName}}</td>
+				<td>{{igor.database.getValue('/data/status/sensors/' + s.tagName + '/alive', token)}}</td>
 				
-				<td>$ago('/data/status/sensors/' + s.tagName + '/lastActivity')</td>
-				<td>$ago('/data/status/sensors/' + s.tagName + '/lastSuccess')</td>
-				<td>$ago('/data/status/sensors/' + s.tagName + '/lastFailure')</td>
+				<td>{{ago('/data/status/sensors/' + s.tagName + '/lastActivity')}}</td>
+				<td>{{ago('/data/status/sensors/' + s.tagName + '/lastSuccess')}}</td>
+				<td>{{ago('/data/status/sensors/' + s.tagName + '/lastFailure')}}</td>
 
-				$ msg = igor.database.getValue('/data/status/sensors/' + s.tagName + '/errorMessage', token)
-				<td>$msg</td>
-
+				{% set msg = igor.database.getValue('/data/status/sensors/' + s.tagName + '/errorMessage', token) %}
+				<td>{{msg}}</td>
+{#
 				$code:
 					muted = igor.database.getValue('/data/status/sensors/' + s.tagName + '/ignoreErrorUntil', token)
 					if muted:
 						muted = igor.database.getValue('igor_dateTime(/data/status/sensors/' + s.tagName + '/ignoreErrorUntil)', token)
-				<td>$muted</td>
+#}
+				<td>{{muted}}</td>
 
-				$if msg:
+				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=864000&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/${s.tagName}&duration=25920000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=864000&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=25920000&returnTo=/systemHealth.html">1m</a>
 					</td>
-				$else:
+				{% else %}
 					<td></td>
+				{% endif %}
 			</tr>
+		{% endfor %}
 	</table>
 		
 	<h2>Device status</h2>
 	
-	$ devices = igor.database.getElements('/data/status/devices/*', 'get', token)
+	{% set devices = igor.database.getElements('/data/status/devices/*', 'get', token) %}
 	<table style="width:100%">
 		<tr>
 			<th>Device</th>
@@ -194,34 +206,37 @@ $code:
 			<th>Ignored until</th>
 			<th>Ignore for:</th>
 		</tr>
-		$for s in devices:
+		{% for s in devices %}
 			<tr>
-				<td>$s.tagName</td>
-				<td>${igor.database.getValue('/data/status/devices/' + s.tagName + '/alive', token)}</td>
+				<td>{{s.tagName}}</td>
+				<td>{{igor.database.getValue('/data/status/devices/' + s.tagName + '/alive', token)}}</td>
 
-				<td>$ago('/data/status/devices/' + s.tagName + '/lastActivity')</td>
-				<td>$ago('/data/status/devices/' + s.tagName + '/lastSuccess')</td>
-				<td>$ago('/data/status/devices/' + s.tagName + '/lastFailure')</td>
+				<td>{{ago('/data/status/devices/' + s.tagName + '/lastActivity')}}</td>
+				<td>{{ago('/data/status/devices/' + s.tagName + '/lastSuccess')}}</td>
+				<td>{{ago('/data/status/devices/' + s.tagName + '/lastFailure')}}</td>
 
-				$ msg = igor.database.getValue('/data/status/devices/' + s.tagName + '/errorMessage', token)
-				<td>$msg</td>
+				{% set msg = igor.database.getValue('/data/status/devices/' + s.tagName + '/errorMessage', token) %}
+				<td>{{msg}}</td>
+{#
 				$code:
 					muted = igor.database.getValue('/data/status/devices/' + s.tagName + '/ignoreErrorUntil', token)
 					if muted:
 						muted = igor.database.getValue('igor_dateTime(/data/status/devices/' + s.tagName + '/ignoreErrorUntil)', token)
-					
-				<td>$muted</td>
+#}					
+				<td>{{muted}}</td>
 
-				$if msg:
+				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=3600&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=86400&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=604800&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=devices/${s.tagName}&duration=2592000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=3600&returnTo=/systemHealth.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=86400&returnTo=/systemHealth.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=604800&returnTo=/systemHealth.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=2592000&returnTo=/systemHealth.html">1m</a>
 					</td>
-				$else:
+				{% else %}
 					<td></td>
+				{% endif %}
 			</tr>
+		{% endfor %}
 	</table>
 		
 

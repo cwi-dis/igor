@@ -1,4 +1,3 @@
-$def with (action=None, username=None, **kwargs)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,20 +12,22 @@ $def with (action=None, username=None, **kwargs)
 </head>
 <body>
 
-	$if action == None or action == 'list':
+	{% if action == None or action == 'list' %}
 		<h1>Igor Users</h1>
 	
-		$ currentUser = igor.app.getSessionItem('user','')
-		$if currentUser:
+		{% set currentUser = igor.app.getSessionItem('user','') %}
+		{% if currentUser %}
 			<p>
-				You are logged in as $currentUser.
-				$if currentUser != 'admin':
+				You are logged in as {{currentUser}}.
+				{% if currentUser != 'admin' %}
 					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
+				{% endif %}
 			</p>
-		$else:
+		{% else %}
 			<p>
 				You are not logged in. This page will probably not render correctly.
 			</p>
+		{% endif %}
 		
 		<table style="width:100%">
 			<tr>
@@ -36,20 +37,23 @@ $def with (action=None, username=None, **kwargs)
 				<th>Operation</th>
 			</tr>
 		
-			$ userList = igor.database.getElements('/data/identities/*', 'get', token)
-			$for user in userList:
-				$if not ':' in user.tagName:
-					$ username = user.tagName
+			{% set userList = igor.database.getElements('/data/identities/*', 'get', token) %}
+			{% for user in userList %}
+				{% if not ':' in user.tagName %}
+					{% set username = user.tagName %}
 					<tr>
-						<td>${username}</td>
-						<td><a href="/data/identities/${username}">identities/${username}</a></td>
-						<td><a href="/data/people/${username}">people/${username}</a></td>
+						<td>{{username}}</td>
+						<td><a href="/data/identities/{{username}}">identities/{{username}}</a></td>
+						<td><a href="/data/people/{{username}}">people/{{username}}</a></td>
 						<td>
-							$if username != 'admin' and username != currentUser:
-								<a href="/users.html?action=delete&username=${username}">delete</a><br>
-							<a href="/users.html?action=password&username=${username}">change password</a>
+							{% if username != 'admin' and username != currentUser %}
+								<a href="/users.html?action=delete&username={{username}}">delete</a><br>
+							{% endif %}
+							<a href="/users.html?action=password&username={{username}}">change password</a>
 						</td>
 					</tr>
+				{% endif %}
+			{% endfor %}
 		</table>
 		
 		<h1>Add User</h1>
@@ -62,30 +66,31 @@ $def with (action=None, username=None, **kwargs)
 			<input type="submit" value="Add">
 		</form>
 		
-	$elif action == "delete":
+	{% elif action == "delete" %}
 		<h1>Delete User</h1>
 		
-		<p>Are you sure you want to delete user <b>${username}</b>? This action cannot be undone.</p>
+		<p>Are you sure you want to delete user <b>{{username}}</b>? This action cannot be undone.</p>
 		<form action="/plugin/user/delete">
 			<input name="returnTo" type="hidden" value="/users.html">
-			<input type="hidden" name="username" value="${username}"><br>
+			<input type="hidden" name="username" value="{{username}}"><br>
 			<input type="submit" value="Delete">
 		</form>
 		
 		<p><a href="/users.html">Return to user listing</a></p>
 
-	$elif action == "password":
+	{% elif action == "password" %}
 		<h1>Change Password</h1>
 		
-		<p>Are you sure you want to change the password for user <b>${username}</b>? This action cannot be undone.</p>
+		<p>Are you sure you want to change the password for user <b>{{username}}</b>? This action cannot be undone.</p>
 		<form action="/plugin/user/password">
 			<input name="returnTo" type="hidden" value="/users.html">
-			<input type="hidden" name="username" value="${username}"><br>
+			<input type="hidden" name="username" value="{{username}}"><br>
 			New password: <input name="password" type="password"></br>
 			<input type="submit" value="Change Password">
 		</form>
 		
 		<p><a href="/users.html">Return to user listing</a></p>
+	{% endif %}
 		
 
 </body>

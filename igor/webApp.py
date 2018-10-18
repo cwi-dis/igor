@@ -135,6 +135,7 @@ class MyServer:
         self.port = None
         self.keyfile = None
         self.certfile = None
+        self.jinjaEnv = None
     
     def run(self, port=8080):
         self.port = port
@@ -219,6 +220,15 @@ class MyServer:
         resp = MyWSGICaller(_WEBAPP.wsgi_app, url=url, method=method, data=data, headers=headers, env=env)
         return resp
         
+    def getJinjaTemplate(self, name):
+        """Return a Jinja2 template"""
+        if self.jinjaEnv == None:
+            self.jinjaEnv = jinja2.Environment(loader=jinja2.PackageLoader('igor', 'template'))
+            self.jinjaEnv.globals['igor'] = _SERVER.igor
+            self.jinjaEnv.globals['json'] = json
+            self.jinjaEnv.globals['time'] = time
+        template = self.jinjaEnv.get_template(name)
+        return template
 
 class _DummyReply:
     def __init__(self):
@@ -293,11 +303,7 @@ def get_static(name):
             return Response(str(data), mimetype=mimetype)
         elif filename.endswith('.html'):
             # Presume its a Jinja2 template
-            env = jinja2.Environment(loader=jinja2.PackageLoader('igor', 'template'))
-            env.globals['igor'] = _SERVER.igor
-            env.globals['json'] = json
-            env.globals['time'] = time
-            template = env.get_template(name)
+            template = _SERVER.getJinjaTemplate(name)
             allArgs['token'] = token
             data = template.render(**dict(allArgs))
             return Response(data, mimetype="text/html")
@@ -575,14 +581,9 @@ def getOrPost_login():
             _SERVER.igor.app.setSessionItem('user', username)
             return redirect('/')
         message = "Password and/or username incorrect."
-    form = web.form.Form(
-        web.form.Textbox('username'),
-        web.form.Password('password'),
-        web.form.Button('login'),
-        )
-    programDir = os.path.dirname(__file__)
-    template = web.template.frender(os.path.join(programDir, 'template', '_login.html'))
-    return str(template(form, _SERVER.igor.app.getSessionItem('user'), message))
+    template = _SERVER.getJinjaTemplate('_login.html')
+    data = template.render(**dict(allArgs))
+    return Response(data, mimetype="text/html")
 
 
 @_WEBAPP.route('/data/', defaults={'name':''})

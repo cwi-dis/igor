@@ -1,4 +1,3 @@
-$def with (form, user, message)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,10 +6,10 @@ $def with (form, user, message)
 </head>
 <body>
 	<h1>Igor Login</h1>
-	
+	{% set user = igor.app.getSessionItem('user', None) %}
 	{% if user %}
 		<p>
-			You are currently logged in as $user.
+			You are currently logged in as {{user}}.
 		</p>
 		<form action="/login">
 			<input type="submit" name="logout" value="logout">
@@ -18,12 +17,16 @@ $def with (form, user, message)
 	{% endif %}
 	{% if message %}
 		<p>
-			<em>$message</em>
+			<em>{{message}}</em>
 		</p>
 	{% endif %}
 		
 	<form action="/login" method="post">
-		$:form.render()
+		Username:<br>
+		<input type="text" name="username"><br>
+		Password:<br>
+		<input type="password" name="password"><br>
+		<input type="submit" value="Login">
 	</form>
 </body>
 </html>

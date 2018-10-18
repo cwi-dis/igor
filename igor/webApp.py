@@ -7,6 +7,7 @@ from builtins import object
 import gevent.pywsgi
 from flask import Flask, Response, request, abort, redirect, jsonify, make_response, after_this_request, session
 import werkzeug.exceptions
+import jinja2
 import web.template
 import web.form
 import shlex
@@ -263,28 +264,44 @@ def get_static(name):
     # Otherwise try a template
     filename = os.path.join(programDir, 'template', name)
     if os.path.exists(filename):
-        mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        #
-        # xxxjack note that the following set of globals basically exports the
-        # whole object hierarchy to templates. This means that a template has
-        # unlimited powers. This needs to be fixed at some time, so templates
-        # can come from untrusted sources.
-        #
-        globals = dict(
-            igor=_SERVER.igor,
-            token=token,
-            json=json,
-            str=str,
-            repr=repr,
-            time=time,
-            type=type
-            )                
-        template = web.template.frender(filename, globals=globals)
-        try:
-            data = template(**dict(allArgs))
-        except xmlDatabase.DBAccessError:
-            myWebError("401 Unauthorized (template rendering)", 401)
-        return Response(str(data), mimetype=mimetype)
+        # See whether it is a Templetor template
+        fp = open(filename)
+        firstLine = fp.readline()
+        fp.close()
+        if firstLine[:5] == '$def ':
+            mimetype = mimetypes.guess_type(filename)[0] or 'text/html'
+            #
+            # xxxjack note that the following set of globals basically exports the
+            # whole object hierarchy to templates. This means that a template has
+            # unlimited powers. This needs to be fixed at some time, so templates
+            # can come from untrusted sources.
+            #
+            globals = dict(
+                igor=_SERVER.igor,
+                token=token,
+                json=json,
+                str=str,
+                repr=repr,
+                time=time,
+                type=type
+                )                
+            template = web.template.frender(filename, globals=globals)
+            try:
+                data = template(**dict(allArgs))
+            except xmlDatabase.DBAccessError:
+                myWebError("401 Unauthorized (template rendering)", 401)
+            return Response(str(data), mimetype=mimetype)
+        elif filename.endswith('.html'):
+            # Presume its a Jinja2 template
+            env = jinja2.Environment(loader=jinja2.PackageLoader('igor', 'template'))
+            env.globals['igor'] = _SERVER.igor
+            env.globals['json'] = json
+            env.globals['time'] = time
+            template = env.get_template(name)
+            allArgs['token'] = token
+            data = template.render(**dict(allArgs))
+            return Response(data, mimetype="text/html")
+            
     abort(404)
 
 

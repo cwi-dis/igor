@@ -235,6 +235,7 @@ class runScript(BaseHandler):
             web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
             pluginData = {}
         # Put all other arguments into the environment with an "igor_" prefix
+        env['igor_pluginName'] = pluginName
         for k, v in list(allArgs.items()):
             if k == 'args': continue
             if not v:

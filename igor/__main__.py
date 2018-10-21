@@ -374,6 +374,67 @@ class IgorInternal(object):
             return self.igor.app.raiseSeeother(returnTo)
         return rv
         
+    def _getDeviceListData(self, token):
+        """Helper for devices.html"""
+        def _getNames(path):
+            """Helper to get all non-namespaced children tag names"""
+            allElements = self.igor.database.getElements(path, 'get', token)
+            rv = []
+            for e in allElements:
+                name = e.tagName
+                if ':' in name: continue
+                rv.append(name)
+            return rv
+        #
+        # Collect all names of devices and sensors tha occur anywhere (sorted)
+        #
+        allNames = _getNames('devices/*') + _getNames('sensors/*') + _getNames('status/sensors/*') + _getNames('status/devices/*')
+        allNames = list(set(allNames))
+        allNames.sort()
+        #
+        # For each of these collect the relevant information
+        #
+        rv = []
+        for name in allNames:
+            descr = dict(name=name)
+            hostname = None
+            representing = None
+            if self.igor.database.getElements('devices/' + name, 'get', token):
+                descr['isDevice'] = True
+                hostname = self.igor.database.getValue('devices/%s/hostname' % name, token)
+                representing = 'devices/' + name
+            if self.igor.database.getElements('sensors/' + name, 'get', token):
+                descr['isSensor'] = True
+                hostname = None
+                representing = 'sensors/' + name
+            if hostname:
+                descr['hostname'] = hostname
+                
+            if self.igor.database.getElements('status/devices/' + name, 'get', token):
+                descr['status'] = '/data/status/devices/' + name
+            elif self.igor.database.getElements('status/sensors/' + name, 'get', token):
+                descr['status'] = '/data/status/sensors/' + name
+            
+            if representing:
+                actionElements = self.igor.database.getElements("actions/action[representing='%s']" % representing, 'get', token)
+                actionPaths = []
+                for e in actionElements:
+                    actionPaths.append(self.igor.database.getXPathForElement(e))
+                if actionPaths:
+                    descr['actions'] = actionPaths
+                descr['representing'] = representing
+            rv.append(descr)
+        return rv
+
+    def _getKeyListData(self, token):
+        """Helper for devices.html"""
+        allKeys = self.igor.internal.accessControl(subcommand='getKeyList', token=token)
+        allKeysAsTuples = [(k.get('iss', ''), k.get('aud', ''), k.get('sub', '')) for k in allKeys]
+        allKeysAsTuples.sort()
+        allKeyAudiences = set([k.get('aud') for k in allKeys])
+        allKeySubjects = set([k.get('sub') for k in allKeys])
+        return dict(allKeysAsTuples=allKeysAsTuples, allKeyAudiences=allKeyAudiences, allKeySubjects=allKeySubjects)
+        
     def updateActions(self, token=None):
         """Recreate event handlers defined in the database. Not intended for human use"""
         startupActions = self.igor.database.getElements('actions', 'get', self.igor.access.tokenForIgor())

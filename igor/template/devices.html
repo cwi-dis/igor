@@ -1,50 +1,3 @@
-$def with (action=None, device=None, **kwargs)
-$code:
-    def doList(token):
-        allNames = _getNames('devices/*', token) + _getNames('sensors/*', token) + _getNames('status/sensors/*', token) + _getNames('status/devices/*', token)
-        allNames = list(set(allNames))
-        allNames.sort()
-        rv = []
-        for name in allNames:
-            descr = dict(name=name)
-            hostname = None
-            representing = None
-            if igor.database.getElements('devices/' + name, 'get', token):
-                descr['isDevice'] = True
-                hostname = igor.database.getValue('devices/%s/hostname' % name, token)
-                representing = 'devices/' + name
-            if igor.database.getElements('sensors/' + name, 'get', token):
-                descr['isSensor'] = True
-                hostname = None
-                representing = 'sensors/' + name
-            if hostname:
-                descr['hostname'] = hostname
-                
-            if igor.database.getElements('status/devices/' + name, 'get', token):
-                descr['status'] = '/data/status/devices/' + name
-            elif igor.database.getElements('status/sensors/' + name, 'get', token):
-                descr['status'] = '/data/status/sensors/' + name
-            
-            if representing:
-                actionElements = igor.database.getElements("actions/action[representing='%s']" % representing, 'get', token)
-                actionPaths = []
-                for e in actionElements:
-                    actionPaths.append(igor.database.getXPathForElement(e))
-                if actionPaths:
-                    descr['actions'] = actionPaths
-                descr['representing'] = representing
-            rv.append(descr)
-        return rv
-
-    def _getNames(path, token):
-        allElements = igor.database.getElements(path, 'get', token)
-        rv = []
-        for e in allElements:
-            name = e.tagName
-            if ':' in name: continue
-            rv.append(name)
-        return rv
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,8 +11,9 @@ $code:
 	</style>
 </head>
 <body>
+    <p>Action is {{action}}</p>
 
-	{% if action == None or action == 'list' %}
+	{% if action == 'list' or not action %}
 		<h1>Igor Devices and Sensors</h1>
 		{% set user = igor.app.getSessionItem('user', None) %}
 		{% if user %}
@@ -94,18 +48,14 @@ $code:
 				<th>Actions</th>
 				<th>OP</th>
 			</tr>
-			$ allKeys = igor.internal.accessControl(subcommand='getKeyList', token=token)
-			$ allKeysAsTuples = [(k.get('iss', ''), k.get('aud', ''), k.get('sub', '')) for k in allKeys]
-			$ allKeysAsTuples.sort()
-			$ allKeyAudiences = set([k.get('aud') for k in allKeys])
-			$ allKeySubjects = set([k.get('sub') for k in allKeys])
-			$ deviceList = doList(token)
+			{% set keyListData = igor.internal._getKeyListData(token) %}
+			{% set deviceList = igor.internal._getDeviceListData(token) %}
 			{% for device in deviceList %}
-				$ name=device.get('name')
-				$ defaultHostname = ('%s.local' % name) if (device.get('isDevice') or device.get('isSensor')) else ''
-				$ hostName = device.get('hostname', defaultHostname)
-				$ hasAudSecretKey = hostName in allKeyAudiences or ('http://%s' % hostName) in allKeyAudiences or ('https://%s' % hostName) in allKeyAudiences
-				$ hasSubSecretKey = hostName in allKeySubjects
+				{% set name=device.get('name') %}
+				{% set defaultHostname = ('%s.local' % name) if (device.get('isDevice') or device.get('isSensor')) else '' %}
+				{% set hostName = device.get('hostname', defaultHostname) %}
+				{% set hasAudSecretKey = hostName in keyListData.allKeyAudiences or ('http://%s' % hostName) in keyListData.allKeyAudiences or ('https://%s' % hostName) in keyListData.allKeyAudiences %}
+				{% set hasSubSecretKey = hostName in keyListData.allKeySubjects %}
 				<tr>
 					<td>{{name}}</td>
 					<td>{{hostName}}</td>
@@ -145,6 +95,7 @@ $code:
 							{% set actionName = igor.database.getValues(action+'/name', token=token) %}
 							{% set actionNameDisplay = actionName[0][1] if actionName else action %}
 							<a href={{action}}>{{actionNameDisplay}}</a><br>
+						{% endfor %}
 					</td>
 					<td>
 						{% if device.get('isDevice') and not hasAudSecretKey %}
@@ -236,7 +187,7 @@ $code:
 				<th>Subject</th>
 				<th>OP</th>
 			</tr>
-			{% for iss, aud, sub in allKeysAsTuples %}
+			{% for iss, aud, sub in keyListData.allKeysAsTuples %}
 				<tr>
 					<td>{{iss}}</td>
 					<td>{{aud}}</td>

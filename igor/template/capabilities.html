@@ -1,4 +1,3 @@
-$def with (action=None, cid=None, childCid=None, **kwargs)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +55,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				{% set cid = cap.pop('cid', '') %}
 				{% set comment = cap.pop('comment', '') %}
 				{% set childIDs = cap.pop('child', []) %}
-				$ if type(childIDs) != type([]): childIDs = [childIDs]
+				{% set childIDs = [childIDs] if type(childIDs) != type([]) else childIDs %}
 				<tr>
 					<td>{{cid}}
 					{% if comment %}
@@ -88,6 +87,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 							<a href="/capabilities.html?action=delegate&cid={{cid}}">delegate</a>
 							{% if delegate == 'external' %}
 								<i>(ext)</i>
+							{% endif %}
 							<br>
 							<a href="/capabilities.html?action=export&cid={{cid}}">export</a>
 						{% endif %}
@@ -144,18 +144,18 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 				{% for right in ['get', 'put', 'post', 'delete'] %}
 					<tr>
 						<td>{{right}}</td>
-						$ disabled = '' if cap.get(right, None) else ' disabled'
+						{% set disabled = '' if cap.get(right, None) else ' disabled' %}
 						<td>
 							<select name="{{right}}" {{disabled}}>
-								$ selected = ' selected' if not cap.get(right) else ''
+								{% set selected = ' selected' if not cap.get(right) else '' %}
 								<option value="" {{selected}}>No access</option>
-								$ selected = ' selected' if cap.get(right) == 'self' else ''
+								{% set selected = ' selected' if cap.get(right) == 'self' else '' %}
 								<option value="self" {{selected}}>self</option>
-								$ selected = ' selected' if cap.get(right) == 'descendant-or-self' else ''
+								{% set selected = ' selected' if cap.get(right) == 'descendant-or-self' else '' %}
 								<option value="descendant-or-self" {{selected}}>descendant-or-self</option>
-								$ selected = ' selected' if cap.get(right) == 'descendant' else ''
+								{% set selected = ' selected' if cap.get(right) == 'descendant' else '' %}
 								<option value="descendant" {{selected}}>descendant</option>
-								$ selected = ' selected' if cap.get(right) == 'child' else ''
+								{% set selected = ' selected' if cap.get(right) == 'child' else '' %}
 								<option value="child" {{selected}}>child</option>
 							</select>
 						</td>
@@ -222,15 +222,15 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 						{% set rightValue = kwargs.get(right, '') %}
 						<td>
 							<select name="{{right}}">
-								$ selected = ' selected' if not rightValue else ''
+								{% set selected = ' selected' if not rightValue else '' %}
 								<option value="" {{selected}}>No access</option>
-								$ selected = ' selected' if rightValue == 'self' else ''
+								{% set selected = ' selected' if rightValue == 'self' else '' %}
 								<option value="self" {{selected}}>self</option>
-								$ selected = ' selected' if rightValue == 'descendant-or-self' else ''
+								{% set selected = ' selected' if rightValue == 'descendant-or-self' else '' %}
 								<option value="descendant-or-self" {{selected}}>descendant-or-self</option>
-								$ selected = ' selected' if rightValue == 'descendant' else ''
+								{% set selected = ' selected' if rightValue == 'descendant' else '' %}
 								<option value="descendant" {{selected}}>descendant</option>
-								$ selected = ' selected' if rightValue == 'child' else ''
+								{% set selected = ' selected' if rightValue == 'child' else '' %}
 								<option value="child" {{selected}}>child</option>
 							</select>
 						</td>
@@ -301,8 +301,8 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 		<h1>Export capability {{cid}}</h1>
 		
 		{% set cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0] %}
-		{% set cap.pop('owner', None) %}
-		{% set cap.pop('parent', None) %}
+		{% set _ = cap.pop('owner', None) %}
+		{% set _ = cap.pop('parent', None) %}
 		<form action="/internal/accessControl/exportToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
 			<table>
@@ -350,18 +350,18 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					{% set rvalue = cap.pop(right, None) %}
 					<tr>
 						<td>{{right}}</td>
-						$ disabled = '' if rvalue else ' disabled'
+						{% set disabled = '' if rvalue else ' disabled' %}
 						<td>
 							<select name="{{right}}" {{disabled}}>
-								$ selected = ' selected' if not rvalue else ''
+								{% set selected = ' selected' if not rvalue else '' %}
 								<option value="" {{selected}}>No access</option>
-								$ selected = ' selected' if rvalue == 'self' else ''
+								{% set selected = ' selected' if rvalue == 'self' else '' %}
 								<option value="self" {{selected}}>self</option>
-								$ selected = ' selected' if rvalue == 'descendant-or-self' else ''
+								{% set selected = ' selected' if rvalue == 'descendant-or-self' else '' %}
 								<option value="descendant-or-self" {{selected}}>descendant-or-self</option>
-								$ selected = ' selected' if rvalue == 'descendant' else ''
+								{% set selected = ' selected' if rvalue == 'descendant' else '' %}
 								<option value="descendant" {{selected}}>descendant</option>
-								$ selected = ' selected' if rvalue == 'child' else ''
+								{% set selected = ' selected' if rvalue == 'child' else '' %}
 								<option value="child" {{selected}}>child</option>
 							</select>
 						</td>
@@ -423,7 +423,7 @@ $def with (action=None, cid=None, childCid=None, **kwargs)
 					<td>Children</td>
 					<td>
 						{% set  childIDs = cap.pop('child', []) %}
-						$ if type(childIDs) != type([]): childIDs = [childIDs]
+						{% set childIDs = [childIDs] if type(childIDs) != [] else childIDs %}
 						{% for gcid in childIDs %}
 							{{gcid}}
 							<br>

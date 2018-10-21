@@ -5,7 +5,7 @@ fi
 
 smartmeter_data=`curl --silent $igor_protocol://$igor_host/p1?format=json`
 case x$smartmeter_data in
-*smartMeter*)
+x'{'*)
 	echo $smartmeter_data | igorVar --put application/json sensors/$igor_pluginName
 	;;
 *)

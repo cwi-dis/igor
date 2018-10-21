@@ -11,8 +11,6 @@
 	</style>
 </head>
 <body>
-    <p>Action is {{action}}</p>
-
 	{% if action == 'list' or not action %}
 		<h1>Igor Devices and Sensors</h1>
 		{% set user = igor.app.getSessionItem('user', None) %}
@@ -214,12 +212,18 @@
 				<th>Key</th>
 				<th>Value</th>
 			</tr>
-				<tr>
-					<td>name</td><td>{{name}}</td>
-					<td>hostname</td><td>{{hostname}}</td>
-					<td>representing</td><td>{{representing}}</td>
-					<td>deviceTokenId</td><td>{{deviceTokenId}}</td>
-				</tr>
+			<tr>
+				<td>name</td><td>{{name}}</td>
+			</tr>
+			<tr>
+				<td>hostname</td><td>{{hostname}}</td>
+			</tr>
+			<tr>
+				<td>representing</td><td>{{representing}}</td>
+			</tr>
+			<tr>
+				<td>deviceTokenId</td><td>{{deviceTokenId}}</td>
+			</tr>
 		</table>
 		{% if deviceTokenId %}
 			<p>If the device is accessed over <i>https://{{hostname}}</i>	you may still need to create a certificate

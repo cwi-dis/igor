@@ -61,10 +61,10 @@ $code:
 
 	{% if action == None or action == 'list' %}
 		<h1>Igor Devices and Sensors</h1>
-		$ user = igor.app.getSessionItem('user', None)
+		{% set user = igor.app.getSessionItem('user', None) %}
 		{% if user %}
 			<p>
-				You are logged in as $user.
+				You are logged in as {{user}}.
 				{% if user != 'admin' %}
 					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
 				{% endif %}
@@ -127,7 +127,7 @@ $code:
 						{% endif %}
 					</td>
 					<td>
-						$ statusEntry = device.get('status')
+						{% set statusEntry = device.get('status') %}
 						{% if statusEntry %}
 							<a href="{{statusEntry}}">{{statusEntry}}</a>
 						{% endif %}
@@ -142,10 +142,9 @@ $code:
 					</td>
 					<td>
 						{% for action in device.get('actions', []) %}
-							$ actionName = igor.database.getValues(action+'/name', token=token)
-							$ if actionName: actionName = actionName[0][1]
-							$ if not actionName: actionName = actionName.split('/')[-1]
-							<a href={{action}}>{{actionName}}</a><br>
+							{% set actionName = igor.database.getValues(action+'/name', token=token) %}
+							{% set actionNameDisplay = actionName[0][1] if actionName else action %}
+							<a href={{action}}>{{actionNameDisplay}}</a><br>
 					</td>
 					<td>
 						{% if device.get('isDevice') and not hasAudSecretKey %}
@@ -264,24 +263,28 @@ $code:
 				<th>Key</th>
 				<th>Value</th>
 			</tr>
-			{% for k, v in kwargs.items() %}
 				<tr>
-					<td>{{k}}</td>
-					<td>{{v}}</td>
+					<td>name</td><td>{{name}}</td>
+					<td>hostname</td><td>{{hostname}}</td>
+					<td>representing</td><td>{{representing}}</td>
+					<td>deviceTokenId</td><td>{{deviceTokenId}}</td>
 				</tr>
-			{% endfor %}
 		</table>
-		{% if kwargs.get('deviceTokenId') %}
-			<p>If the device is accessed over <i>https://{{kwargs.get('hostname')}}</i>	you may still need to create a certificate
+		{% if deviceTokenId %}
+			<p>If the device is accessed over <i>https://{{hostname}}</i>	you may still need to create a certificate
 			using the <a href="/plugin/ca">CA plugin</a>. </p>
 		{% endif %}
 			
-		{% if kwargs.get('isSensor') %}
+		{% if isSensor %}
 			<p>You may want to add actions triggered by this sensor. No GUI for that yet.</p>
 			
-			$ representing = ('devices/%s' % kwargs['name']) if kwargs.get('isDevice') else 'sensors/%s' % kwargs['name']
+			{% if isDevice %}
+				{% set representing = 'devices/' + name %}
+			{% else %}
+				{% set representing = 'sensors/' + name %}
+			{% endif %}
 			
-			<p>You may want to <a href="/devices.html?action=addActionCap&name={{kwargs['name']}}&hostname={{kwargs['hostname']}}&representing={{representing}}">add an action capability</a> if this sensors triggers actions that are already in the database.</p>
+			<p>You may want to <a href="/devices.html?action=addActionCap&name={{name}}&hostname={{hostname}}&representing={{representing}}">add an action capability</a> if this sensors triggers actions that are already in the database.</p>
 		{% endif %}
 			
 		<p><a href="/devices.html">Return to device listing</a>.</p>
@@ -290,16 +293,16 @@ $code:
 		<h1>Add action capability for sensor</h1>
 		
 		<p>
-		If device <i>{{kwargs['name']}}</i> 
-		{% if 'hostname' in kwargs %}
-			(hostname <i>{{kwargs['hostname']}}</i>)
+		If device <i>{{name}}</i> 
+		{% if hostname %}
+			(hostname <i>{{hostname}}</i>)
 		{% endif %}
 		needs a capability to emit http(s) GET requests to trigger an Igor action use this form:
 		</p>
 
 		<form action="/plugin/device/addAction">
 			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
-			<input type="hidden" name="subject" value="/{{kwargs['hostname']}}">
+			<input type="hidden" name="subject" value="/{{hostname}}">
 			Action: <select name="obj">
 				{% for _, actionName in igor.database.getValues('actions/action/name', token=token) %}
 					<option value="/action/{{actionName}}">{{actionName}}</option>
@@ -309,16 +312,16 @@ $code:
 		</form>
 
 		<p>
-		If device <i>{{kwargs['name']}}</i> 
-		{% if 'hostname' in kwargs %}
-			(hostname <i>{{kwargs['hostname']}}</i>)
+		If device <i>{{name}}</i> 
+		{% if hostname %}
+			(hostname <i>{{hostname}}</i>)
 		{% endif %}
 		needs a capability to emit other http(s) requests to Igor action use this form:
 		</p>
 
 		<form action="/plugin/device/addAction">
 			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
-			<input type="hidden" name="subject" value="/{{kwargs['hostname']}}">
+			<input type="hidden" name="subject" value="/{{hostname}}">
 			Verb: <select name="verb">
 				<option value="get">get</option>
 				<option value="put">put</option>
@@ -338,27 +341,30 @@ $code:
 				<th>Key</th>
 				<th>Value</th>
 			</tr>
-			{% for k, v in kwargs.items() %}
-				<tr>
-					<td>{{k}}</td>
-					<td>{{v}}</td>
-				</tr>
-			{% endfor %}
+			<tr>
+				<td>aud</td><td>{{aud}}</td>
+			</tr>
+			<tr>
+				<td>aud</td><td>{{aud}}</td>
+			</tr>
+			<tr>
+				<td>aud</td><td>{{aud}}</td>
+			</tr>
 		</table>		
 		<p><a href="/devices.html">Return to device listing</a>.</p>
 	{% elif action == "addKey" %}
 		<h1>Add Secret Shared Key</h1>
 		
 		<p>Do you want to add a shared secret key for signing capabilities with subject (source)
-		<i>{{kwargs.get('sub', 'Igor itself')}}</i> and audience (destination) <i>{{kwargs.get('aud', 'Igor itself')}}</i>?
+		<i>{{sub if sub else 'Igor itself'}}</i> and audience (destination) <i>{{aud if aud else'Igor itself'}}</i>?
 		</p>
 		
 		<form action="/internal/accessControl/createSharedKey">
-			{% if kwargs.get('aud') %}
-				<input type="hidden" name="aud" value="{{kwargs['aud']}}">
+			{% if aud %}
+				<input type="hidden" name="aud" value="{{aud}}">
 			{% endif %}
-			{% if kwargs.get('sub') %}
-				<input type="hidden" name="sub" value="{{kwargs['sub']}}">
+			{% if sub %}
+				<input type="hidden" name="sub" value="{{sub}}">
 			{% endif %}
 			<input type="hidden" name="returnTo" value="/devices.html">
 			<input type="submit" value="Create Secret Shared Key">
@@ -370,14 +376,14 @@ $code:
 		<h1>Delete Secret Shared Key</h1>
 		
 		<p>
-		Are you sure you want to delete the secret key that allows subject <em>"{{kwargs['sub']}}"</em> to contact audience <em>"{{kwargs['aud']}}"</em> signed by
-		issuer <em>"{{kwargs['iss']}}"</em>? This action cannot be undone.
+		Are you sure you want to delete the secret key that allows subject <em>"{{sub}}"</em> to contact audience <em>"{{aud}}"</em> signed by
+		issuer <em>"{{iss}}"</em>? This action cannot be undone.
 		</p>
 		
 		<form action="/internal/accessControl/deleteSharedKey">
-			<input type="hidden" name="iss" value="{{kwargs['iss']}}">
-			<input type="hidden" name="aud" value="{{kwargs['aud']}}">
-			<input type="hidden" name="sub" value="{{kwargs['sub']}}">
+			<input type="hidden" name="iss" value="{{iss}}">
+			<input type="hidden" name="aud" value="{{aud}}">
+			<input type="hidden" name="sub" value="{{sub}}">
 			<input type="hidden" name="returnTo" value="/devices.html">
 			<input type="submit" value="Delete Secret Shared Key">
 		</form>
@@ -386,11 +392,11 @@ $code:
 	{% elif action == "deleteDevice" %}
 		<h1>Delete Device</h1>
 		
-		<p>Are you sure you want to delete device <em>{{kwargs['name']}}</em> completely? This action cannot be undone.</p>
+		<p>Are you sure you want to delete device <em>{{name}}</em> completely? This action cannot be undone.</p>
 		<form action="/plugin/device/delete">
 			<input name="returnTo" type="hidden" value="/devices.html">
-			<input type="hidden" name="name" value="{{kwargs['name']}}"><br>
-			<input type="hidden" name="hostname" value="{{kwargs['hostname']}}"><br>
+			<input type="hidden" name="name" value="{{name}}"><br>
+			<input type="hidden" name="hostname" value="{{hostname}}"><br>
 			<input type="submit" value="Delete Device">
 		</form>
 		

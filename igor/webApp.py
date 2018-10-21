@@ -557,10 +557,10 @@ def get_plugin(pluginName, methodName='index'):
         rv = method(**dict(allArgs))
     except ValueError as arg:
         myWebError("400 Error in plugin method %s/%s parameters: %s" % (pluginName, methodName, arg), 400)
+    # See what the plugin returned. Could be a flask Response or bytestring, otherwise we convert to string.
     if rv == None:
         rv = ''
-    if not isinstance(rv, basestring):
-        rv = str(rv)
+    rv = make_response(rv)
     return rv
 
 @_WEBAPP.route('/evaluate/<path:command>')

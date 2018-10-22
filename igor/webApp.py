@@ -229,6 +229,7 @@ class MyServer:
             self.jinjaEnv.globals['time'] = time
             self.jinjaEnv.globals['float'] = float
             self.jinjaEnv.globals['int'] = int
+            self.jinjaEnv.globals['type'] = type
         template = self.jinjaEnv.get_template(name)
         return template
 
@@ -307,7 +308,7 @@ def get_static(name):
             # Presume its a Jinja2 template
             template = _SERVER.getJinjaTemplate(name)
             allArgs['token'] = token
-            data = template.render(**dict(allArgs))
+            data = template.render(kwargs=dict(allArgs), **dict(allArgs))
             return Response(data, mimetype="text/html")
             
     abort(404)

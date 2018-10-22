@@ -12,7 +12,7 @@
 </head>
 <body>
 
-	{% if action == None or action == 'list' %}
+	{% if action == 'list' or not action %}
 		<h1>Igor Capabilities</h1>
 
 		{% if not igor.internal.accessControl('hasCapabilitySupport') %}
@@ -21,7 +21,7 @@
 	
 		{% if igor.app.getSessionItem('user', None) %}
 			<p>
-				You are logged in as {{igor.igor.app.getSessionItem('user')}}.
+				You are logged in as {{igor.app.getSessionItem('user')}}.
 				{% if cid == None %}
 					Here is the list of all capabilities assigned to your user identity.
 				{% else %}
@@ -518,5 +518,6 @@
 
 		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
 		<p><a href="/capabilities.html">Return to capability listing</a></p>
+	{% endif %}
 </body>
 </html>

@@ -716,7 +716,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert self.igor.internal
         if fix:
             self.igor.internal.save(token)
-        checker = CapabilityConsistency(self.igor, fix, NAMESPACES, _accessSelfToken)
+        checker = CapabilityConsistency(self.igor, fix, AU_NAMESPACE, _accessSelfToken)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
             self.igor.internal.save(token)

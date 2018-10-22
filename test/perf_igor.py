@@ -378,10 +378,7 @@ def main():
     args = parser.parse_args()
     MEASUREMENT_MIN_COUNT = args.count
     MEASUREMENT_MIN_DURATION = args.dur
-    if sys.version_info[0] <3:
-        perfClasses = [IgorPerf, IgorPerfHttps, IgorPerfCaps]
-    else:
-        perfClasses = [IgorPerf]
+    perfClasses = [IgorPerf, IgorPerfHttps, IgorPerfCaps]
     for cls in perfClasses:
         try:
             print('%s:' % cls.__name__)

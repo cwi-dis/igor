@@ -300,15 +300,16 @@ def get_static(name):
                 )                
             template = web.template.frender(filename, globals=globals)
             try:
-                data = template(**dict(allArgs))
+                data = template(**allArgs)
             except xmlDatabase.DBAccessError:
                 myWebError("401 Unauthorized (template rendering)", 401)
             return Response(str(data), mimetype=mimetype)
         elif filename.endswith('.html'):
-            # Presume its a Jinja2 template
+            # Presume its a Jinja2 template.
+            # Pass an extra kwargs argument containing all arguments (for easier
+            # porting of old web.py templates)
             template = _SERVER.getJinjaTemplate(name)
-            allArgs['token'] = token
-            data = template.render(kwargs=dict(allArgs), **dict(allArgs))
+            data = template.render(kwargs=allArgs, token=token, **allArgs)
             return Response(data, mimetype="text/html")
             
     abort(404)

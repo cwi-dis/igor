@@ -1,18 +1,19 @@
-$def with (**kwargs)
-	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<title>Igor test page 4</title>
-	</head>
-	<body>
-	<h1>Igor test page 4</h1>
-	<p>This is template file 4 in the template directory.</p>
-	<p>You passed $len(kwargs) arguments:</p>
-	<ul>
-	$for k, v in kwargs.items():
-		<li>Key $k with value $v</li>
-	</ul>
-	
-	</body>
-	</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor test page 4</title>
+</head>
+<body>
+<h1>Igor test page 4</h1>
+<p>This is template file 4 in the template directory.</p>
+<p>You passed {{kwargs|length}} arguments:</p>
+<ul>
+
+{% for k, v in kwargs.items() %}
+	<li>Key {{k}} with value {{v}}</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>

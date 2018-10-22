@@ -189,7 +189,7 @@
 					<td>
 						<select name="tokenId">
 							{% for cid in kwargs.get('parentList', '').split('/') %}
-								<option value="$cid">$cid</option>
+								<option value="{{cid}}">{{cid}}</option>
 							{% endfor %}
 						</select>
 					</td>
@@ -319,7 +319,7 @@
 						{% if subjectList %}
 							<select name="subject" required>
 							{% for sub in subjectList %}
-								<option value="$sub">$sub</option>
+								<option value="{{sub}}">{{sub}}</option>
 							{% endfor %}
 							</select>
 						{% else %}

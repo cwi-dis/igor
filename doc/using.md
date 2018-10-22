@@ -2,17 +2,19 @@
 
 ## Prerequisites
 
-You need to have Python v2.7 installed, and that should also have `setuptools` installed. Python 3 is in principle supported, but Igor uses _web.py_ and its support for Python 3 is not complete, currently.
+You need to have Python 3.6 or later installed.
+Python 2.7 is also still supported (but Python 3 is preferred).
 
-Installing Python's package installation program `pip` will also install `setuptools`.
+You need _pip_ and _setuptools_ (if not already included in your Python installation). Installing Python's package installation program _pip_ will also install _setuptools_.
 
-See also https://packaging.python.org/tutorials/installing-packages/
+See also <https://packaging.python.org/tutorials/installing-packages/>.
 
 ## Installing the software
 
 Download the source via <https://github.com/cwi-dis/igor>. Then install everything with
 
 ```
+pip install -r requirements.txt
 python setup.py build
 sudo python setup.py install
 ```
@@ -81,7 +83,7 @@ It is advised to run Igor with the secure _https_ protocol as opposed to the com
 
 #### Igor as a CA
 
-Enabling Igor as a Certificate Authority is the best option if there are other services (such as Iotsa-based devices, or other Igors) that you want to protect with _https_. Details on using Igor as a CA are in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md) but here are the commands needed to get this kickstarted:
+Enabling Igor as a Certificate Authority is the best option if there are other services (such as [Iotsa](https://github.com/cwi-dis/iotsa)-based devices, or other Igors) that you want to protect with _https_. Details on using Igor as a CA are in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md) but here are the commands needed to get this kickstarted:
 
 ```
 igorCA initialize
@@ -120,9 +122,15 @@ igorServer --capabilities
 
 to run your server in capability-based acess control mode. You will probably need various visits to the _/users.html_, _/devices.html_ and _/capabilities.html_ administrative interfaces to get anything to work.
 
+It is also possible to let Igor go through all the motions of capability-based access control, but allowing the operations even if the capabilities would disallow it. This can be handy while converting your database to use capabilities: you will get all the error messages about missing capabilities, but as warnings only. Therefore your Igor server will function as if no capabilities were in use. Enable this mode with
+
+```
+igorServer --warnCapabilities
+```
+
 ### Igor configuration
 
-You will need to configure your Igor to do something useful. See [../igor/plugins/readmd.md](../igor/plugins/readme.md) for a list of useful plugins, and [schema.md](schema.md) for how to add useful actions to your database.
+You will need to configure your Igor to do something useful. See [../igor/std-plugins/readmd.md](../igor/std-plugins/readme.md) for a list of useful plugins that are included with Igor, and [schema.md](schema.md) for how to add useful actions to your database.
 
 Stop Igor before editing your `~/.igor/database.xml` in a text editor. The following command helps you with this:
 

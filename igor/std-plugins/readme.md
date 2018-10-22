@@ -28,7 +28,7 @@ igorPlugin(igor, pluginName, pluginData)
 ``` 
 
 which is called whenever any method of the plugin is to be called. This function should return an object on which the individual methods are looked up. The `igorPlugin` function is called every time a plugin method needs to be called, but it can of course return a singleton object. See the _watchdog_ plugin for an example. _igor_ is a pointer to the global Igor object (see below), _PluginName_
-is the name under which the plugin has been installed, and _PluginData_ is filled from `/data/plugindata/_pluginname_`.
+is the name under which the plugin has been installed, and _PluginData_ is filled from `/data/plugindata/_pluginname_`. There will always be an argument `token` which will be the current set of capabilities (or `None` if Igor is running without capability support) and which the plugin will have to pass to most Igor API calls.
 
 Accessing `/plugin/pluginname` will call the `index()` method. 
 
@@ -49,7 +49,7 @@ A plugin can be (partially) implemented with shell scripts. Accessing `/pluginsc
 
 Scripts get an environment variable `IGORSERVER_URL` set correctly so they can use the _igorVar_ command easily.
 
-Each argument is passed to the script (in Python notation) with `igor_` prepended to the name.
+Each argument is passed to the script (in Python notation) with `igor_` prepended to the name. `igor_pluginName` contains the name under which the plugin is installed.
 
 The per-plugin data from `/data/plugindata/_pluginname_` and (if the _user_ argument is present) the per-user per-plugin data from `/data/identities/_user_/plugindata/_pluginname_`
 is encoded as a Python dictionary and passed in the `igor_pluginData` environment variable.

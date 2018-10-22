@@ -15,9 +15,10 @@ This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS 
 
 ## Prerequisites
 
-You need to have Python v2.7 installed, and that should also have _setuptools_ installed. Python 3.6 or later is partially supported (but not completely).
+You need to have Python 3.6 or later installed.
+Python 2.7 is also still supported (but Python 3 is preferred).
 
-Installing Python's package installation program _pip_ will also install _setuptools_.
+You need _pip_ and _setuptools_ (if not already included in your Python installation). Installing Python's package installation program _pip_ will also install _setuptools_.
 
 See also <https://packaging.python.org/tutorials/installing-packages/>.
 
@@ -67,7 +68,7 @@ be represented in JSON or some other form.
 
 On top of that an XPath 1.0 implementation (currently ``py-dom-xpath`` but again: could be replaced for efficiency reasons) to allow searching, selecting and combining (using expressions) of database elements.
 
-On top of that is a webserver (based on ``web.py``, using either _http_ or _https_ access) that allows REST-like access to the database (GET, PUT, POST and DELETE methods), by default on port 9333. The server handles conversion between the internal (XML) format and external XML, JSON or plain text format.
+On top of that is a webserver (based on [Flask](http://flask.pocoo.org), using either _http_ or _https_ access) that allows REST-like access to the database (GET, PUT, POST and DELETE methods), by default on port 9333. The server handles conversion between the internal (XML) format and external XML, JSON or plain text format.
 
 In addition to database access, the web server exposes internal
 functionality (for example to save the database), more general XPath
@@ -109,7 +110,7 @@ A description of the database can be found in [doc/schema.md](doc/schema.md).
 
 Mirroring and distributing the database over multiple Igor instances is planned but not implemented yet.
 
-A method for easy installation (and updating and removal) of plugins is not implemented yet.
+A method for easy installation (and updating and removal) of externally supplied plugins is not implemented yet.
 
 a more user-friendly method of editing the database is not implemented yet.
 

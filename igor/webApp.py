@@ -860,6 +860,8 @@ class XmlDatabaseAccess(object):
             return element
         elif mimetype == 'application/json':
             try:
+                if isinstance(value, bytes):
+                    value = value.decode('utf8')
                 valueDict = json.loads(value)
             except ValueError:
                 raise web.BadRequest("No JSON object could be decoded from body")

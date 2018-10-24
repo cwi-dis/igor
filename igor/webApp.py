@@ -328,7 +328,7 @@ def get_pluginscript(pluginName, scriptName):
             v = ''
         env['igor_'+k] = v
     # If a user is logged in we use that as default for a user argument
-    user = _server.igor.app.getSessionItem('user')
+    user = _SERVER.igor.app.getSessionItem('user')
     if user and not 'user' in allArgs:
         allArgs['user'] = user
     # If there's a user argument see if we need to add per-user data

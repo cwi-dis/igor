@@ -1,7 +1,7 @@
 future
 httplib2
 requests
-flask
+flask>=1.0
 gevent
 python-dateutil
 py-dom-xpath-six

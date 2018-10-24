@@ -1,0 +1,45 @@
+IgorPerf:
+http://0.0.0.0:19434/
+IgorPerf.perf01_get_static                            14  0.153  0.012
+IgorPerf.perf02_get_static_nonexistent               294  0.007  0.001
+IgorPerf.perf11_get_xml                              284  0.007  0.000
+IgorPerf.perf12_get_text                             274  0.007  0.001
+IgorPerf.perf13_get_json                             264  0.008  0.001
+IgorPerf.perf21_put_xml                              222  0.009  0.002
+IgorPerf.perf22_put_text                             230  0.009  0.001
+IgorPerf.perf23_put_json                             229  0.009  0.001
+IgorPerf.perf31_post_text                             76  0.026  0.001
+IgorPerf.perf61_call_action                           76  0.027  0.002
+IgorPerf.perf62_call_external                        310  0.005  0.000
+IgorPerf.perf63_call_action_external                 135  0.014  0.002
+IgorPerfHttps:
+https://0.0.0.0:19534/
+IgorPerfHttps.perf01_get_static                       10  0.223  0.003
+IgorPerfHttps.perf02_get_static_nonexistent           26  0.078  0.002
+IgorPerfHttps.perf11_get_xml                          26  0.078  0.002
+IgorPerfHttps.perf12_get_text                         26  0.078  0.001
+IgorPerfHttps.perf13_get_json                         26  0.078  0.001
+IgorPerfHttps.perf21_put_xml                          26  0.079  0.004
+IgorPerfHttps.perf22_put_text                         26  0.079  0.004
+IgorPerfHttps.perf23_put_json                         26  0.079  0.004
+IgorPerfHttps.perf31_post_text                        21  0.096  0.001
+IgorPerfHttps.perf61_call_action                      27  0.077  0.003
+IgorPerfHttps.perf62_call_external                    26  0.075  0.002
+IgorPerfHttps.perf63_call_action_external             11  0.154  0.004
+IgorPerfCaps:
+https://0.0.0.0:19634/
+IgorPerfCaps.perf01_get_static                        10  0.223  0.004
+IgorPerfCaps.perf02_get_static_nonexistent            26  0.078  0.002
+IgorPerfCaps.perf11_get_xml                           26  0.078  0.001
+IgorPerfCaps.perf12_get_text                          26  0.078  0.001
+IgorPerfCaps.perf13_get_json                          26  0.078  0.001
+IgorPerfCaps.perf19_get_disallowed                    26  0.079  0.005
+IgorPerfCaps.perf21_put_xml                           26  0.079  0.004
+IgorPerfCaps.perf22_put_text                          26  0.079  0.004
+IgorPerfCaps.perf23_put_json                          26  0.079  0.004
+IgorPerfCaps.perf29_put_disallowed                    25  0.081  0.004
+IgorPerfCaps.perf31_post_text                         21  0.097  0.001
+IgorPerfCaps.perf61_call_action                       26  0.079  0.003
+IgorPerfCaps.perf62_call_external                     26  0.077  0.002
+IgorPerfCaps.perf63_call_action_external              11  0.157  0.003
+IgorPerfCaps.perf68_call_external_disallowed          27  0.077  0.001

@@ -1,0 +1,14 @@
+IgorPerf:
+http://0.0.0.0:19434/
+IgorPerf.perf01_get_static                            10  0.610  0.060
+IgorPerf.perf02_get_static_nonexistent               101  0.020  0.000
+IgorPerf.perf11_get_xml                               98  0.021  0.000
+IgorPerf.perf12_get_text                              96  0.021  0.003
+IgorPerf.perf13_get_json                              97  0.021  0.000
+IgorPerf.perf21_put_xml                               87  0.023  0.006
+IgorPerf.perf22_put_text                              92  0.022  0.005
+IgorPerf.perf23_put_json                              94  0.021  0.004
+IgorPerf.perf31_post_text                             34  0.059  0.001
+IgorPerf.perf61_call_action                           38  0.053  0.012
+IgorPerf.perf62_call_external                        113  0.013  0.002
+IgorPerf.perf63_call_action_external                  50  0.039  0.011

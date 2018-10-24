@@ -2,6 +2,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 import sys
+import os
 import argparse
 import igorVar
 import traceback
@@ -15,7 +16,7 @@ def main():
     parser.add_argument("--credentials", metavar="USER:PASS", help="Add Authorization: Basic header line with given credentials", default=igorVar.CONFIG.get('igor', 'credentials'))
     parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures", default=igorVar.CONFIG.get('igor', 'noverify'))
     parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file", default=igorVar.CONFIG.get('igor', 'certificate'))
-    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has', default=CONFIG.get('igor', 'nosystemrootcertificates'))
+    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has', default=igorVar.CONFIG.get('igor', 'nosystemrootcertificates'))
     parser.add_argument("action", help="Action to perform: help, save, stop, restart, command, ...")
     parser.add_argument("arguments", help="Arguments to the action", metavar="NAME=VALUE", nargs="*")
     

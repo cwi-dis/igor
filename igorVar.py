@@ -197,6 +197,8 @@ def main():
     if args.eval:
         url = url.replace("/data", "/evaluate")
     if not args.noSystemRootCertificates and not os.environ.get('REQUESTS_CA_BUNDLE', None):
+        # The requests package uses its own set of certificates, ignoring the ones the user has added to the system
+        # set. By default, override that behaviour.
         for cf in ["/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ca-certificates.crt"]:
             if os.path.exists(cf):
                 os.putenv('REQUESTS_CA_BUNDLE', cf)

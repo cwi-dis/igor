@@ -638,7 +638,7 @@ def main():
     parser.add_argument("--credentials", metavar="USER:PASS", help="(remote only) Add Authorization: Basic header line with given credentials", default=igorVar.CONFIG.get('igor', 'credentials'))
     parser.add_argument("--noverify", action='store_true', help="(remote only) Disable verification of https signatures", default=igorVar.CONFIG.get('igor', 'noverify'))
     parser.add_argument("--certificate", metavar='CERTFILE', help="(remote only) Verify https certificates from given file", default=igorVar.CONFIG.get('igor', 'certificate'))
-    parser.add_argument('--noSystemRootCertificates', action="store_true", help='(remote only) Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has', default=CONFIG.get('igor', 'nosystemrootcertificates'))
+    parser.add_argument('--noSystemRootCertificates', action="store_true", help='(remote only) Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has', default=igorVar.CONFIG.get('igor', 'nosystemrootcertificates'))
     parser.add_argument("action", help="Action to perform: help, initialize, ...", default="help")
     parser.add_argument("arguments", help="Arguments to the action", nargs="*")
     args = parser.parse_args()

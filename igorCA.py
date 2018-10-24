@@ -638,11 +638,20 @@ def main():
     parser.add_argument("--credentials", metavar="USER:PASS", help="(remote only) Add Authorization: Basic header line with given credentials", default=igorVar.CONFIG.get('igor', 'credentials'))
     parser.add_argument("--noverify", action='store_true', help="(remote only) Disable verification of https signatures", default=igorVar.CONFIG.get('igor', 'noverify'))
     parser.add_argument("--certificate", metavar='CERTFILE', help="(remote only) Verify https certificates from given file", default=igorVar.CONFIG.get('igor', 'certificate'))
+    parser.add_argument('--noSystemRootCertificates', action="store_true", help='(remote only) Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has', default=CONFIG.get('igor', 'nosystemrootcertificates'))
     parser.add_argument("action", help="Action to perform: help, initialize, ...", default="help")
     parser.add_argument("arguments", help="Arguments to the action", nargs="*")
     args = parser.parse_args()
     igorServer = None
     if args.remote:
+        if not args.noSystemRootCertificates and not os.environ.get('REQUESTS_CA_BUNDLE', None):
+            # The requests package uses its own set of certificates, ignoring the ones the user has added to the system
+            # set. By default, override that behaviour.
+            for cf in ["/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ca-certificates.crt"]:
+                if os.path.exists(cf):
+                    os.putenv('REQUESTS_CA_BUNDLE', cf)
+                    os.environ['REQUESTS_CA_BUNDLE'] = cf
+                    break
         igorServer = igorVar.IgorServer(args.url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
     m = IgorCA(sys.argv[0], igorServer, keysize=args.keysize, database=args.database)
     if not args.action:

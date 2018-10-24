@@ -33,6 +33,7 @@ CONFIG = configparser.ConfigParser(
         certificate='',
         noverify='',
         verbose='',
+        nosystemrootcertificates='',
     ))
 CONFIG.add_section('igor')
 CONFIG.read(os.path.expanduser('~/.igor/igor.cfg'))
@@ -186,6 +187,7 @@ def main():
     parser.add_argument("--credentials", metavar="USER:PASS", help="Add Authorization: Basic header line with given credentials", default=CONFIG.get('igor', 'credentials'))
     parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures", default=CONFIG.get('igor', 'noverify'))
     parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file", default=CONFIG.get('igor', 'certificate'))
+    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has', default=CONFIG.get('igor', 'nosystemrootcertificates'))
     
     parser.add_argument("var", help="Variable to retrieve")
     args = parser.parse_args()
@@ -194,6 +196,12 @@ def main():
     url = args.url
     if args.eval:
         url = url.replace("/data", "/evaluate")
+    if not args.noSystemRootCertificates and not os.environ.get('REQUESTS_CA_BUNDLE', None):
+        for cf in ["/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/certs/ca-certificates.crt"]:
+            if os.path.exists(cf):
+                os.putenv('REQUESTS_CA_BUNDLE', cf)
+                os.environ['REQUESTS_CA_BUNDLE'] = cf
+                break
     server = IgorServer(url, bearer_token=args.bearer, access_token=args.access, credentials=args.credentials, noverify=args.noverify, certificate=args.certificate)
     if args.python:
         args.mimetype = 'application/json'

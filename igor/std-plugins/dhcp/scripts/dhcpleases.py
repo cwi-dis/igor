@@ -261,7 +261,7 @@ def test_pingable(dataset):
     
 def parse_arp():
     try:
-        output = subprocess.check_output(['arp', '-an'])
+        output = subprocess.check_output(['arp', '-an'], universal_newlines=True)
     except subprocess.CalledProcessError:
         return []
     rv = {}

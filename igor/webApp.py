@@ -368,12 +368,12 @@ def get_pluginscript(pluginName, scriptName):
         args = [scriptName] + args
     # Call the command and get the output
     try:
-        rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env)
+        rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
         _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
     except subprocess.CalledProcessError as arg:
         _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
         msg = "502 Command %s exited with status code=%d" % (scriptName, arg.returncode)
-        output = msg + '\n\n' + arg.output
+        output = '%s\n\n%s' % (msg, arg.output)
         # Convenience for internal logging: if there is 1 line of output only we append it to the error message.
         argOutputLines = arg.output.split('\n')
         if len(argOutputLines) == 2 and argOutputLines[1] == '':

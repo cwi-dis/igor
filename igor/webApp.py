@@ -66,9 +66,9 @@ class MyWSGICaller:
         if data and not isinstance(data, str) and not isinstance(data, bytes):
             data = json.dumps(data)
         environ = self._buildRequestEnviron(url, method, data, headers, env)
-
         rv = app(environ, self._start_response)
-        
+        if self.status[:2] != '20':
+            print('Warning: %s %s returned %s' % (method, url, self.status) )
         self._feed(rv)
         
     def _start_response(self, status, headers):
@@ -386,7 +386,7 @@ def get_pluginscript(pluginName, scriptName):
     return rv
 
 @_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None})
-@_WEBAPP.route('/internal/<string:command>/<string:subcommand>') 
+@_WEBAPP.route('/internal/<string:command>/<path:subcommand>') 
 def get_command(command, subcommand=None):
     allArgs = request.values.to_dict()
     token = _SERVER.igor.access.tokenForRequest(request.environ)
@@ -411,7 +411,7 @@ def get_command(command, subcommand=None):
     return Response(json.dumps(rv), mimetype='application/json')
 
 @_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None}, methods=["POST"])
-@_WEBAPP.route('/internal/<string:command>/<string:subcommand>', methods=["POST"]) 
+@_WEBAPP.route('/internal/<string:command>/<path:subcommand>', methods=["POST"]) 
 def post_command(command, subcommand=None):
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     try:

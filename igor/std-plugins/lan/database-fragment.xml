@@ -17,7 +17,7 @@
 		</action>
 		<action own:plugin="{plugin}">
 			<interval>60</interval>
-			<url>/plugin/lan?name=igor&amp;service=igor/web&amp;ip={/data/services/igor/host}&amp;port={/data/services/igor/port}</url>
+			<url>/plugin/lan?name=igor&amp;service=igor/web&amp;url={/data/services/igor/url}/services/igor/host</url>
 			<aggregate>true</aggregate>
 			<notBefore>1512862407</notBefore>
 		</action>

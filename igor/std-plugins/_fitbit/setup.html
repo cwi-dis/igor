@@ -1,0 +1,27 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Setup {{pluginName}}</title>
+</head>
+<body>
+	<h1>Setup {{pluginName}}</h1>
+	
+	<h2>Fitbit website settings for this Igor</h2>
+	
+	<p>Register your Igor as a Fitbit app at <a href="https://dev.fitbit.com/apps/new">Fitbit website</a> and 
+	fill in the resulting details (Client ID and Client Secret)here. As callback URL, specify
+	<b>https://<i>your-igor-url</i>/plugin/{{pluginName}}/auth2</b>
+	</p>
+	
+	<form action="/plugin/{{pluginName}}/settings">
+		Fitbit Client ID for this Igor: <br>
+		<input type="text" name="client_id" value="{{pluginData.client_id}}"><br>
+		Fitbit Client Secret for this Igor: <br>
+		<input type="text" name="client_secret" value="{{pluginData.client_secret}}"><br>
+		Measurement system and units: <br>
+		<input type="text" name="system" value="{{pluginData.system}}"><br>
+		<input type="submit" name="Submit">
+	</form>	
+
+</body>
+</html>

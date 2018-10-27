@@ -221,7 +221,11 @@ class MyServer:
     def getJinjaTemplate(self, name):
         """Return a Jinja2 template"""
         if self.jinjaEnv == None:
-            self.jinjaEnv = jinja2.Environment(loader=jinja2.PackageLoader('igor', 'template'), extensions=['jinja2.ext.do'])
+            loader=jinja2.ChoiceLoader([
+                jinja2.PackageLoader('igor', 'template'),
+                jinja2.FileSystemLoader(_SERVER.igor.pathnames.plugindir)
+                ])
+            self.jinjaEnv = jinja2.Environment(loader=loader, extensions=['jinja2.ext.do'])
             self.jinjaEnv.globals['igor'] = _SERVER.igor
             self.jinjaEnv.globals['json'] = json
             self.jinjaEnv.globals['time'] = time
@@ -534,6 +538,45 @@ def get_plugin(pluginName, methodName='index'):
         rv = ''
     rv = make_response(rv)
     return rv
+
+@_WEBAPP.route('/plugin/<string:pluginName>/page/<string:pageName>')
+def get_plugin_page(pluginName, pageName='index'):
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    pluginToken = _SERVER.igor.access.tokenForPlugin(pluginName, token=token)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
+    if not checker.allowed('get', token):
+        myWebError('401 Unauthorized', 401)
+
+    allArgs = request.values.to_dict()
+    allArgs['pluginName'] = pluginName
+    # Find plugindata and per-user plugindata
+    try:
+        pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
+    except werkzeug.exceptions.HTTPException:
+        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+        pluginData = {}
+    allArgs['pluginData'] = pluginData
+    if 'user' in allArgs:
+        user = allArgs['user']
+    else:
+        user = _SERVER.getSessionItem('user', None)
+    if user:
+        allArgs['user'] = user
+        try:
+            userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
+        except werkzeug.exceptions.HTTPException:
+            pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+        else:
+            allArgs['userData'] = userData
+
+    fullPageName = os.path.join(pluginName, pageName)
+    template = _SERVER.getJinjaTemplate(fullPageName)
+    if template:
+        # Note that we pass the incoming token, not the pluginToken, to the template
+        data = template.render(kwargs=allArgs, token=token, **allArgs)
+        return Response(data, mimetype="text/html")
+
+    abort(404)
 
 @_WEBAPP.route('/evaluate/<path:command>')
 def get_evaluate(command):

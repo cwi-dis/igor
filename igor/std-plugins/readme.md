@@ -72,6 +72,19 @@ The fragment overlay installation may be delayed until the next time the Igor se
 
 It may be necessary to do some hand editing of the database after installing, because you may have to modify some elements (such as hostname fields) and you may need to duplicate some (with modifications) for example if you want the _lan_ plugin to test different services.
 
+### *.html
+
+A plugin can contain a user interface through HTML pages. Actually, these are [Jinja2](http://jinja.pocoo.org) templates. Within the template you have access to the following variables:
+
+- _pluginName_ is the name under which the plugin has been installed.
+- _token_ is the capability of the current user (the user visiting the page).
+- _pluginData_ is the internal data of the plugin (from `/data/plugindata`).
+- _user_ is the current user (if logged in).
+- _userData_ is the per-plugin data for the current user (if logged in).
+- all url parameters.
+
+In general, the template should provide forms and such to allow the user to change settings, and then call methods in the plugin proper to implement those changes (because the plugin will run with a _token_ that allows read/write access to the plugin data).
+
 ## Included Igor Standard Plugins
 
 ### ble
@@ -100,7 +113,10 @@ Queries database of DHCP server on local machine and stores all active dhcp leas
 ### _fitbit
 
 Retrieves health data from Fitbit devices using the Fitbit cloud API and stores this in ```sensors/_fitbit```. See [_fitbit/readme.md](_fitbit/readme.md) for details.
-Not the underscore: the plugin is called `_fitbit` because otherwise it would have a name clash with the underlying Python module it uses.
+
+Note the underscore: the plugin is called `_fitbit` because otherwise it would have a name clash with the underlying Python module it uses.
+
+As of October 2018 this is the first plugin to have a user interface through a `setup.html` page, it can be used as an example of such. It is also currently the only plugin that implements _OAuth2_ to retrieve data from external websites.
 
 ### homey
 

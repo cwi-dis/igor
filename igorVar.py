@@ -137,7 +137,7 @@ class IgorServer(object):
             if e.args[1:]:
                 argstr = e.args[1]
             else:
-                e = repr(e)
+                argstr = repr(e)
             raise IgorError("%s: %s" % (url, argstr))
         except socket.gaierror:
             raise IgorError("%s: unknown host" %  url)

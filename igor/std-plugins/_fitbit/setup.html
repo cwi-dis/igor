@@ -20,8 +20,61 @@
 		<input type="text" name="client_secret" value="{{pluginData.client_secret}}"><br>
 		Measurement system and units: <br>
 		<input type="text" name="system" value="{{pluginData.system}}"><br>
-		<input type="submit" name="Submit">
+		<input type="submit" value="Submit">
 	</form>	
 
+	{% if user %}
+		<h2>Fitbit settings for user {{user}}</h2>
+	
+		{% if 'userData' in kwargs %}
+			<p>Current Fitbit settings for user {{user}}:</p>
+			<form action="/plugin/{{pluginName}}/userSettings">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.py?user={{user}}">
+				<input type="hidden" name="user" value="{{user}}">
+				{% for key, value in userData.items() %}
+					{% if key != 'token' %}
+						{{key}}:<br>
+						<input type="text" name="{{key}}" value="{{value}}"><br>
+					{% endif %}
+				{% endfor %}
+				{% if not 'methods' in userData %}
+					methods (comma-separated list, default: <i>get_bodyweight</i>):<br>
+					<input type="text" name="methods" value=""><br>
+				{% endif %}
+				Add a new field:<br>
+				name: <input type="text" name="_newName" value=""> value: <input type="text" name="_newValue" value=""><br>
+				<input type="submit" value="Modify">
+			</form>
+			{% if 'token' in userData %}
+				<p>User {{user}} has already given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
+				in case you need to re-grant Igor the Fitbit access rights.</p>
+			{% else %}
+				<p>User {{user}} has not yet given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
+				to arrange that this Igor can access your Fitbit data.</p>
+			{% endif %}
+			<p>If you want to you can also <a href="/plugin/{{pluginName}}/auth1?user={{user}}&delete=true">delete the access token</a> for this user. 
+			(This action cannot be undone except by re-adding the user and re-authenticating).</p>
+		{% else %}
+			<p>No per-user Fitbit data for user {{user}}.</p>
+			<form action="/plugin/{{pluginName}}/userSettings">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.py?user={{user}}">
+				<input type="hidden" name="user" value="{{user}}">
+				<input type="submit" value="Create user {{user}}">
+			</form>
+		{% endif %}
+	{% else %}
+		<h2>Not logged in</h2>
+		
+		<p>You are not logged in, visit the <a href="/login">login page</a> to do so.</a>
+	{% endif %}
+	
+	<h2>Fitbit settings for another user</h2>
+	
+	<p>To view data for another user please enter the username here and select <i>Show</i><p>
+	<form action="setup.html">
+	Username: <br>
+	<input type="text" name="user" value="{{user}}"><br>
+	<input type="Submit" value="Show"><br>
+	</form>
 </body>
 </html>

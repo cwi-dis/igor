@@ -42,6 +42,7 @@ class FitbitPlugin(object):
         if DEBUG: print('xxxjack queued save call')
     
     def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
+        """Main entry point - get Fitbit data for a single user"""
         if not user:
             self.igor.app.raiseHTTPError("401 Fitbitplugin requires user argument")
         self.user = user
@@ -83,12 +84,15 @@ class FitbitPlugin(object):
             if DEBUG: print("xxxjack method", method, "returned", m)
             results.update(item)
         
-        self.igor.databaseAccessor.put_key('sensors/_fitbit/%s' % user, 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)
+        self.igor.databaseAccessor.put_key('sensors/%s/%s' % (self.pluginName, user), 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)
         return str(results)
     
-    def auth1(self, user=None, userData={}, token=None, **kwargs):
+    def auth1(self, user=None, userData=None, token=None, **kwargs):
+        """OAuth2 entry point 1 - start with authentication sequence, redirect user's browser to Fitbit site"""
         if not user:
             self.igor.app.raiseHTTPError("401 fitbitplugin/auth1 requires 'user' argument")
+        if not isinstance(userData, dict):
+            self.igor.app.raiseHTTPError('401 Element /data/identities/%s/plugindata/%s/token is missing' % (self.user, self.pluginName))
         oauthSettings = {}
         for k in KEYS_PER_APP:
             if not k in self.pluginData:
@@ -105,6 +109,7 @@ class FitbitPlugin(object):
         return self.igor.app.raiseSeeother(redirectUrl)
     
     def auth2(self, code=None, state=None, token=None, **kwargs):
+        """Oatth2 entry point 2 - return data from Fitbit site via the user's browser"""
         oauthSettings = {}
         self.user = state
         self.token = token
@@ -127,6 +132,43 @@ class FitbitPlugin(object):
         self._refresh(fbToken)
         return 'ok\n'
 
+    def settings(self, client_id='', client_secret='', system='', token=None, returnTo=None, **kwArgs):
+        """Set global settings for _fitbit plugin"""
+        rv = 'ok\n'
+        if client_id:
+            rv = self.igor.databaseAccessor.put_key('plugindata/%s/client_id' % self.pluginName, 'text/plain', None, client_id, 'text/plain', token, replace=True)
+        if client_secret:
+            rv = self.igor.databaseAccessor.put_key('plugindata/%s/client_secret' % self.pluginName, 'text/plain', None, client_secret, 'text/plain', token, replace=True)
+        if system:
+            rv = self.igor.databaseAccessor.put_key('plugindata/%s/system' % self.pluginName, 'text/plain', None, system, 'text/plain', token, replace=True)
+        if returnTo:
+            return self.igor.app.raiseSeeother(returnTo)
+        return rv
+        
+    def userSettings(self, user=None, delete=False, userData=None, token=None, returnTo=None, _newName=None, _newValue=None, **kwArgs):
+        """Create or delete Fitbit user, or change per-user settings"""
+        rv = ''
+        if delete:
+            rv = self.igor.databaseAccessor.delete_key('identities/%s/plugindata/%s' % (user, self.pluginName))
+        else:
+            if userData == None:
+                # User does not have fitbit data yet. Create.
+                userData = {}
+                for k, v in kwArgs:
+                    userData[k] = v
+                if _newName:
+                    userData[_newName] = _newValue
+                rv = self.igor.databaseAccessor.put_key('identities/%s/plugindata/%s' % (user, self.pluginName), 'text/plain', None, userData, 'application/x-python-object', token)
+            elif kwArgs or _newName:
+                for k, v in kwArgs.items():
+                    rv = self.igor.databaseAccessor.put_key('identities/%s/plugindata/%s/%s' % (user, self.pluginName, k), 'text/plain', None, v, 'text/plain', token, replace=True)
+                if _newName:
+                    rv = self.igor.databaseAccessor.put_key('identities/%s/plugindata/%s/%s' % (user, self.pluginName, _newName), 'text/plain', None, _newValue, 'text/plain', token, replace=True)
+        if returnTo:
+            return self.igor.app.raiseSeeother(returnTo)
+        return rv
+            
+        
 def igorPlugin(igor, pluginName, pluginData):
     return FitbitPlugin(igor, pluginName, pluginData)
     

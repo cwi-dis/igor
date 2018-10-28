@@ -666,6 +666,12 @@ class IgorPlugins(object):
             if fname[-5:] == '.html':
                 pages.append('/plugin/%s/page/%s' % (pluginName, fname))
         rv['pages'] = pages
+        pluginData = self.igor.databaseAccessor.get_key('plugindata/%s' % pluginName, 'application/x-python-object', 'multi', token)
+        if pluginData:
+            rv['pluginData'] = list(pluginData.keys())[0]
+        userData = []
+        userData = self.igor.databaseAccessor.get_key('identities/*/plugindata/%s' % pluginName, 'application/x-python-object', 'multi', token)
+        rv['userData'] = list(userData.keys())
         return rv
         
 def main():

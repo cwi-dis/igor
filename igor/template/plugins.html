@@ -55,10 +55,14 @@
 						{% endfor %}
 					</td>
 					<td>
-						{{pluginData.get('pluginData', '')}}
+						{% if 'pluginData' in pluginData %}
+							<a href="{{pluginData.pluginData}}">{{pluginData.pluginData}}</a>
+						{% endif %}
 					</td>
 					<td>
-						{{pluginData.get('userData', '')}}
+						{% for userData in pluginData.get('userData', []) %}
+							<a href="{{userData}}">{{userData}}</a><br>
+						{% endfor %}
 					</td>
 					<td>
 						<form action="/plugins.html">

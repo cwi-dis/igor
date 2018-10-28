@@ -205,6 +205,16 @@ class StructuralConsistency(object):
             self._status('* Infrastructure consistency check failed', isError=False)
             raise
         #
+        # Check that all users are unique and have plugindata entries
+        #
+        for userElement in self._getAllElements('/data/identities/*'):
+            userName = userElement.tagName
+            if ':' in userName or '{' in userName:
+                continue # This is not a user but a capability
+            self._checkUnique(userName, context='/data/identities', dontfix=True)
+            self._checkSingleton('/data/identities/%s' % userName, 'plugindata')
+    
+        #
         # Now check that all plugins exist
         #
         # xxxjack to be done
@@ -302,14 +312,7 @@ class CapabilityConsistency(StructuralConsistency):
     
             self._checkExists('/data/identities/admin')
             self._checkUnique('/data/identities/admin')
-    
-            for userElement in self._getAllElements('/data/identities/*'):
-                userName = userElement.tagName
-                if ':' in userName or '{' in userName:
-                    continue # This is not a user but a capability
-                self._checkUnique(userName, context='/data/identities', dontfix=True)
-        
-        
+            
             #
             # Second set - all the default and important capabilities exist
             #

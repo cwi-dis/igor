@@ -27,6 +27,7 @@ import traceback
 import shelve
 import io
 import urllib.parse
+import markdown
 
 if sys.version_info[0] < 3:
     def str23compat(item):
@@ -570,6 +571,12 @@ def get_plugin_page(pluginName, pageName='index'):
             allArgs['userData'] = userData
 
     fullPageName = os.path.join(pluginName, pageName)
+    if fullPageName[-3:] == '.md':
+        # Markdown, probably the readme.
+        mdData = open(os.path.join(_SERVER.igor.pathnames.plugindir, fullPageName)).read()
+        data = markdown.markdown(mdData)
+        return Response(data, mimetype="text/html")
+        
     template = _SERVER.getJinjaTemplate(fullPageName)
     if template:
         # Note that we pass the incoming token, not the pluginToken, to the template

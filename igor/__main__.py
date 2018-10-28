@@ -651,6 +651,23 @@ class IgorPlugins(object):
     def exists(self, pluginName, token=None):
         return os.path.isdir(os.path.join(self.igor.pathnames.plugindir, pluginName))
         
+    def info(self, pluginName, token=None):
+        pluginPath = os.path.join(self.igor.pathnames.plugindir, pluginName)
+        if not os.path.isdir(pluginPath):
+            return None
+        isStd = os.path.islink(pluginPath)
+        rv = dict(name="pluginName", std=isStd)
+        if isStd:
+            rv['stdName'] = os.path.basename(os.path.realpath(pluginPath))
+        if os.path.exists(os.path.join(pluginPath, 'readme.md')):
+            rv['doc'] = '/plugin/%s/page/readme.md' % pluginName
+        pages = []
+        for fname in os.listdir(pluginPath):
+            if fname[-5:] == '.html':
+                pages.append('/plugin/%s/page/%s' % (pluginName, fname))
+        rv['pages'] = pages
+        return rv
+        
 def main():
     signal.signal(signal.SIGQUIT, _dump_app_stacks)
     DEFAULTDIR=os.path.join(os.path.expanduser('~'), '.igor')

@@ -8,9 +8,17 @@
 	
 	<h2>Fitbit website settings for this Igor</h2>
 	
-	<p>Register your Igor as a Fitbit app at <a href="https://dev.fitbit.com/apps/new">Fitbit website</a> and 
-	fill in the resulting details (Client ID and Client Secret)here. As callback URL, specify
-	<b>https://<i>your-igor-url</i>/plugin/{{pluginName}}/auth2</b>
+	<p>Register your Igor as a Fitbit app at <a href="https://dev.fitbit.com/apps/new" target="_blank">Fitbit "register an app" page</a> and 
+	fill in the resulting details (Client ID and Client Secret)here. Specify the following values:<br>
+	Application Name: <i>something with igor- is suggested</i><br>
+	Description: <i>doesn't relly matter</i><br>
+	Application Website: <i>https://github.com/cwi-dis/igor</i> is suggested<br>
+	Organization: <i>your name or family or so</i><br>
+	Organization Website: <i>Something pointing to you, such as a personal website</i><br>
+	Terms of Service and Privacy Policy: <i>probably the personal website again</i></br>
+	OAuth 2.0 Application Type: <b>Client</b><br>
+	Callback URL: <b>https://<i>your-igor-url</i>/plugin/{{pluginName}}/auth2</b><br>
+	Default Access Type: <b>Rwead-only</b><br>
 	</p>
 	
 	<form action="/plugin/{{pluginName}}/settings">
@@ -29,7 +37,7 @@
 		{% if 'userData' in kwargs %}
 			<p>Current Fitbit settings for user {{user}}:</p>
 			<form action="/plugin/{{pluginName}}/userSettings">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.py?user={{user}}">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?user={{user}}">
 				<input type="hidden" name="user" value="{{user}}">
 				{% for key, value in userData.items() %}
 					{% if key != 'token' %}
@@ -49,7 +57,7 @@
 				<p>User {{user}} has already given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
 				in case you need to re-grant Igor the Fitbit access rights.</p>
 			{% else %}
-				<p>User {{user}} has not yet given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
+				<p><b>Note:</b> User {{user}} has not yet given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
 				to arrange that this Igor can access your Fitbit data.</p>
 			{% endif %}
 			<p>If you want to you can also <a href="/plugin/{{pluginName}}/auth1?user={{user}}&delete=true">delete the access token</a> for this user. 
@@ -57,7 +65,7 @@
 		{% else %}
 			<p>No per-user Fitbit data for user {{user}}.</p>
 			<form action="/plugin/{{pluginName}}/userSettings">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.py?user={{user}}">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?user={{user}}">
 				<input type="hidden" name="user" value="{{user}}">
 				<input type="submit" value="Create user {{user}}">
 			</form>

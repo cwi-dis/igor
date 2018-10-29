@@ -9,6 +9,7 @@ include test/*.py
 
 recursive-include igor/bootScripts *
 recursive-include igor/igorDatabase.empty *
+recursive-include igor/std-plugins *
 recursive-include igor/plugins *
 recursive-include igor/scripts *
 recursive-include igor/static *

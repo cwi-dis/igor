@@ -341,7 +341,7 @@ class IgorSetup(object):
             daemonFile = '/Library/LaunchDaemons/nl.cwi.dis.igor.plist'
             if not os.path.exists(daemonFile):
                 daemonFile = os.path.join(os.path.expanduser('~'), 'Library/LaunchAgents/nl.cwi.dis.igor.plist')
-        elif sys.platform == 'linux2':
+        elif sys.platform in ('linux', 'linux2'):
             daemonFile = '/etc/init.d/igor'
         else:
             print("%s: don't know about daemon mode on platform %s" % (self.progname, sys.platform), file=sys.stderr)

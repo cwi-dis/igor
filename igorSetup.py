@@ -362,8 +362,8 @@ class IgorSetup(object):
             if not os.path.exists("setup.py"):
                 print("%s: use 'rebuild' option only in an Igor source directory" % self.progname, file=sys.stderr)
             self.runcmds += [
-                "python setup.py build",
-                "sudo python setup.py install"
+                "%s setup.py build" % sys.executable,
+                "sudo %s setup.py install" % sys.executable
                 ]
         if when in ('rebuild', 'edit', 'rebuildedit', 'start'):
             if sys.platform == 'darwin':

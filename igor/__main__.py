@@ -192,7 +192,7 @@ class IgorServer(object):
             proto = '_http._tcp'
         if sys.platform == 'darwin':
             cmd = ['dns-sd', '-R', 'igor', proto, 'local', str(port)]
-        elif sys.platform == 'linux2':
+        elif sys.platform in ('linux', 'linux2'):
             cmd = ['avahi-publish', '-s', 'igor', proto, str(port)]
         else:
             print("Cannot do mdns-advertise on platform", sys.platform, file=sys.stderr)

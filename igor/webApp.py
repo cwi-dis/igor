@@ -304,7 +304,7 @@ def get_pluginscript(pluginName, scriptName):
         myWebError("400 Cannot use / or . in scriptName", 400)
         
     if 'args' in allArgs:
-        args = shlex.split(allArgs.args)
+        args = shlex.split(allArgs['args'])
     else:
         args = []
     # xxxjack need to check that the incoming action is allowed on this plugin

@@ -109,7 +109,7 @@ class IgorServer(object):
         #
         # Make sure std-plugins points to the correct place
         #
-        if os.path.exists(self.pathnames.stdplugindir):
+        if os.path.exists(self.pathnames.stdplugindir) or os.path.lexists(self.pathnames.stdplugindir):
             os.unlink(self.pathnames.stdplugindir)
         stdplugindirsrc = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'std-plugins')
         os.symlink(stdplugindirsrc, self.pathnames.stdplugindir)

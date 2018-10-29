@@ -33,12 +33,17 @@ def besthostname():
     # Otherwise try a reverse DNS lookup
     #
     try:
-        hostname, _, _ = socket.gethostbyaddr(ip)
-        return hostname
+        realHostname, _, _ = socket.gethostbyaddr(ip)
+        return realHostname
     except socket.gaierror:
         pass
     except socket.herror:
         pass
+    #
+    # If this is a .local name  we use the hostname
+    #
+    if hostname[-6:] == '.local':
+        return hostname
     #
     # Otherwise return the IP address
     #

@@ -296,7 +296,7 @@ class IgorSetup(object):
             self.runcmds += [
                 "launchctl load %s" % dest,
                 ]
-        elif sys.platform == 'linux2' and when == 'runatboot':
+        elif sys.platform in ('linux','linux2') and when == 'runatboot':
             template = os.path.join(self.igorDir, 'bootScripts', 'initscript-igor')
             dest = '/etc/init.d/igor'
             self.runcmds += [
@@ -312,7 +312,7 @@ class IgorSetup(object):
         templateData = open(template).read()
         bootData = templateData % args
         open(dest, 'w').write(bootData)
-        if sys.platform == 'linux2':
+        if sys.platform in ('linux', 'linux2'):
             os.chmod(dest, 0o755)
         return True
    

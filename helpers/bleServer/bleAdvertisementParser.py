@@ -50,7 +50,7 @@ def parse_payload(payload):
         else:
             #allCorrect = False
             advKey = 'unknown_0x%02x' % typeByte 
-            advUpdates = {advKey: binascii.hexlify(singleAdvertisementItem)}
+            advUpdates = {advKey: binascii.hexlify(singleAdvertisementItem).decode('ascii')}
         for advKey in advUpdates:
             if advKey in advs:
                 # Duplicate key!
@@ -88,7 +88,7 @@ def parse_mf_data(name, payload):
         adv, correct = parserFunc(payload[2:])
         if correct:
             return {dataType : adv}, True
-    return {name: dict(raw=binascii.hexlify(payload[2:]), manufacturerID=manufacturerID)}, True
+    return {name: dict(raw=binascii.hexlify(payload[2:]).decode('ascii'), manufacturerID=manufacturerID)}, True
 
 def parse_str(name, payload):
     return {name : str(payload)}, True

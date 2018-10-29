@@ -178,7 +178,7 @@ class BleScanner(object):
 							raw_bdaddr_type=adv_bdaddr_type, 
 							bdaddr=self.packed_bdaddr_to_string(adv_bdaddr)
 							)
-						item['raw_advertisements'] = binascii.hexlify(adv_data)
+						item['raw_advertisements'] = binascii.hexlify(adv_data).decode('ascii')
 						# If we have one byte left we think it is the rssi, but this is guessed from existing code.
 						if len(pkt) == 1:
 							rssi, = struct.unpack("<b", pkt)

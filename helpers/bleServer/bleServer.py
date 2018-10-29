@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from __future__ import print_function
 from __future__ import unicode_literals
 import blescan
@@ -8,7 +8,6 @@ import json
 import threading
 import sys
 import time
-import web
 import argparse
 
 AVAILABLE_TIMEOUT=30   # A device is marked unavailable if it hasn't been seen for 30 seconds

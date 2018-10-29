@@ -30,7 +30,7 @@ def parse_payload(payload):
     allCorrect = True
     advs = {}
     while payload:
-        lenByte,  = unpack('<B', payload[0])
+        lenByte,  = unpack('<B', payload[0:1])
         payload = payload[1:]
         # Cater for zero-lengthadvertisements
         if lenByte == 0:
@@ -40,7 +40,7 @@ def parse_payload(payload):
         singleAdvertisementItem = payload[:lenByte]
         payload = payload[lenByte:]
         # See if we can parse the item
-        typeByte, = unpack("<B", singleAdvertisementItem[0])
+        typeByte, = unpack("<B", singleAdvertisementItem[0:1])
         singleAdvertisementItem = singleAdvertisementItem[1:]
         if typeByte in adv_parsers:
             advKey, advParser = adv_parsers[typeByte]
@@ -68,7 +68,7 @@ def parse_flags(name, payload):
     correct = True
     if len(payload) != 1:
         correct = False
-    bits, = unpack('<B', payload[0])
+    bits, = unpack('<B', payload[0:1])
     if bits & 0x01: adv['le_limited_discoverable'] = True
     if bits & 0x02: adv['le_general_discoverable'] = True
     if bits & 0x04: adv['bredr_not_supported'] = True
@@ -121,7 +121,7 @@ def parse_mf_ibeacon(payload):
 def parse_mf_sensortag(payload):
     adv = {}
     correct = True
-    adv['version'] = unpack("B", payload[0])[0]
+    adv['version'] = unpack("B", payload[0:1])[0]
 
     x_axis = old_div(unpack("h", payload[3:5])[0], float(old_div(32768, 2)))
     y_axis = old_div(unpack("h", payload[5:7])[0], float(old_div(32768, 2)))
@@ -145,7 +145,7 @@ def parse_mf_sensortag(payload):
 def parse_mf_estimote(payload):
     adv = {}
     correct = True
-    adv['version'] = unpack("B", payload[0])[0]
+    adv['version'] = unpack("B", payload[0:1])[0]
 
     adv['uuid'] = "d0d3fa86ca7645ec9bd96af4" + ''.join(x.encode("hex") for x in payload[1:5])
     adv['major'] = unpack(">H", payload[5:7])[0]
@@ -158,11 +158,11 @@ def parse_mf_estimote(payload):
     else:
         adv['temp']  = old_div(raw_temp, 256.0)
 
-    adv['is_moving'] = unpack("B", payload[13])[0] & 0x40 != 0
+    adv['is_moving'] = unpack("B", payload[13:14])[0] & 0x40 != 0
 
-    x_axis = unpack("b", payload[14])[0] * 15.625 / 1000.0
-    y_axis = unpack("b", payload[15])[0] * 15.625 / 1000.0
-    z_axis = unpack("b", payload[16])[0] * 15.625 / 1000.0
+    x_axis = unpack("b", payload[14:15])[0] * 15.625 / 1000.0
+    y_axis = unpack("b", payload[15:16])[0] * 15.625 / 1000.0
+    z_axis = unpack("b", payload[16:17])[0] * 15.625 / 1000.0
 
     adv['accelerometer'] = {'x':x_axis, 'y': y_axis, 'z': z_axis}
 
@@ -177,16 +177,16 @@ def parse_mf_estimote(payload):
 
         return duration
 
-    motion = unpack("B", payload[17])[0]
+    motion = unpack("B", payload[17:18])[0]
     adv['current_motion_state'] = __convert_motion_state(motion)
-    motion = unpack("B", payload[18])[0]
+    motion = unpack("B", payload[18:19])[0]
     adv['previous_motion_state'] = __convert_motion_state(motion)
 
     adv['voltage'] = 0
 
-    if unpack("B", payload[13])[0] & 0x80 == 0:
-        first_nibble = (unpack("B", payload[13])[0] & 0x3f) << 4
-        second_nibble = unpack("B", payload[12])[0] & 0xf
+    if unpack("B", payload[13:14])[0] & 0x80 == 0:
+        first_nibble = (unpack("B", payload[13:14])[0] & 0x3f) << 4
+        second_nibble = unpack("B", payload[12:13])[0] & 0xf
         adv['voltage'] = (first_nibble + second_nibble) * 3.6 / 1023.0
 
     # DON'T KNOW IF THIS IS RIGHT
@@ -199,9 +199,9 @@ def parse_mf_estimote(payload):
                   6:  0,
                   7:  4}
 
-    adv['power'] = int(unpack("B", payload[19])[0] & 0x0f)
-    adv['channel'] = int(unpack("B", payload[19])[0] >> 4)
-#    adv['rssi_1m'] = twos_comp((unpack("B", payload[19])[0] & 0x0f), 2), len
+    adv['power'] = int(unpack("B", payload[19:20])[0] & 0x0f)
+    adv['channel'] = int(unpack("B", payload[19:20])[0] >> 4)
+#    adv['rssi_1m'] = twos_comp((unpack("B", payload[19:20])[0] & 0x0f), 2), len
     return adv, correct
 
 

@@ -1,7 +1,8 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
-
+from future import standard_library
+standard_library.install_aliases()
 from builtins import object
 DEBUG = False
 # BLE scanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
@@ -153,13 +154,13 @@ class BleScanner(object):
 					if DEBUG: print("was event EVT_DISCONN_COMPLETE")
 					return None
 			elif event == LE_META_EVENT:
-				subevent, = struct.unpack("<B", pkt[3])
+				subevent, = struct.unpack("<B", pkt[3:4])
 				if DEBUG: print("-------------- subevent", subevent)
 				pkt = pkt[4:]
 				if subevent == EVT_LE_CONN_COMPLETE:
 					pass # self.le_handle_connection_complete(pkt)
 				elif subevent == EVT_LE_ADVERTISING_REPORT:
-					num_reports, = struct.unpack("<B", pkt[0])
+					num_reports, = struct.unpack("<B", pkt[0:1])
 					pkt = pkt[1:]
 					if DEBUG: print("-------------- numreports", num_reports)
 					assert num_reports == 1

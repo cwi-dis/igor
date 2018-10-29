@@ -9,17 +9,20 @@
 	<h2>Fitbit website settings for this Igor</h2>
 	
 	<p>Register your Igor as a Fitbit app at <a href="https://dev.fitbit.com/apps/new" target="_blank">Fitbit "register an app" page</a> and 
-	fill in the resulting details (Client ID and Client Secret)here. Specify the following values:<br>
-	Application Name: <i>something with igor- is suggested</i><br>
-	Description: <i>doesn't relly matter</i><br>
-	Application Website: <i>https://github.com/cwi-dis/igor</i> is suggested<br>
-	Organization: <i>your name or family or so</i><br>
-	Organization Website: <i>Something pointing to you, such as a personal website</i><br>
-	Terms of Service and Privacy Policy: <i>probably the personal website again</i></br>
-	OAuth 2.0 Application Type: <b>Client</b><br>
-	Callback URL: <b>https://<i>your-igor-url</i>/plugin/{{pluginName}}/auth2</b><br>
-	Default Access Type: <b>Rwead-only</b><br>
-	</p>
+	fill in the resulting details (Client ID and Client Secret) here. You may need to register as a developer before being able to register your igor.</p>
+	
+	<p>Specify the following values:</p>
+	<blockquote>
+		Application Name: <i>something with igor- is suggested</i><br>
+		Description: <i>doesn't really matter</i><br>
+		Application Website: <i>https://github.com/cwi-dis/igor</i> is suggested<br>
+		Organization: <i>your name or family or so</i><br>
+		Organization Website: <i>Something pointing to you, such as a personal website</i><br>
+		Terms of Service and Privacy Policy: <i>probably the personal website again</i></br>
+		OAuth 2.0 Application Type: <b>Client</b><br>
+		Callback URL: <b>https://<i>your-igor-url</i>/plugin/{{pluginName}}/auth2</b><br>
+		Default Access Type: <b>Read-only</b><br>
+	</blockquote>
 	
 	<form action="/plugin/{{pluginName}}/settings">
 		Fitbit Client ID for this Igor: <br>
@@ -63,7 +66,8 @@
 			<p>If you want to you can also <a href="/plugin/{{pluginName}}/auth1?user={{user}}&delete=true">delete the access token</a> for this user. 
 			(This action cannot be undone except by re-adding the user and re-authenticating).</p>
 		{% else %}
-			<p>No per-user Fitbit data for user {{user}}.</p>
+			<p>No per-user Fitbit data for user {{user}}. You can create the new user here and then fill in the type of data you want
+			to retrieve. But <b>note</b> that you will also have to add the <tt>&lt;action&gt;</tt> element yourself.</p>
 			<form action="/plugin/{{pluginName}}/userSettings">
 				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?user={{user}}">
 				<input type="hidden" name="user" value="{{user}}">

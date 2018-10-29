@@ -5,8 +5,8 @@
 	</devices>
 	<actions>
 		<action own:plugin="{plugin}">
-			<xpath>/data/devices/{plugin}/pos</xpath>
-			<url>{/data/plugindata/{plugin}/protocol}://{/data/plugindata/{plugin}/host}/stepper/0?pos={.}</url>
+			<xpath>/data/devices/{plugin}/target</xpath>
+			<url>/plugin/{plugin}/push</url>
 			<!-- needs capability for /data/plugindata/plant -->
 			<!-- needs capability for /data/devices/plant -->
 			<representing>devices/{plugin}</representing>
@@ -14,7 +14,7 @@
 		<action own:plugin="{plugin}">
 			<!-- needs capability for data/devices/plant -->
 			<xpath>/data/environment/energy/electricity</xpath>
-			<url>/data/devices/{plugin}/pos</url>
+			<url>/data/devices/{plugin}/target</url>
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{700-(number(.)*700 div 5)}</data>
@@ -23,7 +23,7 @@
 		</action>
 		<action own:plugin="{plugin}">
 			<interval>600</interval>
-			<url>/pluginscript/{plugin}/pull</url>
+			<url>/plugin/{plugin}/pull</url>
 			<representing>devices/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>			
@@ -32,6 +32,7 @@
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>
 			<protocol>https</protocol>
+			<stepper>0</stepper>
 		</{plugin}>
 	</plugindata>
 	<environment>

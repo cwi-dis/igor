@@ -6,7 +6,7 @@
 	<actions>
 		<action own:plugin="{plugin}">
 			<interval>60</interval>
-			<url>/pluginscript/{plugin}/pull</url>
+			<url>/plugins/{plugin}/pull</url>
 			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>
@@ -16,7 +16,7 @@
             <url>/data/environment/devices/{/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/address)]/name}</url>
             <method>PUT</method>
             <mimetype>text/plain</mimetype>
-            <data>{availa{plugin}}</data>
+            <data>{available}</data>
             <multiple>True</multiple>
         </action>
 	</actions>
@@ -24,6 +24,9 @@
 		<{plugin} own:plugin="{plugin}">
 			<!-- needs capability for /data/sensors/{plugin} -->
 			<!-- needs capability for /data/plugindata/{plugin}Devices -->
+			<protocol>http</protocol>
+			<host>localhost</host>
+			<port>8081</port>
 		</{plugin}>
 		<{plugin}Devices own:plugin="{plugin}">
 			<!-- example: -->

@@ -185,12 +185,14 @@ class MyServer:
         
     def raiseHTTPError(self, message):
         """General http errors"""
-        mSplit = message.split()
         try:
-            code = int(mSplit[0])
+            # If code starts with a numeric string we presume it is an error message
+            code = int(message.split()[0])
         except ValueError:
             code = 500
-        resp = make_response(message, code)
+        else:
+            code = message.splitlines()[0]
+        resp = make_response(message+'\n', code)
         return abort(resp)
         
     def addHeaders(self, headers):
@@ -534,6 +536,8 @@ def get_plugin(pluginName, methodName='index'):
         abort(404)
     try:
         rv = method(**dict(allArgs))
+    except werkzeug.exceptions.HTTPException:
+        raise
     except ValueError as arg:
         myWebError("400 Error in plugin method %s/%s parameters: %s" % (pluginName, methodName, arg), 400)
     except:

@@ -81,7 +81,8 @@ class MyWSGICaller:
         for i in iter:
             if self.data == None:
                 self.data = i
-            self.data += i
+            else:
+                self.data += i
             
     def _buildRequestEnviron(self, url, method, data, headers, env):
         url = str23compat(url)

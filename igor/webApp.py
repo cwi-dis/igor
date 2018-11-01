@@ -183,12 +183,14 @@ class MyServer:
         """303 See Other"""
         return redirect(url, 303)
         
-    def raiseHTTPError(self, status, headers={}, data=""):
+    def raiseHTTPError(self, message):
         """General http errors"""
-        resp = make_response(data, status)
-        if headers:
-            for k, v in headers.items():
-                resp.headers[k] = v
+        mSplit = message.split()
+        try:
+            code = int(mSplit[0])
+        except ValueError:
+            code = 500
+        resp = make_response(message, code)
         return abort(resp)
         
     def addHeaders(self, headers):
@@ -534,6 +536,11 @@ def get_plugin(pluginName, methodName='index'):
         rv = method(**dict(allArgs))
     except ValueError as arg:
         myWebError("400 Error in plugin method %s/%s parameters: %s" % (pluginName, methodName, arg), 400)
+    except:
+        print('Exception in /plugin/%s/%s:' % (pluginName, methodName))
+        traceback.print_exc(file=sys.stdout)
+        msg = "502 Exception in %s/%s : %s" % (pluginName, methodName, repr(sys.exc_info()[1]))
+        myWebError(msg, 502)
     # See what the plugin returned. Could be a flask Response or bytestring, otherwise we convert to string.
     if rv == None:
         rv = ''

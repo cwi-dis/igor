@@ -15,6 +15,7 @@ import json
 import urllib.parse
 import urllib.request, urllib.parse, urllib.error
 from fitbit import Fitbit
+import oauthlib.oauth2.rfc6749.errors
 from requests.packages import urllib3
 urllib3.disable_warnings()
 import os
@@ -77,10 +78,15 @@ class FitbitPlugin(object):
             m = getattr(fb, method)
             try:
                 item = m(**kwargs)
+            except oauthlib.oauth2.rfc6749.errors.OAuth2Error as ex:
+                descr = ex.description
+                if not descr:
+                    descr = str(ex)
+                self.igor.app.raiseHTTPError("502 Fitbit OAuth2 error: %s" % descr)
             except Exception as ex:
                 print('Exception in fitbit.%s with args %s' % (method, repr(kwargs)))
                 traceback.print_exc(file=sys.stdout)
-                self.igor.app.raiseHTTPError("501 fitbit error %s" % repr(ex))
+                self.igor.app.raiseHTTPError("502 fitbit error %s" % repr(ex))
             if DEBUG: print("xxxjack method", method, "returned", m)
             results.update(item)
         

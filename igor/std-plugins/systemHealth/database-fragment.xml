@@ -10,6 +10,7 @@
 			<interval>60</interval>
 			<xpath>/data/status/*/*/errorMessage</xpath>
 			<url>/plugin/{plugin}</url>
+			<aggregate>true</aggregate>
 		</action>
 	</actions>
 	<plugindata>

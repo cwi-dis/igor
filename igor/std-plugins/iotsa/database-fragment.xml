@@ -4,7 +4,7 @@
 		<{plugin} own:plugin="{plugin}">
 			<target/>
 			<current/>
-		</plugin>
+		</{plugin}>
 	</devices>
 	<actions>
 		<action own:plugin="{plugin}">

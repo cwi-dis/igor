@@ -30,33 +30,48 @@ class DevicePlugin(object):
             description = json.loads(description)
         if type(description) != type({}):
             self.igor.app.raiseHTTPError('400 description must be dictionary or json object')
-        isDevice = description.get('isDevice', False)
-        isSensor = description.get('isSensor', False)
-        hostname = description.get('hostname')
-        if not hostname:
+            
+        deviceType = description.get('deviceType', None)
+        if not deviceType:
+            self.igor.app.raiseHTTPError('400 deviceType missing')
+            
+        isDevice = deviceType in {'activeDevice', 'activeSensorDevice'}
+        isSensor = deviceType in {'activeSensor', 'polledSensor', 'passiveSensor'}
+        if not isDevice and not isSensor:
+            self.igor.app.raiseHTTPError('400 unknown deviceType %s' % deviceType)
+        
+        isActive = deviceType in {'activeSensor', 'activeSensorDevice'}
+        isPassive = deviceType == 'passiveSensor'
+        hasPlugin = not isPassive
+        hostname = description.get('hostname', None)
+        if not hostname and (isDevice or isActive):
             hostname = name + '.local'
 
-        if not hostname:
-            self.igor.app.raiseHTTPError('400 hostname must be set')
         if isDevice:
             databaseEntry = 'devices/%s' % name
         elif isSensor:
             databaseEntry = 'sensors/%s' % name
         else:
-            self.igor.app.raiseHTTPError('400 either isDevice or isSensor must be set')
+            assert 0
             
         if self.igor.databaseAccessor.get_key(databaseEntry, 'application/x-python-object', 'multi', token):
             self.igor.app.raiseHTTPError('400 %s already exists' % name)
             
-        # Create item
-        entryValues = {}
-        if hostname != name + ".local":
-            entryValues['hostname'] = hostname
-        self.igor.databaseAccessor.put_key(databaseEntry, 'text/plain', 'ref', entryValues, 'application/x-python-object', token, replace=True)
-        # Create status item
-        self.igor.databaseAccessor.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
-
         rv = dict(name=name, isDevice=isDevice, isSensor=isSensor, hostname=hostname)
+
+        if hasPlugin:
+            pluginName = description.get('plugin', '')
+            if not pluginName:
+                self.igor.app.raiseHTTPError('400 deviceType %s requires plugin' % deviceType)
+            queryString = urllib.parse.urlencode(dict(name=name, stdName=pluginName))
+            rv['addPluginLink'] = '/plugins.html?' + queryString
+        else:
+            # Create item
+            entryValues = {}
+            self.igor.databaseAccessor.put_key(databaseEntry, 'text/plain', 'ref', entryValues, 'application/x-python-object', token, replace=True)
+            # Create status item
+            self.igor.databaseAccessor.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
+
         
         if isDevice and self.hasCapabilities:
             deviceKey = self._genSecretKey(aud=hostname, token=token)
@@ -74,7 +89,7 @@ class DevicePlugin(object):
                 aud=hostname
                 )
             rv['deviceTokenId'] = deviceTokenId
-        if isSensor and self.hasCapabilities:
+        if isActive and self.hasCapabilities:
             deviceKey = self._genSecretKey(sub=hostname, token=token)
             rv['subSharedKeyId'] = deviceKey
             actions = description.get('actions', {})

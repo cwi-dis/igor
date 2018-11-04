@@ -399,21 +399,31 @@ class IgorInternal(object):
             descr = dict(name=name)
             hostname = None
             representing = None
+            entries = []
+            statusEntries = []
             if self.igor.database.getElements('devices/' + name, 'get', token):
                 descr['isDevice'] = True
-                hostname = self.igor.database.getValue('devices/%s/hostname' % name, token)
+                entries.append('devices/' + name)
                 representing = 'devices/' + name
             if self.igor.database.getElements('sensors/' + name, 'get', token):
                 descr['isSensor'] = True
-                hostname = None
+                entries.append('sensors/' + name)
                 representing = 'sensors/' + name
+            if self.igor.database.getElements('plugindata/' + name, 'get', token):
+                descr['isPlugin'] = True
+                entries.append('plugindata/' + name)
+                hostname = self.igor.database.getValue('plugindata/%s/host' % name, token)
+                
             if hostname:
                 descr['hostname'] = hostname
                 
             if self.igor.database.getElements('status/devices/' + name, 'get', token):
-                descr['status'] = '/data/status/devices/' + name
-            elif self.igor.database.getElements('status/sensors/' + name, 'get', token):
-                descr['status'] = '/data/status/sensors/' + name
+                statusEntries.append('status/devices/' + name)
+            if self.igor.database.getElements('status/sensors/' + name, 'get', token):
+                statusEntries.append('status/sensors/' + name)
+            
+            descr['entry'] = entries
+            descr['status'] = statusEntries
             
             if representing:
                 actionElements = self.igor.database.getElements("actions/action[representing='%s']" % representing, 'get', token)

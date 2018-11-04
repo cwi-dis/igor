@@ -11,6 +11,7 @@
 	</style>
 </head>
 <body>
+	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
 	{% if action == 'list' or not action %}
 		<h1>Igor Devices and Sensors</h1>
 		{% set user = igor.app.getSessionItem('user', None) %}
@@ -38,8 +39,7 @@
 			<tr>
 				<th>Name</th>
 				<th>Hostname</th>
-				<th>Device?</th>
-				<th>Sensor Only?</th>
+				<th>Type(s)</th>
 				<th>Entry</th>
 				<th>Status Entry</th>
 				<th>Secret Shared key?</th>
@@ -50,35 +50,32 @@
 			{% set deviceList = igor.internal._getDeviceListData(token) %}
 			{% for device in deviceList %}
 				{% set name=device.get('name') %}
-				{% set defaultHostname = ('%s.local' % name) if (device.get('isDevice') or device.get('isSensor')) else '' %}
-				{% set hostName = device.get('hostname', defaultHostname) %}
-				{% set hasAudSecretKey = hostName in keyListData.allKeyAudiences or ('http://%s' % hostName) in keyListData.allKeyAudiences or ('https://%s' % hostName) in keyListData.allKeyAudiences %}
-				{% set hasSubSecretKey = hostName in keyListData.allKeySubjects %}
+				{% set hostName = device.get('hostname', '') %}
+				{% set hasAudSecretKey = hostName and (hostName in keyListData.allKeyAudiences or ('http://%s' % hostName) in keyListData.allKeyAudiences or ('https://%s' % hostName) in keyListData.allKeyAudiences) %}
+				{% set hasSubSecretKey = hostName and (hostName in keyListData.allKeySubjects) %}
 				<tr>
 					<td>{{name}}</td>
 					<td>{{hostName}}</td>
 					<td>
 						{% if device.get('isDevice') %}
-							Yes
+							Device<br>
 						{% endif %}
-					</td>
-					<td>
 						{% if device.get('isSensor') %}
-							Yes
+							Sensor<br>
+						{% endif %}
+						{% if device.get('isPlugin') %}
+							Plugin<br>
 						{% endif %}
 					</td>
 					<td>
-						{% if device.get('isDevice') %}
-							<a href="/data/devices/{{name}}">devices/{{name}}</a>
-						{% elif device.get('isSensor') %}
-							<a href="/data/sensors/{{name}}">sensors/{{name}}</a>
-						{% endif %}
+						{% for ent in device.get('entry', []) %}
+							<a href="/data/{{ent}}">{{ent}}</a><br>
+						{% endfor %}
 					</td>
 					<td>
-						{% set statusEntry = device.get('status') %}
-						{% if statusEntry %}
-							<a href="{{statusEntry}}">{{statusEntry}}</a>
-						{% endif %}
+						{% for ent in device.get('status', []) %}
+							<a href="/data/{{ent}}">{{ent}}</a><br>
+						{% endfor %}
 					</td>
 					<td>
 						{% if hasAudSecretKey %}
@@ -96,21 +93,21 @@
 						{% endfor %}
 					</td>
 					<td>
-						{% if device.get('isDevice') and not hasAudSecretKey %}
+						{% if hasCapabilitySupport and hostName and device.get('isDevice') and not hasAudSecretKey %}
 							<form action="/devices.html">
 							<input type="hidden" name="action" value="addKey">
 							<input type="hidden" name="aud" value="{{hostName}}">
 							<input type="submit" value="Create Audience Key">
 							</form>
 						{% endif %}
-						{% if (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey %}
+						{% if hasCapabilitySupport and hostName and (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey %}
 							<form action="/devices.html">
 							<input type="hidden" name="action" value="addKey">
 							<input type="hidden" name="sub" value="{{hostName}}">
 							<input type="submit" value="Create Subject Key">
 							</form>
 						{% endif %}
-						{% if device.get('isSensor') or device.get('isDevice') %}
+						{% if hasCapabilitySupport and device.get('isSensor') or device.get('isDevice') %}
 							<form action="/devices.html">
 								<input type="hidden" name="action" value="addActionCap">
 								<input type="hidden" name="name" value="{{name}}">
@@ -170,39 +167,41 @@
 			</table>
 		</form>
 		
-		<h2>Secret Shared Keys</h2>
+		{% if hasCapabilitySupport %}
+			<h2>Secret Shared Keys</h2>
 		
-		<p>A device that wants to contact Igor needs a shared secret key with itself (the device) as <i>subject</i> and Igor as the <i>audience</i>. This key is used by the device to sign the capability, and ensures to igor that the device is the right one.</p>
+			<p>A device that wants to contact Igor needs a shared secret key with itself (the device) as <i>subject</i> and Igor as the <i>audience</i>. This key is used by the device to sign the capability, and ensures to igor that the device is the right one.</p>
 		
-		<p>A device to which Igor needs to send requests needs a shared key with the device as <i>audience</i> and either no <i>subject</i> or Igor itself as
-		the subject. Igor will sign capabilities with this key, and the device can confirm that the request actually comes from Igor.</p>
+			<p>A device to which Igor needs to send requests needs a shared key with the device as <i>audience</i> and either no <i>subject</i> or Igor itself as
+			the subject. Igor will sign capabilities with this key, and the device can confirm that the request actually comes from Igor.</p>
 		
-		<p>Igor has the following shared secret keys:</p>
-		<table style="width:100%">
-			<tr>
-				<th>Issuer</th>
-				<th>Audience</th>
-				<th>Subject</th>
-				<th>OP</th>
-			</tr>
-			{% for iss, aud, sub in keyListData.allKeysAsTuples %}
+			<p>Igor has the following shared secret keys:</p>
+			<table style="width:100%">
 				<tr>
-					<td>{{iss}}</td>
-					<td>{{aud}}</td>
-					<td>{{sub}}</td>
-					<td>
-						<form action="/devices.html">
-						<input type="hidden" name="action" value="deleteKey">
-						<input type="hidden" name="iss" value="{{iss}}">
-						<input type="hidden" name="aud" value="{{aud}}">
-						<input type="hidden" name="sub" value="{{sub}}">
-						<input type="submit" value="Delete Key">
-						</form>
-					</td>
+					<th>Issuer</th>
+					<th>Audience</th>
+					<th>Subject</th>
+					<th>OP</th>
 				</tr>
-			{% endfor %}
+				{% for iss, aud, sub in keyListData.allKeysAsTuples %}
+					<tr>
+						<td>{{iss}}</td>
+						<td>{{aud}}</td>
+						<td>{{sub}}</td>
+						<td>
+							<form action="/devices.html">
+							<input type="hidden" name="action" value="deleteKey">
+							<input type="hidden" name="iss" value="{{iss}}">
+							<input type="hidden" name="aud" value="{{aud}}">
+							<input type="hidden" name="sub" value="{{sub}}">
+							<input type="submit" value="Delete Key">
+							</form>
+						</td>
+					</tr>
+				{% endfor %}
 			
-		</table>
+			</table>
+		{% endif %}
 		
 	{% elif action == "newDevice" %}
 		<h1>New Device</h1>

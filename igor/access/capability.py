@@ -318,7 +318,7 @@ class AccessToken(BaseAccessToken):
             return
         elif len(capNodeList) > 1:
             print('access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList)))
-            raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
+            raise AccessControlError("Database Error: multiple capabilities with cid=%s" % self.identifier)
         oldCapElement = capNodeList[0]
         newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=AU_NAMESPACE)
         parentElement = oldCapElement.parentNode
@@ -336,16 +336,16 @@ class AccessToken(BaseAccessToken):
             return False
         elif len(capNodeList) > 1:
             print('access: Error: Cannot setOwner token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList)))
-            raise myWebError("500 Access: multiple capabilities with cid=%s" % self.identifier)
+            raise AccessControlError("Database Error: multiple capabilities with cid=%s" % self.identifier)
         oldCapElement = capNodeList[0]
         parentElement = oldCapElement.parentNode
         newParentElementList = singleton.igor.database.getElements(newOwner, "post", _accessSelfToken)
         if len(newParentElementList) == 0:
             print('access: cannot setOwner %s because it is not in the database')
-            raise myWebError("401 Unknown new token owner %s" % newOwner)
+            raise AccessControlError("Internal Error: Unknown new token owner %s" % newOwner)
         if len(newParentElementList) > 1:
             print('access: cannot setOwner %s because it occurs multiple times in the database')
-            raise myWebError("401 Multiple new token owner %s" % newOwner)
+            raise AccessControlError("Database Error: Multiple new token owner %s" % newOwner)
         newParentElement = newParentElementList[0]
         newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=AU_NAMESPACE)
         newParentElement.appendChild(oldCapElement) # This also removes it from where it is now...
@@ -401,6 +401,8 @@ class MultiAccessToken(BaseAccessToken):
     def _allows(self, operation, accessChecker):
         if DEBUG: print('access: %s %s: MultiAccessToken(%d)' % (operation, accessChecker.destination, len(self.tokens)))
         for t in self.tokens:
+            if t == self:
+                raise AccessControlError("Database Error: Recursive capability")
             if t._allows(operation, accessChecker):
                 return True
         return False      
@@ -440,5 +442,6 @@ class MultiAccessToken(BaseAccessToken):
         
     def _appendToken(self, token):
         """Add a token object to the end of the list of tokens"""
+        assert token != self
         self.tokens.append(token)
         self.externalTokenCache = {}

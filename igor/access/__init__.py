@@ -34,6 +34,8 @@ def _combineTokens(token1, token2):
         return token2
     if token2 is None:
         return token1
+    if token1 == token2:
+        return token1
     if hasattr(token1, '_appendToken'):
         token1._appendToken(token2)
         return token1

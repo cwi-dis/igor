@@ -413,7 +413,7 @@ class IgorInternal(object):
                 descr['isPlugin'] = True
                 entries.append('plugindata/' + name)
                 hostname = self.igor.database.getValue('plugindata/%s/host' % name, token)
-                
+
             if hostname:
                 descr['hostname'] = hostname
                 
@@ -433,6 +433,25 @@ class IgorInternal(object):
                 if actionPaths:
                     descr['actions'] = actionPaths
                 descr['representing'] = representing
+
+            # See what the type is
+            if descr.get('isDevice'):
+                if not descr.get('isPlugin'):
+                    descr['deviceType'] = 'badDevice (no plugin)'
+                else:
+                    # We cannot tell difference between activeDevice and activeDeviceSensor.
+                    # Could examine actions, but...
+                    descr['deviceType'] = 'activeDevice'
+            elif descr.get('isSensor'):
+                if descr.get('isPlugin'):
+                    descr['deviceType'] = 'polledSensor'
+                elif descr.get('actionPaths'):
+                    descr['deviceType'] = 'activeSensor'
+                else:
+                    descr['deviceType'] = 'passiveSensor'
+            else:
+                descr['deviceType'] = 'bad (not Device, not Sensor)'
+
             rv.append(descr)
         return rv
 

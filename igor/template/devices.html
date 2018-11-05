@@ -57,14 +57,18 @@
 					<td>{{name}}</td>
 					<td>{{hostName}}</td>
 					<td>
-						{% if device.get('isDevice') %}
-							Device<br>
-						{% endif %}
-						{% if device.get('isSensor') %}
-							Sensor<br>
-						{% endif %}
-						{% if device.get('isPlugin') %}
-							Plugin<br>
+						{% if device.get('deviceType') %}
+							{{device.deviceType}}
+						{% else %}
+							{% if device.get('isDevice') %}
+								Device<br>
+							{% endif %}
+							{% if device.get('isSensor') %}
+								Sensor<br>
+							{% endif %}
+							{% if device.get('isPlugin') %}
+								Plugin<br>
+							{% endif %}
 						{% endif %}
 					</td>
 					<td>

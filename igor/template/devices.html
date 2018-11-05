@@ -147,19 +147,24 @@
 					<td>Type</td>
 					<td>
 						<select name="deviceType">
-							<option value="activeDevice">ActiveDevice (Igor will send commands to this device through REST or http[s] or so)</option>
-							<option value="activeSensor">ActiveSensor (device will send commands to Igor through REST or http[s] or so)</option>
-							<option value="activeSensorDevice">ActiveDevice/ActiveSensor combination</option>
-							<option value="polledSensor">PolledSensor (Igor will poll this device)</option>
-							<option value="passiveSensor">PassiveSensor (Sensor data is obtained indirectly)</option>
+							<option value="activeDevice">ActiveDevice</option>
+							<option value="activeSensor">ActiveSensor</option>
+							<option value="activeSensorDevice">ActiveDevice and ActiveSensor</option>
+							<option value="polledSensor">PolledSensor</option>
+							<option value="passiveSensor">PassiveSensor</option>
 						</select>
 					</td>
-					<td>True if Igor will send actuator commands to this device (through REST or http[s] or so)</td>
+					<td>
+						ActiveDevice: Igor will send commands to this device through REST or http[s] or so<br>
+						ActiveSensor: device will send commands to Igor through REST or http[s] or so<br>
+						PolledSensor: Igor will poll this device to obtain sensor data<br>
+						PassiveSensor: Sensor data is obtained indirectly<br>
+					</td>
 				</tr>
 				<tr>
 					<td>Hostname</td>
 					<td><input name="hostname" type="text"></td>
-					<td>Neded for ActiveDevice and ActiveSensor, if needed defaults to <i>Name</i>.local</td>
+					<td>Needed for ActiveDevice and ActiveSensor, if needed defaults to <i>Name</i>.local</td>
 				</tr>
 				<tr>
 					<td>Plugin</td>

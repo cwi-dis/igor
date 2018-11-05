@@ -170,49 +170,9 @@ class DevicePlugin(object):
         self.igor.internal.accessControl('deleteSharedKey', token=token, aud=aud, sub=sub)
         
     def list(self, token=None):
-        allNames = self._getNames('devices/*', token) + self._getNames('sensors/*', token) + self._getNames('status/sensors/*', token) + self._getNames('status/devices/*', token)
-        allNames = list(set(allNames))
-        allNames.sort()
-        rv = []
-        for name in allNames:
-            descr = dict(name=name)
-            hostname = None
-            representing = None
-            if self.igor.database.getElements('devices/' + name, 'get', token):
-                descr['isDevice'] = True
-                hostname = self.igor.database.getValue('devices/%s/hostname' % name, token)
-                representing = 'devices/' + name
-            if self.igor.database.getElements('sensors/' + name, 'get', token):
-                descr['isSensor'] = True
-                hostname = None
-                representing = 'sensors/' + name
-            if hostname:
-                descr['hostname'] = hostname
-                
-            if self.igor.database.getElements('status/devices/' + name, 'get', token):
-                descr['status'] = '/data/status/devices/' + name
-            elif self.igor.database.getElements('status/sensors/' + name, 'get', token):
-                descr['status'] = '/data/status/sensors/' + name
-            
-            if representing:
-                actionElements = self.igor.database.getElements('actions/action[representing="%s"]' % representing, 'get', token)
-                actionPaths = []
-                for e in actionElements:
-                    actionPaths.append(self.igor.database.getXPathForElement(e))
-                if actionPaths:
-                    descr['actions'] = actionPaths
-            rv.append(descr)
+        rv = self.igor.internal._getDeviceListData(token)
         return json.dumps(rv)
             
-    def _getNames(self, path, token):
-        allElements = self.igor.database.getElements(path, 'get', token)
-        rv = []
-        for e in allElements:
-            name = e.tagName
-            if ':' in name: continue
-            rv.append(name)
-        return rv
-        
 def igorPlugin(igor, pluginName, pluginData):
     return DevicePlugin(igor)
     

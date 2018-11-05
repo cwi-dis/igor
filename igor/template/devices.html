@@ -42,7 +42,9 @@
 				<th>Type(s)</th>
 				<th>Entry</th>
 				<th>Status Entry</th>
-				<th>Secret Shared key?</th>
+				{% if hasCapabilitySupport %}
+					<th>Secret Shared keys</th>
+				{% endif %}
 				<th>Actions</th>
 				<th>OP</th>
 			</tr>
@@ -81,14 +83,16 @@
 							<a href="/data/{{ent}}">{{ent}}</a><br>
 						{% endfor %}
 					</td>
-					<td>
-						{% if hasAudSecretKey %}
-							aud={{hostName}}<br>
-						{% endif %}
-						{% if hasSubSecretKey %}
-							sub={{hostName}}<br>
-						{% endif %}
-					</td>
+					{% if hasCapabilitySupport %}
+						<td>
+							{% if hasAudSecretKey %}
+								aud={{hostName}}<br>
+							{% endif %}
+							{% if hasSubSecretKey %}
+								sub={{hostName}}<br>
+							{% endif %}
+						</td>
+					{% endif %}
 					<td>
 						{% for action in device.get('actions', []) %}
 							{% set actionName = igor.database.getValues(action+'/name', token=token) %}
@@ -97,28 +101,30 @@
 						{% endfor %}
 					</td>
 					<td>
-						{% if hasCapabilitySupport and hostName and device.get('isDevice') and not hasAudSecretKey %}
-							<form action="/devices.html">
-							<input type="hidden" name="action" value="addKey">
-							<input type="hidden" name="aud" value="{{hostName}}">
-							<input type="submit" value="Create Audience Key">
-							</form>
-						{% endif %}
-						{% if hasCapabilitySupport and hostName and (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey %}
-							<form action="/devices.html">
-							<input type="hidden" name="action" value="addKey">
-							<input type="hidden" name="sub" value="{{hostName}}">
-							<input type="submit" value="Create Subject Key">
-							</form>
-						{% endif %}
-						{% if hasCapabilitySupport and (device.get('isSensor') or device.get('isDevice')) %}
-							<form action="/devices.html">
-								<input type="hidden" name="action" value="addActionCap">
-								<input type="hidden" name="name" value="{{name}}">
-								<input type="hidden" name="hostname" value="{{hostName}}">
-								<input type="hidden" name="representing" value="{{device.get('representing')}}">
-								<input type="submit" value="Add Action Capability">
-							</form>
+						{% if hasCapabilitySupport %}
+							{% if  hostName and device.get('isDevice') and not hasAudSecretKey %}
+								<form action="/devices.html">
+								<input type="hidden" name="action" value="addKey">
+								<input type="hidden" name="aud" value="{{hostName}}">
+								<input type="submit" value="Create Audience Key">
+								</form>
+							{% endif %}
+							{% if  hostName and (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey %}
+								<form action="/devices.html">
+								<input type="hidden" name="action" value="addKey">
+								<input type="hidden" name="sub" value="{{hostName}}">
+								<input type="submit" value="Create Subject Key">
+								</form>
+							{% endif %}
+							{% if  device.get('isSensor') or device.get('isDevice') %}
+								<form action="/devices.html">
+									<input type="hidden" name="action" value="addActionCap">
+									<input type="hidden" name="name" value="{{name}}">
+									<input type="hidden" name="hostname" value="{{hostName}}">
+									<input type="hidden" name="representing" value="{{device.get('representing')}}">
+									<input type="submit" value="Add Action Capability">
+								</form>
+							{% endif %}
 						{% endif %}
 						<form action="/devices.html">
 							<input type="hidden" name="action" value="deleteDevice">
@@ -178,11 +184,13 @@
 					</td>
 					<td>Plugin to support this device. Not needed for PassiveSensor.</td>
 				</tr>
-				<tr>
-					<td>Device object</td>
-					<td><input name="obj" type="text" value="/"></td>
-					<td>toplevel object on device (for capability, needed for ActiveDevice)</td>
-				</tr>
+				{% if hasCapabilitySupport %}
+					<tr>
+						<td>Device object</td>
+						<td><input name="obj" type="text" value="/"></td>
+						<td>toplevel object on device (for capability, needed for ActiveDevice)</td>
+					</tr>
+				{% endif %}
 				<tr>
 					<td colspan="2">
 						<input type="submit" value="Add Device">

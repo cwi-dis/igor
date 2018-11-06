@@ -3,9 +3,11 @@
 ## Prerequisites
 
 You need to have Python 3.6 or later installed.
-Python 2.7 is also still supported (but Python 3 is preferred).
+(Python 2.7 is also still supported but Python 3 is preferred).
 
 You need _pip_ and _setuptools_ (if not already included in your Python installation). Installing Python's package installation program _pip_ will also install _setuptools_.
+
+Your system might well have both Python 2.7 and Python 3.X installed, for that reason it is best to always use the commands `python3` and `pip3` (as opposed to `python` and `pip`, which could refer to 2 or 3 depending on circumstances).
 
 See also <https://packaging.python.org/tutorials/installing-packages/>.
 
@@ -19,12 +21,14 @@ git clone https://github.com/cwi-dis/igor
 Then install with
 
 ```
-pip install -r requirements.txt
-python setup.py build
-sudo python setup.py install
+sudo pip3 install -r requirements.txt
+python3 setup.py build
+sudo python3 setup.py install
 ```
 
 This will install the main binary `igorServer` as well as the utilties `igorVar`, `igorSetup`, `igorControl` and `igorCA`.
+
+The instructions above, using `sudo` for installation, will install Igor and the required dependencies for all users on your system. Installing for the current user only may be possible but is untested.
 
 You may also want to install some of the helper utilities from the `helpers` subdirectory.
 
@@ -33,15 +37,21 @@ You may also want to install some of the helper utilities from the `helpers` sub
 There is a unittest-based test suite in the `test` subdirectory. The easiest way to run the tests is to first install the software (as per the instructions above) and then run
 
 ```
-python -m unittest discover test
+python3 setup.py test
 ```
 
-This will run all tests in various configurations (with and without https support, with and without capability support, etc).
+This will run all tests in various configurations (with and without https support, with and without capability support, etc). This will run the tests in complete isolation, using a separate temporary install and separate Igor instances running on different ports, etc. So it will not interfere with your installed igor.
+
+If you want more control (for example to specify test options and such) you can in stead use the following command line (which will use the Igor version installed on your system): 
+
+```
+python3 -m test.test_igor
+```
 
 It is also possible to test the performance of Igor (again with the various configurations):
 
 ```
-python test/perf_igor.py
+python3 -m test.perf_igor
 ```
 
 will run a set of actions similar to the unittests (for a minimum number of calls and a minimum duration) and report number of calls, average runtime per call and standard deviation of the runtimes.
@@ -53,14 +63,15 @@ Your default database will be stored in `~/.igor`. You can create an initial emp
 ```
 igorSetup initialize
 ```
+For now, Igor databases are _not_ compatible between versions. So if you have used an older version of Igor you have to first remove your old database.
 
-Now you need to add the standard plugins you need with
+Next you need to add the standard plugins you need with
 
 ```
 igorSetup addstd lan systemHealth ca user device
 ```
 
-(these are the standard plugins used by the default database, which by default does little more than checking the health of your internet connection. You can ignore the message about editing your database at this time).
+(these are the standard plugins used by the default database, which as distributed does little more than checking the health of your internet connection).
 
 At any time the server is not running you can check the consistency of the database, with
 
@@ -135,7 +146,11 @@ igorServer --warnCapabilities
 
 ### Igor configuration
 
-You will need to configure your Igor to do something useful. See [../igor/std-plugins/readmd.md](../igor/std-plugins/readme.md) for a list of useful plugins that are included with Igor, and [schema.md](schema.md) for how to add useful actions to your database.
+You will need to configure your Igor to do something useful. On the Igor landing page there are links to pages that allow you to add _devices_, _plugins_ and _users_. However, this functionality is currently incomplete, so various things will have to be configured manually.
+
+#### Manual configuration
+
+See [../igor/std-plugins/readmd.md](../igor/std-plugins/readme.md) for a list of useful plugins that are included with Igor, and [schema.md](schema.md) for how to add useful actions to your database.
 
 Stop Igor before editing your `~/.igor/database.xml` in a text editor. The following command helps you with this:
 

@@ -16,11 +16,11 @@ This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS 
 ## Prerequisites
 
 You need to have Python 3.6 or later installed.
-Python 2.7 is also still supported (but Python 3 is preferred).
+(Python 2.7 is also still supported but Python 3 is preferred).
 
-You need _pip_ and _setuptools_ (if not already included in your Python installation). Installing Python's package installation program _pip_ will also install _setuptools_.
+You need the _pip_ package manager for the version of Python that you are going to use. Installing Python's package installation program _pip_ will also install _setuptools_.
 
-See also <https://packaging.python.org/tutorials/installing-packages/>.
+Complete installation instructions are in [doc/using.md](doc/using.md).
 
 
 ## Technical description

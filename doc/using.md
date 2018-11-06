@@ -11,7 +11,12 @@ See also <https://packaging.python.org/tutorials/installing-packages/>.
 
 ## Installing the software
 
-Download the source via <https://github.com/cwi-dis/igor>. Then install everything with
+Download the source via <https://github.com/cwi-dis/igor>. 
+```
+git clone https://github.com/cwi-dis/igor
+```
+
+Then install with
 
 ```
 pip install -r requirements.txt

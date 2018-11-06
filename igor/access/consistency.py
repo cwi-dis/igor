@@ -333,6 +333,7 @@ class CapabilityConsistency(StructuralConsistency):
             self._hasCapability('/data/identities/admin', cid='admin-internal', obj='/internal', get='descendant', delegate='true')
             self._hasCapability('/data/identities/admin', cid='admin-plugin', obj='/plugin', get='descendant', delegate='true')
             self._hasCapability('/data/identities/admin', cid='admin-pluginscript', obj='/pluginscript', get='descendant', delegate='true')
+            self._hasCapability('/data/identities/admin', cid='admin-filesystem', obj='/filesystem', get='self', delegate='true')
         
             for userElement in self._getAllElements('/data/identities/*'):
                 userName = userElement.tagName

@@ -103,12 +103,18 @@
 		
 	{% elif action == 'delete' %}
 		<p>{{igor.plugins.uninstall(pluginName, token)}}</p>
-		<p><a href="/plugins.html">Return to plugin listing</a>
+		<p><a href="/plugins.html">Return to plugin listing</a></p>
 		
 	{% elif action == 'addstd' %}
 		<p>{{igor.plugins.installstd(pluginName if pluginName else stdName, stdName, token)}}</p>
-		<p><a href="/plugins.html">Return to plugin listing</a>
+		<p><a href="/plugins.html">Return to plugin listing</a></p>
+		{% if kwargs.get('fromDevicePage') %}
+			<p><a href="/devices.html">Return to devices listing</a></p>
+		{% endif %}
 		
+	{% else %}
+		<p>Unknown action <i>{{action}}</i>.</p>
+		<p><a href="/plugins.html">Return to plugin listing</a></p>
 	{% endif %}
 </body>
 </html>

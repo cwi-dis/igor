@@ -18,7 +18,7 @@ Download the source via <https://github.com/cwi-dis/igor>.
 git clone https://github.com/cwi-dis/igor
 ```
 
-Then install with
+Then change into the igor directory, and install with
 
 ```
 sudo pip3 install -r requirements.txt

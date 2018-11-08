@@ -675,6 +675,7 @@ class IgorPlugins(object):
             if '.' in fn or '@' in fn or '~' in fn or fn[:2] == '__':
                 continue
             allPlugins.append(fn)
+        allPlugins.sort()
         return allPlugins
         
     def exists(self, pluginName, token=None):

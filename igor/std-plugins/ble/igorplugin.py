@@ -27,7 +27,14 @@ class BLEPlugin(object):
         if os.environ.get('IGOR_TEST_NO_SSL_VERIFY'):
             kwargs['verify'] = False
         
-        r = requests.request(method, url, headers=headers, **kwargs)
+        try:
+            r = requests.request(method, url, headers=headers, **kwargs)
+        except requests.exceptions.ConnectionError as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: cannot connect" % (url))
+        except requests.exceptions.Timeout as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: timeout during connect" % (url))
+        except requests.exceptions.RequestException as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (url, repr(e)))
         if r.status_code == 401:
             # If we get a 401 Unauthorized error we also report it through the access control errors
             print('401 error from external call, was carrying capability %s' % addedTokenId)

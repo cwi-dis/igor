@@ -63,7 +63,7 @@ class DevicePlugin(object):
             pluginName = description.get('plugin', '')
             if not pluginName:
                 self.igor.app.raiseHTTPError('400 deviceType %s requires plugin' % deviceType)
-            queryString = urllib.parse.urlencode(dict(action='add', name=name, stdName=pluginName))
+            queryString = urllib.parse.urlencode(dict(action='addstd', pluginName=name, stdName=pluginName, fromDevicePage='true'))
             rv['addPluginLink'] = '/plugins.html?' + queryString
         else:
             # Create item

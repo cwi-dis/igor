@@ -18,7 +18,7 @@ Download the source via <https://github.com/cwi-dis/igor>.
 git clone https://github.com/cwi-dis/igor
 ```
 
-Then install with
+Then change into the `igor` directory, and install with
 
 ```
 sudo pip3 install -r requirements.txt
@@ -31,6 +31,43 @@ This will install the main binary `igorServer` as well as the utilties `igorVar`
 The instructions above, using `sudo` for installation, will install Igor and the required dependencies for all users on your system. Installing for the current user only may be possible but is untested.
 
 You may also want to install some of the helper utilities from the `helpers` subdirectory.
+
+## Setup the database
+
+You create an initial empty database with
+
+```
+igorSetup initialize
+```
+The default database is stored in `~/.igor`.  For now, Igor databases are _not_ compatible between versions, so if you have used an older version of Igor you have to first remove your old database.
+
+Next add the standard plugins you need with
+
+```
+igorSetup addstd lan systemHealth ca user device
+```
+
+(these are the standard plugins used by the default database, which as distributed does little more than checking the health of your internet connection).
+
+At this point you should be able to run the server with
+
+```
+igorServer
+```
+
+and point your browser at <http://localhost:9333> to see Igor in action.
+
+At any time the server is not running you can check the consistency of the database, with
+
+```
+igorServer --check
+```
+
+or alternatively you can try to automatically fix it with
+
+```
+igorServer --fix
+```
 
 ## Testing the software
 
@@ -55,43 +92,6 @@ python3 -m test.perf_igor
 ```
 
 will run a set of actions similar to the unittests (for a minimum number of calls and a minimum duration) and report number of calls, average runtime per call and standard deviation of the runtimes.
-
-## Setup the database
-
-Your default database will be stored in `~/.igor`. You can create an initial empty database with
-
-```
-igorSetup initialize
-```
-For now, Igor databases are _not_ compatible between versions. So if you have used an older version of Igor you have to first remove your old database.
-
-Next you need to add the standard plugins you need with
-
-```
-igorSetup addstd lan systemHealth ca user device
-```
-
-(these are the standard plugins used by the default database, which as distributed does little more than checking the health of your internet connection).
-
-At any time the server is not running you can check the consistency of the database, with
-
-```
-igorServer --check
-```
-
-or alternatively you can try to autmatically fix it with
-
-```
-igorServer --fix
-```
-
-At this point you should be able to run the server with
-
-```
-igorServer
-```
-
-and point your browser at <http://localhost:9333> to see Igor in action.
 
 ### Security
 

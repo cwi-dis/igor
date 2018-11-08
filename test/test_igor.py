@@ -105,6 +105,13 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertIsInstance(root, dict)
         self.assertEqual(list(root.keys()), ["systemHealth"])
         
+    def test14_get_xml_unknownquery(self):
+        p = self._igorVar()
+        result = p.get('environment/systemHealth', format='application/xml', query={'unknownKey':'unknownValue'})
+        self.assertTrue(result)
+        root = ET.fromstring(result)
+        self.assertEqual(root.tag, "systemHealth")
+        
     def test21_put_xml(self):
         """PUT a database variable as XML"""
         p = self._igorVar()

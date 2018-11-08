@@ -636,23 +636,22 @@ def get_data(name):
         variant = optArgs['.VARIANT']
         del optArgs['.VARIANT']
         
-    if optArgs:
-        # GET with a query is treated as POST with the query as JSON data,
-        # unless the .METHOD argument states it should be treaded as another method.
+    if optArgs and '.method' in optArgs:
+        # GET with a query is treated as POST/PUT/DELETE with the query as JSON data,
+        # if .METHOD argument states it should be treaded as another method.
         optArgs = dict(optArgs)
         method = putOrPost_data
         kwargs = {}
-        if '.METHOD' in optArgs:
-            methodName = optArgs['.METHOD']
-            del optArgs['.METHOD']
-            methods = {
-                'PUT' : putOrPost_data,
-                'POST' : putOrPost_data,
-                'DELETE' : delete_data,
-                }
-            method = getattr(methods, methodName)
-            if methodName == 'POST':
-                mwargs['replace'] = False
+        methodName = optArgs['.METHOD']
+        del optArgs['.METHOD']
+        methods = {
+            'PUT' : putOrPost_data,
+            'POST' : putOrPost_data,
+            'DELETE' : delete_data,
+            }
+        method = getattr(methods, methodName)
+        if methodName == 'POST':
+            mwargs['replace'] = False
         rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded", **kwargs)
         return rv
         

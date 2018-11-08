@@ -26,7 +26,7 @@ python3 setup.py build
 sudo python3 setup.py install
 ```
 
-This will install the main binary `igorServer` as well as the utilties `igorVar`, `igorSetup`, `igorControl` and `igorCA`.
+This installs the main binary `igorServer` and the utilties `igorVar`, `igorSetup`, `igorControl` and `igorCA`.
 
 The instructions above, using `sudo` for installation, will install Igor and the required dependencies for all users on your system. Installing for the current user only may be possible but is untested.
 
@@ -34,22 +34,22 @@ You may also want to install some of the helper utilities from the `helpers` sub
 
 ## Setup the database
 
-You create an initial empty database with
+Create an initial empty database with
 
 ```
 igorSetup initialize
 ```
-The default database is stored in `~/.igor`.  For now, Igor databases are _not_ compatible between versions, so if you have used an older version of Igor you have to first remove your old database.
+The default database is stored in `~/.igor`.  Currently, Igor databases are _not_ compatible between versions, so if you have used an older version of Igor you should first remove the old database.
 
-Next add the standard plugins you need with
+Next add the standard plugins:
 
 ```
 igorSetup addstd lan systemHealth ca user device
 ```
 
-(these are the standard plugins used by the default database, which as distributed does little more than checking the health of your internet connection).
+(these are the standard plugins used by the default database, which as distributed do little more than check the health of your internet connection).
 
-At this point you should be able to run the server with
+You should now be able to run the server with
 
 ```
 igorServer
@@ -69,7 +69,7 @@ or alternatively you can try to automatically fix it with
 igorServer --fix
 ```
 
-## Testing the software
+## Testing the software (optional)
 
 There is a unittest-based test suite in the `test` subdirectory. The easiest way to run the tests is to first install the software (as per the instructions above) and then run
 
@@ -93,11 +93,37 @@ python3 -m test.perf_igor
 
 will run a set of actions similar to the unittests (for a minimum number of calls and a minimum duration) and report number of calls, average runtime per call and standard deviation of the runtimes.
 
-### Security
+## Updating the software
 
-It is advised to run Igor with the secure _https_ protocol as opposed to the completely open _http_ protocol. Igor can use any SSL certificate, but simplest is to use a self-signed certificate or to configure Igor as a Certificate Authority.
+Stop the server if necessary:
+```
+igorControl -u http://localhost:9333 stop
+```
 
-#### Igor as a CA
+In the `igor` directory, do
+```
+git pull
+```
+
+and repeat the three steps from earlier:
+
+```
+sudo pip3 install -r requirements.txt
+python3 setup.py build
+sudo python3 setup.py install
+```
+
+Restart the server:
+
+```
+igorServer
+```
+
+## Security
+
+It is advisable to run Igor with the secure _https_ protocol as opposed to the completely open _http_ protocol. Igor can use any SSL certificate, but simplest is to use a self-signed certificate or to configure Igor as a Certificate Authority.
+
+### Igor as a CA
 
 Enabling Igor as a Certificate Authority is the best option if there are other services (such as [Iotsa](https://github.com/cwi-dis/iotsa)-based devices, or other Igors) that you want to protect with _https_. Details on using Igor as a CA are in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md) but here are the commands needed to get this kickstarted:
 
@@ -108,7 +134,7 @@ igorCA self igor.local localhost 127.0.0.1 ::1
 
 The `self` command should be given all hostnames and IP addresses via which you expect to access Igor, and the "canonical name" should be first.
 
-#### Self-signed Certificate
+### Self-signed Certificate
 
 Alternatively, to use a self-signed certificate for Igor, run
 
@@ -120,7 +146,7 @@ And restart Igor. Igor will detect that it has a certificate and start up in sec
 
 Now connect your browser to <https://localhost:9333>. You will get a number of warnings about an untrusted website (because you used a self-signed certificate), read these and select all the answers that indicate you trust this website. This needs to be done only once (per browser).
 
-#### Capability-based access control
+### Capability-based access control
 
 Igor has support for experimental fine grained access control, using capabilities. On top of that there is user-based (login) access control.
 
@@ -144,11 +170,11 @@ It is also possible to let Igor go through all the motions of capability-based a
 igorServer --warnCapabilities
 ```
 
-### Igor configuration
+## Igor configuration
 
 You will need to configure your Igor to do something useful. On the Igor landing page there are links to pages that allow you to add _devices_, _plugins_ and _users_. However, this functionality is currently incomplete, so various things will have to be configured manually.
 
-#### Manual configuration
+### Manual configuration
 
 See [../igor/std-plugins/readmd.md](../igor/std-plugins/readme.md) for a list of useful plugins that are included with Igor, and [schema.md](schema.md) for how to add useful actions to your database.
 
@@ -158,7 +184,7 @@ Stop Igor before editing your `~/.igor/database.xml` in a text editor. The follo
 igorSetup edit
 ```
 
-### starting automatically
+## Starting automatically
 
 Igor can be started automatically at system boot with the following command:
 

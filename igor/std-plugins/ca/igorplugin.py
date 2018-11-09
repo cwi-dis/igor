@@ -40,7 +40,7 @@ class CAPlugin(object):
     
     def initCA(self):
         if self.ca: return
-        self.ca = igorCA.IgorCA('igor/plugins/ca')
+        self.ca = igorCA.IgorCA('igor/plugin/ca')
         
     def index(self, token=None):
         self.initCA()

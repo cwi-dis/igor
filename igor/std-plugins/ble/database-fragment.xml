@@ -6,7 +6,7 @@
 	<actions>
 		<action own:plugin="{plugin}">
 			<interval>60</interval>
-			<url>/plugins/{plugin}/pull</url>
+			<url>/plugin/{plugin}/pull</url>
 			<representing>sensors/{plugin}</representing>
 			<aggregate>true</aggregate>
 		</action>

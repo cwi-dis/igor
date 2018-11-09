@@ -665,7 +665,11 @@ class DBImpl(DBSerializer):
             context = self._doc.documentElement
         if not self._elementsMatch(context, tree):
             raise DBParamError('mergeElement: root elements do not match')
+        self.mergeNodesToSignal = []
         self._mergeTree(context, tree, token, plugin)
+        if self.mergeNodesToSignal:
+            self.signalNodelist(self.mergeNodesToSignal)
+        self.mergeNodesToSignal = []
         
     def _elementsMatch(self, elt1, elt2):
         return elt1.tagName == elt2.tagName
@@ -702,3 +706,4 @@ class DBImpl(DBSerializer):
         for newChild in toAdd:
             newTree.removeChild(newChild)
             context.appendChild(newChild)
+            self.mergeNodesToSignal.append(newChild)

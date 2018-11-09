@@ -57,7 +57,9 @@ class DevicePlugin(object):
         if self.igor.databaseAccessor.get_key(databaseEntry, 'application/x-python-object', 'multi', token):
             self.igor.app.raiseHTTPError('400 %s already exists' % name)
             
-        rv = dict(name=name, isDevice=isDevice, isSensor=isSensor, hostname=hostname)
+        rv = dict(name=name, deviceType=deviceType, isDevice=isDevice, isSensor=isSensor)
+        if hostname:
+            rv['hostname'] = hostname
 
         if hasPlugin:
             pluginName = description.get('plugin', '')

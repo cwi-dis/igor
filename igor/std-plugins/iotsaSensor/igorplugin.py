@@ -4,7 +4,7 @@ import requests
 import os
 
 from builtins import object
-class IotsaPlugin(object):
+class IotsaSensorPlugin(object):
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName
@@ -45,16 +45,17 @@ class IotsaPlugin(object):
         jsonData = r.text
         tocall = dict(
             method='PUT', 
-            url='/data/devices/%s/current' % self.pluginName, 
+            url='/data/sensors/%s' % self.pluginName, 
             mimetype='application/json', 
             data=jsonData, 
-            representing='devices/%s' % self.pluginName, 
+            representing='sensors/%s' % self.pluginName, 
             token=token)
         self.igor.urlCaller.callURL(tocall)
         return 'ok\n'
         
-    def push(self, token=None):
-        target = self.igor.databaseAccessor.get_key('devices/%s/target' % self.pluginName, 'application/json', 'content', token)
+    def _push(self, token=None):
+        """Not really implemented for activeSensors"""
+        target = self.igor.databaseAccessor.get_key('sensors/%s' % self.pluginName, 'application/json', 'content', token)
         
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', '%s.local' % self.pluginName)
@@ -80,4 +81,4 @@ class IotsaPlugin(object):
         return 'ok\n'
     
 def igorPlugin(igor, pluginName, pluginData):
-    return IotsaPlugin(igor, pluginName, pluginData)
+    return IotsaSensorPlugin(igor, pluginName, pluginData)

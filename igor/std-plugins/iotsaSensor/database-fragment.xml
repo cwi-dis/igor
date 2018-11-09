@@ -1,27 +1,9 @@
 <?xml version="1.0" ?>
 <data xmlns:own="http://jackjansen.nl/igor/owner">
-	<devices>
+	<sensors>
 		<{plugin} own:plugin="{plugin}">
-			<target/>
-			<current/>
 		</{plugin}>
-	</devices>
-	<actions>
-		<action own:plugin="{plugin}">
-			<xpath>/data/devices/{plugin}/target</xpath>
-			<url>/plugin/{plugin}/push</url>
-			<!-- needs capability for /data/plugindata/{plugin} -->
-			<!-- needs capability for /data/devices/{plugin} -->
-			<representing>devices/{plugin}</representing>
-		</action>
-		<action own:plugin="{plugin}">
-			<name>action-{plugin}</name>
-			<interval>600</interval>
-			<url>/plugin/{plugin}/pull</url>
-			<representing>devices/{plugin}</representing>
-			<aggregate>true</aggregate>
-		</action>			
-	</actions>
+	</sensors>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>

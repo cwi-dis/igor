@@ -1,0 +1,172 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Iotsa Devices</title>
+</head>
+<body>
+	<h1>Iotsa Devices</h1>
+	
+	{% if not action or action == "list" %}
+		<h2>Finding uninitialized iotsa devices</h2>
+			<p>This will search for uninitialized iotsa devices that advertise their default network:</p>
+			<form action="/plugin/{{pluginName}}/findNetworks">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showWifi">
+				<input type="submit" value="Find Networks">
+			</form>
+		<h2>Finding initialized iotsa devices</h2>
+			<p>This will search for all iotsa devices that advertise their availability on the current local network (WiFi as well as wired):</p>
+			<form action="/plugin/{{pluginName}}/findDevices">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showList">
+				<input type="submit" value="Find Devices">
+			</form>
+		<h2>Finding iotsa device by name or IP address</h2>
+			<p>Enter hostname or IP address:</p>
+			<form action="/plugin/{{pluginName}}/get">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
+				Host name: <input type="text" name="device"><br>
+				Protocol: <input type="text" name="protocol" value="https"></br>
+				<input type="checkbox" name="noverify" value="true">Do not check SSL certificates (for https).<br>
+				<input type="submit" value="Get Device Info">
+			</form>
+		
+	{% elif action == "showWifi" %}
+		<h2>Uninitialized iotsa devices</h2>
+		{% set networks = [] if not networks else networks if type(networks) == type([]) else networks.split('/') %}
+		{% if networks %}
+			<ul>
+				{% for n in networks %}
+					<li>{{n}}</li>
+				{% endfor %}
+			</ul>
+		{% else %}
+			<p>
+				No networks found that appear to be created by uninitialized iotsa devices. Note that is tested using the
+				WiFi card of the computer on which Igor runs, so if a iotsa device is too far away from the Igor computer
+				it may not be seen.
+			</p>
+		{% endif %}
+		<h2>Initializing a Iotsa device</h2>
+		<ul>
+			<li>Select the wifi network (from the list above, or by looking for network names starting with <em>config_</em>) on your laptop, smartphone or tablet.</li>
+			<li>Use a browser to visit <a href="http://192.168.4.1">http://192.168.4.1</a>.</li>
+			<li>Use the <em>config</em> and <em>wificonfig</em> links to give your device a hostname and tell
+			it about your WiFi network name and password. You will have to power-cycle the device during this
+			process (to demonstrate you have physical access).</li>
+		</ul>
+		<p>After this process the device is initialized enough to show up here in the <em>Find Devices</em> section
+		for further setup.</p>
+		<hr>
+		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+		<a href="/">Return to Igor homepage</a>
+		
+	{% elif action == "showList" %}
+		{% set devices = devices if type(devices) == type([]) else devices.split('/') %}
+		<p>Devices: {{devices}}</p>
+		<ul>
+			{% for d in devices %}
+				<li>{{d}}</li>
+			{% endfor %}
+		</ul>
+		<hr>
+		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+		<a href="/">Return to Igor homepage</a>
+		
+	{% elif action == "showDevice" %}
+		<p>Args: {{kwargs}}</p>
+		<hr>
+		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+		<a href="/">Return to Igor homepage</a>
+		
+	{% elif action == "showApi" %}
+		<p>Args: {{kwargs}}</p>
+		<hr>
+		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+		<a href="/">Return to Igor homepage</a>
+		
+	{% endif %}
+	<!--
+	<h2>I</h2>
+	
+	<p>Register your Igor as a Fitbit app at <a href="https://dev.fitbit.com/apps/new" target="_blank">Fitbit "register an app" page</a> and 
+	fill in the resulting details (Client ID and Client Secret) here. You may need to register as a developer before being able to register your igor.</p>
+	
+	<p>Specify the following values:</p>
+	<blockquote>
+		Application Name: <i>something with igor- is suggested</i><br>
+		Description: <i>doesn't really matter</i><br>
+		Application Website: <i>https://github.com/cwi-dis/igor</i> is suggested<br>
+		Organization: <i>your name or family or so</i><br>
+		Organization Website: <i>Something pointing to you, such as a personal website</i><br>
+		Terms of Service and Privacy Policy: <i>probably the personal website again</i></br>
+		OAuth 2.0 Application Type: <b>Client</b><br>
+		Callback URL: <b>https://<i>your-igor-url</i>/plugin/{{pluginName}}/auth2</b><br>
+		Default Access Type: <b>Read-only</b><br>
+	</blockquote>
+	
+	<form action="/plugin/{{pluginName}}/settings">
+		Fitbit Client ID for this Igor: <br>
+		<input type="text" name="client_id" value="{{pluginData.client_id}}"><br>
+		Fitbit Client Secret for this Igor: <br>
+		<input type="text" name="client_secret" value="{{pluginData.client_secret}}"><br>
+		Measurement system and units: <br>
+		<input type="text" name="system" value="{{pluginData.system}}"><br>
+		<input type="submit" value="Submit">
+	</form>	
+
+	{% if user %}
+		<h2>Fitbit settings for user {{user}}</h2>
+	
+		{% if 'userData' in kwargs %}
+			<p>Current Fitbit settings for user {{user}}:</p>
+			<form action="/plugin/{{pluginName}}/userSettings">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?user={{user}}">
+				<input type="hidden" name="user" value="{{user}}">
+				{% for key, value in userData.items() %}
+					{% if key != 'token' %}
+						{{key}}:<br>
+						<input type="text" name="{{key}}" value="{{value}}"><br>
+					{% endif %}
+				{% endfor %}
+				{% if not 'methods' in userData %}
+					methods (comma-separated list, default: <i>get_bodyweight</i>):<br>
+					<input type="text" name="methods" value=""><br>
+				{% endif %}
+				Add a new field:<br>
+				name: <input type="text" name="_newName" value=""> value: <input type="text" name="_newValue" value=""><br>
+				<input type="submit" value="Modify">
+			</form>
+			{% if 'token' in userData %}
+				<p>User {{user}} has already given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
+				in case you need to re-grant Igor the Fitbit access rights.</p>
+			{% else %}
+				<p><b>Note:</b> User {{user}} has not yet given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
+				to arrange that this Igor can access your Fitbit data.</p>
+			{% endif %}
+			<p>If you want to you can also <a href="/plugin/{{pluginName}}/auth1?user={{user}}&delete=true">delete the access token</a> for this user. 
+			(This action cannot be undone except by re-adding the user and re-authenticating).</p>
+		{% else %}
+			<p>No per-user Fitbit data for user {{user}}. You can create the new user here and then fill in the type of data you want
+			to retrieve. But <b>note</b> that you will also have to add the <tt>&lt;action&gt;</tt> element yourself.</p>
+			<form action="/plugin/{{pluginName}}/userSettings">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?user={{user}}">
+				<input type="hidden" name="user" value="{{user}}">
+				<input type="submit" value="Create user {{user}}">
+			</form>
+		{% endif %}
+	{% else %}
+		<h2>Not logged in</h2>
+		
+		<p>You are not logged in, visit the <a href="/login">login page</a> to do so.</a>
+	{% endif %}
+	
+	<h2>Fitbit settings for another user</h2>
+	
+	<p>To view data for another user please enter the username here and select <i>Show</i><p>
+	<form action="setup.html">
+	Username: <br>
+	<input type="text" name="user" value="{{user}}"><br>
+	<input type="Submit" value="Show"><br>
+	</form>
+	-->
+</body>
+</html>

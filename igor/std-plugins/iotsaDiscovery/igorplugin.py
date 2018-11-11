@@ -17,12 +17,26 @@ class IotsaDiscoveryPlugin(object):
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
         
-    def findNetworks(self, token=None):
+    def findNetworks(self, returnTo=None, token=None):
         rv = self.wifi.findNetworks()
+        if returnTo:
+            queryString = urllib.parse.urlencode(dict(networks='/'.join(rv)))
+            if '?' in returnTo:
+                returnTo = returnTo + '&' + queryString
+            else:
+                returnTo = returnTo + '?' + queryString
+            return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
     
-    def findDevices(self, token=None):
+    def findDevices(self, returnTo=None, token=None):
         rv = self.wifi.findDevices()
+        if returnTo:
+            queryString = urllib.parse.urlencode(dict(devices='/'.join(rv)))
+            if '?' in returnTo:
+                returnTo = returnTo + '&' + queryString
+            else:
+                returnTo = returnTo + '?' + queryString
+            return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
         
     def get(self, device, protocol="https", port=None, api="config", noverify=False, token=None, returnTo=None):
@@ -53,6 +67,9 @@ class IotsaDiscoveryPlugin(object):
         except iotsaControl.api.UserIntervention as e:
             rv['message'] = e.message
         if returnTo:
+            for k in rv.keys():
+                if isinstance(rv[k], list):
+                    rv[k] = '/'.join(rv[k])
             queryString = urllib.parse.urlencode(rv)
             if '?' in returnTo:
                 returnTo = returnTo + '&' + queryString

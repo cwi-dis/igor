@@ -12,6 +12,10 @@
 <body>
 	<h1>Iotsa Devices</h1>
 	
+	{% if message %}
+		<p><b>{{message}}</b></p>
+	{% endif %}
+	
 	{% if not action or action == "list" %}
 		<h2>Finding uninitialized iotsa devices</h2>
 			<p>This will search for uninitialized iotsa devices that advertise their default network:</p>
@@ -27,7 +31,7 @@
 			</form>
 		<h2>Finding iotsa device by name or IP address</h2>
 			<p>Enter hostname or IP address:</p>
-			<form action="/plugin/{{pluginName}}/get">
+			<form action="/plugin/{{pluginName}}/getorset">
 				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
 				Host name: <input type="text" name="device"><br>
 				Protocol: <input type="text" name="protocol" value="https"></br>
@@ -35,7 +39,7 @@
 				<input type="submit" value="Get Device Info">
 			</form>
 			<p>Enter hostname or IP address and module name:</p>
-			<form action="/plugin/{{pluginName}}/get">
+			<form action="/plugin/{{pluginName}}/getorset">
 				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showModule">
 				Host name: <input type="text" name="device"><br>
 				Protocol: <input type="text" name="protocol" value="https"></br>
@@ -77,10 +81,9 @@
 	{% elif action == "showList" %}
 		<h2>Iotsa devices discovered</h2>
 		{% set devices = devices if type(devices) == type([]) else devices.split('/') %}
-		<p>Devices: {{devices}}</p>
 		<ul>
 			{% for d in devices %}
-				<li><a href="/plugin/{{pluginName}}/get?device={{d}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">{{d}}</a></li>
+				<li><a href="/plugin/{{pluginName}}/getorset?device={{d}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">{{d}}</a></li>
 			{% endfor %}
 		</ul>
 		<hr>
@@ -107,11 +110,43 @@
 		<ul>
 			{% for m in modules %}
 				<li>
-					<a href="/plugin/{{pluginName}}/get?device={{device}}&module={{m}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showModule">{{m}}</a>
+					<a href="/plugin/{{pluginName}}/getorset?device={{device}}&module={{m}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showModule">{{m}}</a>
 				</li>
 			{% endfor %}
 		</ul>
 		<h2>Configure Device {{device}}</h2>
+		{% if requestedMode %}
+			<p>
+			You have requested a mode change, but not rebooted {{device}} yet. Please do so within {{requestedModeTimeout}} seconds and select
+			<a href="/plugin/{{pluginName}}/getorset?device={{device}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">refresh</a>
+			to reload this page.
+			</p>
+		{% endif %}
+		{% if not currentMode %}
+			<p>To change device settings you have to request <em>configuration mode</em> here, and then power-cycle the device 
+			(to demonstrate you have physical access). After power-cycling the device will be configurable for a few minutes.
+			After submitting the request you may have to 
+			<a href="/plugin/{{pluginName}}/getorset?device={{device}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">refresh</a>
+			this page after the device has rebooted.</p>
+			<form action="/plugin/{{pluginName}}/getorset">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
+				<input type="hidden" name="device" value="{{device}}">
+				<select name="requestedMode">
+					<option value="0">normal operation</option>
+					<option value="1">configuration mode</option>
+					<option value="2">over-the-air reprogramming</option>
+					<option value="3">factory reset</option>
+				</select><br>
+				<input type="checkbox" name="noverify" value="true">Do not check SSL certificates (for https).<br>
+				<input type="submit" value="Request device mode">
+			</form>
+		{% elif currentMode == "1" %}
+			<p>The device is in configuration mode (it will revert to normal mode in {{currentModeTimeout}} seconds).</p>
+		{% elif currentMode == "2" %}
+			<p>The device is in OTA mode and can be reprogrammed over the air. The iotsaDiscovery plugin has no support for this yet.</p>
+		{% else %}
+			<p>Unknown device mode {{currentMode}}</p>
+		{% endif %}
 		<hr>
 		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
 		<a href="/">Return to Igor homepage</a>
@@ -124,7 +159,6 @@
 		{% set _ = kwargs.pop("user") %}
 		{% set _ = kwargs.pop("device") %}
 		{% set _ = kwargs.pop("module") %}
-		<p>Args: {{kwargs}}</p>
 		<table>
 			<tr><th>Key</th><th>Value</th></tr>
 			{% for k, v in kwargs.items() %}
@@ -136,89 +170,6 @@
 		<a href="/">Return to Igor homepage</a>
 		
 	{% endif %}
-	<!--
-	<h2>I</h2>
-	
-	<p>Register your Igor as a Fitbit app at <a href="https://dev.fitbit.com/apps/new" target="_blank">Fitbit "register an app" page</a> and 
-	fill in the resulting details (Client ID and Client Secret) here. You may need to register as a developer before being able to register your igor.</p>
-	
-	<p>Specify the following values:</p>
-	<blockquote>
-		Application Name: <i>something with igor- is suggested</i><br>
-		Description: <i>doesn't really matter</i><br>
-		Application Website: <i>https://github.com/cwi-dis/igor</i> is suggested<br>
-		Organization: <i>your name or family or so</i><br>
-		Organization Website: <i>Something pointing to you, such as a personal website</i><br>
-		Terms of Service and Privacy Policy: <i>probably the personal website again</i></br>
-		OAuth 2.0 Application Type: <b>Client</b><br>
-		Callback URL: <b>https://<i>your-igor-url</i>/plugin/{{pluginName}}/auth2</b><br>
-		Default Access Type: <b>Read-only</b><br>
-	</blockquote>
-	
-	<form action="/plugin/{{pluginName}}/settings">
-		Fitbit Client ID for this Igor: <br>
-		<input type="text" name="client_id" value="{{pluginData.client_id}}"><br>
-		Fitbit Client Secret for this Igor: <br>
-		<input type="text" name="client_secret" value="{{pluginData.client_secret}}"><br>
-		Measurement system and units: <br>
-		<input type="text" name="system" value="{{pluginData.system}}"><br>
-		<input type="submit" value="Submit">
-	</form>	
 
-	{% if user %}
-		<h2>Fitbit settings for user {{user}}</h2>
-	
-		{% if 'userData' in kwargs %}
-			<p>Current Fitbit settings for user {{user}}:</p>
-			<form action="/plugin/{{pluginName}}/userSettings">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?user={{user}}">
-				<input type="hidden" name="user" value="{{user}}">
-				{% for key, value in userData.items() %}
-					{% if key != 'token' %}
-						{{key}}:<br>
-						<input type="text" name="{{key}}" value="{{value}}"><br>
-					{% endif %}
-				{% endfor %}
-				{% if not 'methods' in userData %}
-					methods (comma-separated list, default: <i>get_bodyweight</i>):<br>
-					<input type="text" name="methods" value=""><br>
-				{% endif %}
-				Add a new field:<br>
-				name: <input type="text" name="_newName" value=""> value: <input type="text" name="_newValue" value=""><br>
-				<input type="submit" value="Modify">
-			</form>
-			{% if 'token' in userData %}
-				<p>User {{user}} has already given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
-				in case you need to re-grant Igor the Fitbit access rights.</p>
-			{% else %}
-				<p><b>Note:</b> User {{user}} has not yet given Igor permission to get Fitbit data. Use <a href="/plugin/{{pluginName}}/auth1?user={{user}}">this link</a>
-				to arrange that this Igor can access your Fitbit data.</p>
-			{% endif %}
-			<p>If you want to you can also <a href="/plugin/{{pluginName}}/auth1?user={{user}}&delete=true">delete the access token</a> for this user. 
-			(This action cannot be undone except by re-adding the user and re-authenticating).</p>
-		{% else %}
-			<p>No per-user Fitbit data for user {{user}}. You can create the new user here and then fill in the type of data you want
-			to retrieve. But <b>note</b> that you will also have to add the <tt>&lt;action&gt;</tt> element yourself.</p>
-			<form action="/plugin/{{pluginName}}/userSettings">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?user={{user}}">
-				<input type="hidden" name="user" value="{{user}}">
-				<input type="submit" value="Create user {{user}}">
-			</form>
-		{% endif %}
-	{% else %}
-		<h2>Not logged in</h2>
-		
-		<p>You are not logged in, visit the <a href="/login">login page</a> to do so.</a>
-	{% endif %}
-	
-	<h2>Fitbit settings for another user</h2>
-	
-	<p>To view data for another user please enter the username here and select <i>Show</i><p>
-	<form action="setup.html">
-	Username: <br>
-	<input type="text" name="user" value="{{user}}"><br>
-	<input type="Submit" value="Show"><br>
-	</form>
-	-->
 </body>
 </html>

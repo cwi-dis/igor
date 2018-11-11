@@ -39,40 +39,28 @@ class IotsaDiscoveryPlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
         
-    def get(self, device, protocol="https", port=None, module="config", noverify=False, token=None, returnTo=None):
-        handler = iotsaControl.api.IotsaDevice(device, protocol=protocol, port=port, noverify=(not not noverify))
+    def getorset(self, device, protocol=None, port=None, module="config", noverify=False, token=None, returnTo=None, **kwargs):
+        handler = iotsaControl.api.IotsaDevice(
+            device, 
+            protocol=(protocol if protocol else 'https'), 
+            port=(int(port) if port else None), 
+            noverify=(not not noverify)
+            )
         # xxxjack need to call setBearerToken() with token for this device, if needed.
         accessor = iotsaControl.api.IotsaConfig(handler, module)
         accessor.load()
         rv = accessor.status
+        if kwargs:
+            for k, v in kwargs.items():
+                accessor.set(k, v)
+            try:
+                accessor.save()
+            except iotsaControl.api.UserIntervention as e:
+                rv['message'] = str(e)
         rv['device'] = device
         rv['module'] = module
-        if returnTo:
-            for k in rv.keys():
-                if isinstance(rv[k], list) and rv[k] and isinstance(rv[k][0], str):
-                    rv[k] = '/'.join(rv[k])
-                else:
-                    rv[k] = str(rv[k])
-            queryString = urllib.parse.urlencode(rv)
-            if '?' in returnTo:
-                returnTo = returnTo + '&' + queryString
-            else:
-                returnTo = returnTo + '?' + queryString
-            return self.igor.app.raiseSeeother(returnTo)
-        return json.dumps(rv)
-        
-    def put(self, device, protocol="https", port=None, module="config", noverify=False, token=None, returnTo=None, **kwargs):
-        handler = iotsaControl.api.IotsaDevice(device, protocol=protocol, port=port, noverify=(not not noverify))
-        # xxxjack need to call setBearerToken() with token for this device, if needed.
-        accessor = iotsaControl.api.IotsaConfig(handler, module)
-        accessor.load()
-        for k, v in kwargs:
-            accessor.set(k, v)
-        rv = {}
-        try:
-            accessor.save()
-        except iotsaControl.api.UserIntervention as e:
-            rv['message'] = e.message
+        if protocol:
+            rv['protocol'] = protocol
         if returnTo:
             for k in rv.keys():
                 if isinstance(rv[k], list) and rv[k] and isinstance(rv[k][0], str):

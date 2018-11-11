@@ -49,8 +49,10 @@ class IotsaDiscoveryPlugin(object):
         rv['module'] = module
         if returnTo:
             for k in rv.keys():
-                if isinstance(rv[k], list):
+                if isinstance(rv[k], list) and rv[k] and isinstance(rv[k][0], str):
                     rv[k] = '/'.join(rv[k])
+                else:
+                    rv[k] = str(rv[k])
             queryString = urllib.parse.urlencode(rv)
             if '?' in returnTo:
                 returnTo = returnTo + '&' + queryString
@@ -73,8 +75,10 @@ class IotsaDiscoveryPlugin(object):
             rv['message'] = e.message
         if returnTo:
             for k in rv.keys():
-                if isinstance(rv[k], list):
+                if isinstance(rv[k], list) and rv[k] and isinstance(rv[k][0], str):
                     rv[k] = '/'.join(rv[k])
+                else:
+                    rv[k] = str(rv[k])
             queryString = urllib.parse.urlencode(rv)
             if '?' in returnTo:
                 returnTo = returnTo + '&' + queryString

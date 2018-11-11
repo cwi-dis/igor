@@ -1,6 +1,12 @@
 <html lang="en">
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
 	<title>Iotsa Devices</title>
 </head>
 <body>
@@ -27,6 +33,15 @@
 				Protocol: <input type="text" name="protocol" value="https"></br>
 				<input type="checkbox" name="noverify" value="true">Do not check SSL certificates (for https).<br>
 				<input type="submit" value="Get Device Info">
+			</form>
+			<p>Enter hostname or IP address and module name:</p>
+			<form action="/plugin/{{pluginName}}/get">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showModule">
+				Host name: <input type="text" name="device"><br>
+				Protocol: <input type="text" name="protocol" value="https"></br>
+				Module: <input type="text" name="module" value="wificonfig"></br>
+				<input type="checkbox" name="noverify" value="true">Do not check SSL certificates (for https).<br>
+				<input type="submit" value="Get Module Info">
 			</form>
 		
 	{% elif action == "showWifi" %}
@@ -60,11 +75,12 @@
 		<a href="/">Return to Igor homepage</a>
 		
 	{% elif action == "showList" %}
+		<h2>Iotsa devices discovered</h2>
 		{% set devices = devices if type(devices) == type([]) else devices.split('/') %}
 		<p>Devices: {{devices}}</p>
 		<ul>
 			{% for d in devices %}
-				<li>{{d}}</li>
+				<li><a href="/plugin/{{pluginName}}/get?device={{d}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">{{d}}</a></li>
 			{% endfor %}
 		</ul>
 		<hr>
@@ -72,13 +88,49 @@
 		<a href="/">Return to Igor homepage</a>
 		
 	{% elif action == "showDevice" %}
-		<p>Args: {{kwargs}}</p>
+		<h2>Status for device {{device}}</h2>
+		{% set _ = kwargs.pop("action") %}
+		{% set _ = kwargs.pop("pluginName") %}
+		{% set _ = kwargs.pop("pluginData") %}
+		{% set _ = kwargs.pop("user") %}
+		{% set _ = kwargs.pop("device") %}
+		{% set _ = kwargs.pop("module") %}
+		<table>
+			<tr><th>Key</th><th>Value</th></tr>
+			{% for k, v in kwargs.items() %}
+				<tr><td>{{k}}</td><td>{{v}}</td></tr>
+			{% endfor %}
+		</table>
+		<h2>Module Status</h2>
+		<p>Select the following links to get status information for specific modules on {{device}}:</p>
+		{% set modules = [] if not modules else modules if type(modules) == type([]) else modules.split('/') %}
+		<ul>
+			{% for m in modules %}
+				<li>
+					<a href="/plugin/{{pluginName}}/get?device={{device}}&module={{m}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showModule">{{m}}</a>
+				</li>
+			{% endfor %}
+		</ul>
+		<h2>Configure Device {{device}}</h2>
 		<hr>
 		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
 		<a href="/">Return to Igor homepage</a>
 		
-	{% elif action == "showApi" %}
+	{% elif action == "showModule" %}
+		<h2>Status for device {{device}}, module {{module}}</h2>
+		{% set _ = kwargs.pop("action") %}
+		{% set _ = kwargs.pop("pluginName") %}
+		{% set _ = kwargs.pop("pluginData") %}
+		{% set _ = kwargs.pop("user") %}
+		{% set _ = kwargs.pop("device") %}
+		{% set _ = kwargs.pop("module") %}
 		<p>Args: {{kwargs}}</p>
+		<table>
+			<tr><th>Key</th><th>Value</th></tr>
+			{% for k, v in kwargs.items() %}
+				<tr><td>{{k}}</td><td>{{v}}</td></tr>
+			{% endfor %}
+		</table>
 		<hr>
 		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
 		<a href="/">Return to Igor homepage</a>

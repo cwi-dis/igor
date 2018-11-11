@@ -39,13 +39,18 @@ class IotsaDiscoveryPlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
         
-    def get(self, device, protocol="https", port=None, api="config", noverify=False, token=None, returnTo=None):
-        device = iotsaControl.api.IotsaDevice(device, protocol=protocol, port=port, noverify=(not not noverify))
+    def get(self, device, protocol="https", port=None, module="config", noverify=False, token=None, returnTo=None):
+        handler = iotsaControl.api.IotsaDevice(device, protocol=protocol, port=port, noverify=(not not noverify))
         # xxxjack need to call setBearerToken() with token for this device, if needed.
-        accessor = iotsaControl.api.IotsaConfig(device, api)
+        accessor = iotsaControl.api.IotsaConfig(handler, module)
         accessor.load()
         rv = accessor.status
+        rv['device'] = device
+        rv['module'] = module
         if returnTo:
+            for k in rv.keys():
+                if isinstance(rv[k], list):
+                    rv[k] = '/'.join(rv[k])
             queryString = urllib.parse.urlencode(rv)
             if '?' in returnTo:
                 returnTo = returnTo + '&' + queryString
@@ -54,10 +59,10 @@ class IotsaDiscoveryPlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
         
-    def put(self, device, protocol="https", port=None, api="config", noverify=False, token=None, returnTo=None, **kwargs):
-        device = iotsaControl.api.IotsaDevice(device, protocol=protocol, port=port, noverify=(not not noverify))
+    def put(self, device, protocol="https", port=None, module="config", noverify=False, token=None, returnTo=None, **kwargs):
+        handler = iotsaControl.api.IotsaDevice(device, protocol=protocol, port=port, noverify=(not not noverify))
         # xxxjack need to call setBearerToken() with token for this device, if needed.
-        accessor = iotsaControl.api.IotsaConfig(device, api)
+        accessor = iotsaControl.api.IotsaConfig(handler, module)
         accessor.load()
         for k, v in kwargs:
             accessor.set(k, v)

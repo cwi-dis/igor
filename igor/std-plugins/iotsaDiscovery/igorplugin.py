@@ -39,7 +39,7 @@ class IotsaDiscoveryPlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
         
-    def getorset(self, device, protocol=None, port=None, module="config", noverify=False, token=None, returnTo=None, **kwargs):
+    def getorset(self, device, protocol=None, port=None, module="config", noverify=False, token=None, returnTo=None, _name=None, _value=None, **kwargs):
         handler = iotsaControl.api.IotsaDevice(
             device, 
             protocol=(protocol if protocol else 'https'), 
@@ -50,6 +50,8 @@ class IotsaDiscoveryPlugin(object):
         accessor = iotsaControl.api.IotsaConfig(handler, module)
         accessor.load()
         rv = accessor.status
+        if _name:
+            kwargs[_name] = _value
         if kwargs:
             for k, v in kwargs.items():
                 accessor.set(k, v)

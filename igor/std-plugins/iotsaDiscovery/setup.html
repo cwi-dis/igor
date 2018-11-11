@@ -86,6 +86,25 @@
 				<li><a href="/plugin/{{pluginName}}/getorset?device={{d}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">{{d}}</a></li>
 			{% endfor %}
 		</ul>
+		<p>
+		In some cases the links above may not work. Then please use the following form to get iotsa device information:
+		</p>
+		<form action="/plugin/{{pluginName}}/getorset">
+			<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
+			Device: <select name="device">
+				{% for d in devices %}
+					<option value="{{d}}">{{d}}</option>
+				{% endfor %}
+			</select><br>
+			Protocol: <select name="protocol">
+				<option value="https">https</option>
+				<option value="http">http</option>
+				<option value="coap">coap</option>
+			</select></br>
+			Port (if not default for protocol)<input type="text" name="port"></br>
+			<input type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+			<input type="submit" value="Get Device Info">
+		</form>
 		<hr>
 		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
 		<a href="/">Return to Igor homepage</a>
@@ -137,11 +156,23 @@
 					<option value="2">over-the-air reprogramming</option>
 					<option value="3">factory reset</option>
 				</select><br>
-				<input type="checkbox" name="noverify" value="true">Do not check SSL certificates (for https).<br>
 				<input type="submit" value="Request device mode">
 			</form>
 		{% elif currentMode == "1" %}
-			<p>The device is in configuration mode (it will revert to normal mode in {{currentModeTimeout}} seconds).</p>
+			<p>The device is in configuration mode (it will revert to normal mode in {{currentModeTimeout}} seconds). Use the following form
+			to set values.</p>
+			<form action="/plugin/{{pluginName}}/getorset">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
+				<input type="hidden" name="device" value="{{device}}">
+				<!--
+				Module: 
+				<select" name="module" value="wificonfig">
+				</br>
+				-->
+				Key: <input type="text" name="_name"></br>
+				Value: <input type="text" name="_value"></br>
+				<input type="submit" value="Set">
+			</form>
 		{% elif currentMode == "2" %}
 			<p>The device is in OTA mode and can be reprogrammed over the air. The iotsaDiscovery plugin has no support for this yet.</p>
 		{% else %}

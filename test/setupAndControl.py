@@ -13,7 +13,7 @@ import igorServlet
 import threading
 import traceback
 
-DEBUG_TEST=False
+DEBUG_TEST=True
 if DEBUG_TEST:
     igorVar.VERBOSE=DEBUG_TEST
     igorServlet.DEBUG=DEBUG_TEST

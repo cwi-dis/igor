@@ -56,7 +56,7 @@ class JointSpaceRemote(object):
                 if DEBUG: print('Got message from', sender[0])
                 myHostName = socket.gethostname()
                 if not '.' in myHostName:
-                	myHostName = myHostName + '.local'
+                    myHostName = myHostName + '.local'
                 if not sender[0] in socket.gethostbyname_ex(myHostName)[2]:
                     # It is not our own message. It must be the Philips TV.
                     return sender[0]
@@ -141,7 +141,7 @@ class JointSpaceRemote(object):
             print('%s\t%s' % (data[chID]['preset'], data[chID]['name']))
     
     def cmd_volume(self, volume=None):
-    	"""Change volume on the TV"""
+        """Change volume on the TV"""
         assert self.tv
         if volume is None:
             data = self.getData('audio/volume')
@@ -152,21 +152,21 @@ class JointSpaceRemote(object):
             self.putData('audio/volume', { 'muted' : False, 'current' : volume })
             
     def cmd_json(self, data=None):
-    	"""Return all data as a JSON object"""
-    	if data is None:
-    		data = {}
-    		volumeData = self.getData('audio/volume')
-    		data['volume'] = volumeData['current']
-    		data['muted'] = volumeData['muted']
-    		data['source'] = self.getData('sources/current')['id']
-    		data['power'] = True
-    		data['ip-address'] = self.tv
-    		data['url'] = 'http://%s:1925/1/' % (self.tv)
-    	else:
-    		jData = json.loads(data)
-    		assert 0
-    	print(json.dumps(data))
-    		
+        """Return all data as a JSON object"""
+        if data is None:
+            data = {}
+            volumeData = self.getData('audio/volume')
+            data['volume'] = volumeData['current']
+            data['muted'] = volumeData['muted']
+            data['source'] = self.getData('sources/current')['id']
+            data['power'] = True
+            data['ip-address'] = self.tv
+            data['url'] = 'http://%s:1925/1/' % (self.tv)
+        else:
+            jData = json.loads(data)
+            assert 0
+        print(json.dumps(data))
+            
 
     def cmd_help(self):
         """List available commands"""
@@ -183,10 +183,10 @@ def main():
         del sys.argv[1]
     tv = JointSpaceRemote()
     if not tv.connect():
-    	if len(sys.argv) == 2 and sys.argv[1] == 'json':
-    		print('{"power":false}')
-    		sys.exit(0)
-    	print("TV not found, is it turned on?", file=sys.stderr)
+        if len(sys.argv) == 2 and sys.argv[1] == 'json':
+            print('{"power":false}')
+            sys.exit(0)
+        print("TV not found, is it turned on?", file=sys.stderr)
         sys.exit(1)
     if len(sys.argv) <= 1:
         print(tv.curWatching())

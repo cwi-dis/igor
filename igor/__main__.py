@@ -599,6 +599,7 @@ class IgorPlugins(object):
             ok = self._installPluginFragment(newPlugin, token)
             if not ok:
                 allOK = False
+        # xxxjack should also install requirements, probably...
         if allOK:
             return 'OK'
         return 'Error during plugin fragment installation, please check logfile'
@@ -642,6 +643,11 @@ class IgorPlugins(object):
             fp.write(fragData)
             fp.close()
             self._installPluginFragment(pluginName, token)
+        requirementsFile = os.path.join(dst, 'requirements.txt')
+        if os.path.exists(requirementsFile):
+            sts = subprocess.call([sys.executable, '-m', 'pip', 'install', '--src', 'pip-src-tmp', '--user', '-r', requirementsFile])
+            if sts != 0:
+                self.igor.app.raiseHTTPError('500 Installing requirements for plugin returned error %d' % sts)
         return ''
         
     def install(self, pluginname=None, zipfile=None, token=None):

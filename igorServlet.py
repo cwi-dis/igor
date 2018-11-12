@@ -104,11 +104,11 @@ class IgorServlet(threading.Thread):
         if self.nolog:
             kwargs['log'] = None
         self.server = gevent.pywsgi.WSGIServer(("0.0.0.0", self.port), self.app, **kwargs)
-        self.server.serve_forever()
+        self.server.serve_forever(stop_timeout=10)
         
     def stop(self):
         if self.server:
-            self.server.stop()
+            self.server.stop(timeout=10)
             self.server = None
         return self.join()
         

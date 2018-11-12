@@ -109,6 +109,7 @@ class IgorServlet(threading.Thread):
     def stop(self):
         if self.server:
             self.server.stop()
+            self.server = None
         return self.join()
         
     def addEndpoint(self, path, mimetype='application/json', get=None, put=None, post=None, delete=None):

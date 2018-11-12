@@ -11,6 +11,7 @@ import igorVar
 import igorSetup
 import igorServlet
 import threading
+import traceback
 
 DEBUG_TEST=False
 if DEBUG_TEST:
@@ -174,15 +175,16 @@ class IgorSetupAndControl(object):
         # Gracefully stop server
         if DEBUG_TEST: print('IgorTest: Request server to stop')
         try:
-            p = igorVar.IgorServer(cls.igorUrl, **cls.igorVarArgs)
-            result = p.get('/internal/stop', credentials='admin:')
+            p = igorVar.IgorServer(cls.igorUrl, credentials='admin:', **cls.igorVarArgs)
+            result = p.get('/internal/stop')
         except:
-            if DEBUG_TEST: print('IgorTest: Ignoring exception during stop request')        
+            if DEBUG_TEST: traceback.print_exc()
+            print('IgorTest: Ignoring exception during stop request')        
         time.sleep(2)
         
         sts = cls.igorProcess.poll()
         if sts is None:
-            if DEBUG_TEST: print('IgorTest: Terminate server')
+            print('IgorTest: Terminate server')
             cls.igorProcess.terminate()
             time.sleep(2)
         sts = cls.igorProcess.wait()

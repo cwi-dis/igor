@@ -33,7 +33,34 @@ class IotsaDiscoveryPlugin(object):
             rv['message'] = e
         return self._returnOrSeeother(rv, returnTo)
         
-    def getorset(self, device, protocol=None, port=None, module="config", noverify=False, token=None, returnTo=None, _name=None, _value=None, **kwargs):
+    def getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, _name=None, _value=None, **kwargs):
+        #
+        # Persist settings for protocol, credentials, port, noverify for one device
+        #
+        sessionItem = self.igor.app.getSessionItem('iotsaDiscovery', {})
+        if sessionItem.get('device', None) != device:
+            sessionItem = {}
+        sessionItem['device'] = device
+        if protocol:
+            sessionItem['protocol'] = protocol
+        else:
+            protocol = sessionItem.get('protocol')
+        if credentials:
+            sessionItem['credentials'] = credentials
+        else:
+            credentials = sessionItem.get('credentials')
+        if port:
+            sessionItem['port'] = port
+        else:
+            port = sessionItem.get('port')
+        if noverify:
+            sessionItem['noverify'] = noverify
+        else:
+            noverify = sessionItem.get('noverify')
+        self.igor.app.setSessionItem('iotsaDiscovery', sessionItem)
+        #
+        # Get a handle on the device
+        #
         handler = iotsaControl.api.IotsaDevice(
             device, 
             protocol=(protocol if protocol else 'https'), 
@@ -41,6 +68,12 @@ class IotsaDiscoveryPlugin(object):
             noverify=(not not noverify)
             )
         # xxxjack need to call setBearerToken() with token for this device, if needed.
+        if credentials:
+            username, password = credentials.split(':')
+            handler.setLogin(username, password)
+        #
+        # Get a handle on the module
+        #
         accessor = iotsaControl.api.IotsaConfig(handler, module)
         accessor.load()
         rv = accessor.status
@@ -55,8 +88,6 @@ class IotsaDiscoveryPlugin(object):
                 rv['message'] = str(e)
         rv['device'] = device
         rv['module'] = module
-        if protocol:
-            rv['protocol'] = protocol
         return self._returnOrSeeother(rv, returnTo)
             
     def _returnOrSeeother(self, rv, returnTo):

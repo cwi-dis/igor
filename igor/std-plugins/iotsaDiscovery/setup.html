@@ -33,19 +33,17 @@
 			<p>Enter hostname or IP address:</p>
 			<form action="/plugin/{{pluginName}}/getorset">
 				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
-				Host name: <input type="text" name="device"><br>
-				Protocol: <input type="text" name="protocol" value="https"></br>
-				<input type="checkbox" name="noverify" value="true">Do not check SSL certificates (for https).<br>
-				<input type="submit" value="Get Device Info">
-			</form>
-			<p>Enter hostname or IP address and module name:</p>
-			<form action="/plugin/{{pluginName}}/getorset">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showModule">
-				Host name: <input type="text" name="device"><br>
-				Protocol: <input type="text" name="protocol" value="https"></br>
-				Module: <input type="text" name="module" value="wificonfig"></br>
-				<input type="checkbox" name="noverify" value="true">Do not check SSL certificates (for https).<br>
-				<input type="submit" value="Get Module Info">
+				Hostname or IP: <input type="text" name="device"><br>
+				Protocol: <select name="protocol">
+				<option value="https">https</option>
+				<option value="http">http</option>
+				<option value="coap">coap</option>
+			</select></br>
+			Port (if not default for protocol)<input type="text" name="port"></br>
+			Credentials: <input type="text" name="credentials"><br>
+			<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
+			SSL Certificate: <input type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+			<input type="submit" value="Get Device Info">
 			</form>
 		
 	{% elif action == "showWifi" %}
@@ -102,7 +100,9 @@
 				<option value="coap">coap</option>
 			</select></br>
 			Port (if not default for protocol)<input type="text" name="port"></br>
-			<input type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+			Credentials: <input type="text" name="credentials"><br>
+			<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
+			SSL Certificate: <input type="checkbox" value="true">Do not check SSL certificates (for https)<br>
 			<input type="submit" value="Get Device Info">
 		</form>
 		<hr>

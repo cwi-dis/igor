@@ -1,1 +1,1 @@
--e git+https://github.com/cwi-dis/iotsa#egg=iotsaControl&subdirectory=extras
+git+https://github.com/cwi-dis/iotsa#egg=iotsaControl&subdirectory=extras

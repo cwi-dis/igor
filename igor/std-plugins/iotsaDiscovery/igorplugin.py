@@ -18,26 +18,20 @@ class IotsaDiscoveryPlugin(object):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
         
     def findNetworks(self, returnTo=None, token=None):
-        rv = self.wifi.findNetworks()
-        if returnTo:
-            queryString = urllib.parse.urlencode(dict(networks='/'.join(rv)))
-            if '?' in returnTo:
-                returnTo = returnTo + '&' + queryString
-            else:
-                returnTo = returnTo + '?' + queryString
-            return self.igor.app.raiseSeeother(returnTo)
-        return json.dumps(rv)
+        rv = {}
+        try:
+            rv['networks'] = self.wifi.findNetworks()
+        except iotsaControl.api.UserIntervention as e:
+            rv['message'] = e
+        return self._returnOrSeeother(rv, returnTo)
     
     def findDevices(self, returnTo=None, token=None):
-        rv = self.wifi.findDevices()
-        if returnTo:
-            queryString = urllib.parse.urlencode(dict(devices='/'.join(rv)))
-            if '?' in returnTo:
-                returnTo = returnTo + '&' + queryString
-            else:
-                returnTo = returnTo + '?' + queryString
-            return self.igor.app.raiseSeeother(returnTo)
-        return json.dumps(rv)
+        rv = {}
+        try:
+            rv['devices'] = self.wifi.findDevices()
+        except iotsaControl.api.UserIntervention as e:
+            rv['message'] = e
+        return self._returnOrSeeother(rv, returnTo)
         
     def getorset(self, device, protocol=None, port=None, module="config", noverify=False, token=None, returnTo=None, _name=None, _value=None, **kwargs):
         handler = iotsaControl.api.IotsaDevice(
@@ -63,6 +57,10 @@ class IotsaDiscoveryPlugin(object):
         rv['module'] = module
         if protocol:
             rv['protocol'] = protocol
+        return self._returnOrSeeother(rv, returnTo)
+            
+    def _returnOrSeeother(self, rv, returnTo):
+        """Either return a JSON object or pass it to seeother as a query"""
         if returnTo:
             for k in rv.keys():
                 if isinstance(rv[k], list) and rv[k] and isinstance(rv[k][0], str):

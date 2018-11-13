@@ -69,7 +69,15 @@ def enable_thread_profiling():
             PROFILER_STATS.add(self._prof)
 
     threading.Thread.run = profile_run
-    
+
+#
+# Helper for determining how to run pip
+#
+def is_venv():
+    """Return True if we are in a virtual env"""
+    return (hasattr(sys, 'real_prefix') or
+            (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
+
 class Struct(object):
     pass
     
@@ -645,7 +653,11 @@ class IgorPlugins(object):
             self._installPluginFragment(pluginName, token)
         requirementsFile = os.path.join(dst, 'requirements.txt')
         if os.path.exists(requirementsFile):
-            sts = subprocess.call([sys.executable, '-m', 'pip', 'install', '--src', 'pip-src-tmp', '--user', '-r', requirementsFile])
+            if is_venv():
+                pip_cmd = [sys.executable, '-m', 'pip', 'install', '--src', 'pip-src-tmp']
+            else:
+                pip_cmd = [sys.executable, '-m', 'pip', 'install', '--src', 'pip-src-tmp', '--user']
+            sts = subprocess.call(pip_cmd + ['-r', requirementsFile])
             if sts != 0:
                 self.igor.app.raiseHTTPError('500 Installing requirements for plugin returned error %d' % sts)
         return ''

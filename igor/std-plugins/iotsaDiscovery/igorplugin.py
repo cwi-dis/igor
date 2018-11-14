@@ -33,7 +33,7 @@ class IotsaDiscoveryPlugin(object):
             rv['message'] = e
         return self._returnOrSeeother(rv, returnTo)
         
-    def getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, _name=None, _value=None, **kwargs):
+    def getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, reboot=None, _name=None, _value=None, **kwargs):
         #
         # Get a handle on the device
         #
@@ -46,11 +46,16 @@ class IotsaDiscoveryPlugin(object):
         rv = accessor.status
         if _name:
             kwargs[_name] = _value
-        if kwargs:
+        if kwargs or reboot:
             for k, v in kwargs.items():
                 accessor.set(k, v)
+            if reboot:
+                accessor.set('reboot', True)
             try:
-                accessor.save()
+                returned = accessor.save()
+                if isinstance(returned, dict):
+                    for k, v in returned.items():
+                        rv[k] = v
             except iotsaControl.api.UserIntervention as e:
                 rv['message'] = str(e)
         rv['device'] = device

@@ -42,7 +42,7 @@
 			Port (if not default for protocol)<input type="text" name="port"></br>
 			Credentials: <input type="text" name="credentials"><br>
 			<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
-			SSL Certificate: <input type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+			SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
 			<input type="submit" value="Get Device Info">
 			</form>
 		
@@ -85,7 +85,10 @@
 			{% endfor %}
 		</ul>
 		<p>
-		In some cases the links above may not work. Then please use the following form to get iotsa device information:
+		In some cases the links above may not work, for example when accessing a fresh Iotsa device that has not yet
+		received a correct SSL certificate (and therefore uses the factory-installed certificate which is not trusted).
+		</p>
+		<p>Then please use the following form to get iotsa device information:
 		</p>
 		<form action="/plugin/{{pluginName}}/getorset">
 			<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
@@ -102,7 +105,7 @@
 			Port (if not default for protocol)<input type="text" name="port"></br>
 			Credentials: <input type="text" name="credentials"><br>
 			<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
-			SSL Certificate: <input type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+			SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
 			<input type="submit" value="Get Device Info">
 		</form>
 		<hr>
@@ -173,6 +176,7 @@
 				-->
 				Key: <input type="text" name="_name"></br>
 				Value: <input type="text" name="_value"></br>
+				Reboot after updating: <input type="checkbox" name="reboot" value="true"><br>
 				<input type="submit" value="Set">
 			</form>
 		{% elif currentMode == "2" %}

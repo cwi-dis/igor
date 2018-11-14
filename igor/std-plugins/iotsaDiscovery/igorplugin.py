@@ -35,6 +35,72 @@ class IotsaDiscoveryPlugin(object):
         
     def getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, _name=None, _value=None, **kwargs):
         #
+        # Get a handle on the device
+        #
+        handler = self._getHandler(device, protocol, credentials, port, noverify, token)
+        #
+        # Get a handle on the module
+        #
+        accessor = iotsaControl.api.IotsaConfig(handler, module)
+        accessor.load()
+        rv = accessor.status
+        if _name:
+            kwargs[_name] = _value
+        if kwargs:
+            for k, v in kwargs.items():
+                accessor.set(k, v)
+            try:
+                accessor.save()
+            except iotsaControl.api.UserIntervention as e:
+                rv['message'] = str(e)
+        rv['device'] = device
+        rv['module'] = module
+        return self._returnOrSeeother(rv, returnTo)
+        
+    def pull(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None):
+        handler = self._getHandler(device, protocol, credentials, port, noverify, token)
+        modules = module.split('/')
+        key = 'devices/%s/%s' % (self.pluginName, device)
+        # Create the entry if it doesn't exist yet
+        try:
+            _ = self.igor.databaseAccessor.get_key(key, 'application/x-python-object', None, token)
+        except self.igor.app.getHTTPError():
+            self.igor.databaseAccessor.put_key(key, 'text/plain', None, '', 'text/plain', token)
+        # Fill it will all module info requested.
+        for mod in modules:
+            #
+            # Get a handle on the module
+            #
+            accessor = iotsaControl.api.IotsaConfig(handler, mod)
+            accessor.load()
+            data = accessor.status
+            modKey = key + '/' + mod
+            self.igor.databaseAccessor.put_key(modKey, 'text/plain', None, data, 'application/x-python-object', token)
+        rv = {}
+        return self._returnOrSeeother(rv, returnTo)
+            
+    def push(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None):
+        handler = self._getHandler(device, protocol, credentials, port, noverify, token)
+        key = 'devices/%s/%s/%s' % (self.pluginName, device, module)
+        #
+        # Get a handle on the module
+        #
+        accessor = iotsaControl.api.IotsaConfig(handler, module)
+        accessor.load()
+        newdata = self.igor.databaseAccessor.get_key(key, 'application/x-python-object', None, token)
+        if not isinstance(newdata, dict):
+            self.igor.app.raiseHTTPError("500 data for %s is not in correct form" % key)
+        for k, v in newdata.items():
+            accessor.status[k] = v
+            try:
+                accessor.save()
+            except iotsaControl.api.UserIntervention as e:
+                rv['message'] = str(e)
+        return self._returnOrSeeother(rv, returnTo)
+                    
+    def _getHandler(self, device, protocol, credentials, port, noverify, token=None):
+        """Return a handler for this device"""
+        #
         # Persist settings for protocol, credentials, port, noverify for one device
         #
         sessionItem = self.igor.app.getSessionItem('iotsaDiscovery', {})
@@ -58,9 +124,6 @@ class IotsaDiscoveryPlugin(object):
         else:
             noverify = sessionItem.get('noverify')
         self.igor.app.setSessionItem('iotsaDiscovery', sessionItem)
-        #
-        # Get a handle on the device
-        #
         handler = iotsaControl.api.IotsaDevice(
             device, 
             protocol=(protocol if protocol else 'https'), 
@@ -71,25 +134,8 @@ class IotsaDiscoveryPlugin(object):
         if credentials:
             username, password = credentials.split(':')
             handler.setLogin(username, password)
-        #
-        # Get a handle on the module
-        #
-        accessor = iotsaControl.api.IotsaConfig(handler, module)
-        accessor.load()
-        rv = accessor.status
-        if _name:
-            kwargs[_name] = _value
-        if kwargs:
-            for k, v in kwargs.items():
-                accessor.set(k, v)
-            try:
-                accessor.save()
-            except iotsaControl.api.UserIntervention as e:
-                rv['message'] = str(e)
-        rv['device'] = device
-        rv['module'] = module
-        return self._returnOrSeeother(rv, returnTo)
-            
+        return handler
+        
     def _returnOrSeeother(self, rv, returnTo):
         """Either return a JSON object or pass it to seeother as a query"""
         if returnTo:

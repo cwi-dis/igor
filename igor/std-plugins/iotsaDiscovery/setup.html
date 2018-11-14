@@ -114,7 +114,7 @@
 		{% set _ = kwargs.pop("action") %}
 		{% set _ = kwargs.pop("pluginName") %}
 		{% set _ = kwargs.pop("pluginData") %}
-		{% set _ = kwargs.pop("user") %}
+		{% set _ = kwargs.pop("user", None) %}
 		{% set _ = kwargs.pop("device") %}
 		{% set _ = kwargs.pop("module") %}
 		<table>
@@ -123,7 +123,7 @@
 				<tr><td>{{k}}</td><td>{{v}}</td></tr>
 			{% endfor %}
 		</table>
-		<h2>Module Status</h2>
+		<h2>View Current Module Status</h2>
 		<p>Select the following links to get status information for specific modules on {{device}}:</p>
 		{% set modules = [] if not modules else modules if type(modules) == type([]) else modules.split('/') %}
 		<ul>
@@ -133,7 +133,9 @@
 				</li>
 			{% endfor %}
 		</ul>
+
 		<h2>Configure Device {{device}}</h2>
+		
 		{% if requestedMode %}
 			<p>
 			You have requested a mode change, but not rebooted {{device}} yet. Please do so within {{requestedModeTimeout}} seconds and select
@@ -178,6 +180,30 @@
 		{% else %}
 			<p>Unknown device mode {{currentMode}}</p>
 		{% endif %}
+
+		<h2>Retrieve Device Status to Igor database</h2>
+		<form action="/plugin/{{pluginName}}/pull">
+			<input type="hidden" name="device" value="{{device}}">
+			<input type="hidden" name="module" value="{{'/'.join(modules)}}">
+			<input type="submit" value="Retrieve Status">
+		</form>
+		
+		<p>After retrieving the status it will be stored in <a href="/data/devices/{{pluginName}}/{{device}}">/data/devices/{{pluginName}}/{{device}}</a>
+		where you can inspect it.</p>
+		
+		<p>You can also modify the data for a module there, in the Igor database, and then upload it to the device with the following form:</p>
+
+		<form action="/plugin/{{pluginName}}/pull">
+			<input type="hidden" name="device" value="{{device}}">
+			<input type="hidden" name="module" value="{{module}}">
+			<select name="module">
+			{% for m in modules %}
+				<option value="{{m}}">{{m}}</option>
+			{% endfor %}
+			</select>
+			<input type="submit" value="Retrieve Status">
+		</form>
+
 		<hr>
 		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
 		<a href="/">Return to Igor homepage</a>
@@ -187,7 +213,7 @@
 		{% set _ = kwargs.pop("action") %}
 		{% set _ = kwargs.pop("pluginName") %}
 		{% set _ = kwargs.pop("pluginData") %}
-		{% set _ = kwargs.pop("user") %}
+		{% set _ = kwargs.pop("user", None) %}
 		{% set _ = kwargs.pop("device") %}
 		{% set _ = kwargs.pop("module") %}
 		<table>

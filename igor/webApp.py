@@ -18,7 +18,6 @@ import json
 import time
 from . import mimetypematch
 import copy
-import imp
 import xpath
 from . import xmlDatabase
 import mimetypes
@@ -302,8 +301,7 @@ def get_pluginscript(pluginName, scriptName):
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
-
-    scriptDir = os.path.join(_SERVER.igor.pathnames.plugindir, pluginName, 'scripts')
+    scriptDir = _SERVER.igor._getPluginScriptDir(pluginName, token)
         
     if '/' in scriptName or '.' in scriptName:
         myWebError("400 Cannot use / or . in scriptName", 400)
@@ -325,11 +323,7 @@ def get_pluginscript(pluginName, scriptName):
             env['IGORSERVER_NOVERIFY'] = 'true'
     except werkzeug.exceptions.HTTPException:
         pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-    try:
-        pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except werkzeug.exceptions.HTTPException:
-        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-        pluginData = {}
+    pluginData = _SERVER.igor.plugins._getPluginData(pluginName, pluginToken)
     # Put all other arguments into the environment with an "igor_" prefix
     env['igor_pluginName'] = pluginName
     for k, v in list(allArgs.items()):
@@ -344,11 +338,9 @@ def get_pluginscript(pluginName, scriptName):
     # If there's a user argument see if we need to add per-user data
     if 'user' in allArgs:
         user = allArgs['user']
-        try:
-            userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', token)
-        except werkzeug.exceptions.HTTPException:
-            pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-            userData = {}
+        userData = _SERVER.igor.plugins._getPluginUserData(pluginName, user, pluginToken)
+        if userData:
+            allArgs['userData'] = userData
         if userData:
             pluginData.update(userData)
     # Pass plugin data in environment, as JSON
@@ -470,62 +462,21 @@ def get_plugin(pluginName, methodName='index'):
     token = _SERVER.igor.access.tokenForRequest(request.environ)
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
-        myWebError('401 Unauthorized', 401)
-
+        _SERVER.igor.app.raiseHTTPError('401 Unauthorized')
+    pluginObject = _SERVER.igor.plugins._getPluginObject(pluginName, token)
     #
-    # Import plugin as a submodule of igor.plugins
+    # Assemble arguments
     #
-    import igor.plugins # Make sure the base package exists
-    moduleName = 'igor.plugins.'+pluginName
-    if moduleName in sys.modules:
-        # Imported previously.
-        pluginModule = sys.modules[moduleName]
-    else:
-        # New. Try to import.
-        moduleDir = os.path.join(_SERVER.igor.pathnames.plugindir, pluginName)
-        try:
-            mfile, mpath, mdescr = imp.find_module('igorplugin', [moduleDir])
-            pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
-        except ImportError:
-            print('------ import failed for', pluginName)
-            traceback.print_exc()
-            print('------')
-            abort(404)
-        pluginModule.IGOR = _SERVER.igor
     allArgs = request.values.to_dict()
-
-    # xxxjack need to check that the incoming action is allowed on this plugin
-    # Get the token for the plugin itself
     pluginToken = _SERVER.igor.access.tokenForPlugin(pluginName, token=token)
     allArgs['token'] = pluginToken
-    
-    # Find plugindata and per-user plugindata
-    try:
-        pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except werkzeug.exceptions.HTTPException:
-        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-        pluginData = {}
-    try:
-        factory = getattr(pluginModule, 'igorPlugin')
-    except AttributeError:
-        myWebError("501 Plugin %s problem: misses igorPlugin() method" % (pluginName), 501)
-    #
-    # xxxjack note that the following set of globals basically exports the
-    # whole object hierarchy to plugins. This means that a plugin has
-    # unlimited powers. This needs to be fixed at some time, so plugin
-    # can come from untrusted sources.
-    #
-    pluginObject = factory(_SERVER.igor, pluginName, pluginData)
     #
     # If there is a user argument also get userData
     #
     if 'user' in allArgs:
         user = allArgs['user']
-        try:
-            userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
-        except werkzeug.exceptions.HTTPException:
-            pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-        else:
+        userData = _SERVER.igor.plugins._getPluginUserData(pluginName, user, pluginToken)
+        if userData:
             allArgs['userData'] = userData
     #
     # Find the method and call it.
@@ -563,11 +514,7 @@ def get_plugin_page(pluginName, pageName='index'):
     allArgs = request.values.to_dict()
     allArgs['pluginName'] = pluginName
     # Find plugindata and per-user plugindata
-    try:
-        pluginData = _SERVER.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', pluginToken)
-    except werkzeug.exceptions.HTTPException:
-        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-        pluginData = {}
+    pluginData = _SERVER.igor.plugins._getPluginData(pluginName, pluginToken)
     allArgs['pluginData'] = pluginData
     if 'user' in allArgs:
         user = allArgs['user']
@@ -575,11 +522,8 @@ def get_plugin_page(pluginName, pageName='index'):
         user = _SERVER.getSessionItem('user', None)
     if user:
         allArgs['user'] = user
-        try:
-            userData = _SERVER.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (user, pluginName), 'application/x-python-object', 'content', pluginToken)
-        except werkzeug.exceptions.HTTPException:
-            pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-        else:
+        userData = _SERVER.igor.plugins._getPluginUserData(pluginName, user, pluginToken)
+        if userData:
             allArgs['userData'] = userData
 
     fullPageName = os.path.join(pluginName, pageName)

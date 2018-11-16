@@ -1,6 +1,13 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 import os
 import sys
 import subprocess
+import imp
 
 class IgorPlugins(object):
     """Class to handle access to plugins"""
@@ -13,7 +20,68 @@ class IgorPlugins(object):
         return (hasattr(sys, 'real_prefix') or
                 (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
 
+    def _getPluginObject(self, pluginName, token=None):
+        """Import the plugin, call the factory function and return the object for pluginName"""
+        #
+        # Import plugin as a submodule of igor.plugins
+        #
+        import igor.plugins # Make sure the base package exists
+        moduleName = 'igor.plugins.'+pluginName
+        if moduleName in sys.modules:
+            # Imported previously.
+            pluginModule = sys.modules[moduleName]
+        else:
+            # New. Try to import.
+            moduleDir = os.path.join(self.igor.pathnames.plugindir, pluginName)
+            try:
+                mfile, mpath, mdescr = imp.find_module('igorplugin', [moduleDir])
+                pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
+            except ImportError:
+                print('------ import failed for', pluginName)
+                traceback.print_exc()
+                print('------')
+                self.igor.app.raiseNotfound(404)
+            pluginModule.IGOR = self.igor
 
+        # xxxjack need to check that the incoming action is allowed on this plugin
+        # Get the token for the plugin itself
+        pluginToken = self.igor.access.tokenForPlugin(pluginName, token=token)
+    
+        # Find plugindata and per-user plugindata
+        pluginData = self._getPluginData(pluginName, pluginToken)
+        try:
+            factory = getattr(pluginModule, 'igorPlugin')
+        except AttributeError:
+            self.igor.app.raiseHTTPError("501 Plugin %s problem: misses igorPlugin() method" % (pluginName))
+        #
+        # xxxjack note that the following set of globals basically exports the
+        # whole object hierarchy to plugins. This means that a plugin has
+        # unlimited powers. This needs to be fixed at some time, so plugin
+        # can come from untrusted sources.
+        #
+        pluginObject = factory(self.igor, pluginName, pluginData)
+        return pluginObject
+
+    def _getPluginScriptDir(self, pluginName, token=None):
+        """Return directory with scripts for pluginName"""
+        return os.path.join(_SERVER.igor.pathnames.plugindir, pluginName, 'scripts')
+
+    def _getPluginData(self, pluginName, token=None):
+        """Return plugin data for pluginName"""
+        try:
+            pluginData = self.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', token)
+        except self.igor.app.getHTTPError():
+            pluginData = {}
+        return pluginData
+        
+    def _getPluginUserData(self, pluginName, userName, token=None):
+        """Return per-user data for this plugin or None"""
+        try:
+            userData = self.igor.databaseAccessor.get_key('identities/%s/plugindata/%s' % (userName, pluginName), 'application/x-python-object', 'content', token)
+        except self.igor.app.getHTTPError():
+            userData = {}
+        return userData
+        
     def update(self, token=None):
         """Install (or re-install) plugin-specific portions of the database"""
         checker = self.igor.access.checkerForEntrypoint('/filesystem')

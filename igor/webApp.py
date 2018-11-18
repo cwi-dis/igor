@@ -293,100 +293,6 @@ def get_static(name):
             
     abort(404)
 
-
-@_WEBAPP.route('/pluginscript/<string:pluginName>/<string:scriptName>')    
-def get_pluginscript(pluginName, scriptName):
-    allArgs = request.values.to_dict()
-    token = _SERVER.igor.access.tokenForRequest(request.environ)
-    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
-    if not checker.allowed('get', token):
-        myWebError('401 Unauthorized', 401)
-    scriptDir = _SERVER.igor._getPluginScriptDir(pluginName, token)
-        
-    if '/' in scriptName or '.' in scriptName:
-        myWebError("400 Cannot use / or . in scriptName", 400)
-        
-    if 'args' in allArgs:
-        args = shlex.split(allArgs['args'])
-    else:
-        args = []
-    # xxxjack need to check that the incoming action is allowed on this plugin
-    # Get the token for the plugin itself
-    pluginToken = _SERVER.igor.access.tokenForPlugin(pluginName)
-    # Setup global, per-plugin and per-user data for plugin scripts, if available
-    env = copy.deepcopy(os.environ)
-    try:
-        # Tell plugin about our url, if we know it
-        myUrl = _SERVER.igor.databaseAccessor.get_key('services/igor/url', 'application/x-python-object', 'content', pluginToken)
-        env['IGORSERVER_URL'] = myUrl
-        if myUrl[:6] == 'https:':
-            env['IGORSERVER_NOVERIFY'] = 'true'
-    except werkzeug.exceptions.HTTPException:
-        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
-    pluginData = _SERVER.igor.plugins._getPluginData(pluginName, pluginToken)
-    # Put all other arguments into the environment with an "igor_" prefix
-    env['igor_pluginName'] = pluginName
-    for k, v in list(allArgs.items()):
-        if k == 'args': continue
-        if not v:
-            v = ''
-        env['igor_'+k] = v
-    # If a user is logged in we use that as default for a user argument
-    user = _SERVER.igor.app.getSessionItem('user')
-    if user and not 'user' in allArgs:
-        allArgs['user'] = user
-    # If there's a user argument see if we need to add per-user data
-    if 'user' in allArgs:
-        user = allArgs['user']
-        userData = _SERVER.igor.plugins._getPluginUserData(pluginName, user, pluginToken)
-        if userData:
-            allArgs['userData'] = userData
-        if userData:
-            pluginData.update(userData)
-    # Pass plugin data in environment, as JSON
-    if pluginData:
-        env['igor_pluginData'] = json.dumps(pluginData)
-        if type(pluginData) == type({}):
-            for k, v in list(pluginData.items()):
-                env['igor_'+k] = str(v)
-    # Finally pass the token as an OTP (which has the form user:pass)
-    oneTimePassword = _SERVER.igor.access.produceOTPForToken(pluginToken)
-    env['IGORSERVER_CREDENTIALS'] = oneTimePassword
-    # Check whether we need to use an interpreter on the scriptName
-    scriptName = os.path.join(scriptDir, scriptName)
-    if os.path.exists(scriptName):
-        interpreter = None
-    elif os.path.exists(scriptName + '.py'):
-        scriptName = scriptName + '.py'
-        interpreter = "python"
-    elif os.name == 'posix' and os.path.exists(scriptName + '.sh'):
-        scriptName = scriptName + '.sh'
-        interpreter = 'sh'
-    else:
-        myWebError("404 scriptName not found: %s" % scriptName, 404)
-    if interpreter:
-        args = [interpreter, scriptName] + args
-    else: # Could add windows and .bat here too, if needed
-        args = [scriptName] + args
-    # Call the command and get the output
-    try:
-        rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
-        _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
-    except subprocess.CalledProcessError as arg:
-        _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
-        msg = "502 Command %s exited with status code=%d" % (scriptName, arg.returncode)
-        output = '%s\n\n%s' % (msg, arg.output)
-        # Convenience for internal logging: if there is 1 line of output only we append it to the error message.
-        argOutputLines = arg.output.split('\n')
-        if len(argOutputLines) == 2 and argOutputLines[1] == '':
-            msg += ': ' + argOutputLines[0]
-            output = ''
-        raise myWebError(msg + '\n' + output, 502)
-    except OSError as arg:
-        _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
-        myWebError("502 Error running command: %s: %s" % (scriptName, arg.strerror), 502)
-    return rv
-
 @_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None})
 @_WEBAPP.route('/internal/<string:command>/<path:subcommand>') 
 def get_command(command, subcommand=None):
@@ -540,6 +446,99 @@ def get_plugin_page(pluginName, pageName='index'):
         return Response(data, mimetype="text/html")
 
     abort(404)
+
+@_WEBAPP.route('/pluginscript/<string:pluginName>/<string:scriptName>')    
+def get_plugin_script(pluginName, scriptName):
+    allArgs = request.values.to_dict()
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
+    if not checker.allowed('get', token):
+        myWebError('401 Unauthorized', 401)
+    scriptDir = _SERVER.igor._getPluginScriptDir(pluginName, token)
+        
+    if '/' in scriptName or '.' in scriptName:
+        myWebError("400 Cannot use / or . in scriptName", 400)
+        
+    if 'args' in allArgs:
+        args = shlex.split(allArgs['args'])
+    else:
+        args = []
+    # xxxjack need to check that the incoming action is allowed on this plugin
+    # Get the token for the plugin itself
+    pluginToken = _SERVER.igor.access.tokenForPlugin(pluginName)
+    # Setup global, per-plugin and per-user data for plugin scripts, if available
+    env = copy.deepcopy(os.environ)
+    try:
+        # Tell plugin about our url, if we know it
+        myUrl = _SERVER.igor.databaseAccessor.get_key('services/igor/url', 'application/x-python-object', 'content', pluginToken)
+        env['IGORSERVER_URL'] = myUrl
+        if myUrl[:6] == 'https:':
+            env['IGORSERVER_NOVERIFY'] = 'true'
+    except werkzeug.exceptions.HTTPException:
+        pass # web.ctx.status = "200 OK" # Clear error, otherwise it is forwarded from this request
+    pluginData = _SERVER.igor.plugins._getPluginData(pluginName, pluginToken)
+    # Put all other arguments into the environment with an "igor_" prefix
+    env['igor_pluginName'] = pluginName
+    for k, v in list(allArgs.items()):
+        if k == 'args': continue
+        if not v:
+            v = ''
+        env['igor_'+k] = v
+    # If a user is logged in we use that as default for a user argument
+    user = _SERVER.igor.app.getSessionItem('user')
+    if user and not 'user' in allArgs:
+        allArgs['user'] = user
+    # If there's a user argument see if we need to add per-user data
+    if 'user' in allArgs:
+        user = allArgs['user']
+        userData = _SERVER.igor.plugins._getPluginUserData(pluginName, user, pluginToken)
+        if userData:
+            allArgs['userData'] = userData
+        if userData:
+            pluginData.update(userData)
+    # Pass plugin data in environment, as JSON
+    if pluginData:
+        env['igor_pluginData'] = json.dumps(pluginData)
+        if type(pluginData) == type({}):
+            for k, v in list(pluginData.items()):
+                env['igor_'+k] = str(v)
+    # Finally pass the token as an OTP (which has the form user:pass)
+    oneTimePassword = _SERVER.igor.access.produceOTPForToken(pluginToken)
+    env['IGORSERVER_CREDENTIALS'] = oneTimePassword
+    # Check whether we need to use an interpreter on the scriptName
+    scriptName = os.path.join(scriptDir, scriptName)
+    if os.path.exists(scriptName):
+        interpreter = None
+    elif os.path.exists(scriptName + '.py'):
+        scriptName = scriptName + '.py'
+        interpreter = "python"
+    elif os.name == 'posix' and os.path.exists(scriptName + '.sh'):
+        scriptName = scriptName + '.sh'
+        interpreter = 'sh'
+    else:
+        myWebError("404 scriptName not found: %s" % scriptName, 404)
+    if interpreter:
+        args = [interpreter, scriptName] + args
+    else: # Could add windows and .bat here too, if needed
+        args = [scriptName] + args
+    # Call the command and get the output
+    try:
+        rv = subprocess.check_output(args, stderr=subprocess.STDOUT, env=env, universal_newlines=True)
+        _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
+    except subprocess.CalledProcessError as arg:
+        _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
+        msg = "502 Command %s exited with status code=%d" % (scriptName, arg.returncode)
+        output = '%s\n\n%s' % (msg, arg.output)
+        # Convenience for internal logging: if there is 1 line of output only we append it to the error message.
+        argOutputLines = arg.output.split('\n')
+        if len(argOutputLines) == 2 and argOutputLines[1] == '':
+            msg += ': ' + argOutputLines[0]
+            output = ''
+        raise myWebError(msg + '\n' + output, 502)
+    except OSError as arg:
+        _SERVER.igor.access.invalidateOTPForToken(oneTimePassword)
+        myWebError("502 Error running command: %s: %s" % (scriptName, arg.strerror), 502)
+    return rv
 
 @_WEBAPP.route('/evaluate/<path:command>')
 def get_evaluate(command):

@@ -205,7 +205,7 @@ class IgorPlugins(object):
             rv['doc'] = '/plugin/%s/page/readme.md' % pluginName
         pages = []
         for fname in os.listdir(pluginPath):
-            if fname[-5:] == '.html':
+            if fname[-5:] == '.html' and fname[:1] != '_':
                 pages.append('/plugin/%s/page/%s' % (pluginName, fname))
         rv['pages'] = pages
         pluginData = self.igor.databaseAccessor.get_key('plugindata/%s' % pluginName, 'application/x-python-object', 'multi', token)

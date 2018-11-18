@@ -65,7 +65,7 @@ class IgorPlugins(object):
 
     def _getPluginScriptDir(self, pluginName, token=None):
         """Return directory with scripts for pluginName"""
-        return os.path.join(_SERVER.igor.pathnames.plugindir, pluginName, 'scripts')
+        return os.path.join(self.igor.pathnames.plugindir, pluginName, 'scripts')
 
     def _getPluginData(self, pluginName, token=None):
         """Return plugin data for pluginName"""

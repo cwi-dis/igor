@@ -1,0 +1,38 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Iotsa Devices</title>
+</head>
+<body>
+	<h1>Iotsa Devices</h1>
+	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
+	{% set device = deviceStatus.device %}
+	{% set module = deviceStatus.module %}
+	{% set status = deviceStatus.get(module, {}) %}
+	{% set message = deviceStatus.message %}	
+	{% if message %}
+		<p><b>User intervention required:</b> {{message}}</p>
+	{% endif %}
+	
+
+	<h2>Status for device {{device}}, module {{module}}</h2>
+	<table>
+		<tr><th>Key</th><th>Value</th></tr>
+		{% for k, v in status.items() %}
+			<tr><td>{{k}}</td><td>{{v}}</td></tr>
+		{% endfor %}
+	</table>
+	<hr>
+	<a href="_showDevice.html?device={{device}}">Return to {{device}} device status page.</a><br>
+	<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+	
+
+</body>
+</html>

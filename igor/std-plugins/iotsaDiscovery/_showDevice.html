@@ -1,0 +1,121 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Iotsa Devices</title>
+</head>
+<body>
+	<h1>Iotsa Devices</h1>
+	{% set deviceStatus = pluginObject._getorset(device, module="config", protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
+	{% set device = deviceStatus.device %}
+	{% set module = deviceStatus.module %}
+	{% set status = deviceStatus.get(module, {}) %}
+	{% set modules = status.get('modules', []) %}
+	{% set message = deviceStatus.message %}
+	{% if message %}
+		<p><b>User intervention required:</b> {{message}}</p>
+	{% endif %}
+	
+
+	<h2>Status for device {{device}}</h2>
+	<table>
+		<tr><th>Key</th><th>Value</th></tr>
+		{% for k, v in status.items() %}
+			<tr><td>{{k}}</td><td>{{v}}</td></tr>
+		{% endfor %}
+	</table>
+	<h2>View Current Module Status</h2>
+	<p>Select the following links to get status information for specific modules on {{device}}:</p>
+	<ul>
+		{% for m in modules %}
+			<li>
+				<a href="_showModule.html?device={{device}}&module={{m}}">{{m}}</a>
+			</li>
+		{% endfor %}
+	</ul>
+
+	<h2>Configure Device {{device}}</h2>
+	
+	{% if status.requestedMode %}
+		<p>
+		You have requested a mode change, but not rebooted {{device}} yet. Please do so within {{status.requestedModeTimeout}} seconds and select
+		<a href="_showDevice.html?device={{device}}">refresh</a>
+		to reload this page.
+		</p>
+	{% endif %}
+	{% if not status.currentMode %}
+		<p>To change device settings you have to request <em>configuration mode</em> here, and then power-cycle the device 
+		(to demonstrate you have physical access). After power-cycling the device will be configurable for a few minutes.
+		After submitting the request you may have to 
+		<a href="_showDevice.html?device={{device}}">refresh</a>
+		this page after the device has rebooted.</p>
+		
+		<form action="/plugin/{{pluginName}}/getorset">
+			<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_showDevice.html">
+			<input type="hidden" name="device" value="{{device}}">
+			<select name="requestedMode">
+				<option value="0">normal operation</option>
+				<option value="1">configuration mode</option>
+				<option value="2">over-the-air reprogramming</option>
+				<option value="3">factory reset</option>
+			</select><br>
+			<input type="submit" value="Request device mode">
+		</form>
+	{% elif status.currentMode == 1 %}
+		<p>The device is in configuration mode (it will revert to normal mode in {{status.currentModeTimeout}} seconds). Use the following form
+		to set values.</p>
+		<form action="/plugin/{{pluginName}}/getorset">
+			<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_showDevice.html">
+			<input type="hidden" name="device" value="{{device}}">
+			<!--
+			Module: 
+			<select" name="module" value="wificonfig">
+			</br>
+			-->
+			Key: <input type="text" name="_name"></br>
+			Value: <input type="text" name="_value"></br>
+			Reboot after updating: <input type="checkbox" name="reboot" value="true"><br>
+			<input type="submit" value="Set">
+		</form>
+	{% elif status.currentMode == 2 %}
+		<p>The device is in OTA mode and can be reprogrammed over the air. The iotsaDiscovery plugin has no support for this yet.</p>
+	{% else %}
+		<p>Unknown device mode {{status.currentMode}}</p>
+	{% endif %}
+
+	<h2>Retrieve Device Status to Igor database</h2>
+	<form action="/plugin/{{pluginName}}/pull">
+		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_showDevice.html">
+		<input type="hidden" name="device" value="{{device}}">
+		<input type="hidden" name="module" value="{{'/'.join(modules)}}">
+		<input type="submit" value="Retrieve Status">
+	</form>
+	
+	<p>After retrieving the status it will be stored in <a href="/data/devices/{{pluginName}}/{{device}}">/data/devices/{{pluginName}}/{{device}}</a>
+	where you can inspect it.</p>
+	
+	<p>You can also modify the data for a module there, in the Igor database, and then upload it to the device with the following form:</p>
+
+	<form action="/plugin/{{pluginName}}/pull">
+		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_showDevice.html">
+		<input type="hidden" name="device" value="{{device}}">
+		<select name="module">
+		{% for m in modules %}
+			<option value="{{m}}">{{m}}</option>
+		{% endfor %}
+		</select>
+		<input type="submit" value="Upload Module Status">
+	</form>
+
+	<hr>
+	<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+
+</body>
+</html>

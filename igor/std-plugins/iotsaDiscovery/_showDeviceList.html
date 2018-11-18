@@ -1,0 +1,57 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Iotsa Devices</title>
+</head>
+<body>
+	<h1>Iotsa Devices</h1>
+	{% set deviceStatus = pluginObject._findDevices(token) %}
+	{% set devices = deviceStatus.devices %}
+	{% set message = deviceStatus.message %}
+	
+	{% if message %}
+		<p><b>User intervention required:</b> {{message}}</p>
+	{% endif %}
+	
+
+	<h2>Iotsa devices discovered</h2>
+	<ul>
+		{% for d in devices %}
+			<li><a href="_showDevice.html?device={{d}}">{{d}}</a></li>
+		{% endfor %}
+	</ul>
+	<p>
+	In some cases the links above may not work, for example when accessing a fresh Iotsa device that has not yet
+	received a correct SSL certificate (and therefore uses the factory-installed certificate which is not trusted).
+	</p>
+	<p>Then please use the following form to get iotsa device information:
+	</p>
+	<form action="_showDevice.html">
+		Device: <select name="device">
+			{% for d in devices %}
+				<option value="{{d}}">{{d}}</option>
+			{% endfor %}
+		</select><br>
+		Protocol: <select name="protocol">
+			<option value="https">https</option>
+			<option value="http">http</option>
+			<option value="coap">coap</option>
+		</select></br>
+		Port (if not default for protocol)<input type="text" name="port"></br>
+		Credentials: <input type="text" name="credentials"><br>
+		<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
+		SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+		<input type="submit" value="Get Device Info">
+	</form>
+	<hr>
+	<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

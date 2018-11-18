@@ -17,23 +17,23 @@ class IotsaDiscoveryPlugin(object):
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
         
-    def findNetworks(self, returnTo=None, token=None):
+    def _findNetworks(self, token=None):
         rv = {}
         try:
             rv['networks'] = self.wifi.findNetworks()
         except iotsaControl.api.UserIntervention as e:
             rv['message'] = e
-        return self._returnOrSeeother(rv, returnTo)
+        return rv
     
-    def findDevices(self, returnTo=None, token=None):
+    def _findDevices(self, token=None):
         rv = {}
         try:
             rv['devices'] = self.wifi.findDevices()
         except iotsaControl.api.UserIntervention as e:
             rv['message'] = e
-        return self._returnOrSeeother(rv, returnTo)
+        return rv
         
-    def getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, reboot=None, _name=None, _value=None, **kwargs):
+    def _getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, reboot=None, _name=None, _value=None, **kwargs):
         #
         # Get a handle on the device
         #
@@ -43,7 +43,7 @@ class IotsaDiscoveryPlugin(object):
         #
         accessor = iotsaControl.api.IotsaConfig(handler, module)
         accessor.load()
-        rv = accessor.status
+        rv = {module : accessor.status}
         if _name:
             kwargs[_name] = _value
         if kwargs or reboot:
@@ -60,6 +60,10 @@ class IotsaDiscoveryPlugin(object):
                 rv['message'] = str(e)
         rv['device'] = device
         rv['module'] = module
+        return rv
+        
+    def getorset(self, *args, returnTo=None, **kwargs):
+        rv = self._getorset(*args, **kwargs)
         return self._returnOrSeeother(rv, returnTo)
         
     def pull(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None):

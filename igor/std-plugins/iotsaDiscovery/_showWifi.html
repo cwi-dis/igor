@@ -1,0 +1,52 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Iotsa Devices</title>
+</head>
+<body>
+	<h1>Iotsa Devices</h1>
+	{% set wifiStatus = pluginObject._findNetworks(token) %}
+	{% set networks = wifiStatus.networks %}
+	{% set message = wifiStatus.message %}
+	{% if message %}
+		<p><b>User intervention required:</b> {{message}}</p>
+	{% endif %}
+	
+	<h2>Uninitialized iotsa devices</h2>
+	{% if networks %}
+		<ul>
+			{% for n in networks %}
+				<li>{{n}}</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>
+			No networks found that appear to be created by uninitialized iotsa devices. Note that is tested using the
+			WiFi card of the computer on which Igor runs, so if a iotsa device is too far away from the Igor computer
+			it may not be seen.
+		</p>
+	{% endif %}
+	<h2>Initializing a Iotsa device</h2>
+	<ul>
+		<li>Select the wifi network (from the list above, or by looking for network names starting with <em>config_</em>) on your laptop, smartphone or tablet.</li>
+		<li>Use a browser to visit <a href="http://192.168.4.1">http://192.168.4.1</a>.</li>
+		<li>Use the <em>config</em> and <em>wificonfig</em> links to give your device a hostname and tell
+		it about your WiFi network name and password. You will have to power-cycle the device during this
+		process (to demonstrate you have physical access).</li>
+	</ul>
+	<p>After this process the device is initialized enough to show up here in the <em>Find Devices</em> section
+	for further setup.</p>
+	<hr>
+	<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+		
+
+
+</body>
+</html>

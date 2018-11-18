@@ -16,221 +16,30 @@
 		<p><b>User intervention required:</b> {{message}}</p>
 	{% endif %}
 	
-	{% if not action or action == "list" %}
-		<h2>Finding uninitialized iotsa devices</h2>
-			<p>This will search for uninitialized iotsa devices that advertise their default network:</p>
-			<form action="/plugin/{{pluginName}}/findNetworks">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showWifi">
-				<input type="submit" value="Find Networks">
-			</form>
-		<h2>Finding initialized iotsa devices</h2>
-			<p>This will search for all iotsa devices that advertise their availability on the current local network (WiFi as well as wired):</p>
-			<form action="/plugin/{{pluginName}}/findDevices">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showList">
-				<input type="submit" value="Find Devices">
-			</form>
-		<h2>Finding iotsa device by name or IP address</h2>
-			<p>Enter hostname or IP address:</p>
-			<form action="/plugin/{{pluginName}}/getorset">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
-				Hostname or IP: <input type="text" name="device"><br>
-				Protocol: <select name="protocol">
-				<option value="https">https</option>
-				<option value="http">http</option>
-				<option value="coap">coap</option>
-			</select></br>
-			Port (if not default for protocol)<input type="text" name="port"></br>
-			Credentials: <input type="text" name="credentials"><br>
-			<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
-			SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
-			<input type="submit" value="Get Device Info">
-			</form>
-		
-	{% elif action == "showWifi" %}
-		<h2>Uninitialized iotsa devices</h2>
-		{% set networks = [] if not networks else networks if type(networks) == type([]) else networks.split('/') %}
-		{% if networks %}
-			<ul>
-				{% for n in networks %}
-					<li>{{n}}</li>
-				{% endfor %}
-			</ul>
-		{% else %}
-			<p>
-				No networks found that appear to be created by uninitialized iotsa devices. Note that is tested using the
-				WiFi card of the computer on which Igor runs, so if a iotsa device is too far away from the Igor computer
-				it may not be seen.
-			</p>
-		{% endif %}
-		<h2>Initializing a Iotsa device</h2>
-		<ul>
-			<li>Select the wifi network (from the list above, or by looking for network names starting with <em>config_</em>) on your laptop, smartphone or tablet.</li>
-			<li>Use a browser to visit <a href="http://192.168.4.1">http://192.168.4.1</a>.</li>
-			<li>Use the <em>config</em> and <em>wificonfig</em> links to give your device a hostname and tell
-			it about your WiFi network name and password. You will have to power-cycle the device during this
-			process (to demonstrate you have physical access).</li>
-		</ul>
-		<p>After this process the device is initialized enough to show up here in the <em>Find Devices</em> section
-		for further setup.</p>
-		<hr>
-		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
-		<a href="/">Return to Igor homepage</a>
-		
-	{% elif action == "showList" %}
-		<h2>Iotsa devices discovered</h2>
-		{% set devices = devices if type(devices) == type([]) else devices.split('/') %}
-		<ul>
-			{% for d in devices %}
-				<li><a href="/plugin/{{pluginName}}/getorset?device={{d}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">{{d}}</a></li>
-			{% endfor %}
-		</ul>
-		<p>
-		In some cases the links above may not work, for example when accessing a fresh Iotsa device that has not yet
-		received a correct SSL certificate (and therefore uses the factory-installed certificate which is not trusted).
-		</p>
-		<p>Then please use the following form to get iotsa device information:
-		</p>
+	<h2>Finding uninitialized iotsa devices</h2>
+		<p>This will search for uninitialized iotsa devices that advertise their default network:</p>
+		<p><a href="_showWifi.html">Find WiFi networks for uninitialized iotsa devices</a></p>
+	<h2>Finding initialized iotsa devices</h2>
+		<p>This will search for all iotsa devices that advertise their availability on the current local network (WiFi as well as wired):</p>
+		<p><a href="_showDeviceList.html">Find initialized iotsa devices on the current network</a></p>
+	<h2>Finding iotsa device by name or IP address</h2>
+		<p>Enter hostname or IP address:</p>
 		<form action="/plugin/{{pluginName}}/getorset">
 			<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
-			Device: <select name="device">
-				{% for d in devices %}
-					<option value="{{d}}">{{d}}</option>
-				{% endfor %}
-			</select><br>
+			Hostname or IP: <input type="text" name="device"><br>
 			Protocol: <select name="protocol">
-				<option value="https">https</option>
-				<option value="http">http</option>
-				<option value="coap">coap</option>
-			</select></br>
-			Port (if not default for protocol)<input type="text" name="port"></br>
-			Credentials: <input type="text" name="credentials"><br>
-			<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
-			SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
-			<input type="submit" value="Get Device Info">
+			<option value="https">https</option>
+			<option value="http">http</option>
+			<option value="coap">coap</option>
+		</select></br>
+		Port (if not default for protocol)<input type="text" name="port"></br>
+		Credentials: <input type="text" name="credentials"><br>
+		<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
+		SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+		<input type="submit" value="Get Device Info">
 		</form>
-		<hr>
-		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
-		<a href="/">Return to Igor homepage</a>
-		
-	{% elif action == "showDevice" %}
-		<h2>Status for device {{device}}</h2>
-		{% set _ = kwargs.pop("action") %}
-		{% set _ = kwargs.pop("pluginName") %}
-		{% set _ = kwargs.pop("pluginData") %}
-		{% set _ = kwargs.pop("user", None) %}
-		{% set _ = kwargs.pop("device") %}
-		{% set _ = kwargs.pop("module") %}
-		<table>
-			<tr><th>Key</th><th>Value</th></tr>
-			{% for k, v in kwargs.items() %}
-				<tr><td>{{k}}</td><td>{{v}}</td></tr>
-			{% endfor %}
-		</table>
-		<h2>View Current Module Status</h2>
-		<p>Select the following links to get status information for specific modules on {{device}}:</p>
-		{% set modules = [] if not modules else modules if type(modules) == type([]) else modules.split('/') %}
-		<ul>
-			{% for m in modules %}
-				<li>
-					<a href="/plugin/{{pluginName}}/getorset?device={{device}}&module={{m}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showModule">{{m}}</a>
-				</li>
-			{% endfor %}
-		</ul>
+	
 
-		<h2>Configure Device {{device}}</h2>
-		
-		{% if requestedMode %}
-			<p>
-			You have requested a mode change, but not rebooted {{device}} yet. Please do so within {{requestedModeTimeout}} seconds and select
-			<a href="/plugin/{{pluginName}}/getorset?device={{device}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">refresh</a>
-			to reload this page.
-			</p>
-		{% endif %}
-		{% if not currentMode %}
-			<p>To change device settings you have to request <em>configuration mode</em> here, and then power-cycle the device 
-			(to demonstrate you have physical access). After power-cycling the device will be configurable for a few minutes.
-			After submitting the request you may have to 
-			<a href="/plugin/{{pluginName}}/getorset?device={{device}}&returnTo=/plugin/{{pluginName}}/page/setup.html?action=showDevice">refresh</a>
-			this page after the device has rebooted.</p>
-			<form action="/plugin/{{pluginName}}/getorset">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
-				<input type="hidden" name="device" value="{{device}}">
-				<select name="requestedMode">
-					<option value="0">normal operation</option>
-					<option value="1">configuration mode</option>
-					<option value="2">over-the-air reprogramming</option>
-					<option value="3">factory reset</option>
-				</select><br>
-				<input type="submit" value="Request device mode">
-			</form>
-		{% elif currentMode == "1" %}
-			<p>The device is in configuration mode (it will revert to normal mode in {{currentModeTimeout}} seconds). Use the following form
-			to set values.</p>
-			<form action="/plugin/{{pluginName}}/getorset">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html?action=showDevice">
-				<input type="hidden" name="device" value="{{device}}">
-				<!--
-				Module: 
-				<select" name="module" value="wificonfig">
-				</br>
-				-->
-				Key: <input type="text" name="_name"></br>
-				Value: <input type="text" name="_value"></br>
-				Reboot after updating: <input type="checkbox" name="reboot" value="true"><br>
-				<input type="submit" value="Set">
-			</form>
-		{% elif currentMode == "2" %}
-			<p>The device is in OTA mode and can be reprogrammed over the air. The iotsaDiscovery plugin has no support for this yet.</p>
-		{% else %}
-			<p>Unknown device mode {{currentMode}}</p>
-		{% endif %}
-
-		<h2>Retrieve Device Status to Igor database</h2>
-		<form action="/plugin/{{pluginName}}/pull">
-			<input type="hidden" name="device" value="{{device}}">
-			<input type="hidden" name="module" value="{{'/'.join(modules)}}">
-			<input type="submit" value="Retrieve Status">
-		</form>
-		
-		<p>After retrieving the status it will be stored in <a href="/data/devices/{{pluginName}}/{{device}}">/data/devices/{{pluginName}}/{{device}}</a>
-		where you can inspect it.</p>
-		
-		<p>You can also modify the data for a module there, in the Igor database, and then upload it to the device with the following form:</p>
-
-		<form action="/plugin/{{pluginName}}/pull">
-			<input type="hidden" name="device" value="{{device}}">
-			<input type="hidden" name="module" value="{{module}}">
-			<select name="module">
-			{% for m in modules %}
-				<option value="{{m}}">{{m}}</option>
-			{% endfor %}
-			</select>
-			<input type="submit" value="Retrieve Status">
-		</form>
-
-		<hr>
-		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
-		<a href="/">Return to Igor homepage</a>
-		
-	{% elif action == "showModule" %}
-		<h2>Status for device {{device}}, module {{module}}</h2>
-		{% set _ = kwargs.pop("action") %}
-		{% set _ = kwargs.pop("pluginName") %}
-		{% set _ = kwargs.pop("pluginData") %}
-		{% set _ = kwargs.pop("user", None) %}
-		{% set _ = kwargs.pop("device") %}
-		{% set _ = kwargs.pop("module") %}
-		<table>
-			<tr><th>Key</th><th>Value</th></tr>
-			{% for k, v in kwargs.items() %}
-				<tr><td>{{k}}</td><td>{{v}}</td></tr>
-			{% endfor %}
-		</table>
-		<hr>
-		<a href="/plugin/{{pluginName}}/page/setup.html">Return to iotsa device setup page.</a><br>
-		<a href="/">Return to Igor homepage</a>
-		
-	{% endif %}
 
 </body>
 </html>

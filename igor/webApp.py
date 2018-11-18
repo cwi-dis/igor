@@ -416,9 +416,12 @@ def get_plugin_page(pluginName, pageName='index'):
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
+    # xxxjack should we check for notfound here, so that plugins with scripts only (no module) can also have pages?
+    pluginObject = _SERVER.igor.plugins._getPluginObject(pluginName, token)
 
     allArgs = request.values.to_dict()
     allArgs['pluginName'] = pluginName
+    allArgs['pluginObject'] = pluginObject
     # Find plugindata and per-user plugindata
     pluginData = _SERVER.igor.plugins._getPluginData(pluginName, pluginToken)
     allArgs['pluginData'] = pluginData

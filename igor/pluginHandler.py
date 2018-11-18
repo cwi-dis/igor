@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import imp
+import traceback
 
 class IgorPlugins(object):
     """Class to handle access to plugins"""

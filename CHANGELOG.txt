@@ -1,0 +1,38 @@
+igor 0.96 - November 2018
+- Another new version of plugin interfaces
+- plugins can now have requirements.txt
+- plugins can now refer to each other
+- plugin template UI has access to plugin object
+- Added UIs to add plugins, devices
+- Added iotsaDiscover plugin to setup iotsa devices
+
+igor 0.95 - October 2018
+- Use Flask in stead of web.py as framework
+- Use Jinja2 for templates
+- Python3 now supports https and is preferred version
+- webpy-branch still has web.py compatible code
+
+igor 0.9 - October 2018
+- Make plugins installable automatically
+- Changed how stdplugins are found
+- Refactored rest API code to prepare for port to different framework than web.py
+
+igor 0.85 - September 2018
+- Python3 support (but only for http)
+
+igor 0.8 - August 2018
+- Added unittests
+- Added performance tests
+- Refactored how plugins are implemented
+- Added some database consistency checks
+- Added igorServlet module
+
+igor 0.7 - July 2018
+- Pauline Sia's capability support (not enabled by default)
+- Support for users
+
+igor 0.6 - December 2017
+- Fairly random checkpoint
+
+igor 0.5 and earlier
+- Nothing recorded

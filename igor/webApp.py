@@ -457,7 +457,7 @@ def get_plugin_script(pluginName, scriptName):
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
-    scriptDir = _SERVER.igor._getPluginScriptDir(pluginName, token)
+    scriptDir = _SERVER.igor.plugins._getPluginScriptDir(pluginName, token)
         
     if '/' in scriptName or '.' in scriptName:
         myWebError("400 Cannot use / or . in scriptName", 400)

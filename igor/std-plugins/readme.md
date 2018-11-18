@@ -19,6 +19,8 @@ Various plugins should be considered standard to Igor operations and usually ins
 
 ## Plugin Structure
 
+A plugin generally contains either a Python module or a set of scripts (or both) to communicate with an external device or service. In addition a plugin can contain user-interface pages to allow the user to configure or operate the plugin (or the device it controls).
+
 ### igorplugin.py
 
 A plugin can be implemented in Python. Then it must define a class (or factory function)
@@ -28,7 +30,9 @@ igorPlugin(igor, pluginName, pluginData)
 ``` 
 
 which is called whenever any method of the plugin is to be called. This function should return an object on which the individual methods are looked up. The `igorPlugin` function is called every time a plugin method needs to be called, but it can of course return a singleton object. See the _watchdog_ plugin for an example. _igor_ is a pointer to the global Igor object (see below), _PluginName_
-is the name under which the plugin has been installed, and _PluginData_ is filled from `/data/plugindata/_pluginname_`. There will always be an argument `token` which will be the current set of capabilities (or `None` if Igor is running without capability support) and which the plugin will have to pass to most Igor API calls.
+is the name under which the plugin has been installed, and _PluginData_ is filled from `/data/plugindata/_pluginname_`. 
+
+Each operation will call a method on the object. There will always be an argument `token` which will be the current set of capabilities (or `None` if Igor is running without capability support) and which the plugin will have to pass to most Igor API calls.
 
 Accessing `/plugin/pluginname` will call the `index()` method. 
 
@@ -36,12 +40,15 @@ Accessing `/plugin/pluginname/methodname` will call `methodname()`.
 
 The methods are called with `**kwargs` encoding the plugin arguments, and if there is a `user` argument there will be an additional argument `userData` which is filled from `/data/identities/_user_/plugindata/_pluginname_`.
 
+Methods starting with an underscore `_` are not callable through the web interface but can be called by the plugin template pages or by other plugins.
+
 The _igor_ object has a number of attributes that allow access to various aspects of Igor:
 
 - `igor.database` is the XML database (implemented in `igor.xmlDatabase.DBImpl`)
 - `igor.databaseAccessor` is a higher level, more REST-like interface to the database.
 - `igor.internal` gives access to the set of commands implemented by `igor.__main__.IgorInternal`.
 - `igor.app` is the web application (from `igor.webApp.WebApp`).
+- `igor.plugins` is the plugin manager.
 
 ### scripts
 
@@ -74,9 +81,10 @@ It may be necessary to do some hand editing of the database after installing, be
 
 ### *.html
 
-A plugin can contain a user interface through HTML pages. Actually, these are [Jinja2](http://jinja.pocoo.org) templates. Within the template you have access to the following variables:
+A plugin can contain a user interface through HTML pages. These are accessed with URLs `/plugin/_pluginname_/page/_pagename_.html`. Actually, these are [Jinja2](http://jinja.pocoo.org) templates. Within the template you have access to the following variables:
 
 - _pluginName_ is the name under which the plugin has been installed.
+- _pluginObject_ the plugin object (if the plugin has an `igorplugin.py` Python module).
 - _token_ is the capability of the current user (the user visiting the page).
 - _pluginData_ is the internal data of the plugin (from `/data/plugindata`).
 - _user_ is the current user (if logged in).
@@ -127,6 +135,10 @@ Needs work.
 ### iirfid
 
 Example RFID reader integration. See [iirfid/readme.md](iirfid/readme.md) for details.
+
+### iotsaDiscovery
+
+A plugin to discover devices based on the [iotsa](https://github.com/dis-git/iotsa) architecture and configure those devices (install certificates, install Igor capabilities, etc). The _NeoClock_, _Plant_ and _Smartmeter\_iotsa_ devices below are examples of _iotsa_ devices.
 
 ### kaku
 

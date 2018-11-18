@@ -72,9 +72,10 @@ On top of that is a webserver (based on [Flask](http://flask.pocoo.org), using e
 
 In addition to database access, the web server exposes internal
 functionality (for example to save the database), more general XPath
-expressions over the database and plugin modules. It can also serve static
-content and template-based content (using the web.py template functionality
-and data from the database).
+expressions over the database. It can also serve static
+content and template-based content (using the [Jinja2](http://jinja.pocoo.org/docs/2.10/) template engine and data from the database).
+
+There is a plugin mechanism that allows adding plugins that can control external devices based on variables in the database changing. Or they can change database variables to reflect the state of external devices. Or both.
 
 Then there is an ``actions`` module, populated from a special section of the
 database, that allows actions to be triggered by events. Here, _actions_ are
@@ -92,7 +93,7 @@ There are a number of command-line utilities and Python modules, such as ``igorV
 
 ## Plugins
 
-A number of plugins is included. Some of these are generally useful, some should be considered example code to help you develop your own plugins. See [igor/std-plugins/readme.md](igor/std-plugins/readme.md) for a description of the standard plugins.
+A number of plugins is included. Some of these are generally useful, some should be considered example code to help you develop your own plugins. See [igor/std-plugins/readme.md](igor/std-plugins/readme.md) for a description of the plugin architecture and the standard plugins.
 
 ## Helpers
 

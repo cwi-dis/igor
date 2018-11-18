@@ -42,7 +42,7 @@ class IotsaDiscoveryPlugin(object):
         # Get a handle on the module
         #
         accessor = iotsaControl.api.IotsaConfig(handler, module)
-        accessor.load()
+        self._load(accessor)
         rv = {module : accessor.status}
         if _name:
             kwargs[_name] = _value
@@ -52,7 +52,7 @@ class IotsaDiscoveryPlugin(object):
             if reboot:
                 accessor.set('reboot', True)
             try:
-                returned = accessor.save()
+                returned = self._save(accessor)
                 if isinstance(returned, dict):
                     for k, v in returned.items():
                         rv[k] = v
@@ -81,8 +81,11 @@ class IotsaDiscoveryPlugin(object):
             # Get a handle on the module
             #
             accessor = iotsaControl.api.IotsaConfig(handler, mod)
-            accessor.load()
-            data = accessor.status
+            try:
+                self._load(accessor)
+                data = accessor.status
+            except requests.exceptions.HTTPError:
+                data = {}
             modKey = key + '/' + mod
             self.igor.databaseAccessor.put_key(modKey, 'text/plain', None, data, 'application/x-python-object', token)
         rv = {}
@@ -95,16 +98,20 @@ class IotsaDiscoveryPlugin(object):
         # Get a handle on the module
         #
         accessor = iotsaControl.api.IotsaConfig(handler, module)
-        accessor.load()
+        self._load(accessor)
         newdata = self.igor.databaseAccessor.get_key(key, 'application/x-python-object', None, token)
         if not isinstance(newdata, dict):
             self.igor.app.raiseHTTPError("500 data for %s is not in correct form" % key)
         for k, v in newdata.items():
             accessor.status[k] = v
-            try:
-                accessor.save()
-            except iotsaControl.api.UserIntervention as e:
-                rv['message'] = str(e)
+        rv = {}
+        try:
+            returned = self._save(accessor)
+            if isinstance(returned, dict):
+                for k, v in returned.items():
+                    rv[k] = v
+        except iotsaControl.api.UserIntervention as e:
+            rv['message'] = str(e)
         return self._returnOrSeeother(rv, returnTo)
                     
     def _getHandler(self, device, protocol, credentials, port, noverify, token=None):
@@ -161,5 +168,27 @@ class IotsaDiscoveryPlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
         
+    def _load(self, accessor):
+        """Wrapper to return better errors"""
+        try:
+            return accessor.load()
+        except requests.exceptions.ConnectionError as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: cannot connect" % (accessor.endpoint))
+        except requests.exceptions.Timeout as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: timeout during connect" % (accessor.endpoint))
+        except requests.exceptions.RequestException as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (accessor.endpoint, repr(e)))
+
+    def _save(self, accessor):
+        """Wrapper to return better errors"""
+        try:
+            return accessor.save()
+        except requests.exceptions.ConnectionError as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: cannot connect" % (accessor.endpoint))
+        except requests.exceptions.Timeout as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: timeout during connect" % (accessor.endpoint))
+        except requests.exceptions.RequestException as e:
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (accessor.endpoint, repr(e)))
+            
 def igorPlugin(igor, pluginName, pluginData):
     return IotsaDiscoveryPlugin(igor, pluginName, pluginData)

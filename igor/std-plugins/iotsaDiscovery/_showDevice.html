@@ -10,18 +10,43 @@
 	<title>Iotsa Devices</title>
 </head>
 <body>
-	<h1>Iotsa Devices</h1>
+	{% set protocol, credentials, port, noverify = pluginObject._getpersist(device) %}
 	{% set deviceStatus = pluginObject._getorset(device, module="config", protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
 	{% set device = deviceStatus.device %}
 	{% set module = deviceStatus.module %}
 	{% set status = deviceStatus.get(module, {}) %}
 	{% set modules = status.get('modules', []) %}
 	{% set message = deviceStatus.message %}
+	<h1>Iotsa Device status for {{device}}</h1>
+
 	{% if message %}
 		<p><b>User intervention required:</b> {{message}}</p>
 	{% endif %}
 	
+	{% if noverify %}
+		<h2>Unverified SSL signature</h2>
+		<p>You are accessing {{device}} with SSL (https) certificate verification disabled. </p>
 
+		<p>If this is a new iotsa device that is still using the factory-installed default certificate you
+		can install an Igor-signed certificate.</p>
+		{% if status.currentMode == 1 %}
+			<p><a href="_installCert.html">Install Igor-signed certificate to {{device}}</a></p>
+			
+			<p>Alternatively, you can install a private key and certificate obtained through other means by visiting
+			the device directly (without Igor intervention) by visiting
+			<a href="{{protocol}}://{{device}}:{{port}}/config">{{protocol}}://{{device}}:{{port}}/config</a>.
+			</p>
+			
+			<p>Or you can paste the private key and certificate (as base64-encoded DER files) in the fields below:</p>
+			<form action="_installCert.html">
+				Key (bas64 DER): <textarea name="deviceKey"></textarea><br>
+				Certificate (bas64 DER): <textarea name="deviceCertificate"></textarea><br>
+				<input type="submit" value="Install certificate">
+			</form>
+		{% else %}
+			<p>You must first set the iotsa device in <em>configuration mode</em>, below.</p>
+		{% endif %}
+	{% endif %}
 	<h2>Status for device {{device}}</h2>
 	<table>
 		<tr><th>Key</th><th>Value</th></tr>
@@ -39,7 +64,7 @@
 		{% endfor %}
 	</ul>
 
-	<h2>Configure Device {{device}}</h2>
+	<h2>Configure Device</h2>
 	
 	{% if status.requestedMode %}
 		<p>

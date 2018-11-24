@@ -152,6 +152,16 @@ class IotsaDiscoveryPlugin(object):
             handler.setLogin(username, password)
         return handler
         
+    def _getpersist(self, device, clearNoverify=False):
+        """Get persistent settings for this device"""
+        sessionItem = self.igor.app.getSessionItem('iotsaDiscovery', {})
+        if sessionItem.get('device', None) != device:
+            return None, None, None, None
+        if clearNoverify:
+            sessionItem['noverify'] = False
+            self.igor.app.setSessionItem('iotsaDiscovery', sessionItem)
+        return sessionItem.get('protocol'), sessionItem.get('credentials'), sessionItem.get('port'), sessionItem.get('noverify')
+            
     def _returnOrSeeother(self, rv, returnTo):
         """Either return a JSON object or pass it to seeother as a query"""
         if returnTo:

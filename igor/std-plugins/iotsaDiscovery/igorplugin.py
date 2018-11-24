@@ -172,23 +172,27 @@ class IotsaDiscoveryPlugin(object):
         """Wrapper to return better errors"""
         try:
             return accessor.load()
+        except requests.exceptions.SSLError as e:
+            return self.igor.app.raiseHTTPError("502 Incorrect certificate or other SSL failure while accessing %s" % e.request.url)
         except requests.exceptions.ConnectionError as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: cannot connect" % (accessor.endpoint))
+            return self.igor.app.raiseHTTPError("502 Cannot connect to %s" % e.request.url)
         except requests.exceptions.Timeout as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: timeout during connect" % (accessor.endpoint))
+            return self.igor.app.raiseHTTPError("502 Timeout while connecting to %s" % e.request.url)
         except requests.exceptions.RequestException as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (accessor.endpoint, repr(e)))
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (e.request.url, repr(e)))
 
     def _save(self, accessor):
         """Wrapper to return better errors"""
         try:
             return accessor.save()
+        except requests.exceptions.SSLError as e:
+            return self.igor.app.raiseHTTPError("502 Incorrect certificate or other SSL failure while accessing %s" % e.request.url)
         except requests.exceptions.ConnectionError as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: cannot connect" % (accessor.endpoint))
+            return self.igor.app.raiseHTTPError("502 Cannot connect to %s" % e.request.url)
         except requests.exceptions.Timeout as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: timeout during connect" % (accessor.endpoint))
+            return self.igor.app.raiseHTTPError("502 Timeout while connecting to %s" % e.request.url)
         except requests.exceptions.RequestException as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (accessor.endpoint, repr(e)))
+            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (e.request.url, repr(e)))
             
 def igorPlugin(igor, pluginName, pluginData):
     return IotsaDiscoveryPlugin(igor, pluginName, pluginData)

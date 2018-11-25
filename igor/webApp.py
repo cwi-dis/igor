@@ -195,7 +195,7 @@ class MyServer:
         resp = make_response(message+'\n', code)
         return abort(resp)
         
-    def responseWithHeaders(self, reponse, headers):
+    def responseWithHeaders(self, response, headers):
         """Add headers to the reply"""
         return make_response(response, headers)
             

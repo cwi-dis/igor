@@ -318,18 +318,32 @@ class DBImpl(DBSerializer):
             return
         raise DBAccessError
 
+    def _removeBlanks(self, node):
+        toDelete = []
+        for n in node.childNodes:
+            if n.nodeType == n.TEXT_NODE:
+                n.nodeValue = n.nodeValue.strip()
+                if not n.nodeValue:
+                    toDelete.append(n)
+            if n.nodeType == n.ELEMENT_NODE:
+                self._removeBlanks(n)
+        for n in toDelete:
+            node.removeChild(n)
+                
     def filterAfterLoad(self, nodeOrDoc, token):
         with self:
+            self._removeBlanks(nodeOrDoc)
             return nodeOrDoc
         
     def filterBeforeSave(self, nodeOrDoc,token):
         with self:
+            self._removeBlanks(nodeOrDoc)
             return nodeOrDoc
         
     def saveFile(self):
         newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
         docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
-        docToSave.writexml(open(newFilename + '~', 'w'))
+        docToSave.writexml(open(newFilename + '~', 'w'), addindent="\t", newl="\n")
         if os.path.exists(newFilename):
             os.unlink(newFilename)
         os.link(newFilename + '~', newFilename)

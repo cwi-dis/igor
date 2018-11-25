@@ -182,7 +182,7 @@ class IgorCA(object):
 
     def get_distinguishedName(self, type, configFile):
         """Helper that returns DN in key-value dict (from req or cert file)"""
-        fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-subject'], stdout=subprocess.PIPE)
+        fp = subprocess.Popen(['openssl', type, '-in', configFile, '-noout', '-subject'], stdout=subprocess.PIPE, universal_newlines=True)
         data, _ = fp.communicate()
         if not data.startswith('subject='):
             print('%s: unexpected openssl x509 output: %s' % (self.argv0, data), file=sys.stderr)
@@ -250,7 +250,7 @@ class IgorCA(object):
   
     def get_altNamesFromReq(self, configFile):
         """Helper to get subjectAltName data from a request or certificate"""
-        fp = subprocess.Popen(['openssl', 'req', '-in', configFile, '-noout', '-text'], stdout=subprocess.PIPE)
+        fp = subprocess.Popen(['openssl', 'req', '-in', configFile, '-noout', '-text'], stdout=subprocess.PIPE, universal_newlines=True)
         data, _ = fp.communicate()
         data = data.splitlines()
         while data and not 'X509v3 Subject Alternative Name' in data[0]:

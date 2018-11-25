@@ -39,8 +39,10 @@
 			
 			<p>Or you can paste the private key and certificate (as base64-encoded DER files) in the fields below:</p>
 			<form action="_installCert.html">
-				Key (bas64 DER): <textarea name="deviceKey"></textarea><br>
-				Certificate (bas64 DER): <textarea name="deviceCertificate"></textarea><br>
+				Key (base64 DER):<br>
+				<textarea name="deviceKey" rows="8" cols="60"></textarea><br>
+				Certificate (base64 DER):<br>
+				<textarea name="deviceCertificate"" rows="8" cols="60"></textarea><br>
 				<input type="submit" value="Install certificate">
 			</form>
 		{% else %}

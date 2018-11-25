@@ -402,8 +402,10 @@ def get_plugin(pluginName, methodName='index'):
         myWebError(msg, 502)
     # See what the plugin returned. Could be a flask Response or bytestring, otherwise we convert to string.
     if rv == None:
-        rv =  ''
-    elif isinstance(rv, Response) or isinstance(rv, str):
+        rv =  Response('', mimetype='text/plain')
+    elif isinstance(rv, str):
+        rv = Response(rv, mimetype='text/plain')
+    elif isinstance(rv, Response):
         pass
     else:
         rv = Response(json.dumps(rv), mimetype='application/json')

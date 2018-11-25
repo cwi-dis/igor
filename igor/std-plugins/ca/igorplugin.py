@@ -49,25 +49,21 @@ class CAPlugin(object):
     def list(self, token=None):
         self.initCA()
         listData = self.ca.do_list()
-        self.igor.app.addHeaders({'Content-type':'text/plain'})
         return listData
         
     def status(self, token=None):
         self.initCA()
         statusData = self.ca.do_status()
-        self.igor.app.addHeaders({'Content-type':'text/plain'})
         return statusData
 
     def dn(self, token=None):
         self.initCA()
         dnData = self.ca.do_dn()
-        self.igor.app.addHeaders({'Content-type':'application/json'})
         return dnData
         
     def csrtemplate(self, token=None):
         self.initCA()
         tmplData = self.ca.do_csrtemplate()
-        self.igor.app.addHeaders({'Content-type':'text/plain'})
         return tmplData
         
     def sign(self, csr, token=None):
@@ -75,16 +71,14 @@ class CAPlugin(object):
         cert = self.ca.do_signCSR(csr)
         if not cert:
             self.igor.app.raiseHTTPError('500 Could not sign certificate')
-        self.igor.app.addHeaders({'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="certificate.pem"'})
-        return cert
+        return self.igor.app.responseWithHeaders(cert, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="certificate.pem"'})
         
     def root(self, token=None):
         self.initCA()
         chain = self.ca.do_getRoot()
         if not chain:
             self.igor.app.raiseHTTPError('500 Could not obtain root certificate chain')
-        self.igor.app.addHeaders({'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="igor-root-certificate-chain.pem"'})
-        return chain
+        return self.igor.app.responseWithHeaders(chain, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="igor-root-certificate-chain.pem"'})
 
 def igorPlugin(igor, pluginName, pluginData):
     return CAPlugin(igor)

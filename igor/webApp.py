@@ -195,12 +195,9 @@ class MyServer:
         resp = make_response(message+'\n', code)
         return abort(resp)
         
-    def addHeaders(self, headers):
-        """Add headers to the reply (to be returned shortly)"""
-        @after_this_request
-        def _add_headers(resp):
-            for k, v in headers.items():
-                resp.headers[k] = v
+    def responseWithHeaders(self, reponse, headers):
+        """Add headers to the reply"""
+        return make_response(response, headers)
             
     def getOperationTraceInfo(self):
         """Return information that helps debugging access control errors in current operation"""
@@ -405,8 +402,11 @@ def get_plugin(pluginName, methodName='index'):
         myWebError(msg, 502)
     # See what the plugin returned. Could be a flask Response or bytestring, otherwise we convert to string.
     if rv == None:
-        rv = ''
-    rv = make_response(rv)
+        rv =  ''
+    elif isinstance(rv, Response) or isinstance(rv, str):
+        pass
+    else:
+        rv = Response(json.dumps(rv), mimetype='application/json')
     return rv
 
 @_WEBAPP.route('/plugin/<string:pluginName>/page/<string:pageName>')
@@ -558,7 +558,6 @@ def getOrPost_login():
     message = None
     username = allArgs.get('username')
     password = allArgs.get('password')
-    print('xxxjack', (username, password))
     if username:
         if _SERVER.igor.access.userAndPasswordCorrect(username, password):
             _SERVER.igor.app.setSessionItem('user', username)

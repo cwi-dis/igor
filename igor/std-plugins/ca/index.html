@@ -1,0 +1,42 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Igor Certificate Authority</title>
+</head>
+<body>
+	<h1>Igor Certificate Authority</h1>
+	
+	<h2>Root Certificate Chain</h2>
+	
+	<p>To trust certificates signed by this Igor CA, download the <a href="/plugin/{{pluginName}}/root">root certificate chain</a> and install in your browser or system.</p>
+	
+	<p>If available, the <a href="/static/crl.pem">Certificate Revocation List</a> can be downloaded too.</p>
+	
+	<h2>Listing all Certificates</h2>
+	
+	<p>To list certificates signed by this Igor CA, see the <a href="/plugin/{{pluginName}}/list">certificate listing</a>.</p>
+	
+	<p>Revocation user interface is not implemented yet.</p>
+	
+	<h2>Signing a certificate</h2>
+	
+	<p>Create a key and CSR (Certificate Signing Request) locally, possibly using the <i>igorCA csr</i> command (user interface not implemented yet).</p>
+	
+	<p>Enter the CSR in PEM for in the following field and submit.</p>
+	
+	<form action="/plugin/{{pluginName}}/sign">
+	<textarea name="csr" rows="8" cols="60"></textarea>
+	<br>
+	<input type="submit" value="Submit">
+	</form>
+	
+	<p>The result is the (PEM-encoded) certificate you can use for your service (together with the key from the <i>igorCA csr</i> step).</p>
+
+</body>
+</html>

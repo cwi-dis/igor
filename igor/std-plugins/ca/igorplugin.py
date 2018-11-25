@@ -42,10 +42,9 @@ class CAPlugin(object):
         if self.ca: return
         self.ca = igorCA.IgorCA('igor/plugin/ca')
         
-    def index(self, token=None):
-        self.initCA()
-        return INDEX_HTML
-    
+    def index(self, *args, **kwargs):
+        return self.igor.app.raiseHTTPError("404 No index method for this plugin")
+        
     def list(self, token=None):
         self.initCA()
         listData = self.ca.do_list()

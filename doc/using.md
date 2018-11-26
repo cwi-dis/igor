@@ -213,7 +213,7 @@ Uses the _http[s]_ interface so can be run on a different computer. Configuratio
 
 `igorVar --help` explains the parameters.
 
-The _igorVar_ utility can also be used to communicate with other services that have a REST-like interface and uses JSON or XML as data format.
+The _igorVar_ utility can also be used to communicate with other services that have a REST-like interface and use JSON or XML as data format.
 
 ### igorCA
 
@@ -221,7 +221,7 @@ Certificate Authority command line tool. Call `igorCA help` for a list of comman
 
 ## Supporting modules
 
-The command line tools listed above also do double duty as importable Python modules, enabling accessing Igor from other applications without having to code all the REST code yourself.
+The command line tools listed above also do double duty as importable Python modules, enabling accessing Igor from other applications without having to code all the REST code yourself. There is currently no documentation on using the modules from Python, please inspect the source code.
 
 The following modules are available:
 
@@ -239,19 +239,21 @@ The `~/.igor` directory can contain the following files and subdirectories:
 - `database.xml.YYYYMMDDHHMMSS` Backups of the database (created automatically).
 - `plugins` directory with installed plugins. Many will be symlinks into `std-plugins` directory.
 - `std-plugins` symlink to standard plugins directory in the igor package (will be re-created on every startup).
-- `igor.log` if _igorServer_ is started at system boot this is the _httpd-style_ log of all Igor activity.
-- `igor.log.*` Older logfiles.
+- `igor.log` the _httpd-style_ log of all Igor activity.
+- `igor.log.*` older logfiles.
 - `igor.crt` and `igor.key` if Igor is run in _https_ mode these are the certificate and key used. `igor.crt` is also used by _igorVar_ and _igorControl_ to check the server identity.
 - `ca` certificate authority data such as signing keys and certificates.
 - `igorSessions.db` may be available to store igor user sessions.
-- `igor.cfg` configuration file for _igorVar_ and _igorControl_ (not used by _igorServer_ or _igorSetup_). All values are stored in the `[igor]` section, with names identical to the long option name. So, the following file will change the default server used by _igorVar_ and _igorControl_:
+- `igor.cfg` configuration file for _igorVar_, _igorControl_ and _igorCA_ (not used by _igorServer_ or _igorSetup_). Default argument values are stored in the `[igor]` section, with names identical to the long option name. By supplying the `--config` argument to _igorVar_ or one of the other tools another section can be selected.
+
+  So, the following file will change the default server used by _igorVar_ and _igorControl_:
 
 	```
 	[igor]
 	url = https://myigor.local:9333/data
 	```
 	
-	Default option values can also be specified in the environment by specifying the name in capitals and prefixed with IGORSERVER_. So the following environment valiable setting will have the same effect:
+	Default option values can also be specified in the environment by specifying the name in capitals and prefixed with IGORSERVER_. So the following environment variable setting will have the same effect:
 	
 	```
 	IGORSERVER_URL="https://myigor.local:9333/data"

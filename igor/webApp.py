@@ -405,10 +405,10 @@ def get_plugin(pluginName, methodName='index'):
         rv =  Response('', mimetype='text/plain')
     elif isinstance(rv, str):
         rv = Response(rv, mimetype='text/plain')
-    elif isinstance(rv, Response):
-        pass
-    else:
+    elif isinstance(rv, dict) or isinstance(rv, list):
         rv = Response(json.dumps(rv), mimetype='application/json')
+    else:
+        pass
     return rv
 
 @_WEBAPP.route('/plugin/<string:pluginName>/page/<string:pageName>')

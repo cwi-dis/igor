@@ -24,29 +24,6 @@ except ImportError:
 class IgorError(EnvironmentError):
     pass
 
-DEFAULTS = dict(
-        url="http://igor.local:9333/data",
-        bearer='',
-        access='',
-        credentials='',
-        certificate='',
-        noverify='',
-        verbose='',
-        nosystemrootcertificates='',
-    )
-CONFIG = configparser.ConfigParser(DEFAULTS)
-CONFIG.add_section('igor')
-CONFIG.read(os.path.expanduser('~/.igor/igor.cfg'))
-# Override from environment:
-for k, _ in CONFIG.items('igor'):
-    envKey = 'IGORSERVER_' + k.upper()
-    if envKey in os.environ:
-        CONFIG.set('igor', k, os.environ[envKey])
-        
-# DEFAULT_URL="http://framboos.local:9333/data"
-# if 'IGORSERVER_URL' in os.environ:
-#   DEFAULT_URL = os.environ['IGORSERVER_URL']
-
 VERBOSE=False
 
 class IgorServer(object):
@@ -160,12 +137,64 @@ class IgorServer(object):
         if type(rv) != type(''):
             rv = rv.decode('utf-8')
         return rv
+
+def igorArgumentDefaults(configFile=None, config=None):
+    if configFile:
+        if not os.path.exists(configFile):
+            print("%s: does not exist" % configFile, file=sys.stderr)
+            sys.exit(1)
+    else:
+        configFile = os.path.expanduser('~/.igor/igor.cfg')
+    if config == None:
+        config = 'igor'
         
+    defaultDefaults = dict(
+            url="http://igor.local:9333/data",
+            bearer='',
+            access='',
+            credentials='',
+            certificate='',
+            noverify='',
+            verbose='',
+            noSystemRootCertificates='',
+        )
+    c = configparser.ConfigParser(defaultDefaults)
+    c.add_section(config)
+    c.read(configFile)
+    # Override from environment:
+    for k, _ in c.items(config):
+        envKey = 'IGORSERVER_' + k.upper()
+        if envKey in os.environ:
+            c.set(config, k, os.environ[envKey])
+    return dict(c[config])
+
+def igorArgumentParser(description):
+    """Return argument parser with common arguments for Igor and defaults already filled in"""
+    conf_parser = argparse.ArgumentParser(add_help=False)
+    conf_parser.add_argument("--configFile", metavar="FILE", help="Get default arguments from ini-style config FILE (default: ~/.igor/igor.cfg)")
+    conf_parser.add_argument("--config", metavar="SECTION", help="Get default arguments from config file section [SECTION] (default: igor).")
+    args, _ = conf_parser.parse_known_args()
+
+    parser = argparse.ArgumentParser(
+        parents=[conf_parser],
+        description="Access Igor home automation service and other http databases",
+        epilog="Argument defaults can also be specified in environment variables like IGORSERVER_URL (for --url), etc."
+        )
+    parser.set_defaults(**igorArgumentDefaults(configFile=args.configFile, config=args.config))
+    parser.add_argument("-u", "--url", help="Base URL of the server (default: %(default)s)")
+    parser.add_argument("--verbose", action="store_true", help="Print what is happening")
+    parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line")
+    parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument")
+    parser.add_argument("--credentials", metavar="USER:PASS", help="Add Authorization: Basic header line with given credentials")
+    parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures")
+    parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file")
+    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has')
+    return parser
+             
 def main():
     global VERBOSE
-    parser = argparse.ArgumentParser(description="Access Igor home automation service and other http databases")
-    parser.set_defaults(**dict(CONFIG['igor']))
-    parser.add_argument("-u", "--url", help="Base URL of the server (default: %(default)s, environment IGORSERVER_URL)")
+    parser = igorArgumentParser(description="Access Igor home automation service and other http databases")
+
     parser.add_argument("-e", "--eval", action="store_true", help="Evaluate XPath expression in stead of retrieving variable (by changing /data to /evaluate in URL)")
     parser.add_argument("-v", "--variant", help="Variant of data to get (or put, post)")
     parser.add_argument("-M", "--mimetype", help="Get result as given mimetype")
@@ -174,7 +203,6 @@ def main():
     parser.add_argument("--xml", dest="mimetype", action="store_const", const="application/xml", help="Get result as XML")
     parser.add_argument("--python", action="store_true", help="Get result as Python (converted from JSON)")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print result (only for Python, currently)")
-    parser.add_argument("--verbose", action="store_true", help="Print what is happening")
     parser.add_argument("--delete", action="store_true", help="Delete variable")
     parser.add_argument("--create", action="store_true", help="Create or clear a variable")
     parser.add_argument("--put", metavar="MIMETYPE", help="PUT data of type MIMETYPE, from --data or stdin")
@@ -183,12 +211,6 @@ def main():
     parser.add_argument("--checkdata", action="store_true", help="Check that data is valid XML or JSON")
     parser.add_argument("--checknonempty", action="store_true", help="Check that data is valid XML or JSON data, and fail silently on empty data")
     parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
-    parser.add_argument("--bearer", metavar="TOKEN", help="Add Authorization: Bearer TOKEN header line")
-    parser.add_argument("--access", metavar="TOKEN", help="Add access_token=TOKEN query argument")
-    parser.add_argument("--credentials", metavar="USER:PASS", help="Add Authorization: Basic header line with given credentials")
-    parser.add_argument("--noverify", action='store_true', help="Disable verification of https signatures")
-    parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file")
-    parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has')
     
     parser.add_argument("var", help="Variable to retrieve")
     args = parser.parse_args()

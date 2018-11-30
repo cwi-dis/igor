@@ -10,7 +10,9 @@
 	<title>Iotsa Devices</title>
 </head>
 <body>
-	{% set protocol, credentials, port, noverify = pluginObject._getpersist(device) %}
+	{% if not (protocol or credentials or port or noverify) %}
+		{% set protocol, credentials, port, noverify = pluginObject._getpersist(device) %}
+	{% endif %}
 	{% set deviceStatus = pluginObject._getorset(device, module="config", protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
 	{% set device = deviceStatus.device %}
 	{% set module = deviceStatus.module %}
@@ -39,6 +41,7 @@
 			
 			<p>Or you can paste the private key and certificate (as base64-encoded DER files) in the fields below:</p>
 			<form action="_installCert.html">
+				<input type="hidden" name="device" value="{{device}}">
 				Key (base64 DER):<br>
 				<textarea name="deviceKey" rows="8" cols="60"></textarea><br>
 				Certificate (base64 DER):<br>

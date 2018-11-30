@@ -19,7 +19,7 @@
 		{% if message %}
 			<p><b>User intervention required:</b> {{message}}</p>
 		{% else %}
-			{% set _ = pluginObject._persist(device, noverify=False) %}
+			{% set _ = pluginObject._getpersist(device, noverify=False) %}
 			<p>It seems installing the certificate and key was successful. Re-enabled certificate verification. Visit <a href="_showDevice.html?device={{device}}">{{device}} status page</a> to test.</p>
 		{% endif %}
 		

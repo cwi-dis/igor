@@ -190,8 +190,6 @@ class MyServer:
             code = int(message.split()[0])
         except ValueError:
             code = 500
-        else:
-            code = message.splitlines()[0]
         resp = make_response(message+'\n', code)
         return abort(resp)
         
@@ -436,7 +434,6 @@ def get_plugin_page(pluginName, pageName='index'):
         userData = _SERVER.igor.plugins._getPluginUserData(pluginName, user, pluginToken)
         if userData:
             allArgs['userData'] = userData
-
     fullPageName = os.path.join(pluginName, pageName)
     if fullPageName[-3:] == '.md':
         # Markdown, probably the readme.
@@ -447,7 +444,15 @@ def get_plugin_page(pluginName, pageName='index'):
     template = _SERVER.getJinjaTemplate(fullPageName)
     if template:
         # Note that we pass the incoming token, not the pluginToken, to the template
-        data = template.render(kwargs=allArgs, token=token, **allArgs)
+        try:
+            data = template.render(kwargs=allArgs, token=token, **allArgs)
+        except werkzeug.exceptions.HTTPException:
+            raise
+        except:
+            print('Exception in /plugin/%s/%s:' % (pluginName, pageName))
+            traceback.print_exc(file=sys.stdout)
+            msg = "502 Exception in %s/page/%s : %s" % (pluginName, pageName, repr(sys.exc_info()[1]))
+            myWebError(msg, 502)
         return Response(data, mimetype="text/html")
 
     abort(404)

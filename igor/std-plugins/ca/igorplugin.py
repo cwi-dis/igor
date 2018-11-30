@@ -79,6 +79,33 @@ class CAPlugin(object):
             self.igor.app.raiseHTTPError('500 Could not obtain root certificate chain')
         return self.igor.app.responseWithHeaders(chain, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="igor-root-certificate-chain.pem"'})
 
+    def _generateKeyAndSign(self, names, token=None):
+        self._initCA()
+        _, keyFile = tempfile.mkstemp(suffix=".key")
+        _, csrFile = tempfile.mkstemp(suffix=".csr")
+        _, csrConfigFile = tempfile.mkstemp(suffix=".csrconfig")
+        csrData = self.ca.do_genCSR(keyFile, csrFile, csrConfigFile, *names)
+        certData = self.ca.do_signCSR(csrData)
+        keyData = open(keyFile).read()
+        print('xxxjack keyFile', keyFile, 'csrFile', csrFile, 'csrConfigFile', csrConfigFile)
+#        os.unlink(keyFile)
+#        os.unlink(csrFile)
+#        os.unlink(csrConfigFile)
+        return keyData, certData
+        
+    def generateKeyAndSign(self, dn, alt1=None, alt2=None, alt3=None, alt4=None, token=None):
+        names = [dn]
+        if alt1:
+            names.append(alt1)
+        if alt2:
+            names.append(alt2)
+        if alt3:
+            names.append(alt3)
+        if alt4:
+            names.append(alt4)
+        keyData, certData = self._generateKeyAndSign(names, token)
+        return dict(key=keyData, cert=certData)
+        
 def igorPlugin(igor, pluginName, pluginData):
     return CAPlugin(igor)
     

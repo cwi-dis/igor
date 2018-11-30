@@ -119,6 +119,8 @@ class IotsaDiscoveryPlugin(object):
         #
         # Persist settings for protocol, credentials, port, noverify for one device
         #
+        if not device:
+            return self.igor.app.raiseHTTPError("400 No device specified")
         sessionItem = self.igor.app.getSessionItem('iotsaDiscovery', {})
         if sessionItem.get('device', None) != device:
             sessionItem = {}
@@ -160,7 +162,8 @@ class IotsaDiscoveryPlugin(object):
         if clearNoverify:
             sessionItem['noverify'] = False
             self.igor.app.setSessionItem('iotsaDiscovery', sessionItem)
-        return sessionItem.get('protocol'), sessionItem.get('credentials'), sessionItem.get('port'), sessionItem.get('noverify')
+        rv = sessionItem.get('protocol'), sessionItem.get('credentials'), sessionItem.get('port'), sessionItem.get('noverify')
+        return rv
             
     def _returnOrSeeother(self, rv, returnTo):
         """Either return a JSON object or pass it to seeother as a query"""

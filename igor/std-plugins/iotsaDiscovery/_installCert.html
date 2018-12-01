@@ -11,7 +11,14 @@
 </head>
 <body>
 	<h1>Install SSL key for {{device}}</h1>
-
+	{% if not deviceKey and not deviceCertificate %}
+		{% set caPlugin = igor.plugins._getPluginObject(pluginName="ca", token=token) %}
+		{% if caPlugin %}
+			{% set deviceKey, deviceCertificate = caPlugin._generateKeyAndSign(names=[device, "192.168.4.1"], token=token) %}
+		{% else %}
+			<p><b>Error:</b> The Igor <i>ca</i> plugin is needed to sign certificates for iotsa devices.</p>
+		{% endif %}
+	{% endif %}
 	{% if deviceKey and deviceCertificate %}
 		{% set ds1 = pluginObject._getorset(device, module="config", protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token, httpsKey=deviceKey) %}
 		{% set ds2 = pluginObject._getorset(device, module="config", protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token, httpsCertificate=deviceCertificate, reboot=1) %}
@@ -23,10 +30,8 @@
 			<p>It seems installing the certificate and key was successful. Re-enabled certificate verification. Visit <a href="_showDevice.html?device={{device}}">{{device}} status page</a> to test.</p>
 		{% endif %}
 		
-	{% elif deviceKey or deviceCertificate %}
-		<p>Both Key and Certificate must be specified.</p>
 	{% else %}
-		<p>Cannot do yet.</p>
+		<p>Both Key and Certificate must be specified.</p>
 	{% endif %}
 
 

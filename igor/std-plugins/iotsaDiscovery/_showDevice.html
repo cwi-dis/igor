@@ -32,7 +32,7 @@
 		<p>If this is a new iotsa device that is still using the factory-installed default certificate you
 		can install an Igor-signed certificate.</p>
 		{% if status.currentMode == 1 %}
-			<p><a href="_installCert.html">Install Igor-signed certificate to {{device}}</a></p>
+			<p><a href="_installCert.html?device={{device}}">Install Igor-signed certificate to {{device}}</a></p>
 			
 			<p>Alternatively, you can install a private key and certificate obtained through other means by visiting
 			the device directly (without Igor intervention) by visiting

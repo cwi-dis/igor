@@ -4,6 +4,7 @@ import json
 import igorCA
 import os
 import sys
+import tempfile
 
 DEBUG=False
 
@@ -79,30 +80,34 @@ class CAPlugin(object):
             self.igor.app.raiseHTTPError('500 Could not obtain root certificate chain')
         return self.igor.app.responseWithHeaders(chain, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="igor-root-certificate-chain.pem"'})
 
+    def revoke(self, number, token=None):
+        self.initCA()
+        ok = self.ca.do_revoke(number)
+        if ok:
+            return ''
+        return self.igor.app.raiseHTTPError('500 Error while revoking %s' % number)
+        
     def _generateKeyAndSign(self, names, token=None):
-        self._initCA()
+        self.initCA()
         _, keyFile = tempfile.mkstemp(suffix=".key")
         _, csrFile = tempfile.mkstemp(suffix=".csr")
         _, csrConfigFile = tempfile.mkstemp(suffix=".csrconfig")
         csrData = self.ca.do_genCSR(keyFile, csrFile, csrConfigFile, *names)
         certData = self.ca.do_signCSR(csrData)
         keyData = open(keyFile).read()
-        print('xxxjack keyFile', keyFile, 'csrFile', csrFile, 'csrConfigFile', csrConfigFile)
-#        os.unlink(keyFile)
-#        os.unlink(csrFile)
-#        os.unlink(csrConfigFile)
-        return keyData, certData
+        os.unlink(keyFile)
+        os.unlink(csrFile)
+        os.unlink(csrConfigFile)
+        if not keyData:
+            return self.igor.app.raiseHTTPError("500 Could not create key")
+        if not keyData:
+            return self.igor.app.raiseHTTPError("500 Could not certificate signing request")
+        if not csrData:
+            return self.igor.app.raiseHTTPError("500 Could not create certificate")
+        return self.igor.app.responseWithHeaders(keyData+certData, {"Content-type":"text/plain"})
         
-    def generateKeyAndSign(self, dn, alt1=None, alt2=None, alt3=None, alt4=None, token=None):
-        names = [dn]
-        if alt1:
-            names.append(alt1)
-        if alt2:
-            names.append(alt2)
-        if alt3:
-            names.append(alt3)
-        if alt4:
-            names.append(alt4)
+    def generateKeyAndSign(self, names, token=None):
+        names = names.split()
         keyData, certData = self._generateKeyAndSign(names, token)
         return dict(key=keyData, cert=certData)
         

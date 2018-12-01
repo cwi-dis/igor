@@ -28,15 +28,28 @@
 	
 	<p>Create a key and CSR (Certificate Signing Request) locally, possibly using the <i>igorCA csr</i> command (user interface not implemented yet).</p>
 	
-	<p>Enter the CSR in PEM for in the following field and submit.</p>
+	<p>Enter the CSR in PEM for in the following field and submit:</p>
 	
 	<form action="/plugin/{{pluginName}}/sign">
-	<textarea name="csr" rows="8" cols="60"></textarea>
-	<br>
-	<input type="submit" value="Submit">
+		<textarea name="csr" rows="8" cols="60"></textarea>
+		<br>
+		<input type="submit" value="Sign CSR">
 	</form>
 	
 	<p>The result is the (PEM-encoded) certificate you can use for your service (together with the key from the <i>igorCA csr</i> step).</p>
 
+	<h2>Creating a key and certificate</h2>
+	
+	<p>You can also have the Igor CA module do all of the steps above for you: create a key, create a CSR and sign it. You will get
+	the private key and certificate as a result (encoded in DER form and concatenated). </p>
+	
+	<p>Note that Igor does <i>not</i> keep a copy of the key, it is only returned to you (and used to sign the CSR). You must keep
+	the key safe once you have received it.</p>
+	
+	<p>Enter hostnames (canonical name first), one per line:
+	<form action="/plugin/{{pluginName}}/generateKeyAndSign">
+		<textarea name="names" rows="4" cols="20"></textarea><br>
+		<input type="submit" value="Generate Key and Certificate">
+	</form>
 </body>
 </html>

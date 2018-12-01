@@ -117,6 +117,24 @@ class CAInterface(object):
         cert = open(certFile).read()
         return cert
 
+    def ca_revoke(self, number):
+        certFile = os.path.join(self.caDatabase, 'intermediate', 'newcerts', str(number)+'.pem')
+        if not os.path.exists(certFile):
+            print("%s: no such certificate: %s" % (self.parent.argv0, certFile), file=sys.stderr)
+        ok = self.parent.runSSLCommand('ca', '-config', self.intConfigFile, '-revoke', certFile)
+        if ok:
+            ok = self.ca_genCRL()
+        return ok
+    
+    def ca_genCRL(self):
+        crlFile = os.path.join(self.parent.database, 'static', 'crl.pem')
+        ok = self.parent.runSSLCommand('ca', '-config', self.intConfigFile, '-gencrl', '-out', crlFile)
+        return ok
+        
+    def ca_getCRL(self):
+        crlFile = os.path.join(self.parent.database, 'static', 'crl.pem')
+        return open(crlFile).read()
+        
     def get_distinguishedNameForCA(self):
         return self.parent.get_distinguishedName('x509', self.intCertFile)
            
@@ -148,6 +166,13 @@ class CARemoteInterface(object):
     def ca_signCSR(self, csr):
         return self.igor.get('/plugin/ca/sign', format='text/plain', query=dict(csr=csr))
 
+    def ca_revoke(self, number):
+        rv = self.igor.get('/plugin/ca/revoke', format='text/plain', query=dict(number=number))
+        return not rv
+        
+    def ca_getCRL(self):
+        return self.igor.get('/static/crl.pem', format='text/plain')
+        
     def get_distinguishedNameForCA(self):
         dnString = self.igor.get('/plugin/ca/dn', format='application/json')
         return json.loads(dnString)
@@ -486,23 +511,22 @@ class IgorCA(object):
         if not self.ca.isLocal():
             print("%s: genCRL should only be used for local CA" % self.argv0, file=sys.stderr)
             return False
-        crlFile = os.path.join(self.database, 'static', 'crl.pem')
-        ok = self.runSSLCommand('ca', '-config', self.ca.intConfigFile, '-gencrl', '-out', crlFile)
+        ok = self.ca.ca_genCRL()
         return ok
+        
+    def cmd_getCRL(self):
+        """Output the CRL (Certificate Revocation List)"""
+        rv = self.ca.ca_getCRL()
+        print(rv)
+        return True
         
     def cmd_revoke(self, number):
         """Revoke a certificate. Argument is the number of the certificate to revoke (see list). Regenerates CRL as well."""
-        if not self.ca.isLocal():
-            print("%s: revoke should only be used for local CA" % self.argv0, file=sys.stderr)
-            return False
-        certFile = os.path.join(self.ca.caDatabase, 'intermediate', 'newcerts', str(number)+'.pem')
-        if not os.path.exists(certFile):
-            print("%s: no such certificate: %s" % (self.argv0, certFile), file=sys.stderr)
-        ok = self.runSSLCommand('ca', '-config', self.ca.intConfigFile, '-revoke', certFile)
-        if not ok:
-            return False
-        return self.cmd_genCRL()
+        ok = self.ca.ca_revoke(number)
+        return ok
         
+    do_revoke = cmd_revoke
+    
     def gen_configFile(self, commonName, altNames, configFile=None):
         """Helper function to create CSR or signing config file"""
         if not configFile:

@@ -100,16 +100,17 @@ class CAPlugin(object):
         os.unlink(csrConfigFile)
         if not keyData:
             return self.igor.app.raiseHTTPError("500 Could not create key")
-        if not keyData:
-            return self.igor.app.raiseHTTPError("500 Could not certificate signing request")
         if not csrData:
+            return self.igor.app.raiseHTTPError("500 Could not certificate signing request")
+        if not certData:
             return self.igor.app.raiseHTTPError("500 Could not create certificate")
-        return self.igor.app.responseWithHeaders(keyData+certData, {"Content-type":"text/plain"})
+        return keyData, certData
         
     def generateKeyAndSign(self, names, token=None):
         names = names.split()
         keyData, certData = self._generateKeyAndSign(names, token)
-        return dict(key=keyData, cert=certData)
+        return self.igor.app.responseWithHeaders(keyData+certData, {"Content-type":"text/plain"})
+
         
 def igorPlugin(igor, pluginName, pluginData):
     return CAPlugin(igor)

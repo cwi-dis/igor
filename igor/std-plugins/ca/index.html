@@ -51,5 +51,14 @@
 		<textarea name="names" rows="4" cols="20"></textarea><br>
 		<input type="submit" value="Generate Key and Certificate">
 	</form>
+	
+	<h2>Revoking a certificate</h2>
+	
+	<p>Look up the certificate sequence number (a hexadecimal string) in the <a href="/plugin/{{pluginName}}/list">certificate listing</a>.
+	Enter the number in the form below to revoke it:</p>
+	<form action="/plugin/{{pluginName}}/revoke">
+		Certificate sequence number: <input name="number"></br>
+		<input type="submit" value="Revoke Certificate">
+	</form>
 </body>
 </html>

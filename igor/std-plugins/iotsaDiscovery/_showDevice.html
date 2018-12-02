@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta charset="utf-8" />
 	<style>
 	table, th, td {
 			border: 1px solid black;
@@ -63,8 +63,17 @@
 	<p>Select the following links to get status information for specific modules on {{device}}:</p>
 	<ul>
 		{% for m in modules %}
+			{% if m == "users" %}
+				{% set modulePage = "_showModuleUsers" %}
+			{% elif m == "buttons" %}
+				{% set modulePage = "_showModuleButtons" %}
+			{% elif m == "capabilities" %}
+				{% set modulePage = "_showModuleCapabilities" %}
+			{% else %}
+				{% set modulePage = "_showModule" %}
+			{% endif %}
 			<li>
-				<a href="_showModule.html?device={{device}}&module={{m}}">{{m}}</a>
+				<a href="{{modulePage}}.html?device={{device}}&module={{m}}">{{m}}</a>
 			</li>
 		{% endfor %}
 	</ul>

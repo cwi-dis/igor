@@ -11,11 +11,10 @@
 </head>
 <body>
 	<h1>Iotsa Devices</h1>
-	{% set module = "users" %}
 	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
 	{% set device = deviceStatus.device %}
-	{% set userStatus = deviceStatus.get(module, {}) %}
-	{% set users = userStatus.users %}
+	{% set module = deviceStatus.module %}
+	{% set status = deviceStatus.get(module, {}) %}
 	{% set message = deviceStatus.message %}	
 	{% if message %}
 		<p><b>User intervention required:</b> {{message}}</p>
@@ -24,21 +23,9 @@
 
 	<h2>Status for device {{device}}, module {{module}}</h2>
 	<table>
-		<tr>
-			<th>#</th>
-			<th>Key</th>
-			<th>Value</th>
-		</tr>
-		{% for user in users %}
-			{% for k, v in user.items() %}
-				<tr>
-					{% if loop.first %}
-						<td rowspan="{{user|length}}">{{loop.index0}}</td>
-					{% endif %}
-					<td>{{k}}</td>
-					<td>{{v}}</td>
-				</tr>
-			{% endfor %}
+		<tr><th>Key</th><th>Value</th></tr>
+		{% for k, v in status.items() %}
+			<tr><td>{{k}}</td><td>{{v}}</td></tr>
 		{% endfor %}
 	</table>
 	<hr>

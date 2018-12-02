@@ -12,7 +12,7 @@
 <body>
 	<h1>Iotsa Devices</h1>
 	{% set module = "users" %}
-	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
+	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
 	{% set device = deviceStatus.device %}
 	{% set userStatus = deviceStatus.get(module, {}) %}
 	{% set users = userStatus.users %}
@@ -41,6 +41,22 @@
 			{% endfor %}
 		{% endfor %}
 	</table>
+	
+	<h2>Changing users and passwords</h2>
+	
+	{% if deviceStatus.config.currentMode == 1 %}
+		<p>Changing users and passwords not yet implemented</p>
+	{% elif deviceStatus.config.requestedMode == 1 %}
+		<p>
+		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{deviceStatus.config.requestedModeTimeout}} seconds and select
+		<a href="_showModuleUsers.html?device={{device}}&module={{module}}">refresh</a>
+		to reload this page.
+		</p>
+	{% else %}
+		<p>To change usernames or passwords {{device}} must be in configuration mode. You can request the device to go to configuration mode on the 
+		<a href="_showDevice.html?device={{device}}">device status page</a>.
+		</p>
+	{% endif %}
 	<hr>
 	<a href="_showDevice.html?device={{device}}">Return to {{device}} device status page.</a><br>
 	<a href="/plugin/{{pluginName}}/page/index.html">Return to iotsa device setup page.</a><br>

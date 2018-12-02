@@ -33,7 +33,7 @@ class IotsaDiscoveryPlugin(object):
             rv['message'] = e
         return rv
         
-    def _getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, reboot=None, _name=None, _value=None, **kwargs):
+    def _getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, reboot=None, _name=None, _value=None, includeConfig=False, **kwargs):
         #
         # Get a handle on the device
         #
@@ -44,6 +44,16 @@ class IotsaDiscoveryPlugin(object):
         accessor = iotsaControl.api.IotsaConfig(handler, module)
         self._load(accessor)
         rv = {module : accessor.status}
+        #
+        # Also load global device config, if wanted
+        #
+        if includeConfig and module != "config":
+            acConfig = iotsaControl.api.IotsaConfig(handler, "config")
+            self._load(acConfig)
+            rv['config'] = acConfig.status
+        #
+        # Set variables, if wanted
+        #
         if _name:
             kwargs[_name] = _value
         if kwargs or reboot:
@@ -58,6 +68,9 @@ class IotsaDiscoveryPlugin(object):
                         rv[k] = v
             except iotsaControl.api.UserIntervention as e:
                 rv['message'] = str(e)
+        #
+        # Include device and module names, for convenience
+        #
         rv['device'] = device
         rv['module'] = module
         return rv

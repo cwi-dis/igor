@@ -19,6 +19,7 @@
 	{% set status = deviceStatus.get(module, {}) %}
 	{% set modules = status.get('modules', []) %}
 	{% set message = deviceStatus.message %}
+	
 	<h1>Iotsa Device status for {{device}}</h1>
 
 	{% if message %}
@@ -49,39 +50,15 @@
 				<input type="submit" value="Install certificate">
 			</form>
 		{% else %}
-			<p>You must first set the iotsa device in <em>configuration mode</em>, below.</p>
+			<p>To do this you must first set the iotsa device in <em>configuration mode</em>, below.</p>
 		{% endif %}
 	{% endif %}
-	<h2>Status for device {{device}}</h2>
-	<table>
-		<tr><th>Key</th><th>Value</th></tr>
-		{% for k, v in status.items() %}
-			<tr><td>{{k}}</td><td>{{v}}</td></tr>
-		{% endfor %}
-	</table>
-	<h2>View Current Module Status</h2>
-	<p>Select the following links to get status information for specific modules on {{device}}:</p>
-	<ul>
-		{% for m in modules %}
-			{% if m == "users" %}
-				{% set modulePage = "_showModuleUsers" %}
-			{% elif m == "buttons" %}
-				{% set modulePage = "_showModuleButtons" %}
-			{% elif m == "capabilities" %}
-				{% set modulePage = "_showModuleCapabilities" %}
-			{% elif m == "ntpconfig" %}
-				{% set modulePage = "_showModuleNtpconfig" %}
-			{% else %}
-				{% set modulePage = "_showModule" %}
-			{% endif %}
-			<li>
-				<a href="{{modulePage}}.html?device={{device}}&module={{m}}">{{m}}</a>
-			</li>
-		{% endfor %}
-	</ul>
 
-	<h2>Configure Device</h2>
+	<h2>Operating Mode</h2>
 	
+	{% if not status.currentMode %}
+		<p>Device {{device}} is operating in normal mode (in other words, you cannot change important settings or reprogram it).</p>
+	{% endif %}
 	{% if status.requestedMode %}
 		<p>
 		You have requested a mode change, but not rebooted {{device}} yet. Please do so within {{status.requestedModeTimeout}} seconds and select
@@ -91,7 +68,10 @@
 	{% endif %}
 	{% if not status.currentMode %}
 		<p>To change device settings you have to request <em>configuration mode</em> here, and then power-cycle the device 
-		(to demonstrate you have physical access). After power-cycling the device will be configurable for a few minutes.
+		to demonstrate you have physical access (in other words: to show that you actually own the device and it is somewhere
+		in your home, and that you are not a hacker who managed to get access to the local wifi network).</p>
+		
+		<p>After power-cycling the device will be configurable for a few minutes (otherwise it will revert to normal operating mode).
 		After submitting the request you may have to 
 		<a href="_showDevice.html?device={{device}}">refresh</a>
 		this page after the device has rebooted.</p>
@@ -124,12 +104,43 @@
 			<input type="submit" value="Set">
 		</form>
 	{% elif status.currentMode == 2 %}
-		<p>The device is in OTA mode and can be reprogrammed over the air. The iotsaDiscovery plugin has no support for this yet.</p>
+		<p>The device is in OTA mode and can be reprogrammed over the air. The Igor iotsaDiscovery plugin has no support for this yet, use the
+		<i>iotsaControl</i> command-line tool to reprogram the device.</p>
 	{% else %}
 		<p>Unknown device mode {{status.currentMode}}</p>
 	{% endif %}
 
-	<h2>Retrieve Device Status to Igor database</h2>
+	<h2>Device Configuration for {{device}}</h2>
+	<table>
+		<tr><th>Key</th><th>Value</th></tr>
+		{% for k, v in status.items() %}
+			<tr><td>{{k}}</td><td>{{v}}</td></tr>
+		{% endfor %}
+	</table>
+	
+	<h2>Supported Modules</h2>
+	
+	<p>Select the following links to get status information for specific modules on {{device}} and possibly modify it:</p>
+	<ul>
+		{% for m in modules %}
+			{% if m == "users" %}
+				{% set modulePage = "_showModuleUsers" %}
+			{% elif m == "buttons" %}
+				{% set modulePage = "_showModuleButtons" %}
+			{% elif m == "capabilities" %}
+				{% set modulePage = "_showModuleCapabilities" %}
+			{% elif m == "ntpconfig" %}
+				{% set modulePage = "_showModuleNtpconfig" %}
+			{% else %}
+				{% set modulePage = "_showModule" %}
+			{% endif %}
+			<li>
+				<a href="{{modulePage}}.html?device={{device}}&module={{m}}">{{m}}</a>
+			</li>
+		{% endfor %}
+	</ul>
+
+	<h2>Retrieve Complete Device Status to Igor database</h2>
 	<form action="/plugin/{{pluginName}}/pull">
 		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_showDevice.html">
 		<input type="hidden" name="device" value="{{device}}">

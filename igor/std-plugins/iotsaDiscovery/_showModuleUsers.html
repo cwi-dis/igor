@@ -12,6 +12,16 @@
 <body>
 	<h1>Iotsa Devices</h1>
 	{% set module = "users" %}
+	{% if set %}
+		{% set modUser = {} %}
+		{% set _ = modUser.update(username=new_username) if change_username else None %}
+		{% set _ = modUser.update(password=new_password) if change_password else None %}
+		{% set _ = modUser.update(rights=new_rights) if change_rights else None %}
+		{% set error = pluginObject._setIndexed(device, module, index, modUser, protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
+		{% if error %}
+			<p><b>Error while changing user {{index}} settings:</b> {{error}}</p>
+		{% endif %}
+	{% endif %}
 	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
 	{% set device = deviceStatus.device %}
 	{% set userStatus = deviceStatus.get(module, {}) %}
@@ -45,7 +55,7 @@
 	<h2>Changing users and passwords</h2>
 	
 	{% if deviceStatus.config.currentMode == 1 %}
-		<p>Changing users and passwords not yet implemented</p>
+		<p>Device {{device}} is in configuration mode, you have {{deviceStatus.config.modeTimeout}} seconds to change user settings.</p>
 	{% elif deviceStatus.config.requestedMode == 1 %}
 		<p>
 		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{deviceStatus.config.requestedModeTimeout}} seconds and select
@@ -57,8 +67,93 @@
 		<a href="_showDevice.html?device={{device}}">device status page</a>.
 		</p>
 	{% endif %}
+	{% for user in users %}
+		<h3>Modify user {{loop.index0}}</h3>
+		<form>
+			<input type="hidden" name="device" value="{{device}}">
+			<input type="hidden" name="module" value="{{module}}">
+			<input type="hidden" name="set" value="1">
+			<input type="hidden" name="index" value="{{loop.index0}}">
+			<table>
+				<tr>
+					<th>Key</th>
+					<th>Change?</th>
+					<th>Value</th>
+					<th>Help</th>
+				</tr>
+				<tr>
+					<td>username</td>
+					<td><input type="checkbox" name="change_username" id="change_username"></td>
+					<td><input type="text" name="new_username" value="{{user.username}}" oninput="document.getElementById('change_username').checked=true"></td>
+					<td></td>
+				</tr>
+
+				<tr>
+					<td>password</td>
+					<td><input type="checkbox" name="change_password" id="change_password"></td>
+					<td><input type="password" name="new_password" oninput="document.getElementById('change_password').checked=true"></td>
+					<td></td>
+				</tr>
+				{% if users.multi %}
+					<tr>
+						<td>token</td>
+						<td><input type="checkbox" name="change_rights" id="change_rights"></td>
+						<td><input type="text" name="new_rights" value="{{user.rights}}" oninput="document.getElementById('change_rights').checked=true"></td>
+						<td>Slash-delimited list or *, for example <i>/users/config/</i></td>
+					</tr>
+				{% endif %}
+				<tr>
+					<td colspan="3"><input type="submit" value="Modify user {{loop.index0}}"></td>
+				</tr>
+			</table>
+		</form>
+	{% endfor %}
+	{% if users.multi %}
+		<h3>Add new user</h3>
+		<form>
+			<input type="hidden" name="device" value="{{device}}">
+			<input type="hidden" name="module" value="{{module}}">
+			<input type="hidden" name="set" value="1">
+			<input type="hidden" name="index" value="post">
+			<table>
+				<tr>
+					<th>Key</th>
+					<th>Set?</th>
+					<th>Value</th>
+					<th>Help</th>
+				</tr>
+				<tr>
+					<td>username</td>
+					<td><input type="checkbox" name="change_username" id="change_username"></td>
+					<td><input type="text" name="new_username" value="" oninput="document.getElementById('change_username').checked=true"></td>
+					<td></td>
+				</tr>
+
+				<tr>
+					<td>password</td>
+					<td><input type="checkbox" name="change_password" id="change_password"></td>
+					<td><input type="password" name="new_password" oninput="document.getElementById('change_password').checked=true"></td>
+					<td></td>
+				</tr>
+				{% if users.multi %}
+					<tr>
+						<td>token</td>
+						<td><input type="checkbox" name="change_rights" id="change_rights"></td>
+						<td><input type="text" name="new_rights" value="" oninput="document.getElementById('change_rights').checked=true"></td>
+						<td>Slash-delimited list or *, for example <i>/users/config/</i></td>
+					</tr>
+				{% endif %}
+				<tr>
+					<td colspan="3"><input type="submit" value="Add user"></td>
+				</tr>
+			</table>
+		</form>
+	{% endif %}
 	<hr>
 	<a href="_showDevice.html?device={{device}}">Return to {{device}} device status page.</a><br>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
 	<a href="/plugin/{{pluginName}}/page/index.html">Return to iotsa device setup page.</a><br>
 	<a href="/">Return to Igor homepage</a>
 	

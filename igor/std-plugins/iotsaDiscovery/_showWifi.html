@@ -44,6 +44,9 @@
 	for further setup.</p>
 	<hr>
 	<a href="/plugin/{{pluginName}}/page/index.html">Return to iotsa device setup page.</a><br>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
 	<a href="/">Return to Igor homepage</a>
 		
 

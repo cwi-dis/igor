@@ -17,29 +17,37 @@
 	{% endif %}
 	
 	<h2>Finding uninitialized iotsa devices</h2>
-		<p>This will search for uninitialized iotsa devices that advertise their default network:</p>
-		<p><a href="_showWifi.html">Find WiFi networks for uninitialized iotsa devices</a></p>
+
+	<p>This will search for uninitialized iotsa devices that advertise their default network:</p>
+	<p><a href="_showWifi.html">Find WiFi networks for uninitialized iotsa devices</a></p>
+
 	<h2>Finding initialized iotsa devices</h2>
-		<p>This will search for all iotsa devices that advertise their availability on the current local network (WiFi as well as wired):</p>
-		<p><a href="_showDeviceList.html">Find initialized iotsa devices on the current network</a></p>
+
+	<p>This will search for all iotsa devices that advertise their availability on the current local network (WiFi as well as wired):</p>
+	<p><a href="_showDeviceList.html">Find initialized iotsa devices on the current network</a></p>
+
 	<h2>Finding iotsa device by name or IP address</h2>
-		<p>Enter hostname or IP address:</p>
-		<form action="/plugin/{{pluginName}}/getorset">
-			<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/index.html?action=showDevice">
-			Hostname or IP: <input type="text" name="device"><br>
-			Protocol: <select name="protocol">
-			<option value="https">https</option>
-			<option value="http">http</option>
-			<option value="coap">coap</option>
-		</select></br>
-		Port (if not default for protocol)<input type="text" name="port"></br>
-		Credentials: <input type="text" name="credentials"><br>
-		<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
-		SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
-		<input type="submit" value="Get Device Info">
-		</form>
+
+	<p>Enter hostname or IP address:</p>
+	<form action="/plugin/{{pluginName}}/getorset">
+		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/index.html?action=showDevice">
+		Hostname or IP: <input type="text" name="device"><br>
+		Protocol: <select name="protocol">
+		<option value="https">https</option>
+		<option value="http">http</option>
+		<option value="coap">coap</option>
+	</select></br>
+	Port (if not default for protocol)<input type="text" name="port"></br>
+	Credentials: <input type="text" name="credentials"><br>
+	<i>(warning: credentials are passed in plaintext. Format is username:password)</i><br>
+	SSL Certificate: <input name="noverify" type="checkbox" value="true">Do not check SSL certificates (for https)<br>
+	<input type="submit" value="Get Device Info">
+	</form>
 	
-
-
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/">Return to Igor homepage</a>
 </body>
 </html>

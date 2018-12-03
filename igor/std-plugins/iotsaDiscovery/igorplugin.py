@@ -5,6 +5,7 @@ import os
 import iotsaControl
 import json
 import urllib
+import socket
 
 from builtins import object
 class IotsaDiscoveryPlugin(object):
@@ -220,5 +221,33 @@ class IotsaDiscoveryPlugin(object):
         except requests.exceptions.RequestException as e:
             return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (e.request.url, repr(e)))
             
+    def _getIgorUrl(self, token=None):
+        """Helper for templates: get base URL for this igor, in a iotsa-compatible form.
+        This method is a workaround for iotsa currently not being able to handle .local hostnames
+        so we convert such a hostname into IP address.
+        """
+        igorInfo = self.igor.databaseAccessor.get_key('services/igor', 'application/x-python-object', None, token)
+        host = igorInfo['host']
+        if host.endswith('.local'):
+            host = socket.gethostbyname(host)
+        return "%s://%s:%s" % (igorInfo['protocol'], host, igorInfo['port'])
+        
+    def _getIgorFingerprint(self, token=None):
+        """Helper for templates: return the SSL certificate fingerprint for this igor."""
+        return self.igor.database.getValue('services/igor/fingerprint', token=token)
+        
+    def _getActionsForDevice(self, device=None, token=None):
+        """Helper for templates: returns list of action names this device might trigger"""
+        list = self.igor.database.getValues('actions/action/name', token=token)
+        return [x[1] for x in list]
+        
+    def _getTokensForDevice(self, device=None, token=None):
+        """Helper for templates: return list of all capabilities valid for this device as subject"""
+        return []
+        
+    def _getSharedKeyForDevice(self, device=None, token=None):
+        """Helper for templates: return shared secret key between Igor and device"""
+        return None
+        
 def igorPlugin(igor, pluginName, pluginData):
     return IotsaDiscoveryPlugin(igor, pluginName, pluginData)

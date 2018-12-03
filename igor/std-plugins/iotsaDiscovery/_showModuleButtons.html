@@ -44,8 +44,56 @@
 	
 	<h2>Changing button actions</h2>
 	
-	{% if deviceStatus.config.currentMode == 1 %}
-		<p>Changing buttons not yet implemented</p>
+	{% if deviceStatus.config.currentMode == 1 or 1 %}
+		{% for button in buttons %}
+			<h3>Modify button {{loop.index0}} configuration</h3>
+			<form action="/plugin/{{pluginName}}/setItem">
+				<input type="hidden" name="device" value="{{device}}">
+				<input type="hidden" name="module" value="{{module}}">
+				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_showModuleButtons.html">
+				<input type="hidden" name="index" value="{{loop.index0}}">
+				<table>
+					<tr>
+						<th>Key</th>
+						<th>Value</th>
+						<th>Help</th>
+					</tr>
+					<tr>
+						<td>url</td>
+						<td><input type="text" name="url" value="{{button.url}}"></td>
+						<td>URL to contact on button changes</td>
+					</tr>
+					<tr>
+						<td>fingerprint</td>
+						<td><input type="text" name="fingerprint" value="{{button.fingerprint}}"></td>
+						<td>Certificate fingerprint to check when contacting URL (https only)</td>
+					</tr>
+					<tr>
+						<td>credentials</td>
+						<td><input type="text" name="credentials" value="{{button.credentials}}"></td>
+						<td>Credentials supplied when contacting URL (username:password)</td>
+					</tr>
+					<tr>
+						<td>token</td>
+						<td><input type="text" name="x_token" value="{{button.token}}"></td>
+						<td>Bearer token supplied when contacting URL</td>
+					</tr>
+					<tr>
+						<td>onPress</td>
+						<td><input type="checkbox" name="onPress" {{"checked" if button.onPress else ""}}></td>
+						<td>Call URL when button is pressed</td>
+					</tr>
+					<tr>
+						<td>onRelease</td>
+						<td><input type="checkbox" name="onRelease" {{"checked" if button.onRelease else ""}}></td>
+						<td>Call URL when button is released</td>
+					</tr>
+					<tr>
+						<td colspan="3"><input type="submit" value="Modify button {{loop.index0}}"></td>
+					</tr>
+				</table>
+			</form>
+		{% endfor %}
 	{% elif deviceStatus.config.requestedMode == 1 %}
 		<p>
 		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{deviceStatus.config.requestedModeTimeout}} seconds and select

@@ -19,12 +19,12 @@
 	{% set message = deviceStatus.message %}
 	{% if set %}
 		{% set modButton = buttons[int(index)] %}
-		{% set _ = modButton.update(url=new_url) %}
-		{% set _ = modButton.update(fingerprint=new_fingerprint) %}
-		{% set _ = modButton.update(credentials=new_credentials) %}
-		{% set _ = modButton.update(token=new_token) %}
-		{% set _ = modButton.update(onPress=new_onPress) %}
-		{% set _ = modButton.update(onRelease=new_onRelease) %}
+		{% set _ = modButton.update(url=new_url) if change_url else None %}
+		{% set _ = modButton.update(fingerprint=new_fingerprint) if change_fingerprint else None %}
+		{% set _ = modButton.update(credentials=new_credentials) if change_credentials else None %}
+		{% set _ = modButton.update(token=new_token) if change_token else None %}
+		{% set _ = modButton.update(onPress=new_onPress) if change_onPress else None %}
+		{% set _ = modButton.update(onRelease=new_onRelease) if change_onRelease else None %}
 	{% endif %}
 	{% if message %}
 		<p><b>User intervention required:</b> {{message}}</p>
@@ -64,37 +64,44 @@
 				<table>
 					<tr>
 						<th>Key</th>
+						<th>Change?</th>
 						<th>Value</th>
 						<th>Help</th>
 					</tr>
 					<tr>
 						<td>url</td>
-						<td><input type="text" name="new_url" value="{{button.url}}"></td>
+						<td><input type="checkbox" name="change_url" id="change_url"></td>
+						<td><input type="text" name="new_url" value="{{button.url}}" oninput="document.getElementById('change_url').checked=true"></td>
 						<td>URL to contact on button changes</td>
 					</tr>
 					<tr>
 						<td>fingerprint</td>
-						<td><input type="text" name="new_fingerprint" value="{{button.fingerprint}}"></td>
+						<td><input type="checkbox" name="change_fingerprint" id="change_fingerprint"></td>
+						<td><input type="text" name="new_fingerprint" value="{{button.fingerprint}}" oninput="document.getElementById('change_fingerprint').checked=true"></td>
 						<td>Certificate fingerprint to check when contacting URL (https only)</td>
 					</tr>
 					<tr>
 						<td>credentials</td>
-						<td><input type="text" name="new_credentials" value="{{button.credentials}}"></td>
+						<td><input type="checkbox" name="change_credentials" id="change_credentials"></td>
+						<td><input type="text" name="new_credentials" value="{{button.credentials}}" oninput="document.getElementById('change_credentials').checked=true"></td>
 						<td>Credentials supplied when contacting URL (username:password)</td>
 					</tr>
 					<tr>
 						<td>token</td>
-						<td><input type="text" name="new_token" value="{{button.token}}"></td>
+						<td><input type="checkbox" name="change_token" id="change_token"></td>
+						<td><input type="text" name="new_token" value="{{button.token}}" oninput="document.getElementById('change_token').checked=true"></td>
 						<td>Bearer token supplied when contacting URL</td>
 					</tr>
 					<tr>
 						<td>onPress</td>
-						<td><input type="checkbox" name="new_onPress" {{"checked" if button.onPress else ""}}></td>
+						<td><input type="checkbox" name="change_onPress" id="change_onPress"></td>
+						<td><input type="checkbox" name="new_onPress" {{"checked" if button.onPress else ""}} onchange="document.getElementById('change_onPress').checked=true"></td>
 						<td>Call URL when button is pressed</td>
 					</tr>
 					<tr>
 						<td>onRelease</td>
-						<td><input type="checkbox" name="new_onRelease" {{"checked" if button.onRelease else ""}}></td>
+						<td><input type="checkbox" name="change_onRelease" id="change_onRelease"></td>
+						<td><input type="checkbox" name="new_onRelease" {{"checked" if button.onRelease else ""}} onchange="document.getElementById('change_onRelease').checked=true"></td>
 						<td>Call URL when button is released</td>
 					</tr>
 					<tr>

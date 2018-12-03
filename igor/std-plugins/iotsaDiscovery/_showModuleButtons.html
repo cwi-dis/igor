@@ -21,8 +21,8 @@
 		{% set _ = modButton.update(token=new_token) if change_token else None %}
 		{% set _ = modButton.update(token=new_token_2) if change_token_2 else None %}
 		{% set _ = modButton.update(credentials=new_credentials) if change_credentials else None %}
-		{% set _ = modButton.update(onPress=new_onPress) if change_onPress else None %}
-		{% set _ = modButton.update(onRelease=new_onRelease) if change_onRelease else None %}
+		{% set _ = modButton.update(onPress=not not new_onPress) if change_onPress else None %}
+		{% set _ = modButton.update(onRelease=not not new_onRelease) if change_onRelease else None %}
 		{% set error = pluginObject._setIndexed(device, module, index, modButton, protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
 		{% if error %}
 			<p><b>Error while changing button {{index}} settings:</b> {{error}}</p>

@@ -16,7 +16,16 @@
 	{% set device = deviceStatus.device %}
 	{% set buttonStatus = deviceStatus.get(module, {}) %}
 	{% set buttons = buttonStatus.buttons %}
-	{% set message = deviceStatus.message %}	
+	{% set message = deviceStatus.message %}
+	{% if set %}
+		{% set modButton = buttons[int(index)] %}
+		{% set _ = modButton.update(url=new_url) %}
+		{% set _ = modButton.update(fingerprint=new_fingerprint) %}
+		{% set _ = modButton.update(credentials=new_credentials) %}
+		{% set _ = modButton.update(token=new_token) %}
+		{% set _ = modButton.update(onPress=new_onPress) %}
+		{% set _ = modButton.update(onRelease=new_onRelease) %}
+	{% endif %}
 	{% if message %}
 		<p><b>User intervention required:</b> {{message}}</p>
 	{% endif %}
@@ -47,10 +56,10 @@
 	{% if deviceStatus.config.currentMode == 1 or 1 %}
 		{% for button in buttons %}
 			<h3>Modify button {{loop.index0}} configuration</h3>
-			<form action="/plugin/{{pluginName}}/setItem">
+			<form>
 				<input type="hidden" name="device" value="{{device}}">
 				<input type="hidden" name="module" value="{{module}}">
-				<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_showModuleButtons.html">
+				<input type="hidden" name="set" value="1">
 				<input type="hidden" name="index" value="{{loop.index0}}">
 				<table>
 					<tr>
@@ -60,32 +69,32 @@
 					</tr>
 					<tr>
 						<td>url</td>
-						<td><input type="text" name="url" value="{{button.url}}"></td>
+						<td><input type="text" name="new_url" value="{{button.url}}"></td>
 						<td>URL to contact on button changes</td>
 					</tr>
 					<tr>
 						<td>fingerprint</td>
-						<td><input type="text" name="fingerprint" value="{{button.fingerprint}}"></td>
+						<td><input type="text" name="new_fingerprint" value="{{button.fingerprint}}"></td>
 						<td>Certificate fingerprint to check when contacting URL (https only)</td>
 					</tr>
 					<tr>
 						<td>credentials</td>
-						<td><input type="text" name="credentials" value="{{button.credentials}}"></td>
+						<td><input type="text" name="new_credentials" value="{{button.credentials}}"></td>
 						<td>Credentials supplied when contacting URL (username:password)</td>
 					</tr>
 					<tr>
 						<td>token</td>
-						<td><input type="text" name="x_token" value="{{button.token}}"></td>
+						<td><input type="text" name="new_token" value="{{button.token}}"></td>
 						<td>Bearer token supplied when contacting URL</td>
 					</tr>
 					<tr>
 						<td>onPress</td>
-						<td><input type="checkbox" name="onPress" {{"checked" if button.onPress else ""}}></td>
+						<td><input type="checkbox" name="new_onPress" {{"checked" if button.onPress else ""}}></td>
 						<td>Call URL when button is pressed</td>
 					</tr>
 					<tr>
 						<td>onRelease</td>
-						<td><input type="checkbox" name="onRelease" {{"checked" if button.onRelease else ""}}></td>
+						<td><input type="checkbox" name="new_onRelease" {{"checked" if button.onRelease else ""}}></td>
 						<td>Call URL when button is released</td>
 					</tr>
 					<tr>

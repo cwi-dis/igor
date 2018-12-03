@@ -221,6 +221,20 @@ class IotsaDiscoveryPlugin(object):
         except requests.exceptions.RequestException as e:
             return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (e.request.url, repr(e)))
             
+    def _setIndexed(self, device, module, index, newSettings, protocol=None, credentials=None, port=None, noverify=False, token=None):
+        """Helper for templates: change settings for a single entry for a module that has multiple entries"""
+        handler = self._getHandler(device, protocol, credentials, port, noverify, token)
+        apiName = "%s/%d" % (module, int(index))
+        accessor = iotsaControl.api.IotsaConfig(handler, apiName)
+        for k, v in newSettings.items():
+            accessor.set(k, v)
+        rv = ""
+        try:
+            _ = self._save(accessor)
+        except iotsaControl.api.UserIntervention as e:
+            rv = str(e)
+        return rv
+                
     def _getIgorUrl(self, token=None):
         """Helper for templates: get base URL for this igor, in a iotsa-compatible form.
         This method is a workaround for iotsa currently not being able to handle .local hostnames

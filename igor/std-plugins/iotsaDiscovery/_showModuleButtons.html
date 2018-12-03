@@ -12,13 +12,8 @@
 <body>
 	<h1>Iotsa Devices</h1>
 	{% set module = "buttons" %}
-	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
-	{% set device = deviceStatus.device %}
-	{% set buttonStatus = deviceStatus.get(module, {}) %}
-	{% set buttons = buttonStatus.buttons %}
-	{% set message = deviceStatus.message %}
 	{% if set %}
-		{% set modButton = buttons[int(index)] %}
+		{% set modButton = {} %}
 		{% set _ = modButton.update(url=new_url) if change_url else None %}
 		{% set _ = modButton.update(url=new_url_2) if change_url_2 else None %}
 		{% set _ = modButton.update(fingerprint=new_fingerprint) if change_fingerprint else None %}
@@ -28,7 +23,16 @@
 		{% set _ = modButton.update(credentials=new_credentials) if change_credentials else None %}
 		{% set _ = modButton.update(onPress=new_onPress) if change_onPress else None %}
 		{% set _ = modButton.update(onRelease=new_onRelease) if change_onRelease else None %}
+		{% set error = pluginObject._setIndexed(device, module, index, modButton, protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token) %}
+		{% if error %}
+			<p><b>Error while changing button {{index}} settings:</b> {{error}}</p>
+		{% endif %}
 	{% endif %}
+	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
+	{% set device = deviceStatus.device %}
+	{% set buttonStatus = deviceStatus.get(module, {}) %}
+	{% set buttons = buttonStatus.buttons %}
+	{% set message = deviceStatus.message %}
 	{% if message %}
 		<p><b>User intervention required:</b> {{message}}</p>
 	{% endif %}

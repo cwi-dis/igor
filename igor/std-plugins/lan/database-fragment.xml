@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<data xmlns:own="http://jackjansen.nl/igor/owner">
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<services>
 		<router/>
 		<internet/>
@@ -24,6 +24,10 @@
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
+			<au:needCapability>
+				<obj>/data/services</obj>
+				<put>descendant-or-self</put>
+			</au:needCapability>
 		</{plugin}>
 	</plugindata>
 </data>

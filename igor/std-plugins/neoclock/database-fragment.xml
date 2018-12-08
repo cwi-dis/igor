@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<data xmlns:own="http://jackjansen.nl/igor/owner">
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<environment>
 		<systemHealth>
 			<messages/>
@@ -20,8 +20,15 @@
 			<mimetype>text/plain</mimetype>
 			<method>PUT</method>
 			<data>0x206060/{data[1]/level * 0.01 - 0.4}/{data[2]/level * 0.01 - 0.4}/{data[3]/level * 0.01 - 0.4}/{data[4]/level * 0.01 - 0.4}/{data[5]/level * 0.01 - 0.4}/{data[6]/level * 0.01 - 0.4}/{data[7]/level * 0.01 - 0.4}/{data[8]/level * 0.01 - 0.4}/{data[9]/level * 0.01 - 0.4}/{data[10]/level * 0.01 - 0.4}/{data[11]/level * 0.01 - 0.4}/{data[12]/level * 0.01 - 0.4}</data>
-			<!-- needs capability for /data/plugindata/{plugin} -->
 			<representing>devices/{plugin}</representing>
+			<au:needCapability>
+				<obj>/data/devices/{plugin}</obj>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/sensors/buienradar</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
 		</action>
 		<action own:plugin="{plugin}">
 			<xpath>/data/environment/systemHealth/messages</xpath>
@@ -32,6 +39,10 @@
 			<data>{igor_ifthenelse(string(/data/environment/systemHealth/messages),"0x603000","")}</data>
 			<!-- needs capability for /data/plugindata/{plugin} -->
 			<representing>devices/{plugin}</representing>
+			<au:needCapability>
+				<obj>/data/devices/{plugin}</obj>
+				<put>descendant-or-self</put>
+			</au:needCapability>
 		</action>
 		<action own:plugin="{plugin}">
 			<xpath>/data/devices/{plugin}/*</xpath>
@@ -45,6 +56,17 @@
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>
 			<protocol>http</protocol>
+			<au:needCapability>
+				<obj>/data/devices/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:mayNeedCapability>
+				<obj>/api</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+				<aud>{plugin}.local</aud>
+			</au:mayNeedCapability>
 		</{plugin}>
 	</plugindata>
 </data>

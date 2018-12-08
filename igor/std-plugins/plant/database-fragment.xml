@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<data xmlns:own="http://jackjansen.nl/igor/owner">
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<devices>
 		<{plugin} own:plugin="{plugin}"/>
 	</devices>
@@ -7,12 +7,9 @@
 		<action own:plugin="{plugin}">
 			<xpath>/data/devices/{plugin}/target</xpath>
 			<url>/plugin/{plugin}/push</url>
-			<!-- needs capability for /data/plugindata/plant -->
-			<!-- needs capability for /data/devices/plant -->
 			<representing>devices/{plugin}</representing>
 		</action>
 		<action own:plugin="{plugin}">
-			<!-- needs capability for data/devices/plant -->
 			<xpath>/data/environment/energy/electricity</xpath>
 			<url>/data/devices/{plugin}/target</url>
 			<method>PUT</method>
@@ -33,6 +30,17 @@
 			<host>{plugin}.local</host>
 			<protocol>https</protocol>
 			<stepper>0</stepper>
+			<au:needCapability>
+				<obj>/data/devices/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:mayNeedCapability>
+				<obj>/api</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+				<aud>{plugin}.local</aud>
+			</au:mayNeedCapability>
 		</{plugin}>
 	</plugindata>
 	<environment>

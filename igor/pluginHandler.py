@@ -41,7 +41,7 @@ class IgorPlugins(object):
                 print('------ import failed for', pluginName)
                 traceback.print_exc()
                 print('------')
-                self.igor.app.raiseNotfound(404)
+                self.igor.app.raiseNotfound()
             pluginModule.IGOR = self.igor
 
         # xxxjack need to check that the incoming action is allowed on this plugin

@@ -9,6 +9,17 @@
 			<host>{plugin}.local</host>
 			<protocol>https</protocol>
 			<endpoint>api</endpoint>
+			<au:needCapability>
+				<obj>/data/sensors/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:mayNeedCapability>
+				<obj>/api</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+				<aud>{plugin}.local</aud>
+			</au:mayNeedCapability>
 		</{plugin}>
 	</plugindata>
 </data>

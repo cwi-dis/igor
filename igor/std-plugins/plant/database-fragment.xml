@@ -18,18 +18,18 @@
 			<minInterval>60</minInterval>
 			<condition>not(/data/environment/night)</condition>
 		</action>
-		<action own:plugin="{plugin}">
-			<interval>600</interval>
-			<url>/plugin/{plugin}/pull</url>
-			<representing>devices/{plugin}</representing>
-			<aggregate>true</aggregate>
-		</action>			
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>
 			<protocol>https</protocol>
 			<stepper>0</stepper>
+			<action>
+				<interval>600</interval>
+				<url>/plugin/{plugin}/pull</url>
+				<representing>devices/{plugin}</representing>
+				<aggregate>true</aggregate>
+			</action>			
 			<au:needCapability>
 				<obj>/data/devices/{plugin}</obj>
 				<get>descendant-or-self</get>

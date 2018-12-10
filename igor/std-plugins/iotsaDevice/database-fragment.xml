@@ -8,13 +8,6 @@
 	</devices>
 	<actions>
 		<action own:plugin="{plugin}">
-			<xpath>/data/devices/{plugin}/target</xpath>
-			<url>/plugin/{plugin}/push</url>
-			<!-- needs capability for /data/plugindata/{plugin} -->
-			<!-- needs capability for /data/devices/{plugin} -->
-			<representing>devices/{plugin}</representing>
-		</action>
-		<action own:plugin="{plugin}">
 			<name>action-{plugin}</name>
 			<interval>600</interval>
 			<url>/plugin/{plugin}/pull</url>
@@ -27,6 +20,22 @@
 			<host>{plugin}.local</host>
 			<protocol>https</protocol>
 			<endpoint>api</endpoint>
+			<action>
+				<xpath>/data/devices/{plugin}/target</xpath>
+				<url>/plugin/{plugin}/push</url>
+				<representing>devices/{plugin}</representing>
+			</action>
+			<au:needCapability>
+				<obj>/data/devices/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:mayNeedCapability>
+				<obj>/api</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+				<aud>{plugin}.local</aud>
+			</au:mayNeedCapability>
 		</{plugin}>
 	</plugindata>
 </data>

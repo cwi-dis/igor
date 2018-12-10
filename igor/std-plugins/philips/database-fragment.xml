@@ -3,25 +3,23 @@
 	<devices>
 		<tv own:plugin="{plugin}"/>
 	</devices>
-	<actions>
-		<action own:plugin="{plugin}">
-			<xpath>/data/devices/tv/power</xpath>
-			<url>/pluginscript/philips/power?power={.}</url>
-			<representing>devices/tv</representing>
-		</action>
-		<action own:plugin="{plugin}">
-			<xpath>/data/devices/tv/*[name()!='power']</xpath>
-			<url>/pluginscript/philips/push?{name()}={.}</url>
-			<representing>devices/tv</representing>
-		</action>
-		<action own:plugin="{plugin}">
-			<interval>60</interval>
-			<url>/pluginscript/philips/pull</url>
-			<aggregate>true</aggregate>
-		</action>
-	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
+			<action>
+				<xpath>/data/devices/tv/power</xpath>
+				<url>/pluginscript/philips/power?power={.}</url>
+				<representing>devices/tv</representing>
+			</action>
+			<action>
+				<xpath>/data/devices/tv/*[name()!='power']</xpath>
+				<url>/pluginscript/philips/push?{name()}={.}</url>
+				<representing>devices/tv</representing>
+			</action>
+			<action>
+				<interval>60</interval>
+				<url>/pluginscript/philips/pull</url>
+				<aggregate>true</aggregate>
+			</action>
 		</{plugin}>
 	</plugindata>
 </data>

@@ -3,13 +3,6 @@
 	<devices>
 		<{plugin} own:plugin="{plugin}"/>
 	</devices>
-    <actions>
-        <action own:plugin="{plugin}">
-            <xpath>/data/environment/lights/*</xpath>
-            <url>/scripts/pluginscript/{plugin}/switch?state={.}&amp;switch={/data/plugindata/{plugin}/switch[name=name($originalContext)]/id}</url>
-			<representing>devices/{plugin}</representing>
-        </action>
-    </actions>
     <plugindata>
         <{plugin} own:plugin="{plugin}">
             <host>malakoff.local</host>
@@ -17,6 +10,11 @@
                 <id>0</id>
                 <name>sampleSwitch</name>
             </switch>
+			<action>
+				<xpath>/data/environment/lights/*</xpath>
+				<url>/scripts/pluginscript/{plugin}/switch?state={.}&amp;switch={/data/plugindata/{plugin}/switch[name=name($originalContext)]/id}</url>
+				<representing>devices/{plugin}</representing>
+			</action>
         </{plugin}>
     </plugindata>
 </data>

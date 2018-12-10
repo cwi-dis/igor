@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<data xmlns:own="http://jackjansen.nl/igor/owner">
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<sensors>
 		<rfid/>
 		<tags/>
@@ -18,17 +18,36 @@
             <method>DELETE</method>
             <url>/data/sensors/tags/tag[position()&lt;last()]</url>
         </action>
-        <action own:plugin="{plugin}">
-            <xpath>/data/sensors/rfid/rfidtag</xpath>
-            <url>/data/sensors/tags/tag</url>
-            <method>POST</method>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
-            <notBefore>1457647462</notBefore>
-        </action>
     </actions>
     <plugindata>
-        <rfid own:plugin="{plugin}">
+        <{plugin} own:plugin="{plugin}">
+			<au:needCapability>
+				<obj>/data/sensors/rfid</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/sensors/tags</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<action>
+				<xpath>/data/sensors/rfid/rfidtag</xpath>
+				<url>/data/sensors/tags/tag</url>
+				<method>POST</method>
+				<mimetype>text/plain</mimetype>
+				<data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
+				<notBefore>1457647462</notBefore>
+			</action>
+			<action>
+				<xpath>/data/sensors/rfid/rfidtag</xpath>
+				<url>/data/environment/introspection/lastActivity/rfid</url>
+				<method>PUT</method>
+				<mimetype>text/plain</mimetype>
+				<data>{igor_dateTime()}</data>
+			</action>
+        </{plugin}>
+        <rfid>
             <tag>
                 <id>00:11:22:33</id>
                 <name>sampleTag</name>

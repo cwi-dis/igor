@@ -1,21 +1,22 @@
 <?xml version="1.0" ?>
 <data xmlns:own="http://jackjansen.nl/igor/owner">
-	<services>
-		<router/>
-		<internet/>
-	</services>
-	<actions>
-		<action own:plugin="{plugin}">
-			<name>systemHealth</name>
-			<interval>60</interval>
-			<xpath>/data/status/*/*/errorMessage</xpath>
-			<url>/plugin/{plugin}</url>
-			<aggregate>true</aggregate>
-		</action>
-	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<sensorMaxInterval/>
+			<action>
+				<name>systemHealth</name>
+				<interval>60</interval>
+				<xpath>/data/status/*/*/errorMessage</xpath>
+				<url>/plugin/{plugin}</url>
+				<aggregate>true</aggregate>
+			</action>
+			<au:needCapability>
+				<obj>/data/environment</obj>
+				<get>descendant</get>
+				<put>descendant</put>
+				<post>descendant</post>
+				<delete>descendant</delete>
+			</au:needCapability>
 		</{plugin}>
 	</plugindata>
 </data>

@@ -1,10 +1,14 @@
 <?xml version="1.0" ?>
-<data xmlns:own="http://jackjansen.nl/igor/owner">
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<sensors>
 		<rfid/>
 		<tags/>
 	</sensors>
     <actions>
+        <action own:plugin="{plugin}">
+            <name>start</name>
+            <url>/pluginscript/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
+        </action>
         <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
@@ -15,31 +19,37 @@
             <method>DELETE</method>
             <url>/data/sensors/tags/tag[position()&lt;last()]</url>
         </action>
-        <action own:plugin="{plugin}">
-            <name>start</name>
-            <url>/pluginscript/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
-        </action>
-        <action own:plugin="{plugin}">
-            <xpath>/data/sensors/rfid/rfidtag</xpath>
-            <url>/data/sensors/tags/tag</url>
-            <method>POST</method>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
-            <notBefore>1457647462</notBefore>
-        </action>
-        <action own:plugin="{plugin}">
-            <xpath>/data/sensors/rfid/rfidtag</xpath>
-            <url>/data/environment/introspection/lastActivity/rfid</url>
-            <method>PUT</method>
-            <mimetype>text/plain</mimetype>
-            <data>{igor_dateTime()}</data>
-        </action>
     </actions>
     <plugindata>
         <{plugin} own:plugin="{plugin}">
             <serial>/dev/tty.usbserial-A700ekiO</serial>
             <baud>57600</baud>
             <host/>
+			<au:needCapability>
+				<obj>/data/sensors/rfid</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/sensors/tags</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<action>
+				<xpath>/data/sensors/rfid/rfidtag</xpath>
+				<url>/data/sensors/tags/tag</url>
+				<method>POST</method>
+				<mimetype>text/plain</mimetype>
+				<data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
+				<notBefore>1457647462</notBefore>
+			</action>
+			<action>
+				<xpath>/data/sensors/rfid/rfidtag</xpath>
+				<url>/data/environment/introspection/lastActivity/rfid</url>
+				<method>PUT</method>
+				<mimetype>text/plain</mimetype>
+				<data>{igor_dateTime()}</data>
+			</action>
         </{plugin}>
         <rfid>
             <tag>

@@ -1,30 +1,38 @@
 <?xml version="1.0" ?>
-<data xmlns:own="http://jackjansen.nl/igor/owner">
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
+	<environment>
+		<{plugin}Devices own:plugin="{plugin}"/>
+	</environment>
 	<sensors>
 		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
-	<actions>
-		<action own:plugin="{plugin}">
-			<interval>60</interval>
-			<url>/pluginscript/{plugin}/pull</url>
-			<representing>sensors/{plugin}</representing>
-			<aggregate>true</aggregate>
-		</action>
-        <action own:plugin="{plugin}">
-            <xpath>/data/sensors/{plugin}/lease</xpath>
-            <condition>/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name</condition>
-            <url>/data/environment/{plugin}Devices/{/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name}</url>
-            <!-- needs capability for /data/plugindata/{plugin}Devices -->
-            <!-- needs capability for /data/sensors/dhcp -->
-            <method>PUT</method>
-            <mimetype>text/plain</mimetype>
-            <data>{alive}</data>
-            <multiple>True</multiple>
-        </action>
-	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
-			<!-- needs capability for /data/plugindata/{plugin}Devices -->
+			<au:needCapability>
+				<obj>/data/sensors/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/environment/{plugin}Devices</obj>
+				<get>descendant</get>
+				<put>descendant</put>
+			</au:needCapability>
+			<action>
+				<interval>60</interval>
+				<url>/pluginscript/{plugin}/pull</url>
+				<representing>sensors/{plugin}</representing>
+				<aggregate>true</aggregate>
+			</action>
+			<action>
+				<xpath>/data/sensors/{plugin}/lease</xpath>
+				<condition>/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name</condition>
+				<url>/data/environment/{plugin}Devices/{/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/hardware)]/name}</url>
+				<method>PUT</method>
+				<mimetype>text/plain</mimetype>
+				<data>{alive}</data>
+				<multiple>True</multiple>
+			</action>
 		</{plugin}>
 		<{plugin}Devices own:plugin="{plugin}">
 			<{plugin}Device>

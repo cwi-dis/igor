@@ -3,25 +3,28 @@
 	<sensors>
 		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
-	<actions>
-		<action own:plugin="{plugin}">
-			<interval>60</interval>
-			<url>/plugin/{plugin}/pull</url>
-			<representing>sensors/{plugin}</representing>
-			<aggregate>true</aggregate>
-		</action>
-		<action own:plugin="{plugin}">
-			<xpath>/data/sensors/{plugin}</xpath>
-			<method>PUT</method>
-			<url>/data/environment/energy/electricity</url>
-			<mimetype>text/plain</mimetype>
-			<data>{current_kw}</data>
-		</action>
-	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>
 			<protocol>https</protocol>
+			<action>
+				<interval>60</interval>
+				<url>/plugin/{plugin}/pull</url>
+				<representing>sensors/{plugin}</representing>
+				<aggregate>true</aggregate>
+			</action>
+			<action>
+				<xpath>/data/sensors/{plugin}</xpath>
+				<method>PUT</method>
+				<url>/data/environment/energy/electricity</url>
+				<mimetype>text/plain</mimetype>
+				<data>{current_kw}</data>
+			</action>
+			<au:needCapability>
+				<obj>/data/sensors/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
 			<au:needCapability>
 				<obj>/data/environment/energy</obj>
 				<put>descendant-or-self</put>

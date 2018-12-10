@@ -3,30 +3,33 @@
 	<sensors>
 		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
-	<actions>
-		<action own:plugin="{plugin}">
-			<interval>60</interval>
-			<url>/pluginscript/smartmeter_rfduino/pull</url>
-			<aggregate>true</aggregate>
-			<representing>sensors/{plugin}</representing>
-		</action>
-		<action own:plugin="{plugin}">
-			<xpath>/data/sensors/{plugin}</xpath>
-			<method>PUT</method>
-			<url>/data/environment/energy/electricity</url>
-			<mimetype>text/plain</mimetype>
-			<data>{current_kw}</data>
-		</action>
-	</actions>
 	<environment>
 		<energy/>
 	</environment>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<au:needCapability>
+				<obj>/data/sensors/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:needCapability>
 				<obj>/data/environment/energy</obj>
 				<put>descendant-or-self</put>
 			</au:needCapability>
+			<action>
+				<interval>60</interval>
+				<url>/pluginscript/smartmeter_rfduino/pull</url>
+				<aggregate>true</aggregate>
+				<representing>sensors/{plugin}</representing>
+			</action>
+			<action>
+				<xpath>/data/sensors/{plugin}</xpath>
+				<method>PUT</method>
+				<url>/data/environment/energy/electricity</url>
+				<mimetype>text/plain</mimetype>
+				<data>{current_kw}</data>
+			</action>
 		</{plugin}>
 	</plugindata>
 </data>

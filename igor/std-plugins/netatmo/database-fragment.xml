@@ -4,12 +4,6 @@
 		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
 	<actions>
-		<action own:plugin="{plugin}">
-			<interval>900</interval>
-			<url>/pluginscript/{plugin}/pull</url>
-			<representing>sensors/{plugin}</representing>
-			<aggregate>true</aggregate>
-		</action>
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
@@ -17,6 +11,12 @@
 				<obj>/data/sensors/{plugin}</obj>
 				<put>descendant-or-self</put>
 			</au:needCapability>
+			<action>
+				<interval>900</interval>
+				<url>/pluginscript/{plugin}/pull</url>
+				<representing>sensors/{plugin}</representing>
+				<aggregate>true</aggregate>
+			</action>
 		</{plugin}>
 	</plugindata>
 </data>

@@ -45,18 +45,18 @@ class FitbitPlugin(object):
     def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
         """Main entry point - get Fitbit data for a single user"""
         if not user:
-            self.igor.app.raiseHTTPError("401 Fitbitplugin requires user argument")
+            self.igor.app.raiseHTTPError("400 Fitbitplugin requires user argument")
         self.user = user
         self.token = token
         if not 'token' in userData:
-            self.igor.app.raiseHTTPError("401 Fitbitplugin requires 'token' plugindata for user '%s'" % user)
+            self.igor.app.raiseHTTPError("403 Fitbitplugin requires 'token' plugindata for user '%s'" % user)
         oauthSettings = userData['token']
         for k in KEYS_PER_USER:
             if not k in oauthSettings:
-                self.igor.app.raiseHTTPError("401 Fitbitplugin 'token' plugindata for user '%s' misses '%s'" % (user, k))
+                self.igor.app.raiseHTTPError("403 Fitbitplugin 'token' plugindata for user '%s' misses '%s'" % (user, k))
         for k in KEYS_PER_APP:
             if not k in self.pluginData:
-                self.igor.app.raiseHTTPError("401 Fitbitplugin requires global plugindata '%s'" % k)
+                self.igor.app.raiseHTTPError("403 Fitbitplugin requires global plugindata '%s'" % k)
             oauthSettings[k] = self.pluginData[k]
         
         fb = Fitbit(refresh_cb=self._refresh, **oauthSettings)

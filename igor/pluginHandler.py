@@ -9,6 +9,7 @@ import sys
 import subprocess
 import imp
 import traceback
+from . import xmlDatabase
 
 class IgorPlugins(object):
     """Class to handle access to plugins"""
@@ -114,7 +115,10 @@ class IgorPlugins(object):
         fp = open(pluginFile)
         pluginData = fp.read()
         fp.close()
-        pluginTree = self.igor.database.elementFromXML(pluginData)
+        try:
+            pluginTree = self.igor.database.elementFromXML(pluginData)
+        except xmlDatabase.DBParamError as e:
+            self.igor.app.raiseHTTPError('500 Error in %s XML fragment: %s' % (pluginName, e))
         self.igor.database.mergeElement('/', pluginTree, token=token, plugin=True)
         os.unlink(pluginFile)
         self.igor.save(token=self.igor.access.tokenForIgor())

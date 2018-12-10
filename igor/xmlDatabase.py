@@ -5,6 +5,7 @@ from builtins import str
 from builtins import range
 from builtins import object
 import xml.dom
+import xml.parsers.expat
 import xpath
 import sys
 import traceback
@@ -606,6 +607,8 @@ class DBImpl(DBSerializer):
     def elementFromXML(self, xmltext):
         try:
             newdoc = xml.dom.minidom.parseString(xmltext)
+        except xml.parsers.expat.ExpatError as e:
+            raise DBParamError('Not valid xml: %s' % e)            
         except:
             raise DBParamError('Not valid xml: %s' % xmltext)
         return newdoc.firstChild

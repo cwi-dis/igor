@@ -470,15 +470,11 @@ class IgorInternal(object):
         
     def updateActions(self, token=None):
         """Recreate event handlers defined in the database. Not intended for human use"""
-        startupActions = self.igor.database.getElements('actions', 'get', self.igor.access.tokenForIgor())
-        if len(startupActions):
-            if len(startupActions) > 1:
-                self.igor.app.raiseHTTPError('401 only one <actions> element allowed')
-            if not self.igor.actionHandler:
-                self.igor.actionHandler = actions.ActionCollection(self.igor)
-            self.igor.actionHandler.updateActions(startupActions[0])
-        elif self.igor.actionHandler:
-            self.igor.actionHandler.updateActions([])
+        allActions = self.igor.database.getElements('actions/action', 'get', self.igor.access.tokenForIgor())
+        allActions += self.igor.database.getElements('plugindata/*/action', 'get', self.igor.access.tokenForIgor())
+        if not self.igor.actionHandler:
+            self.igor.actionHandler = actions.ActionCollection(self.igor)
+        self.igor.actionHandler.updateActions(allActions)
         return 'OK'
 
     def updateEventSources(self, token=None):

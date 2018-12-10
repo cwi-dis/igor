@@ -123,7 +123,7 @@
         </action>
 		<action>
 			<name>updateActions</name>
-			<xpath>/data/actions/*</xpath>
+			<xpath>/data/actions/* | /data/plugindata/*/action</xpath>
 			<representing>igor/core</representing>
 			<url>/internal/updateActions</url>
 			<notBefore/>

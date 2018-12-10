@@ -299,11 +299,10 @@ class ActionCollection(threading.Thread):
             self.nothingBefore = time.time()
             self.actionsChanged.notify()
         
-    def updateActions(self, node):
+    def updateActions(self, nodelist):
         """Called by upper layers when something has changed in the actions in the database"""
         if DEBUG: print('ActionCollection(%s).updateActions(t=%d)' % (repr(self), time.time()))
         if DEBUG: print(self.dump())
-        assert node.tagName == 'actions'
         with self.lock:
             unchanged = []
             new = []
@@ -311,16 +310,14 @@ class ActionCollection(threading.Thread):
             #
             # Pass one - check which action elements already exist (and are unchanged) and which are new
             #
-            child = node.firstChild
-            while child:
-                if child.nodeType == child.ELEMENT_NODE and child.tagName == 'action':
-                    for action in self.actions:
-                        if action.matches(child):
-                            unchanged.append(action)
-                            break
-                    else:
-                        new.append(child)
-                child = child.nextSibling
+            for node in nodelist:
+                assert node.tagName == "action"
+                for action in self.actions:
+                    if action.matches(node):
+                        unchanged.append(action)
+                        break
+                else:
+                    new.append(node)
             #
             # Pass two - determine which old actions no longer exist (or are changed)
             #

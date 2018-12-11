@@ -29,6 +29,12 @@ class TestPlugin(object):
         rv += "self.igor.app=%s\n" % repr(self.igor.app)
         return rv
     
+    def push(self, token=None):
+        dataPath = '/data/devices/%s' % self.pluginName
+        data = self.igor.databaseAccessor.get_key(dataPath+'/outgoing', 'application/x-python-object', None, token)
+        newData = dict(incoming=data)
+        rv = self.igor.databaseAccessor.put_key(dataPath+'/incoming', 'text/plain', None, data, 'application/x-python-object', token, replace=True)
+        return rv
     
 def igorPlugin(igor, pluginName, pluginData):
     return TestPlugin(igor, pluginName, pluginData)

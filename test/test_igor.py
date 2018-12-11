@@ -459,6 +459,16 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         for p in added:
             ok = pAdmin.get('/internal/pluginControl/uninstall', query=dict(pluginName=p))
 
+    def test_84_plugin_access(self):
+        """Test that a plugin can read and write its own /data/devices/ data"""
+        pAdmin = self._igorVar(credentials="admin:")
+        content = {"test84" : "eigthy-four"}
+        pAdmin.put("devices/testPlugin/outgoing", json.dumps(content), "application/json")
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        result = pAdmin.get("devices/testPlugin/incoming", format="application/json")
+        resultDict = json.loads(result)
+        self.assertEqual(resultDict, {'incoming':content})
+        
     def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
         pass
                 

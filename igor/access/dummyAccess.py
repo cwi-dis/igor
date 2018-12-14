@@ -52,7 +52,8 @@ class OTPHandler(object):
             
     
 class TokenStorage(object):
-    pass
+    def tokensNeededByElement(self, element, optional=False):
+        return []
     
 class RevokeList(object):
     pass

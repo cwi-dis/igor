@@ -130,7 +130,15 @@ class TokenStorage(object):
         if len(tokenDataList) > 1:
             return MultiAccessToken(tokenDataList, owner=owner)
         rv = AccessToken(tokenDataList[0], owner=owner)
-        return rv       
+        return rv
+        
+    def tokensNeededByElement(self, element, optional=False):
+        """Return a list of dictionaries describing the tokens this element needs"""
+        nodelist = xpath.find("au:needCpability", element, namespaces=NAMESPACES)
+        if optional:
+            nodelist += xpath.find("au:mayNeedCpability", element, namespaces=NAMESPACES)
+        tokenDataList = [self.igor.database.tagAndDictFromElement(e)[1] for e in nodelist]
+        return tokenDataList
         
 class RevokeList(object):
     """Handles revocation list"""

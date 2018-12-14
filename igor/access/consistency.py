@@ -291,6 +291,14 @@ class CapabilityConsistency(StructuralConsistency):
         parent = parent[0]
         parent.appendChild(self.database.elementFromTagAndData('child', cid))
         self.nChanges += 1
+        
+    def _getTokensNeededByElement(self, element, optional=False):
+        """Return a list of dictionaries describing the tokens this element needs"""
+        nodelist = self.database.getElements("au:needCpability", 'get', self.token, context=element, namespaces=self.namespaces)
+        if optional:
+            nodelist += xpath.find("au:mayNeedCpability", 'get', self.token, context=element, namespaces=self.namespaces)
+        tokenDataList = [self.igor.database.tagAndDictFromElement(e)[1] for e in nodelist]
+        return tokenDataList
 
     def do_check(self):
         with self.database:
@@ -354,7 +362,10 @@ class CapabilityConsistency(StructuralConsistency):
                 if ':' in pluginName or '{' in pluginName:
                     continue
                 pluginPath = '/data/plugindata/%s' % pluginName
-                self._hasCapability(pluginPath, obj=pluginPath, get='descendant-or-self')
+                tokensNeeded = [dict(obj=pluginPath, get='descendant-or-self')]
+                tokensNeeded += self._getTokensNeededByElement(pluginElement)
+                for item in tokensNeeded:
+                    self._hasCapability(pluginPath, **item)
             #
             # Second set of checks: test that capability tree is indeed a tree
             #

@@ -134,9 +134,9 @@ class TokenStorage(object):
         
     def tokensNeededByElement(self, element, optional=False):
         """Return a list of dictionaries describing the tokens this element needs"""
-        nodelist = xpath.find("au:needCpability", element, namespaces=NAMESPACES)
+        nodelist = xpath.find("au:needCapability", element, namespaces=NAMESPACES)
         if optional:
-            nodelist += xpath.find("au:mayNeedCpability", element, namespaces=NAMESPACES)
+            nodelist += xpath.find("au:mayNeedCapability", element, namespaces=NAMESPACES)
         tokenDataList = [self.igor.database.tagAndDictFromElement(e)[1] for e in nodelist]
         return tokenDataList
         
@@ -594,6 +594,34 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         return newId
         
+    def createTokensNeededByElement(self, needElementList, token):
+        """Create tokens (if they don't exist yet) based on a list of needCapability elements"""
+        toCreate = []
+        for needElement in needElementList:
+            parentElement = needElement.parentNode
+            # xxxjack this is a hack. The au:needCapability will be in an <action> or in the plugindata for the element
+            if parentElement.tagName == 'action':
+                parentToken = self.tokenForAction(parentElement)
+                newOwner = self.igor.database.getXPathForElement(parentElement)
+            else:
+                parentToken = self.tokenForPlugin(parentElement.tagName)
+                newOwner = self.igor.database.getXPathForElement(parentElement)
+            need = self.igor.database.tagAndDictFromElement(needElement)[1]
+            path = need.pop('obj')
+            if self.findCompatibleTokens(parentToken, path, **need):
+                # The tokens in the parent of the needCapability element already allows it. Nothing to do.
+                continue
+            # Otherwise we have to create it from the tokens we are carrying
+            compatibleTokenIDs = self.findCompatibleTokens(token, path, **need)
+            if not compatibleTokenIDs:
+                self.igor.app.raiseHTTPError("401 No rights to create capability for %s" % self.igor.database.getXPathForElement(needElement))
+            # Remember for later creation
+            toCreate.append((compatibleTokenIDs[0], path, need, newOwner))
+        # Now create all the needed capabilities
+        for tokenId, newPath, need, newOwner in toCreate:
+            self.newToken(token, tokenId, newOwner, newPath, **need)
+            
+                    
     def findCompatibleTokens(self, token, newPath, **kwargs):
         """Return list of token IDs that allow the given operation."""
         assert self.igor

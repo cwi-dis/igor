@@ -52,9 +52,8 @@ class OTPHandler(object):
             
     
 class TokenStorage(object):
-    def tokensNeededByElement(self, element, optional=False):
-        return []
-    
+    pass
+        
 class RevokeList(object):
     pass
     
@@ -147,6 +146,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Create a new token based on an existing token. Returns ID of new token."""
         self.igor.app.raiseHTTPError("400 This Igor does not have token support")
         
+    def createTokensNeededByElement(self, needElementList, token):
+        """Create tokens (if they don't exist yet) based on a list of needCapability elements"""
+        pass
+
     def findCompatibleTokens(self, token, newPath, **kwargs):
         return []
 

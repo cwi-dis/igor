@@ -10,6 +10,8 @@ import subprocess
 import imp
 import traceback
 from . import xmlDatabase
+from . import access
+import xpath
 
 class IgorPlugins(object):
     """Class to handle access to plugins"""
@@ -92,6 +94,7 @@ class IgorPlugins(object):
         allOK = True
         allFNs = os.listdir(self.igor.pathnames.plugindir)
         allNewPlugins = []
+        allMessages = ''
         for fn in allFNs:
             if fn[-4:] == '.xml':
                 pluginName = fn[:-4]
@@ -100,13 +103,14 @@ class IgorPlugins(object):
                 else:
                     print('Warning: found XML fragment but no corresponding plugin: %s' % fn)
         for newPlugin in allNewPlugins:
-            ok = self._installPluginFragment(newPlugin, token)
-            if not ok:
+            message = self._installPluginFragment(newPlugin, token)
+            if message:
                 allOK = False
+                allMessages = allMessages + '\n' + message
         # xxxjack should also install requirements, probably...
         if allOK:
             return 'OK'
-        return 'Error during plugin fragment installation, please check logfile'
+        return 'Messages from plugin installation:' + allMessages
        
     def _installPluginFragment(self, pluginName, token):
         """Install XML fragment for a specific plugin"""
@@ -115,14 +119,33 @@ class IgorPlugins(object):
         fp = open(pluginFile)
         pluginData = fp.read()
         fp.close()
+        message = ''
         try:
             pluginTree = self.igor.database.elementFromXML(pluginData)
         except xmlDatabase.DBParamError as e:
             self.igor.app.raiseHTTPError('500 Error in %s XML fragment: %s' % (pluginName, e))
+        # Check whether there are actions in the new bits in the database
+        newActions = xpath.find('.//action', pluginTree)
+        if newActions:
+            message += 'Restart Igor to handle new <action>s installed by plugin\n'
+        newCapsNeeded = None
+        if self.igor.access.hasCapabilitySupport():
+            newCapsNeeded = xpath.find('.//au:needCapability', pluginTree, namespaces=access.NAMESPACES)
+            # newCapsNeeded += xpath.find('.//au:mayNeedCapability', pluginTree, namespaces=access.NAMESPACES)
+            if newCapsNeeded:
+                message += 'Restart Igor after running with --fix to fix capabilities needed by plugin\n'
+        print('xxxjack newActions', newActions)
+        print('xxxjack newCapsNeeded', newCapsNeeded)
         self.igor.database.mergeElement('/', pluginTree, token=token, plugin=True)
         os.unlink(pluginFile)
+        print('xxxjack newActions', [self.igor.database.getXPathForElement(e) for e in newActions])
+        print('xxxjack newCapsNeeded', [self.igor.database.getXPathForElement(e) for e in newCapsNeeded])
+        if newCapsNeeded:
+            self.igor.access.createTokensNeededByElement(newCapsNeeded, token)
+        if newActions:
+            self.igor.internal.updateActions(token=token)
         self.igor.save(token=self.igor.access.tokenForIgor())
-        return True
+        return message
         
     def installstd(self, pluginName=None, stdName=None, token=None):
         checker = self.igor.access.checkerForEntrypoint('/filesystem')
@@ -134,6 +157,7 @@ class IgorPlugins(object):
             stdName = pluginName
         if not os.path.exists(os.path.join(self.igor.pathnames.stdplugindir, stdName)):
             self.igor.app.raiseNotFound()
+        message = ''
         # Create the symlink to the plugin
         dst = os.path.join(self.igor.pathnames.plugindir, pluginName)
         src = os.path.join('..', 'std-plugins', stdName)
@@ -149,7 +173,7 @@ class IgorPlugins(object):
             fp = open(fragDest, 'w')
             fp.write(fragData)
             fp.close()
-            self._installPluginFragment(pluginName, token)
+            message = self._installPluginFragment(pluginName, token)
         requirementsFile = os.path.join(dst, 'requirements.txt')
         if os.path.exists(requirementsFile):
             if self._is_venv():
@@ -159,7 +183,7 @@ class IgorPlugins(object):
             sts = subprocess.call(pip_cmd + ['-r', requirementsFile])
             if sts != 0:
                 self.igor.app.raiseHTTPError('500 Installing requirements for plugin returned error %d' % sts)
-        return ''
+        return message
         
     def install(self, pluginname=None, zipfile=None, token=None):
         self.igor.app.raiseHTTPError('500 Not yet implemented')

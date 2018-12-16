@@ -297,6 +297,7 @@ class DBImpl(DBSerializer):
     
     def __init__(self, filename):
         DBSerializer.__init__(self)
+        self.saveLock = threading.Lock()
         from . import access
         self.access = access.singleton
         self._terminating = False
@@ -342,24 +343,29 @@ class DBImpl(DBSerializer):
             return nodeOrDoc
         
     def saveFile(self):
-        newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
-        docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
-        docToSave.writexml(open(newFilename + '~', 'w'), addindent="\t", newl="\n")
-        try:
-            os.unlink(newFilename)
-        except OSError:
-            pass
-        os.link(newFilename + '~', newFilename)
-        os.rename(newFilename + '~', self.filename)
-        # Remove outdated saves
-        dir,file = os.path.split(self.filename)
-        allOldDatabases = []
-        for fn in os.listdir(dir):
-            if fn.startswith(file + '.'):
-                allOldDatabases.append(fn)
-        allOldDatabases.sort()
-        for fn in allOldDatabases[:-10]:
-            os.unlink(os.path.join(dir, fn))
+        with self.saveLock:
+            newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
+            if os.path.exists(newFilename):
+                for i in range(10):
+                    nf2 = '{}.{}'.format(newFilename, i)
+                    if not os.path.exists(nf2):
+                        newFilename = nf2
+                        break
+                else:
+                    raise DBParamError('Cannot create tempfile {}'.format(newFilename))
+            docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
+            docToSave.writexml(open(newFilename, 'w'), addindent="\t", newl="\n")
+            os.link(newFilename, newFilename +'.tolink')
+            os.rename(newFilename + '.tolink', self.filename)
+            # Remove outdated saves
+            dir,file = os.path.split(self.filename)
+            allOldDatabases = []
+            for fn in os.listdir(dir):
+                if fn.startswith(file + '.'):
+                    allOldDatabases.append(fn)
+            allOldDatabases.sort()
+            for fn in allOldDatabases[:-10]:
+                os.unlink(os.path.join(dir, fn))
             
 
     def signalNodelist(self, nodelist):

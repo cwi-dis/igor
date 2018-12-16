@@ -253,6 +253,19 @@ def myWebError(msg, code=400):
     resp = make_response(msg, code)
     abort(resp)
 
+def returnReply(rv):
+    """Helper function: return reply in a suitable way. Can be Response (return as-is),
+    dict or list (return as JSON), None (return empty string), otherwise return as string"""
+    if rv == None:
+        rv =  Response('', mimetype='text/plain')
+    elif isinstance(rv, str):
+        rv = Response(rv, mimetype='text/plain')
+    elif isinstance(rv, dict) or isinstance(rv, list):
+        rv = Response(json.dumps(rv), mimetype='application/json')
+    else:
+        pass
+    return rv
+    
 @_WEBAPP.route('/', defaults={'name':'index.html'})
 @_WEBAPP.route('/<path:name>')    
 def get_static(name):
@@ -307,11 +320,7 @@ def get_command(command, subcommand=None):
         rv = method(token=token, **dict(allArgs))
     except TypeError as arg:
         raise #myWebError("400 Error in command method %s parameters: %s" % (command, arg))
-    if rv == None:
-        return ''
-    if isinstance(rv, str):
-        return Response(rv, mimetype='text/plain')
-    return Response(json.dumps(rv), mimetype='application/json')
+    return returnReply(rv)
 
 @_WEBAPP.route('/internal/<string:command>', defaults={'subcommand':None}, methods=["POST"])
 @_WEBAPP.route('/internal/<string:command>/<path:subcommand>', methods=["POST"]) 
@@ -331,7 +340,7 @@ def post_command(command, subcommand=None):
         rv = method(token=token, **allArgs)
     except TypeError as arg:
         myWebError("400 Error in command method %s parameters: %s" % (command, arg), 400)
-    return rv
+    return returnReply(rv)
 
 @_WEBAPP.route('/action/<string:actionname>')
 def get_action(actionname):
@@ -398,16 +407,8 @@ def get_plugin(pluginName, methodName='index'):
         traceback.print_exc(file=sys.stdout)
         msg = "502 Exception in %s/%s : %s" % (pluginName, methodName, repr(sys.exc_info()[1]))
         myWebError(msg, 502)
-    # See what the plugin returned. Could be a flask Response or bytestring, otherwise we convert to string.
-    if rv == None:
-        rv =  Response('', mimetype='text/plain')
-    elif isinstance(rv, str):
-        rv = Response(rv, mimetype='text/plain')
-    elif isinstance(rv, dict) or isinstance(rv, list):
-        rv = Response(json.dumps(rv), mimetype='application/json')
-    else:
-        pass
-    return rv
+    # See what the plugin returned. Could be a flask Response or list/dict, otherwise we convert to string.
+    return returnReply(rv)
 
 @_WEBAPP.route('/plugin/<string:pluginName>/page/<string:pageName>')
 def get_plugin_page(pluginName, pageName='index'):

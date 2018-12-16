@@ -361,11 +361,16 @@ class CapabilityConsistency(StructuralConsistency):
                 pluginName = pluginElement.tagName
                 if ':' in pluginName or '{' in pluginName:
                     continue
-                pluginPath = '/data/plugindata/%s' % pluginName
-                tokensNeeded = [dict(obj=pluginPath, get='descendant-or-self')]
+                pluginDataPath = '/data/plugindata/%s' % pluginName
+                # A plugin always needs access to its own plugindata
+                tokensNeeded = [dict(obj=pluginDataPath, get='descendant-or-self')]
+                # A plugin needs access to its own plugin if it has any actions that refer to the plugin
+                pluginPath = '/plugin/{}'.format(pluginName)
+                if pluginPath in self._getValues('action/url', context=pluginElement):
+                    tokensNeeded.append(dict(obj=pluginPath, get='self'))
                 tokensNeeded += self._getTokensNeededByElement(pluginElement, optional=self.extended)
                 for item in tokensNeeded:
-                    self._hasCapability(pluginPath, **item)
+                    self._hasCapability(pluginDataPath, **item)
             #
             # Second set of checks: test that capability tree is indeed a tree
             #

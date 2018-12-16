@@ -720,13 +720,13 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Return the location where we store external tokens"""
         return '/data/au:access/au:exportedCapabilities'
         
-    def consistency(self, token=None, fix=False, restart=False):
+    def consistency(self, token=None, fix=False, restart=False, extended=False):
         assert self.igor
         assert self.igor.database
         assert self.igor.internal
         if fix:
             self.igor.internal.save(token)
-        checker = CapabilityConsistency(self.igor, fix, AU_NAMESPACE, _accessSelfToken)
+        checker = CapabilityConsistency(self.igor, fix, AU_NAMESPACE, _accessSelfToken, extended=extended)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
             self.igor.internal.save(token)

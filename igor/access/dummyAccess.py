@@ -165,13 +165,13 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def externalRepresentation(self, token, tokenId):
         self.igor.app.raiseHTTPError("400 This Igor does not have token support")
 
-    def consistency(self, token=None, fix=False, restart=False):
+    def consistency(self, token=None, fix=False, restart=False, extended=False):
         assert self.igor
         assert self.igor.database
         assert self.igor.internal
         if fix:
             self.igor.internal.save(token)
-        checker = StructuralConsistency(self.igor, fix, NAMESPACES, _token)
+        checker = StructuralConsistency(self.igor, fix, NAMESPACES, _token, extended=extended)
         nChanges, nErrors, rv = checker.check()
         if nChanges:
             self.igor.internal.save(token)

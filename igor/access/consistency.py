@@ -81,8 +81,8 @@ class StructuralConsistency(object):
             print('consistency._checkSingleton(%s, %s)' % (path1, path2))
         self._checkExists(path1 + '/' + path2, dontfix=dontfix, context=context)
         self._checkUnique(path1 + '/' + path2, dontfix=dontfix, context=context)
-        if self.extended:
-             self._checkUnique('//' + path2, dontfix=dontfix, context=context)
+#        if self.extended:
+#             self._checkUnique('//' + path2, dontfix=dontfix, context=context)
         
     def _getAllElements(self, path):
         rv = self.database.getElements(path, 'get', self.token, namespaces=self.namespaces)
@@ -294,9 +294,9 @@ class CapabilityConsistency(StructuralConsistency):
         
     def _getTokensNeededByElement(self, element, optional=False):
         """Return a list of dictionaries describing the tokens this element needs"""
-        nodelist = self.database.getElements("au:needCpability", 'get', self.token, context=element, namespaces=self.namespaces)
+        nodelist = self.database.getElements("au:needCapability", 'get', self.token, context=element, namespaces=self.namespaces)
         if optional:
-            nodelist += xpath.find("au:mayNeedCpability", 'get', self.token, context=element, namespaces=self.namespaces)
+            nodelist += self.database.getElements("au:mayNeedCapability", 'get', self.token, context=element, namespaces=self.namespaces)
         tokenDataList = [self.igor.database.tagAndDictFromElement(e)[1] for e in nodelist]
         return tokenDataList
 
@@ -363,7 +363,7 @@ class CapabilityConsistency(StructuralConsistency):
                     continue
                 pluginPath = '/data/plugindata/%s' % pluginName
                 tokensNeeded = [dict(obj=pluginPath, get='descendant-or-self')]
-                tokensNeeded += self._getTokensNeededByElement(pluginElement)
+                tokensNeeded += self._getTokensNeededByElement(pluginElement, optional=self.extended)
                 for item in tokensNeeded:
                     self._hasCapability(pluginPath, **item)
             #

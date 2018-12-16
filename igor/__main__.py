@@ -238,8 +238,8 @@ class IgorServer(object):
         print('SIGTERM caught, exiting gracefully...')
         self.stop(save=True, token=self.access.tokenForIgor())
                 
-    def check(self, fix=False, token=None):
-        rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor())
+    def check(self, fix=False, token=None, extended=False):
+        rv = self.access.consistency(fix=fix, token=self.access.tokenForIgor(), extended=extended)
         print(rv)
 
     def stop(self, token=None, save=True):
@@ -601,6 +601,7 @@ def main():
     parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
     parser.add_argument('--check', action="store_true", help="Do not run the server, only check the database for consistency")
     parser.add_argument('--fix', action="store_true", help="Do not run the server, only check the database for consistency and possibly fix it if needed")
+    parser.add_argument('--extended', action="store_true", help="For --check and --fix also check some extended consistency checks")
     parser.add_argument('--rootCertificates', metavar='FILE', help='Use root certificates from FILE')
     parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has')
     args = parser.parse_args()
@@ -650,7 +651,7 @@ def main():
         print('%s: Use --help option to see command line arguments' % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     if args.fix or args.check:
-        igorServer.check(args.fix)
+        igorServer.check(args.fix, extended=args.extended)
         igorServer.stop(save=False)
     else:
         igorServer.preRun()

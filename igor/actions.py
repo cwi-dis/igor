@@ -325,7 +325,15 @@ class ActionCollection(threading.Thread):
                 if not action in unchanged:
                     removed.append(action)
             if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(unchanged), len(removed)))
-            assert len(self.actions) == len(unchanged) + len(removed)
+            assert len(self.actions) <= len(unchanged) + len(removed)
+            if len(self.actions) < len(unchanged) + len(removed):
+                print('WARNING: duplicate actions skipped in updateActions')
+                actionSet = set(unchanged)
+                for a in unchanged:
+                    if a in actionSet:
+                        actionSet.remove(a)
+                    else:
+                        print('WARNING: duplicate:', a)
             #
             # Pass three - remove old actions
             #

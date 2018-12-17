@@ -618,8 +618,11 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             # Remember for later creation
             toCreate.append((compatibleTokenIDs[0], path, need, newOwner))
         # Now create all the needed capabilities
+        if not toCreate:
+            return
         for tokenId, newPath, need, newOwner in toCreate:
             self.newToken(token, tokenId, newOwner, newPath, **need)
+        print('xxxjack should refresh capability storage')
             
                     
     def findCompatibleTokens(self, token, newPath, **kwargs):

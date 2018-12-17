@@ -134,12 +134,8 @@ class IgorPlugins(object):
             # newCapsNeeded += xpath.find('.//au:mayNeedCapability', pluginTree, namespaces=access.NAMESPACES)
             if newCapsNeeded:
                 message += 'Restart Igor after running with --fix to fix capabilities needed by plugin\n'
-        print('xxxjack newActions', newActions)
-        print('xxxjack newCapsNeeded', newCapsNeeded)
         self.igor.database.mergeElement('/', pluginTree, token=token, plugin=True)
         os.unlink(pluginFile)
-        print('xxxjack newActions', [self.igor.database.getXPathForElement(e) for e in newActions])
-        print('xxxjack newCapsNeeded', [self.igor.database.getXPathForElement(e) for e in newCapsNeeded])
         if newCapsNeeded:
             self.igor.access.createTokensNeededByElement(newCapsNeeded, token)
         if newActions:

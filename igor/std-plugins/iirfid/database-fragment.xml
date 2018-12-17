@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<sensors>
-		<rfid/>
+		<{plugin}rfid own:plugin="{plugin}"/>
 		<tags/>
 	</sensors>
     <actions>
@@ -26,7 +26,7 @@
             <baud>57600</baud>
             <host/>
 			<au:needCapability>
-				<obj>/data/sensors/rfid</obj>
+				<obj>/data/sensors/{plugin}rfid</obj>
 				<get>descendant-or-self</get>
 				<put>descendant-or-self</put>
 			</au:needCapability>
@@ -36,19 +36,12 @@
 				<put>descendant-or-self</put>
 			</au:needCapability>
 			<action>
-				<xpath>/data/sensors/rfid/rfidtag</xpath>
+				<xpath>/data/sensors/{plugin}rfid/rfidtag</xpath>
 				<url>/data/sensors/tags/tag</url>
+				<representing>sensors/{plugin}</representing>
 				<method>POST</method>
 				<mimetype>text/plain</mimetype>
 				<data>{igor_ifelse(/data/plugindata/rfid/tag[id=string($originalContext)]/name,concat(&quot;unknown &quot;,string($originalContext)))}</data>
-				<notBefore>1457647462</notBefore>
-			</action>
-			<action>
-				<xpath>/data/sensors/rfid/rfidtag</xpath>
-				<url>/data/environment/introspection/lastActivity/rfid</url>
-				<method>PUT</method>
-				<mimetype>text/plain</mimetype>
-				<data>{igor_dateTime()}</data>
 			</action>
         </{plugin}>
         <rfid>

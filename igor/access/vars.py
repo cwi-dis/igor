@@ -22,7 +22,7 @@ CASCADING_RULES_IMPLIED = {
 }
 
 DEBUG=[]    # False, but trick in __main__ can make it true even though imported as * by other modules
-DEBUG_DELEGATION=True
+DEBUG_DELEGATION=False
 
 # For the time being: define this to have the default token checker allow everything
 # the dummy token allows

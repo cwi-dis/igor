@@ -249,12 +249,12 @@ class AccessToken(BaseAccessToken):
             elif newIsChild:
                 # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
-                    if 1 or DEBUG_DELEGATION: print('access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self))
+                    if DEBUG_DELEGATION: print('access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self))
                     return False
             else:
                 # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
-                    if 1 or DEBUG_DELEGATION: print('access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s (xxxjack temp)' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self))
+                    if DEBUG_DELEGATION: print('access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self))
                     return False
         # Everything seems to be fine.
         return True       

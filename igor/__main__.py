@@ -178,7 +178,8 @@ class IgorServer(object):
         self.triggerHandler = None
         
     def preRun(self):
-        self.plugins.update(token=self.access.tokenForIgor())
+        with self.app.tempContext('/__main__/preRun'):
+            self.plugins.update(token=self.access.tokenForAdminUser())
         self.internal.updateActions()
         self.internal.updateEventSources()
         self.internal.updateTriggers()

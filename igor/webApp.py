@@ -238,6 +238,10 @@ class MyServer:
             template = None
         return template
 
+    def tempContext(self, path):
+        """Return a temporary context to run a method in, so accessing context works"""
+        return _WEBAPP.test_request_context(path)
+        
 class _DummyReply:
     def __init__(self):
         self.status = '500 Not Implemented Yet'

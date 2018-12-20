@@ -445,7 +445,20 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         wantedContent = {'test82':{'src':'eighty-two', 'sink':'eighty-two'}}
         self.assertEqual(resultDict, wantedContent)
 
-    def test_83_install_all_stdplugins(self):
+    def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
+        pass
+                
+    def test_83_plugin_access(self):
+        """Test that a plugin can read and write its own /data/devices/ data"""
+        pAdmin = self._igorVar(credentials="admin:")
+        content = {"test84" : "eigthy-four"}
+        pAdmin.put("devices/testPlugin/outgoing", json.dumps(content), "application/json")
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        result = pAdmin.get("devices/testPlugin/incoming", format="application/json")
+        resultDict = json.loads(result)
+        self.assertEqual(resultDict, {'incoming':content})
+        
+    def test_84_install_all_stdplugins(self):
         pAdmin = self._igorVar(credentials='admin:')
         txtInstalled = pAdmin.get('/internal/pluginControl/list')
         pluginsInstalled = eval(txtInstalled)
@@ -459,19 +472,6 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         for p in added:
             ok = pAdmin.get('/internal/pluginControl/uninstall', query=dict(pluginName=p))
 
-    def test_84_plugin_access(self):
-        """Test that a plugin can read and write its own /data/devices/ data"""
-        pAdmin = self._igorVar(credentials="admin:")
-        content = {"test84" : "eigthy-four"}
-        pAdmin.put("devices/testPlugin/outgoing", json.dumps(content), "application/json")
-        self._flush(pAdmin, MAX_FLUSH_DURATION)
-        result = pAdmin.get("devices/testPlugin/incoming", format="application/json")
-        resultDict = json.loads(result)
-        self.assertEqual(resultDict, {'incoming':content})
-        
-    def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
-        pass
-                
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorPort = 29333

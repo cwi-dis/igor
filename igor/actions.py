@@ -107,6 +107,8 @@ class Action(object):
     def uninstall(self):
         """Remove any installed triggers from the database"""
         self.collection.igor.database.unregisterCallback(self.callback)
+        self.collection = None
+        self.element = None
                 
     def callback(self, *nodelist):
         """Schedule the action, if it is runnable at this time, and according to the condition"""
@@ -339,7 +341,6 @@ class ActionCollection(threading.Thread):
             #
             for action in removed:
                 assert action in self.actions
-                action.delete()
                 self.actions.remove(action)
                 assert not action in self.actions
             #
@@ -352,6 +353,9 @@ class ActionCollection(threading.Thread):
             # Signal the runner thread
             #
             self.actionTimeChanged()
+        # Now (without holding the lock) delete the actions, which may update the database.
+        for action in removed:
+            action.uninstall()
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""

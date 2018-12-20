@@ -462,7 +462,11 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def tokenForIgor(self):
         """Return token for igor itself (use sparingly)"""
         return _igorSelfToken
-        
+
+    def tokenForAdminUser(self):
+        """Return token for admin user of Igor itself (use sparingly)"""
+        return self._tokenForUser('admin')
+                
     def tokenForRequest(self, headers):
         """Return token for the given incoming http(s) request"""
         token = None

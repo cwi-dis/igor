@@ -41,6 +41,7 @@
 				<child>admin-internal</child>
 				<child>admin-plugin</child>
 				<child>admin-pluginscript</child>
+				<child>admin-filesystem</child>
 				<child>action-plugin</child>
 				<child>action-pluginscript</child>
 				<child>action-action</child>
@@ -84,6 +85,13 @@
 				<obj>/pluginscript</obj>
 				<parent>root</parent>
 				<cid>admin-pluginscript</cid>
+				<delegate>true</delegate>
+			</au:capability>
+			<au:capability>
+				<get>self</get>
+				<obj>/filesystem</obj>
+				<parent>root</parent>
+				<cid>admin-filesystem</cid>
 				<delegate>true</delegate>
 			</au:capability>
             <au:capability>

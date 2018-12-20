@@ -193,6 +193,7 @@ class IgorPlugins(object):
         # And remove all elements pertaining to the plugin
         xp = '//*[@own:plugin="%s"]' % pluginName
         self.igor.database.delValues(xp, token)
+        self.igor.internal.updateActions(token)
         self.igor.save(token=self.igor.access.tokenForIgor())
         return ''
         

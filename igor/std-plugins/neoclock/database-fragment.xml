@@ -37,7 +37,6 @@
 			<mimetype>text/plain</mimetype>
 			<method>PUT</method>
 			<data>{igor_ifthenelse(string(/data/environment/systemHealth/messages),"0x603000","")}</data>
-			<!-- needs capability for /data/plugindata/{plugin} -->
 			<representing>devices/{plugin}</representing>
 			<au:needCapability>
 				<obj>/data/devices/{plugin}</obj>

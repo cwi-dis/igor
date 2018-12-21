@@ -13,6 +13,10 @@
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
 		</{plugin}>
 	</plugindata>
 </data>

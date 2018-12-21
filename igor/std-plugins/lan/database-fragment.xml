@@ -25,6 +25,10 @@
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
 				<obj>/data/services</obj>
 				<put>descendant-or-self</put>
 			</au:needCapability>

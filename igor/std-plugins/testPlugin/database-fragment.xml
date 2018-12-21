@@ -23,6 +23,10 @@
 				<obj>/plugin/{plugin}</obj>
 				<get>descendant-or-self</get>
 			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
 		</{plugin}>
 	</plugindata>
 </data>

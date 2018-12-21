@@ -188,13 +188,19 @@ class IgorPlugins(object):
         checker = self.igor.access.checkerForEntrypoint('/filesystem')
         if not checker.allowed('get', token):
             return
-        dst = os.path.join(self.igor.pathnames.plugindir, pluginName)
-        os.unlink(dst)
+        # First remove all actions (before removing the plugin and the database entries)
+        xp = '//action[@own:plugin="%s"]' % pluginName
+        self.igor.database.delValues(xp, token)
+        xp = '//*[@own:plugin="%s"]//action' % pluginName
+        self.igor.database.delValues(xp, token)
+        self.igor.internal.updateActions(token)
         # And remove all elements pertaining to the plugin
         xp = '//*[@own:plugin="%s"]' % pluginName
         self.igor.database.delValues(xp, token)
-        self.igor.internal.updateActions(token)
         self.igor.save(token=self.igor.access.tokenForIgor())
+        # Finally remove plugin itself
+        dst = os.path.join(self.igor.pathnames.plugindir, pluginName)
+        os.unlink(dst)
         return ''
         
     def list(self, token=None):

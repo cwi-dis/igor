@@ -5,6 +5,9 @@ case x$igor_remoteHost in
 x)
 	tmutil=tmutil
 	;;
+localhost)
+	tmutil=tmutil
+	;;
 *)
 	tmutil="ssh $igor_remoteHost tmutil"
 	;;

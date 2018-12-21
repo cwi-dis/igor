@@ -9,6 +9,18 @@
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}Devices</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/pluginscript/{plugin}</obj>
+				<get>child</get>
+			</au:needCapability>
+			<au:needCapability>
 				<obj>/data/sensors/{plugin}</obj>
 				<get>descendant-or-self</get>
 				<put>descendant-or-self</put>

@@ -17,9 +17,17 @@
 				<obj>/data/environment/energy</obj>
 				<put>descendant-or-self</put>
 			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/pluginscript/{plugin}</obj>
+				<get>child</get>
+			</au:needCapability>
 			<action>
 				<interval>60</interval>
-				<url>/pluginscript/smartmeter_rfduino/pull</url>
+				<url>/pluginscript/{plugin}/pull</url>
 				<aggregate>true</aggregate>
 				<representing>sensors/{plugin}</representing>
 			</action>

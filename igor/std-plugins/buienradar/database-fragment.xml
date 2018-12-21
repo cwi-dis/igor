@@ -11,6 +11,10 @@
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{/data/environment/location/lon}</data>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<put>child</put>
+			</au:needCapability>
 		</action>
 		<action own:plugin="{plugin}">
 			<name>start</name>
@@ -19,6 +23,10 @@
 			<method>PUT</method>
 			<mimetype>text/plain</mimetype>
 			<data>{/data/environment/location/lat}</data>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<put>child</put>
+			</au:needCapability>
 		</action>
 	</actions>
 	<plugindata>
@@ -30,6 +38,14 @@
 				<url>/pluginscript/{plugin}/pull</url>
 				<aggregate>true</aggregate>
 			</action>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/pluginscript/{plugin}</obj>
+				<get>child</get>
+			</au:needCapability>
 			<au:needCapability>
 				<obj>/data/sensors/{plugin}</obj>
 				<get>descendant-or-self</get>

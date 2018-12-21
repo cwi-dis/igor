@@ -1,10 +1,14 @@
 <?xml version="1.0" ?>
-<data xmlns:own="http://jackjansen.nl/igor/owner">
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<actions>
 		<action own:plugin="{plugin}">
 			<xpath>/data/environment/messages/*</xpath>
 			<condition>not(data/environment/night)</condition>
 			<url>/pluginscript/{plugin}/message?args={.}</url>
+			<au:needCapability>
+				<obj>/pluginscript/{plugin}</obj>
+				<get>child</get>
+			</au:needCapability>
 		</action>
 	</actions>
 	<plugindata>

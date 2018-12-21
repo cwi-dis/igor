@@ -26,6 +26,14 @@
             <baud>57600</baud>
             <host/>
 			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/pluginscript/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
 				<obj>/data/sensors/{plugin}rfid</obj>
 				<get>descendant-or-self</get>
 				<put>descendant-or-self</put>

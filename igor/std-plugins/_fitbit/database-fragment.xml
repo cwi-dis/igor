@@ -8,10 +8,19 @@
 			<interval>36000</interval>
 			<url>/plugin/{plugin}?user=jack</url>
 			<representing>sensors/{plugin}</representing>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<put>child</put>
+			</au:needCapability>
 		</action>
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant</put>
+			</au:needCapability>
 			<au:needCapability>
 				<obj>/data/sensors/{plugin}</obj>
 				<get>descendant-or-self</get>

@@ -27,6 +27,18 @@
 				<multiple>True</multiple>
 			</action>
 			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<put>child</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}Devices</obj>
+				<put>child</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/plugin/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
 				<obj>/data/sensors/{plugin}</obj>
 				<get>descendant-or-self</get>
 				<put>descendant-or-self</put>

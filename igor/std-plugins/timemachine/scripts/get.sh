@@ -5,7 +5,7 @@ case x$igor_remoteHost in
 x)
 	tmutil=tmutil
 	;;
-localhost)
+xlocalhost)
 	tmutil=tmutil
 	;;
 *)

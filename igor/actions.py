@@ -249,6 +249,7 @@ class ActionCollection(threading.Thread):
         self.actions = []
         self.nothingBefore = NEVER
         self.lock = threading.RLock()
+        self.updateLock = threading.RLock()
         self.actionsChanged = threading.Condition(self.lock)
         self.database = self.igor.database
         self.scheduleCallback = self.igor.urlCaller.callURL
@@ -305,57 +306,69 @@ class ActionCollection(threading.Thread):
         """Called by upper layers when something has changed in the actions in the database"""
         if DEBUG: print('ActionCollection(%s).updateActions(t=%d)' % (repr(self), time.time()))
         if DEBUG: print(self.dump())
-        with self.lock:
-            unchanged = []
-            new = []
-            removed = []
-            #
-            # Pass one - check which action elements already exist (and are unchanged) and which are new
-            #
-            for node in nodelist:
-                assert node.tagName == "action"
-                for action in self.actions:
-                    if action.matches(node):
-                        unchanged.append(action)
-                        break
-                else:
-                    new.append(node)
-            #
-            # Pass two - determine which old actions no longer exist (or are changed)
-            #
-            for action in self.actions:
-                if not action in unchanged:
-                    removed.append(action)
-            if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(unchanged), len(removed)))
-            assert len(self.actions) <= len(unchanged) + len(removed)
-            if len(self.actions) < len(unchanged) + len(removed):
-                print('WARNING: duplicate actions skipped in updateActions')
-                actionSet = set(unchanged)
-                for a in unchanged:
-                    if a in actionSet:
-                        actionSet.remove(a)
+        with self.updateLock:
+            with self.lock:
+                unchanged = []
+                new = []
+                removed = []
+                added = []
+                #
+                # Pass one - check which action elements already exist (and are unchanged) and which are new
+                #
+                for node in nodelist:
+                    assert node.tagName == "action"
+                    for action in self.actions:
+                        if action.matches(node):
+                            unchanged.append(action)
+                            break
                     else:
-                        print('WARNING: duplicate:', a)
+                        new.append(node)
+                #
+                # Pass two - determine which old actions no longer exist (or are changed)
+                #
+                for action in self.actions:
+                    if not action in unchanged:
+                        removed.append(action)
+                if DEBUG: print('updateActions old %d, new %d, alreadyexist %d removed %d' % (len(self.actions), len(new), len(unchanged), len(removed)))
+                assert len(self.actions) <= len(unchanged) + len(removed)
+                if len(self.actions) < len(unchanged) + len(removed):
+                    print('WARNING: duplicate actions skipped in updateActions')
+                    actionSet = set(unchanged)
+                    for a in unchanged:
+                        if a in actionSet:
+                            actionSet.remove(a)
+                        else:
+                            print('WARNING: duplicate:', a)
+                #
+                # Pass three - remove old actions
+                #
+                for action in removed:
+                    assert action in self.actions
+                    self.actions.remove(action)
+                    assert not action in self.actions
+            # Now (without holding the normal lock) delete and create the actions, which may update the database.
             #
-            # Pass three - remove old actions
-            #
-            for action in removed:
-                assert action in self.actions
-                self.actions.remove(action)
-                assert not action in self.actions
-            #
-            # Pass four - install new actions
+            # Pass four - create new actions
             #
             for elt in new:
                 action = Action(self, elt)
-                self.actions.append(action)
+                added.append(action)
+            # Pass five - uninstall removed actions
             #
-            # Signal the runner thread
+            for action in removed:
+                action.uninstall()
             #
-            self.actionTimeChanged()
-        # Now (without holding the lock) delete the actions, which may update the database.
-        for action in removed:
-            action.uninstall()
+            # Pass six - create new actions
+            with self.lock:
+                #
+                # Pass seven - install new actions
+                #
+                for action in added:
+                    self.actions.append(action)
+                #
+                # Signal the runner thread
+                #
+                self.actionTimeChanged()
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""

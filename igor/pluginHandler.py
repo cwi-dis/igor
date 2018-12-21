@@ -126,14 +126,10 @@ class IgorPlugins(object):
             self.igor.app.raiseHTTPError('500 Error in %s XML fragment: %s' % (pluginName, e))
         # Check whether there are actions in the new bits in the database
         newActions = xpath.find('.//action', pluginTree)
-        if newActions:
-            message += 'Restart Igor to handle new <action>s installed by plugin\n'
         newCapsNeeded = None
         if self.igor.access.hasCapabilitySupport():
             newCapsNeeded = xpath.find('.//au:needCapability', pluginTree, namespaces=access.NAMESPACES)
             # newCapsNeeded += xpath.find('.//au:mayNeedCapability', pluginTree, namespaces=access.NAMESPACES)
-            if newCapsNeeded:
-                message += 'Restart Igor after running with --fix to fix capabilities needed by plugin\n'
         self.igor.database.mergeElement('/', pluginTree, token=token, plugin=True)
         os.unlink(pluginFile)
         if newCapsNeeded:

@@ -404,6 +404,8 @@ def get_plugin(pluginName, methodName='index'):
         rv = method(**dict(allArgs))
     except werkzeug.exceptions.HTTPException:
         raise
+    except xmlDatabase.DBAccessError:
+        myWebError("401 Unauthorized (while running plugin)", 401)
     except ValueError as arg:
         myWebError("400 Error in plugin method %s/%s parameters: %s" % (pluginName, methodName, arg), 400)
     except:
@@ -453,6 +455,8 @@ def get_plugin_page(pluginName, pageName='index'):
             data = template.render(kwargs=allArgs, token=token, **allArgs)
         except werkzeug.exceptions.HTTPException:
             raise
+        except xmlDatabase.DBAccessError:
+            myWebError("401 Unauthorized (while rendering template)", 401)
         except:
             print('Exception in /plugin/%s/%s:' % (pluginName, pageName))
             traceback.print_exc(file=sys.stdout)

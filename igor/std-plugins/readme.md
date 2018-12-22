@@ -204,7 +204,7 @@ Checks last time that Apple Time Machine backed up specific machines. See [timem
 
 ### user
 
-Low-level interface to add and delete users, including capabilities and such, and change passwords. The user-oriented web interface is provided by `/users.html`.
+Low-level interface to add and delete users, including capabilities and such, and change passwords. User interface is provided.
 
 ### watchdog
 

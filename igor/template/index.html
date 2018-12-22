@@ -39,7 +39,14 @@
 
 	<p>To view installed plugins (and add or remove them) see the <a href="/plugins.html">plugins page</a>.</p>
 
-	<p>To view the list of users (and possibly add or remove users) see the <a href="/users.html">users page</a>.</p>
+	{% if igor.plugins.exists('user') %}
+		<p>
+		To view the list of users (and possibly add or remove users) see the <a href="/plugin/user/page/index.html">users page</a>.
+		{% if user %}
+			To change the password for user {{user}} see the <a href="/plugin/user/page/_password.html?username={{user}}">password form</a>.
+		{% endif %}
+		</p>
+	{% endif %}
 
 	{% if igor.plugins.exists('device') %}
 		<p>To view known devices (and add or remove them) see the <a href="/plugin/device/page/index.html">devices page</a>.</p>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Users</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+
+	<h1>Delete User</h1>
+	
+	<p>Are you sure you want to delete user <b>{{username}}</b>? This action cannot be undone.</p>
+	<form action="/plugin/user/delete">
+		<input name="returnTo" type="hidden" value="/plugin/{{pluginName}}/page/index.html">
+		<input type="hidden" name="username" value="{{username}}"><br>
+		<input type="submit" value="Delete">
+	</form>
+
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to user listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

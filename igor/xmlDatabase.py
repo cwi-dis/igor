@@ -682,7 +682,7 @@ class DBImpl(DBSerializer):
                 rv.append((self.getXPathForElement(node), xpath.expr.string_value(node)))
             return rv
             
-    def mergeElement(self, location, tree, token, plugin=False, context=None):
+    def mergeElement(self, location, tree, token, plugin=False, context=None, namespaces=NAMESPACES):
         assert plugin # No other merges implemented yet
         assert location == '/'
         assert context == None
@@ -691,7 +691,7 @@ class DBImpl(DBSerializer):
         if not self._elementsMatch(context, tree):
             raise DBParamError('mergeElement: root elements do not match')
         self.mergeNodesToSignal = []
-        self._mergeTree(context, tree, token, plugin)
+        self._mergeTree(context, tree, token, plugin, namespaces=namespaces)
         if self.mergeNodesToSignal:
             self.signalNodelist(self.mergeNodesToSignal)
         self.mergeNodesToSignal = []
@@ -707,7 +707,7 @@ class DBImpl(DBSerializer):
             rv += '[@own:plugin="%s"]' % pluginName
         return rv
         
-    def _mergeTree(self, context, newTree, token, plugin):
+    def _mergeTree(self, context, newTree, token, plugin, namespaces=NAMESPACES):
         newChild = newTree.firstChild
         toAdd = []
         while newChild:
@@ -717,14 +717,14 @@ class DBImpl(DBSerializer):
                 continue
             # Check whether the old tree has an element corresponding to this one
             xp = self._constructXPathForNewChild(newChild, plugin)
-            matches = xpath.find(xp, context, namespaces=NAMESPACES)
+            matches = xpath.find(xp, context, namespaces=namespaces)
             if not matches:
                 # No child exists that matches this child
                 toAdd.append(newChild)
             elif len(matches) == 1:
                 # A single child in the old tree matches. Recursively descend.
                 newContext = matches[0]
-                self._mergeTree(newContext, newChild, token, plugin)
+                self._mergeTree(newContext, newChild, token, plugin, namespaces=namespaces)
             else:
                 raise DBParamError('mergeElement: multiple matches for %s at %s' % (xp, self.getXPathForElement(context)))
             newChild = newChild.nextSibling

@@ -130,7 +130,7 @@ class IgorPlugins(object):
         if self.igor.access.hasCapabilitySupport():
             newCapsNeeded = xpath.find('.//au:needCapability', pluginTree, namespaces=access.NAMESPACES)
             # newCapsNeeded += xpath.find('.//au:mayNeedCapability', pluginTree, namespaces=access.NAMESPACES)
-        self.igor.database.mergeElement('/', pluginTree, token=token, plugin=True)
+        self.igor.database.mergeElement('/', pluginTree, token=token, plugin=True, namespaces=access.NAMESPACES)
         os.unlink(pluginFile)
         if newCapsNeeded:
             self.igor.access.createTokensNeededByElement(newCapsNeeded, token)

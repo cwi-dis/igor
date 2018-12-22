@@ -15,7 +15,9 @@
 	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
 
 	<h1>New Device</h1>
-
+	{% if result.message %}
+		<p><em>Note:</em> {{result.message}}</p>
+	{% endif %}
 	<table>
 		<tr>
 			<th>Key</th>
@@ -27,9 +29,6 @@
 			</tr>
 		{% endfor %}
 	</table>
-	{% if result.addPluginLink %}
-		<p><b>Note:</b> you must still add the plugin through this link: <a href="{{result.addPluginLink}}">{{result.addPluginLink}}</a>.</p>
-	{% endif %}
 	{% if deviceTokenId %}
 		<p>If the device is accessed over <i>https://{{hostname}}</i>	you may still need to create a certificate
 		using the <a href="/plugin/ca">CA plugin</a>. </p>

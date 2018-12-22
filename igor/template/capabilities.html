@@ -104,10 +104,8 @@
 				</tr>
 			{% endfor %}
 		</table>
-		{% if cid != None %}
-			<p><a href="/capabilities.html">Return to full listing</a></p>
-			<p><a href="/capabilities.html?action=listKeys">View shared key listing</a></p>
-		{% endif %}
+		<hr>
+		<p><a href="/capabilities.html?action=listKeys">View shared key listing</a></p>
 	{% elif action == "delegate" %}
 		<h1>Delegate capability {{cid}}</h1>
 		
@@ -174,7 +172,8 @@
 				</tr>
 			</table>
 		</form>
-		<p><a href="/capabilities.html">Return to listing</a></p>
+		
+		<hr>
 	{% elif action == "create" %}
 		<p>Cannot do yet. Should create {{repr(kwargs)}}.</p>
 		<form action="/internal/accessControl/newToken">
@@ -247,12 +246,8 @@
 				</tr>
 			</table>
 		</form>		
-		<p>
-			<a href="/capabilities.html">List my capabilities.</a>
-			{% if 'returnTo' in kwargs %}
-				<br><a href="{{kwargs['returnTo']}}">Return to {{kwargs['returnTo']}}.</a>
-			{% endif %}
-		</p>
+
+		<hr>
 	{% elif action == "transfer" %}
 		<h1>Delegate capability {{cid}}</h1>
 		
@@ -296,7 +291,8 @@
 				</tr>
 			</table>
 		</form>
-		<p><a href="/capabilities.html">Return to listing</a></p>
+
+		<hr>
 	{% elif action == "export" %}
 		<h1>Export capability {{cid}}</h1>
 		
@@ -386,7 +382,8 @@
 				</tr>
 			</table>
 		</form>
-		<p><a href="/capabilities.html">Return to listing</a></p>
+
+		<hr>
 	{% elif action == "revoke" %}
 		<h1>Revoke capability {{childCid}}</h1>
 		
@@ -443,7 +440,7 @@
 			</table>
 		</form>
 		
-		<p><a href="/capabilities.html">Return to listing</a></p>
+		<hr>
 	{% elif action == "listKeys" %}
 		<h1>Shared secret keys issued by this Igor</h1>
 		
@@ -474,9 +471,9 @@
 			{% endfor %}
 		</table>
 
+		<hr>
 		<p><a href="/capabilities.html?action=addKey">Add a new secret key</a></p>
 		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
-		<p><a href="/capabilities.html">Return to capability listing</a></p>
 	{% elif action == "addKey" %}
 		<h1>Issue new shared key</h1>
 
@@ -489,7 +486,7 @@
 			<input type="submit" value="Create">
 		</form>		
 
-		<p><a href="/capabilities.html">Return to capability listing</a></p>
+		<hr>
 		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
 	{% elif action == "deleteKey" %}
 		<h1>Delete old shared key</h1>
@@ -516,8 +513,16 @@
 			</table>
 		</form>
 
+		<hr>
 		<p><a href="/capabilities.html?action=listKeys">Return to secret key listing</a></p>
+	{% endif %}
+	{% if action != 'list' or cid != None %}
 		<p><a href="/capabilities.html">Return to capability listing</a></p>
+	{% endif %}
+
+	<p><a href="/">Return to Igor homepage</a></p>
+	{% if 'returnTo' in kwargs %}
+		<p><a href="{{kwargs['returnTo']}}">Return to {{kwargs['returnTo']}}.</a></p>
 	{% endif %}
 </body>
 </html>

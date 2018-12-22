@@ -362,12 +362,9 @@ class CapabilityConsistency(StructuralConsistency):
                 if ':' in pluginName or '{' in pluginName:
                     continue
                 pluginDataPath = '/data/plugindata/%s' % pluginName
-                # A plugin always needs access to its own plugindata
+                # Plugins specify all capabilities they need in their au:needCapability elements
+                # But we ensure that it always needs access to its own plugindata
                 tokensNeeded = [dict(obj=pluginDataPath, get='descendant-or-self')]
-                # A plugin needs access to its own plugin if it has any actions that refer to the plugin
-                pluginPath = '/plugin/{}'.format(pluginName)
-                if pluginPath in self._getValues('action/url', context=pluginElement):
-                    tokensNeeded.append(dict(obj=pluginPath, get='self'))
                 tokensNeeded += self._getTokensNeededByElement(pluginElement, optional=self.extended)
                 for item in tokensNeeded:
                     self._hasCapability(pluginDataPath, **item)
@@ -471,9 +468,9 @@ class CapabilityConsistency(StructuralConsistency):
                         badLocations.append(loc)
             for loc in badLocations:
                 parentPath = self.database.getXPathForElement(loc)
-                cidList = self._getValues('au:capabiity/cid', context=loc)
+                cidList = self._getValues('au:capability/cid', context=loc)
                 if not cidList:
-                    self._status('Listed as parent of capabilities but cannot find them: %s' % path)
+                    self._status('Listed as parent of capabilities but cannot find them: %s' % parentPath)
                     continue
                 for cid in cidList:
                     if self.fix:

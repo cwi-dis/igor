@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Devices and Sensors</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+
+	<h1>Delete Device</h1>
+	
+	<p>Are you sure you want to delete device <em>{{name}}</em> completely? This action cannot be undone.</p>
+	<form action="/plugin/device/delete">
+		<input name="returnTo" type="hidden" value="/plugin/{{pluginName}}/page/index.html">
+		<input type="hidden" name="name" value="{{name}}"><br>
+		<input type="hidden" name="hostname" value="{{hostname}}"><br>
+		<input type="submit" value="Delete Device">
+	</form>
+
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to device listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

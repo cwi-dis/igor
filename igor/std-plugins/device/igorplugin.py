@@ -22,6 +22,17 @@ class DevicePlugin(object):
         raise self.igor.app.raiseNotfound()
     
     def add(self, token=None, name=None, description=None, returnTo=None, **kwargs):
+        rv = self._add(token, name, description, **kwargs)
+        if returnTo:
+            queryString = urllib.parse.urlencode(rv)
+            if '?' in returnTo:
+                returnTo = returnTo + '&' + queryString
+            else:
+                returnTo = returnTo + '?' + queryString
+            return self.igor.app.raiseSeeother(returnTo)
+        return json.dumps(rv)
+
+    def _add(self, token=None, name=None, description=None, **kwargs):
         if not NAME_RE.match(name):
             self.igor.app.raiseHTTPError('400 Illegal name for device')
         if not description:
@@ -101,15 +112,8 @@ class DevicePlugin(object):
                     actionData = self._addAction(token, subject=hostname, **actions[actionName])
                     actionResults[actionName] = actionData
                 rv['actions'] = actionResults
-        if returnTo:
-            queryString = urllib.parse.urlencode(rv)
-            if '?' in returnTo:
-                returnTo = returnTo + '&' + queryString
-            else:
-                returnTo = returnTo + '?' + queryString
-            return self.igor.app.raiseSeeother(returnTo)
-        return json.dumps(rv)
-
+        return rv
+        
     def _genSecretKey(self, token=None, aud=None, sub=None):
         return self.igor.internal.accessControl('createSharedKey', token=token, aud=aud, sub=sub)
                 
@@ -172,8 +176,99 @@ class DevicePlugin(object):
         self.igor.internal.accessControl('deleteSharedKey', token=token, aud=aud, sub=sub)
         
     def list(self, token=None):
-        rv = self.igor.internal._getDeviceListData(token)
+        rv = self._list(token)
         return json.dumps(rv)
+
+    def _list(self, token):
+        """Return list of dictionaries describing all devices"""
+        def _getNames(path):
+            """Helper to get all non-namespaced children tag names"""
+            allElements = self.igor.database.getElements(path, 'get', token)
+            rv = []
+            for e in allElements:
+                name = e.tagName
+                if ':' in name: continue
+                rv.append(name)
+            return rv
+        #
+        # Collect all names of devices and sensors tha occur anywhere (sorted)
+        #
+        allNames = _getNames('devices/*') + _getNames('sensors/*') + _getNames('status/sensors/*') + _getNames('status/devices/*')
+        allNames = list(set(allNames))
+        allNames.sort()
+        #
+        # For each of these collect the relevant information
+        #
+        rv = []
+        for name in allNames:
+            descr = dict(name=name)
+            hostname = None
+            representing = None
+            entries = []
+            statusEntries = []
+            if self.igor.database.getElements('devices/' + name, 'get', token):
+                descr['isDevice'] = True
+                entries.append('devices/' + name)
+                representing = 'devices/' + name
+            if self.igor.database.getElements('sensors/' + name, 'get', token):
+                descr['isSensor'] = True
+                entries.append('sensors/' + name)
+                representing = 'sensors/' + name
+            if self.igor.database.getElements('plugindata/' + name, 'get', token):
+                descr['isPlugin'] = True
+                entries.append('plugindata/' + name)
+                hostname = self.igor.database.getValue('plugindata/%s/host' % name, token)
+
+            if hostname:
+                descr['hostname'] = hostname
+                
+            if self.igor.database.getElements('status/devices/' + name, 'get', token):
+                statusEntries.append('status/devices/' + name)
+            if self.igor.database.getElements('status/sensors/' + name, 'get', token):
+                statusEntries.append('status/sensors/' + name)
+            
+            descr['entry'] = entries
+            descr['status'] = statusEntries
+            
+            if representing:
+                actionElements = self.igor.database.getElements("actions/action[representing='%s']" % representing, 'get', token)
+                actionPaths = []
+                for e in actionElements:
+                    actionPaths.append(self.igor.database.getXPathForElement(e))
+                if actionPaths:
+                    descr['actions'] = actionPaths
+                descr['representing'] = representing
+
+            # See what the type is
+            if descr.get('isDevice'):
+                if not descr.get('isPlugin'):
+                    descr['deviceType'] = 'badDevice (no plugin)'
+                else:
+                    # We cannot tell difference between activeDevice and activeDeviceSensor.
+                    # Could examine actions, but...
+                    descr['deviceType'] = 'activeDevice'
+            elif descr.get('isSensor'):
+                if descr.get('isPlugin'):
+                    descr['deviceType'] = 'polledSensor'
+                elif descr.get('actionPaths'):
+                    descr['deviceType'] = 'activeSensor'
+                else:
+                    descr['deviceType'] = 'passiveSensor'
+            else:
+                descr['deviceType'] = 'bad (not Device, not Sensor)'
+
+            rv.append(descr)
+        return rv
+
+    def _keyList(self, token):
+        """Helper for devices.html"""
+        allKeys = self.igor.internal.accessControl(subcommand='getKeyList', token=token)
+        allKeysAsTuples = [(k.get('iss', ''), k.get('aud', ''), k.get('sub', '')) for k in allKeys]
+        allKeysAsTuples.sort()
+        allKeyAudiences = set([k.get('aud') for k in allKeys])
+        allKeySubjects = set([k.get('sub') for k in allKeys])
+        return dict(allKeysAsTuples=allKeysAsTuples, allKeyAudiences=allKeyAudiences, allKeySubjects=allKeySubjects)
+        
             
 def igorPlugin(igor, pluginName, pluginData):
     return DevicePlugin(igor)

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Devices and Sensors</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
+	<h1>Add action capability for sensor</h1>
+	
+	<p>
+	If device <i>{{name}}</i> 
+	{% if hostname %}
+		(hostname <i>{{hostname}}</i>)
+	{% endif %}
+	needs a capability to emit http(s) GET requests to trigger an Igor action use this form:
+	</p>
+
+	<form action="/plugin/device/addAction">
+		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_addActionResult.html">
+		<input type="hidden" name="subject" value="/{{hostname}}">
+		Action: <select name="obj">
+			{% for _, actionName in igor.database.getValues('actions/action/name', token=token) %}
+				<option value="/action/{{actionName}}">{{actionName}}</option>
+			{% endfor %}
+		</select>
+		<input type="submit" value="Add Action">
+	</form>
+
+	<p>
+	If device <i>{{name}}</i> 
+	{% if hostname %}
+		(hostname <i>{{hostname}}</i>)
+	{% endif %}
+	needs a capability to emit other http(s) requests to Igor action use this form:
+	</p>
+
+	<form action="/plugin/device/addAction">
+		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_addActionResult.html">
+		<input type="hidden" name="subject" value="/{{hostname}}">
+		Verb: <select name="verb">
+			<option value="get">get</option>
+			<option value="put">put</option>
+			<option value="post">post</option>
+			<option value="delete">delete</option>
+		</select>
+		Object path: <input name="obj" type="text" value="/data/">
+		<input type="submit" value="Add Action">
+	</form>
+
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to device listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

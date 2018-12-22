@@ -113,7 +113,7 @@ Copies subtree ```src``` to ```dst```. Both src and dst can be local or remote, 
 
 ### device
 
-Low level API to add devices and their capabilities and secret keys, and allow devices to call certain actions. User interface is provided by `/devices.html`.
+Low level API to add devices and their capabilities and secret keys, and allow devices to call certain actions. User interface is provided.
 ### dhcp
 
 Queries database of DHCP server on local machine and stores all active dhcp leases. See [dhcp/readme.md](dhcp/readme.md) for details.
@@ -139,6 +139,7 @@ Example RFID reader integration. See [iirfid/readme.md](iirfid/readme.md) for de
 ### iotsaDiscovery
 
 A plugin to discover devices based on the [iotsa](https://github.com/dis-git/iotsa) architecture and configure those devices (install certificates, install Igor capabilities, etc). The _NeoClock_, _Plant_ and _Smartmeter\_iotsa_ devices below are examples of _iotsa_ devices.
+User interface is provided.
 
 ### kaku
 

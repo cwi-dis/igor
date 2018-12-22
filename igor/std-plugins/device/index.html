@@ -12,377 +12,227 @@
 </head>
 <body>
 	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
-	{% if action == 'list' or not action %}
-		<h1>Igor Devices and Sensors</h1>
-		{% set user = igor.app.getSessionItem('user', None) %}
-		{% if user %}
-			<p>
-				You are logged in as {{user}}.
-				{% if user != 'admin' %}
-					You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
-				{% endif %}
-			</p>
-		{% else %}
-			<p>
-				You are not logged in. This page will probably not render correctly.
-			</p>
-		{% endif %}
-		
-		<h2>Igor Devices</h2>
-		
-		<p>In Igor terms, a <i>device</i> is something that Igor may send commands to. It exports some sort of service (for example
-		using <i>http</i> or <i>https</i>) that Igor can contact. If something is a device as well as a <i>sensor</i> it will be listed
-		amongst the devices here.
+	<h1>Igor Devices and Sensors</h1>
+	{% set user = igor.app.getSessionItem('user', None) %}
+	{% if user %}
+		<p>
+			You are logged in as {{user}}.
+			{% if user != 'admin' %}
+				You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
+			{% endif %}
 		</p>
-		
+	{% else %}
+		<p>
+			You are not logged in. This page will probably not render correctly.
+		</p>
+	{% endif %}
+	
+	<h2>Igor Devices</h2>
+	
+	<p>In Igor terms, a <i>device</i> is something that Igor may send commands to. It exports some sort of service (for example
+	using <i>http</i> or <i>https</i>) that Igor can contact. If something is a device as well as a <i>sensor</i> it will be listed
+	amongst the devices here.
+	</p>
+	
+	<table style="width:100%">
+		<tr>
+			<th>Name</th>
+			<th>Hostname</th>
+			<th>Type(s)</th>
+			<th>Entry</th>
+			<th>Status Entry</th>
+			{% if hasCapabilitySupport %}
+				<th>Secret Shared keys</th>
+			{% endif %}
+			<th>Actions</th>
+			<th>OP</th>
+		</tr>
+		{% set keyListData = pluginObject._keyList(token) %}
+		{% set deviceList = pluginObject._list(token) %}
+		{% for device in deviceList %}
+			{% set name=device.get('name') %}
+			{% set hostName = device.get('hostname', '') %}
+			{% set hasAudSecretKey = hostName and (hostName in keyListData.allKeyAudiences or ('http://%s' % hostName) in keyListData.allKeyAudiences or ('https://%s' % hostName) in keyListData.allKeyAudiences) %}
+			{% set hasSubSecretKey = hostName and (hostName in keyListData.allKeySubjects) %}
+			<tr>
+				<td>{{name}}</td>
+				<td>{{hostName}}</td>
+				<td>
+					{% if device.get('deviceType') %}
+						{{device.deviceType}}
+					{% else %}
+						{% if device.get('isDevice') %}
+							Device<br>
+						{% endif %}
+						{% if device.get('isSensor') %}
+							Sensor<br>
+						{% endif %}
+						{% if device.get('isPlugin') %}
+							Plugin<br>
+						{% endif %}
+					{% endif %}
+				</td>
+				<td>
+					{% for ent in device.get('entry', []) %}
+						<a href="/data/{{ent}}">{{ent}}</a><br>
+					{% endfor %}
+				</td>
+				<td>
+					{% for ent in device.get('status', []) %}
+						<a href="/data/{{ent}}">{{ent}}</a><br>
+					{% endfor %}
+				</td>
+				{% if hasCapabilitySupport %}
+					<td>
+						{% if hasAudSecretKey %}
+							aud={{hostName}}<br>
+						{% endif %}
+						{% if hasSubSecretKey %}
+							sub={{hostName}}<br>
+						{% endif %}
+					</td>
+				{% endif %}
+				<td>
+					{% for action in device.get('actions', []) %}
+						{% set actionName = igor.database.getValues(action+'/name', token=token) %}
+						{% set actionNameDisplay = actionName[0][1] if actionName else action %}
+						<a href={{action}}>{{actionNameDisplay}}</a><br>
+					{% endfor %}
+				</td>
+				<td>
+					{% if hasCapabilitySupport %}
+						{% if  hostName and device.get('isDevice') and not hasAudSecretKey %}
+							<form action="_addKey.html">
+							<input type="hidden" name="aud" value="{{hostName}}">
+							<input type="submit" value="Create Audience Key">
+							</form>
+						{% endif %}
+						{% if  hostName and (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey %}
+							<form action="_addKey.html">
+							<input type="hidden" name="sub" value="{{hostName}}">
+							<input type="submit" value="Create Subject Key">
+							</form>
+						{% endif %}
+						{% if  device.get('isSensor') or device.get('isDevice') %}
+							<form action="_addActionCap.html">
+								<input type="hidden" name="name" value="{{name}}">
+								<input type="hidden" name="hostname" value="{{hostName}}">
+								<input type="hidden" name="representing" value="{{device.get('representing')}}">
+								<input type="submit" value="Add Action Capability">
+							</form>
+						{% endif %}
+					{% endif %}
+					<form action="_deleteDevice.html">
+						<input type="hidden" name="name" value="{{name}}">
+						<input type="hidden" name="hostname" value="{{hostName}}">
+						<input type="submit" value="Delete Device">
+					</form>
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+	
+	<h2>Add Device</h2>
+	
+	<p>Add a new device or sensor to Igor:</p>
+	
+	<form action="_newDevice.html">
+		<table>
+			<tr>
+				<td>Name</td>
+				<td><input name="name" type="text"></td>
+				<td>User-visible name in Igor (must be an identifier)</td>
+			</tr>
+			<tr>
+				<td>Type</td>
+				<td>
+					<select name="deviceType">
+						<option value="activeDevice">ActiveDevice</option>
+						<option value="activeSensor">ActiveSensor</option>
+						<option value="activeSensorDevice">ActiveDevice and ActiveSensor</option>
+						<option value="polledSensor">PolledSensor</option>
+						<option value="passiveSensor">PassiveSensor</option>
+					</select>
+				</td>
+				<td>
+					ActiveDevice: Igor will send commands to this device through REST or http[s] or so<br>
+					ActiveSensor: device will send commands to Igor through REST or http[s] or so<br>
+					PolledSensor: Igor will poll this device to obtain sensor data<br>
+					PassiveSensor: Sensor data is obtained indirectly<br>
+				</td>
+			</tr>
+			<tr>
+				<td>Hostname</td>
+				<td><input name="hostname" type="text"></td>
+				<td>Needed for ActiveDevice and ActiveSensor, if needed defaults to <i>Name</i>.local</td>
+			</tr>
+			<tr>
+				<td>Plugin</td>
+				<td>
+					<select name="plugin">
+						<option value="">None</option>
+						{% for stdName in igor.plugins.liststd(token) %}
+							<option value="{{stdName}}">{{stdName}}</option>
+						{% endfor %}
+					</select>
+				</td>
+				<td>Plugin to support this device. Not needed for PassiveSensor.</td>
+			</tr>
+			<tr>
+				<td>Device object</td>
+				<td><input name="obj" type="text" value="/"></td>
+				<td>toplevel object on device (for capability, needed for ActiveDevice)</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="submit" value="Add Device">
+				</td>
+			</tr>
+		</table>
+	</form>
+	
+	{% if hasCapabilitySupport %}
+		<h2>Secret Shared Keys</h2>
+	
+		<p>A device that wants to contact Igor needs a shared secret key with itself (the device) as <i>subject</i> and Igor as the <i>audience</i>. This key is used by the device to sign the capability, and ensures to igor that the device is the right one.</p>
+	
+		<p>A device to which Igor needs to send requests needs a shared key with the device as <i>audience</i> and either no <i>subject</i> or Igor itself as
+		the subject. Igor will sign capabilities with this key, and the device can confirm that the request actually comes from Igor.</p>
+	
+		<p>Igor has the following shared secret keys:</p>
 		<table style="width:100%">
 			<tr>
-				<th>Name</th>
-				<th>Hostname</th>
-				<th>Type(s)</th>
-				<th>Entry</th>
-				<th>Status Entry</th>
-				{% if hasCapabilitySupport %}
-					<th>Secret Shared keys</th>
-				{% endif %}
-				<th>Actions</th>
+				<th>Issuer</th>
+				<th>Audience</th>
+				<th>Subject</th>
 				<th>OP</th>
 			</tr>
-			{% set keyListData = igor.internal._getKeyListData(token) %}
-			{% set deviceList = igor.internal._getDeviceListData(token) %}
-			{% for device in deviceList %}
-				{% set name=device.get('name') %}
-				{% set hostName = device.get('hostname', '') %}
-				{% set hasAudSecretKey = hostName and (hostName in keyListData.allKeyAudiences or ('http://%s' % hostName) in keyListData.allKeyAudiences or ('https://%s' % hostName) in keyListData.allKeyAudiences) %}
-				{% set hasSubSecretKey = hostName and (hostName in keyListData.allKeySubjects) %}
+			{% for iss, aud, sub in keyListData.allKeysAsTuples %}
 				<tr>
-					<td>{{name}}</td>
-					<td>{{hostName}}</td>
+					<td>{{iss}}</td>
+					<td>{{aud}}</td>
+					<td>{{sub}}</td>
 					<td>
-						{% if device.get('deviceType') %}
-							{{device.deviceType}}
-						{% else %}
-							{% if device.get('isDevice') %}
-								Device<br>
-							{% endif %}
-							{% if device.get('isSensor') %}
-								Sensor<br>
-							{% endif %}
-							{% if device.get('isPlugin') %}
-								Plugin<br>
-							{% endif %}
-						{% endif %}
-					</td>
-					<td>
-						{% for ent in device.get('entry', []) %}
-							<a href="/data/{{ent}}">{{ent}}</a><br>
-						{% endfor %}
-					</td>
-					<td>
-						{% for ent in device.get('status', []) %}
-							<a href="/data/{{ent}}">{{ent}}</a><br>
-						{% endfor %}
-					</td>
-					{% if hasCapabilitySupport %}
-						<td>
-							{% if hasAudSecretKey %}
-								aud={{hostName}}<br>
-							{% endif %}
-							{% if hasSubSecretKey %}
-								sub={{hostName}}<br>
-							{% endif %}
-						</td>
-					{% endif %}
-					<td>
-						{% for action in device.get('actions', []) %}
-							{% set actionName = igor.database.getValues(action+'/name', token=token) %}
-							{% set actionNameDisplay = actionName[0][1] if actionName else action %}
-							<a href={{action}}>{{actionNameDisplay}}</a><br>
-						{% endfor %}
-					</td>
-					<td>
-						{% if hasCapabilitySupport %}
-							{% if  hostName and device.get('isDevice') and not hasAudSecretKey %}
-								<form action="/devices.html">
-								<input type="hidden" name="action" value="addKey">
-								<input type="hidden" name="aud" value="{{hostName}}">
-								<input type="submit" value="Create Audience Key">
-								</form>
-							{% endif %}
-							{% if  hostName and (device.get('isDevice') or device.get('isSensor')) and not hasSubSecretKey %}
-								<form action="/devices.html">
-								<input type="hidden" name="action" value="addKey">
-								<input type="hidden" name="sub" value="{{hostName}}">
-								<input type="submit" value="Create Subject Key">
-								</form>
-							{% endif %}
-							{% if  device.get('isSensor') or device.get('isDevice') %}
-								<form action="/devices.html">
-									<input type="hidden" name="action" value="addActionCap">
-									<input type="hidden" name="name" value="{{name}}">
-									<input type="hidden" name="hostname" value="{{hostName}}">
-									<input type="hidden" name="representing" value="{{device.get('representing')}}">
-									<input type="submit" value="Add Action Capability">
-								</form>
-							{% endif %}
-						{% endif %}
-						<form action="/devices.html">
-							<input type="hidden" name="action" value="deleteDevice">
-							<input type="hidden" name="name" value="{{name}}">
-							<input type="hidden" name="hostname" value="{{hostName}}">
-							<input type="submit" value="Delete Device">
+						<form action="_deleteKey.html">
+						<input type="hidden" name="iss" value="{{iss}}">
+						<input type="hidden" name="aud" value="{{aud}}">
+						<input type="hidden" name="sub" value="{{sub}}">
+						<input type="submit" value="Delete Key">
 						</form>
 					</td>
 				</tr>
 			{% endfor %}
+		
 		</table>
-		
-		<h2>Add Device</h2>
-		
-		<p>Add a new device or sensor to Igor:</p>
-		
-		<form action="/plugin/device/add">
-			<input type="hidden" name="returnTo" value="/devices.html?action=newDevice">
-			<table>
-				<tr>
-					<td>Name</td>
-					<td><input name="name" type="text"></td>
-					<td>User-visible name in Igor (must be an identifier)</td>
-				</tr>
-				<tr>
-					<td>Type</td>
-					<td>
-						<select name="deviceType">
-							<option value="activeDevice">ActiveDevice</option>
-							<option value="activeSensor">ActiveSensor</option>
-							<option value="activeSensorDevice">ActiveDevice and ActiveSensor</option>
-							<option value="polledSensor">PolledSensor</option>
-							<option value="passiveSensor">PassiveSensor</option>
-						</select>
-					</td>
-					<td>
-						ActiveDevice: Igor will send commands to this device through REST or http[s] or so<br>
-						ActiveSensor: device will send commands to Igor through REST or http[s] or so<br>
-						PolledSensor: Igor will poll this device to obtain sensor data<br>
-						PassiveSensor: Sensor data is obtained indirectly<br>
-					</td>
-				</tr>
-				<tr>
-					<td>Hostname</td>
-					<td><input name="hostname" type="text"></td>
-					<td>Needed for ActiveDevice and ActiveSensor, if needed defaults to <i>Name</i>.local</td>
-				</tr>
-				<tr>
-					<td>Plugin</td>
-					<td>
-						<select name="plugin">
-							<option value="">None</option>
-							{% for stdName in igor.plugins.liststd(token) %}
-								<option value="{{stdName}}">{{stdName}}</option>
-							{% endfor %}
-						</select>
-					</td>
-					<td>Plugin to support this device. Not needed for PassiveSensor.</td>
-				</tr>
-				{% if hasCapabilitySupport %}
-					<tr>
-						<td>Device object</td>
-						<td><input name="obj" type="text" value="/"></td>
-						<td>toplevel object on device (for capability, needed for ActiveDevice)</td>
-					</tr>
-				{% endif %}
-				<tr>
-					<td colspan="2">
-						<input type="submit" value="Add Device">
-					</td>
-				</tr>
-			</table>
-		</form>
-		
-		{% if hasCapabilitySupport %}
-			<h2>Secret Shared Keys</h2>
-		
-			<p>A device that wants to contact Igor needs a shared secret key with itself (the device) as <i>subject</i> and Igor as the <i>audience</i>. This key is used by the device to sign the capability, and ensures to igor that the device is the right one.</p>
-		
-			<p>A device to which Igor needs to send requests needs a shared key with the device as <i>audience</i> and either no <i>subject</i> or Igor itself as
-			the subject. Igor will sign capabilities with this key, and the device can confirm that the request actually comes from Igor.</p>
-		
-			<p>Igor has the following shared secret keys:</p>
-			<table style="width:100%">
-				<tr>
-					<th>Issuer</th>
-					<th>Audience</th>
-					<th>Subject</th>
-					<th>OP</th>
-				</tr>
-				{% for iss, aud, sub in keyListData.allKeysAsTuples %}
-					<tr>
-						<td>{{iss}}</td>
-						<td>{{aud}}</td>
-						<td>{{sub}}</td>
-						<td>
-							<form action="/devices.html">
-							<input type="hidden" name="action" value="deleteKey">
-							<input type="hidden" name="iss" value="{{iss}}">
-							<input type="hidden" name="aud" value="{{aud}}">
-							<input type="hidden" name="sub" value="{{sub}}">
-							<input type="submit" value="Delete Key">
-							</form>
-						</td>
-					</tr>
-				{% endfor %}
-			
-			</table>
-		{% endif %}
-		
-	{% elif action == "newDevice" %}
-		<h1>New Device</h1>
-
-		<table>
-			<tr>
-				<th>Key</th>
-				<th>Value</th>
-			</tr>
-			{% for k, v in kwargs.items() %}
-				<tr>
-					<td>{{k}}</td><td>{{v}}</td>
-				</tr>
-			{% endfor %}
-		</table>
-		{% if addPluginLink %}
-			<p><b>Note:</b> you must still add the plugin through this link: <a href="{{addPluginLink}}">{{addPluginLink}}</a>.</p>
-		{% endif %}
-		{% if deviceTokenId %}
-			<p>If the device is accessed over <i>https://{{hostname}}</i>	you may still need to create a certificate
-			using the <a href="/plugin/ca">CA plugin</a>. </p>
-		{% endif %}
-			
-		{% if deviceType in ("activeSensor", "activeSensorDevice") %}
-			<p>You probably want to add actions triggered by this sensor. Unfortunately there is no GUI for that yet.</p>
-			
-			{% if hasCapabilitySupport  %}
-				{% if isDevice %}
-					{% set representing = 'devices/' + name %}
-				{% else %}
-					{% set representing = 'sensors/' + name %}
-				{% endif %}
-			
-				<p>You probably want to <a href="/devices.html?action=addActionCap&name={{name}}&hostname={{hostname}}&representing={{representing}}">add an action capability</a> if this sensors triggers actions that are already in the database.</p>
-			{% endif %}
-		{% endif %}
-			
-		<p><a href="/devices.html">Return to device listing</a>.</p>
-		
-	{% elif action == "addActionCap" %}
-		<h1>Add action capability for sensor</h1>
-		
-		<p>
-		If device <i>{{name}}</i> 
-		{% if hostname %}
-			(hostname <i>{{hostname}}</i>)
-		{% endif %}
-		needs a capability to emit http(s) GET requests to trigger an Igor action use this form:
-		</p>
-
-		<form action="/plugin/device/addAction">
-			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
-			<input type="hidden" name="subject" value="/{{hostname}}">
-			Action: <select name="obj">
-				{% for _, actionName in igor.database.getValues('actions/action/name', token=token) %}
-					<option value="/action/{{actionName}}">{{actionName}}</option>
-				{% endfor %}
-			</select>
-			<input type="submit" value="Add Action">
-		</form>
-
-		<p>
-		If device <i>{{name}}</i> 
-		{% if hostname %}
-			(hostname <i>{{hostname}}</i>)
-		{% endif %}
-		needs a capability to emit other http(s) requests to Igor action use this form:
-		</p>
-
-		<form action="/plugin/device/addAction">
-			<input type="hidden" name="returnTo" value="/devices.html?action=addActionResult">
-			<input type="hidden" name="subject" value="/{{hostname}}">
-			Verb: <select name="verb">
-				<option value="get">get</option>
-				<option value="put">put</option>
-				<option value="post">post</option>
-				<option value="delete">delete</option>
-			</select>
-			Object path: <input name="obj" type="text" value="/data/">
-			<input type="submit" value="Add Action">
-		</form>
-
-		<p><a href="/devices.html">Return to device listing</a>.</p>
-	{% elif action == "addActionResult" %}
-		<h1>New Action</h1>
-
-		<table>
-			<tr>
-				<th>Key</th>
-				<th>Value</th>
-			</tr>
-			{% for k, v in kwargs.items() %}
-				<tr>
-					<td>{{k}}</td><td>{{v}}</td>
-				</tr>
-			{% endfor %}
-		</table>		
-		<p><a href="/devices.html">Return to device listing</a>.</p>
-	{% elif action == "addKey" %}
-		<h1>Add Secret Shared Key</h1>
-		
-		<p>Do you want to add a shared secret key for signing capabilities with subject (source)
-		<i>{{sub if sub else 'Igor itself'}}</i> and audience (destination) <i>{{aud if aud else'Igor itself'}}</i>?
-		</p>
-		
-		<form action="/internal/accessControl/createSharedKey">
-			{% if aud %}
-				<input type="hidden" name="aud" value="{{aud}}">
-			{% endif %}
-			{% if sub %}
-				<input type="hidden" name="sub" value="{{sub}}">
-			{% endif %}
-			<input type="hidden" name="returnTo" value="/devices.html">
-			<input type="submit" value="Create Secret Shared Key">
-		</form>
-		
-		<p><a href="/devices.html">Return to device listing</a>.</p>		
-		
-	{% elif action == "deleteKey" %}
-		<h1>Delete Secret Shared Key</h1>
-		
-		<p>
-		Are you sure you want to delete the secret key that allows subject <em>"{{sub}}"</em> to contact audience <em>"{{aud}}"</em> signed by
-		issuer <em>"{{iss}}"</em>? This action cannot be undone.
-		</p>
-		
-		<form action="/internal/accessControl/deleteSharedKey">
-			<input type="hidden" name="iss" value="{{iss}}">
-			<input type="hidden" name="aud" value="{{aud}}">
-			<input type="hidden" name="sub" value="{{sub}}">
-			<input type="hidden" name="returnTo" value="/devices.html">
-			<input type="submit" value="Delete Secret Shared Key">
-		</form>
-		
-		<p><a href="/devices.html">Return to device listing</a>.</p>
-	{% elif action == "deleteDevice" %}
-		<h1>Delete Device</h1>
-		
-		<p>Are you sure you want to delete device <em>{{name}}</em> completely? This action cannot be undone.</p>
-		<form action="/plugin/device/delete">
-			<input name="returnTo" type="hidden" value="/devices.html">
-			<input type="hidden" name="name" value="{{name}}"><br>
-			<input type="hidden" name="hostname" value="{{hostname}}"><br>
-			<input type="submit" value="Delete Device">
-		</form>
-		
-		<p><a href="/devices.html">Return to device listing</a></p>
-
 	{% endif %}
+	
+
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to device listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
 
 </body>
 </html>

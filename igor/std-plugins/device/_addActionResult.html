@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Devices and Sensors</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
+
+	<h1>New Action</h1>
+
+	<table>
+		<tr>
+			<th>Key</th>
+			<th>Value</th>
+		</tr>
+		{% for k, v in kwargs.items() %}
+			<tr>
+				<td>{{k}}</td><td>{{v}}</td>
+			</tr>
+		{% endfor %}
+	</table>		
+
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to device listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Devices and Sensors</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	{% set result = pluginObject.add(name=name, deviceType=deviceType, hostname=hostname, plugin=plugin, obj=obj, token=token) %}
+	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
+
+	<h1>New Device</h1>
+
+	<table>
+		<tr>
+			<th>Key</th>
+			<th>Value</th>
+		</tr>
+		{% for k, v in result.items() %}
+			<tr>
+				<td>{{k}}</td><td>{{v}}</td>
+			</tr>
+		{% endfor %}
+	</table>
+	{% if addPluginLink %}
+		<p><b>Note:</b> you must still add the plugin through this link: <a href="{{addPluginLink}}">{{addPluginLink}}</a>.</p>
+	{% endif %}
+	{% if deviceTokenId %}
+		<p>If the device is accessed over <i>https://{{hostname}}</i>	you may still need to create a certificate
+		using the <a href="/plugin/ca">CA plugin</a>. </p>
+	{% endif %}
+		
+	{% if deviceType in ("activeSensor", "activeSensorDevice") %}
+		<p>You probably want to add actions triggered by this sensor. Unfortunately there is no GUI for that yet.</p>
+		
+		{% if hasCapabilitySupport  %}
+			{% if isDevice %}
+				{% set representing = 'devices/' + name %}
+			{% else %}
+				{% set representing = 'sensors/' + name %}
+			{% endif %}
+		
+			<p>You probably want to <a href="addActionCap.html?name={{name}}&hostname={{hostname}}&representing={{representing}}">add an action capability</a> if this sensors triggers actions that are already in the database.</p>
+		{% endif %}
+	{% endif %}
+		
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to device listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

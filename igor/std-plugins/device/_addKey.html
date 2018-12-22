@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Devices and Sensors</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
+	<h1>Add Secret Shared Key</h1>
+	
+	<p>Do you want to add a shared secret key for signing capabilities with subject (source)
+	<i>{{sub if sub else 'Igor itself'}}</i> and audience (destination) <i>{{aud if aud else'Igor itself'}}</i>?
+	</p>
+	
+	<form action="/internal/accessControl/createSharedKey">
+		{% if aud %}
+			<input type="hidden" name="aud" value="{{aud}}">
+		{% endif %}
+		{% if sub %}
+			<input type="hidden" name="sub" value="{{sub}}">
+		{% endif %}
+		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/index.html">
+		<input type="submit" value="Create Secret Shared Key">
+	</form>
+		
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to device listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

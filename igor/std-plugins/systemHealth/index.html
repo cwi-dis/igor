@@ -93,10 +93,10 @@
 				
 				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=3600&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=86400&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=604800&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=2592000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=3600&returnTo=/plugin/{{pluginName}}/page/index.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=86400&returnTo=/plugin/{{pluginName}}/page/index.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=604800&returnTo=/plugin/{{pluginName}}/page/index.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=igor/{{s.tagName}}&duration=2592000&returnTo=/plugin/{{pluginName}}/page/index.html">1m</a>
 					</td>
 				{% else %}
 					<td></td>
@@ -134,10 +134,10 @@
 
 				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=36000&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=864000&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=25920000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=36000&returnTo=/plugin/{{pluginName}}/page/index.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=864000&returnTo=/plugin/{{pluginName}}/page/index.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=6048000&returnTo=/plugin/{{pluginName}}/page/index.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=services/{{s.tagName}}&duration=25920000&returnTo=/plugin/{{pluginName}}/page/index.html">1m</a>
 					</td>
 				{% else %}
 					<td></td>
@@ -176,10 +176,10 @@
 
 				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=3600&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=864000&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=6048000&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=25920000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=3600&returnTo=/plugin/{{pluginName}}/page/index.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=864000&returnTo=/plugin/{{pluginName}}/page/index.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=6048000&returnTo=/plugin/{{pluginName}}/page/index.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=sensors/{{s.tagName}}&duration=25920000&returnTo=/plugin/{{pluginName}}/page/index.html">1m</a>
 					</td>
 				{% else %}
 					<td></td>
@@ -217,10 +217,10 @@
 
 				{% if msg %}
 					<td>
-						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=3600&returnTo=/systemHealth.html">1h</a> 
-						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=86400&returnTo=/systemHealth.html">1d</a> 
-						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=604800&returnTo=/systemHealth.html">1w</a> 
-						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=2592000&returnTo=/systemHealth.html">1m</a>
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=3600&returnTo=/plugin/{{pluginName}}/page/index.html">1h</a> 
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=86400&returnTo=/plugin/{{pluginName}}/page/index.html">1d</a> 
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=604800&returnTo=/plugin/{{pluginName}}/page/index.html">1w</a> 
+						<a href="/plugin/systemHealth?ignore=devices/{{s.tagName}}&duration=2592000&returnTo=/plugin/{{pluginName}}/page/index.html">1m</a>
 					</td>
 				{% else %}
 					<td></td>
@@ -229,6 +229,11 @@
 		{% endfor %}
 	</table>
 		
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/">Return to Igor homepage</a>
 
 </body>
 </html>

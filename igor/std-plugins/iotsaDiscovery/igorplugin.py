@@ -200,7 +200,7 @@ class IotsaDiscoveryPlugin(object):
         try:
             return accessor.load()
         except requests.exceptions.SSLError as e:
-            return self.igor.app.raiseHTTPError("502 Incorrect certificate or other SSL failure while accessing %s" % e.request.url)
+            return self.igor.app.raiseHTTPError("502 Incorrect certificate or other SSL failure while accessing %s: %s" % (e.request.url, e))
         except requests.exceptions.ConnectionError as e:
             return self.igor.app.raiseHTTPError("502 Cannot connect to %s" % e.request.url)
         except requests.exceptions.Timeout as e:
@@ -213,7 +213,7 @@ class IotsaDiscoveryPlugin(object):
         try:
             return accessor.save()
         except requests.exceptions.SSLError as e:
-            return self.igor.app.raiseHTTPError("502 Incorrect certificate or other SSL failure while accessing %s" % e.request.url)
+            return self.igor.app.raiseHTTPError("502 Incorrect certificate or other SSL failure while accessing %s: %s" % (e.request.url, e))
         except requests.exceptions.ConnectionError as e:
             return self.igor.app.raiseHTTPError("502 Cannot connect to %s" % e.request.url)
         except requests.exceptions.Timeout as e:

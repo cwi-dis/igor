@@ -147,7 +147,7 @@ class DevicePlugin(object):
             tokenId=newTokenId,
             subject=subject
             )
-        return dict(verb=verb, obj=obj, token=newTokenRepresentation)
+        return dict(verb=verb, obj=obj, newToken=newTokenRepresentation)
         
     def delete(self, name, hostname=None, token=None, returnTo=None):
         if not NAME_RE.match(name):

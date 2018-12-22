@@ -325,15 +325,11 @@
 				<th>Key</th>
 				<th>Value</th>
 			</tr>
-			<tr>
-				<td>aud</td><td>{{aud}}</td>
-			</tr>
-			<tr>
-				<td>aud</td><td>{{aud}}</td>
-			</tr>
-			<tr>
-				<td>aud</td><td>{{aud}}</td>
-			</tr>
+			{% for k, v in kwargs.items() %}
+				<tr>
+					<td>{{k}}</td><td>{{v}}</td>
+				</tr>
+			{% endfor %}
 		</table>		
 		<p><a href="/devices.html">Return to device listing</a>.</p>
 	{% elif action == "addKey" %}

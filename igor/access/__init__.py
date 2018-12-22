@@ -352,7 +352,7 @@ class UserPasswords(object):
         passwordHash = passlib.hash.pbkdf2_sha256.hash(password)
         element = self.igor.database.elementFromTagAndData('encryptedPassword', passwordHash)
         self.igor.database.delValues('identities/%s/encryptedPassword' % username, token)
-        parentElements = self.igor.database.getElements('identities/%s' % username, 'post', token)
+        parentElements = self.igor.database.getElements('identities/%s' % username, 'post', token, postChild='encryptedPassword')
         if len(parentElements) == 0:
             self.igor.app.raiseHTTPError('404 User %s not found' % username)
         if len(parentElements) > 1:

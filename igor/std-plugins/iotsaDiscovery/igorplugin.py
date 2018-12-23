@@ -42,15 +42,23 @@ class IotsaDiscoveryPlugin(object):
         #
         # Get a handle on the module
         #
+        rv = dict(device=device, module=module)
         accessor = iotsaControl.api.IotsaConfig(handler, module)
-        self._load(accessor)
-        rv = {module : accessor.status}
+        try:
+            self._load(accessor)
+        except self.igor.app.getHTTPError() as e:
+            rv['message'] = self.igor.app.stringFromHTTPError(e)
+            return rv
+        rv[module] = accessor.status
         #
         # Also load global device config, if wanted
         #
         if includeConfig and module != "config":
             acConfig = iotsaControl.api.IotsaConfig(handler, "config")
-            self._load(acConfig)
+            try:
+                self._load(acConfig)
+            except self.igor.app.getHTTPError() as e:
+                return {'message' : self.igor.app.stringFromHTTPError(e)}
             rv['config'] = acConfig.status
         #
         # Set variables, if wanted
@@ -69,11 +77,6 @@ class IotsaDiscoveryPlugin(object):
                         rv[k] = v
             except iotsaControl.api.UserIntervention as e:
                 rv['message'] = str(e)
-        #
-        # Include device and module names, for convenience
-        #
-        rv['device'] = device
-        rv['module'] = module
         return rv
         
     def getorset(self, *args, returnTo=None, **kwargs):
@@ -98,8 +101,8 @@ class IotsaDiscoveryPlugin(object):
             try:
                 self._load(accessor)
                 data = accessor.status
-            except requests.exceptions.HTTPError:
-                data = {}
+            except self.igor.app.getHTTPError() as e:
+                data = {'message' : self.igor.app.stringFromHTTPError(e)}
             modKey = key + '/' + mod
             self.igor.databaseAccessor.put_key(modKey, 'text/plain', None, data, 'application/x-python-object', token)
         rv = {}
@@ -206,7 +209,11 @@ class IotsaDiscoveryPlugin(object):
         except requests.exceptions.Timeout as e:
             return self.igor.app.raiseHTTPError("502 Timeout while connecting to %s" % e.request.url)
         except requests.exceptions.RequestException as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (e.request.url, repr(e)))
+            value = str(e)
+            if value[:3] == '401':
+                # Special case: we forward 401 (access denied) errors as-is
+                return self.igor.app.raiseHTTPError(value)
+            return self.igor.app.raiseHTTPError("502 Error while accessing %s: %s" % (e.request.url, value))
 
     def _save(self, accessor):
         """Wrapper to return better errors"""
@@ -219,7 +226,7 @@ class IotsaDiscoveryPlugin(object):
         except requests.exceptions.Timeout as e:
             return self.igor.app.raiseHTTPError("502 Timeout while connecting to %s" % e.request.url)
         except requests.exceptions.RequestException as e:
-            value = repr(e)
+            value = str(e)
             if value[:3] == '401':
                 # Special case: we forward 401 (access denied) errors as-is
                 return self.igor.app.raiseHTTPError(value)
@@ -238,7 +245,7 @@ class IotsaDiscoveryPlugin(object):
         except iotsaControl.api.UserIntervention as e:
             rv = str(e)
         except self.igor.app.getHTTPError() as e:
-            rv = str(e)
+            rv = self.igor.app.stringFromHTTPError(e)
         return rv
                 
     def _getIgorUrl(self, token=None):

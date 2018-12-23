@@ -18,7 +18,16 @@
 	{% set status = deviceStatus.get(module, {}) %}
 	{% set message = deviceStatus.message %}	
 	{% if message %}
-		<p><b>User intervention required:</b> {{message}}</p>
+		<h2>User Intervention Required</h2>
+		<p><b>Message:</b> {{message}}</p>
+		{% if message[:4] == '502 ' %}
+			<p>If the SSL certificate of iotsa device "{{device}}" is not trusted by this Igor please try to connect using the form at the bottom of the
+			<a href="_showDeviceList.html">iotsa device list</a> page and select the <em>Do not check SSL certificates</em> option.</p>
+		{% elif message[:4] == '401 ' %}
+			<p>To allow access to module "{{module}}" iotsa device "{{device}}" requires either a trusted capability (which Igor does not have yet) or
+			username/passord credentials. You can use the latter by selecting this device on the form at the bottom of 
+			<a href="_showDeviceList.html">iotsa device list</a> and providing them in the <em>credentials</em> field.</p>
+		{% endif %}
 	{% endif %}
 	
 

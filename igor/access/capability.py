@@ -217,9 +217,15 @@ class AccessToken(BaseAccessToken):
                 # xxxjack no further checks for external tokens. This may need refining.
                 return True
             else:
+                if DEBUG_DELEGATION: print('access: delegate %s: only allowed for external audience' % newPath)
+                return False
+        elif 'aud' in self.content:
+            if aud != self.content.get('aud'):
+                if DEBUG_DELEGATION: print('access: delegate %s: audience %s, capability is for %s' % (newPath, aud, self.content.get('aud')))
                 return False
         else:
             if aud and aud != singleton.getSelfAudience():
+                if DEBUG_DELEGATION: print('access: delegate %s: cannot delegate to external %s' % (newPath, aud))
                 return False
         # Check whether the path is contained in our path
         path = self.content.get('obj')

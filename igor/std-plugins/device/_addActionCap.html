@@ -24,7 +24,7 @@
 
 	<form action="/plugin/device/addAction">
 		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_addActionResult.html">
-		<input type="hidden" name="subject" value="/{{hostname}}">
+		<input type="hidden" name="subject" value="{{hostname}}">
 		Action: <select name="obj">
 			{% for _, actionName in igor.database.getValues('actions/action/name', token=token) %}
 				<option value="/action/{{actionName}}">{{actionName}}</option>

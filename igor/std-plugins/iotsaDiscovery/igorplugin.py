@@ -219,7 +219,11 @@ class IotsaDiscoveryPlugin(object):
         except requests.exceptions.Timeout as e:
             return self.igor.app.raiseHTTPError("502 Timeout while connecting to %s" % e.request.url)
         except requests.exceptions.RequestException as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (e.request.url, repr(e)))
+            value = repr(e)
+            if value[:3] == '401':
+                # Special case: we forward 401 (access denied) errors as-is
+                return self.igor.app.raiseHTTPError(value)
+            return self.igor.app.raiseHTTPError("502 Error while accessing %s: %s" % (e.request.url, value))
             
     def _setIndexed(self, device, module, index, newSettings, protocol=None, credentials=None, port=None, noverify=False, token=None):
         """Helper for templates: change settings for a single entry for a module that has multiple entries"""
@@ -232,6 +236,8 @@ class IotsaDiscoveryPlugin(object):
         try:
             _ = self._save(accessor)
         except iotsaControl.api.UserIntervention as e:
+            rv = str(e)
+        except self.igor.app.getHTTPError() as e:
             rv = str(e)
         return rv
                 

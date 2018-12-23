@@ -188,10 +188,21 @@ class MyServer:
         try:
             # If code starts with a numeric string we presume it is an error message
             code = int(message.split()[0])
+            # And if it is we re-use it
+            code = message
         except ValueError:
             code = 500
         resp = make_response(message+'\n', code)
         return abort(resp)
+        
+    def stringFromHTTPError(self, e):
+        """Return the string representation for an HTTPError"""
+        if e.code and e.description:
+            return "{} {}".format(e.code, e.description)
+        resp = e.get_response()
+        if resp.status:
+            return str(resp.status)
+        return str(resp.status_code)
         
     def responseWithHeaders(self, response, headers):
         """Add headers to the reply"""

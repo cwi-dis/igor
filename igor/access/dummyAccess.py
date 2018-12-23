@@ -79,6 +79,10 @@ class IssuerInterface(object):
         """Return list of tuples with (iss, sub, aud) for every key"""
         return []
                 
+    def getSecretKeysForAudience(self, aud, token=None):
+        """Return verbatim secret key for this audience"""
+        return []
+        
     def createSharedKey(self, sub=None, aud=None, token=None):
         """Create a secret key that is shared between issues and audience"""
         self.igor.app.raiseHTTPError("400 This Igor does not have shared key support")

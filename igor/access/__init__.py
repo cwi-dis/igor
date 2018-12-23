@@ -238,6 +238,7 @@ class IssuerInterface(object):
         
     def getSubjectList(self, token=None):
         """Return list of subjects that trust this issuer"""
+        # xxxjack should perform some checks on token
         assert self.igor
         assert self.igor.database
         # xxxjack this is wrong: it also returns keys shared with other issuers
@@ -249,6 +250,7 @@ class IssuerInterface(object):
 
     def getAudienceList(self, token=None):
         """Return list of audiences that trust this issuer"""
+        # xxxjack should perform some checks on token
         audienceValues = self.igor.database.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
         audienceValues = set(audienceValues)
         audienceValues = list(audienceValues)
@@ -257,6 +259,7 @@ class IssuerInterface(object):
         
     def getKeyList(self, token=None):
         """Return list of tuples with (iss, sub, aud) for every key"""
+        # xxxjack should perform some checks on token
         assert self.igor
         assert self.igor.database
         keyElements = self.igor.database.getElements('au:access/au:sharedKeys/au:sharedKey', 'get', _accessSelfToken, namespaces=NAMESPACES)
@@ -272,6 +275,16 @@ class IssuerInterface(object):
                 kDict['sub'] = sub
             rv.append(kDict)
         return rv
+        
+    def getSecretKeysForAudience(self, aud, token=None):
+        """Return verbatim secret key for this audience"""
+        # xxxjack should perform some checks on token
+        try:
+            keyData = self._getSharedKey(aud=aud)
+        except self.igor.app.getHTTPError():
+            return []
+        return [(self.getSelfIssuer(), keyData)]
+        
         
     def createSharedKey(self, sub=None, aud=None, token=None):
         """Create a secret key that is shared between issues and audience"""

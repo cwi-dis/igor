@@ -299,49 +299,25 @@
 		{% set cap = igor.internal.accessControl(subcommand='getTokenDescription', token=token, tokenId=cid)[0] %}
 		{% set _ = cap.pop('owner', None) %}
 		{% set _ = cap.pop('parent', None) %}
+		{% set _ = cap.pop('delegate', None) %}
+		
 		<form action="/internal/accessControl/exportToken">
 			<input name="returnTo" type="hidden" value="/capabilities.html">
 			<table>
 				<tr>
 					<th>Field</th>
-					<th>New</th>
-					<th>Old</th>
+					<th>Value</th>
 				</tr>
 				<input name="tokenId" type="hidden" value="{{cap.pop('cid')}}">
 				<tr>
-					<td>Subject</td>
-					<td>
-						{% set subjectList = igor.internal.accessControl(subcommand='getSubjectList') %}
-						{% if subjectList %}
-							<select name="subject" required>
-							{% for sub in subjectList %}
-								<option value="{{sub}}">{{sub}}</option>
-							{% endfor %}
-							</select>
-						{% else %}
-							<input name="subject" type="text" value="">
-						{% endif %}
-					</td>
-					<td>n.a.</td>
+					<td>Audience</td>
+					<td><input name="aud" value="{{cap.pop('aud','')}}" readonly></td>
 				</tr>
 				<tr>
 					<td>Object</td>
-					<td colspan="2">{{cap.pop('obj')}}</td>
+					<td>{{cap.pop('obj')}}</td>
 				</tr>
-				<tr>
-					<td>Lifetime (seconds)</td>
-					<td><input name="lifetime" type="text" value=""></td>
-					<td>n.a.</td>
-				</tr>
-				<tr>
-						<td>Can Delegate</td>
-						<td>
-							{% if cap.pop('delegate', None) %}
-								<input name="delegate" type="checkbox" value="false">
-							{% endif %}
-						</td>
-						<td>{{'yes' if cap.get('delegate') else 'no'}}</td>
-				</tr>			
+
 				{% for right in ['get', 'put', 'post', 'delete'] %}
 					{% set rvalue = cap.pop(right, None) %}
 					<tr>
@@ -361,24 +337,40 @@
 								<option value="child" {{selected}}>child</option>
 							</select>
 						</td>
-						<td>{{cap.get(right, 'no access')}}</td>
 					</tr>
 				{% endfor %}
+				<tr>
+					<td>Subject</td>
+					<td>
+						{% set subjectList = igor.internal.accessControl(subcommand='getSubjectList') %}
+						{% if subjectList %}
+							<select name="subject">
+							<option value="">- (also use for Igor)</option>
+							{% for sub in subjectList %}
+								<option value="{{sub}}">{{sub}}</option>
+							{% endfor %}
+							</select>
+						{% else %}
+							<input name="subject" type="text" value="">
+						{% endif %}
+					</td>
+				</tr>
+				<tr>
+					<td>Lifetime (seconds)</td>
+					<td><input name="lifetime" type="text" value=""></td>
+				</tr>
 				{% for k,v in cap.items() %}
 					<tr>
 						<td>{{k}}</td>
-						<td colspan="2">{{v}}</td>
+						<td><input name="{{k}}" value="{{v}}" readonly></td>
 					</tr>
 				{% endfor %}
 				<tr>
 					<td>Comment</td>
-					<td><input name="comment" type="text"></td>
-					<td>{{cap.get('comment', '')}}</td>
+					<td><input name="comment" value="{{cap.get('comment', '')}}" type="text"></td>
 				</tr>
 				<tr>
-					<td></td>
-					<td><input type="submit" value="Export"></td>
-					<td></td>
+					<td colspan="2"><input type="submit" value="Export"></td>
 				</tr>
 			</table>
 		</form>

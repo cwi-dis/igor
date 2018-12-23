@@ -47,7 +47,7 @@
 	
 	<h2>Install shared secret key for capabilities</h2>
 	
-	{% if 1 or deviceStatus.config.currentMode == 1 %}
+	{% if deviceStatus.config.currentMode == 1 %}
 		{% set aud = device %}
 		{% set keylist = igor.access.getSecretKeysForAudience(aud=aud, token=token) %}
 		{% if keylist %}

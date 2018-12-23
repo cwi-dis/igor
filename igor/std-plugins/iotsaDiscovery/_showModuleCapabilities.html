@@ -12,6 +12,12 @@
 <body>
 	<h1>Iotsa Devices</h1>
 	{% set module = "capabilities" %}
+	{% if set %}
+		{% set modCapabilities = {} %}
+		{% set _ = modCapabilities.update(issuerKey=issuerKey) if issuerKey else None %}
+		{% set _ = modCapabilities.update(trustedIssuer=trustedIssuer) if trustedIssuer else None %}
+		{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token, **modCapabilities) %}
+	{% endif %}
 	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
 	{% set device = deviceStatus.device %}
 	{% set module = deviceStatus.module %}
@@ -39,10 +45,47 @@
 		{% endfor %}
 	</table>
 	
-	<h2>Changing capability support</h2>
+	<h2>Install shared secret key for capabilities</h2>
 	
-	{% if deviceStatus.config.currentMode == 1 %}
-		<p>Changing capabilities not yet implemented</p>
+	{% if 1 or deviceStatus.config.currentMode == 1 %}
+		{% set aud = device %}
+		{% set keylist = igor.access.getSecretKeysForAudience(aud=aud, token=token) %}
+		{% if keylist %}
+			<p>You can select the correct secret key shared between Igor and iotsa device "{{device}}":</p>
+			{% for iss, kkk in keylist %}
+				<form>
+					<input type="hidden" name="device" value="{{device}}">
+					<input type="hidden" name="module" value="{{module}}">
+					<input type="hidden" name="set" value="1">
+					<input type="hidden" name="issuerKey" value="{{kkk}}">
+					Key issued by:
+					<input type="text" name="trustedIssuer" value="{{iss}}" readonly>
+					<input type="submit" value="Set Shared Secret Key">
+				</form><br>
+			{% endfor %}
+		{% else %}
+			<p>This Igor does not know of any shared secret keys issued for iotsa device "{{device}}". You can create one on the
+			<a href="/capabilities.html">capabilities page</a>.</p>
+		{% endif %}
+		<p>Alternatively, you can set the shared secret key and the URL of the issuer of that key manually:</p>
+		<form>
+			<input type="hidden" name="device" value="{{device}}">
+			<input type="hidden" name="module" value="{{module}}">
+			<input type="hidden" name="set" value="1">
+			<table>
+				<tr>
+					<td>Issuer URL:</td>
+					<td><input type="text" name="trustedIssuer" value="{{igor.access.getSelfIssuer()}}"></td>
+				</tr>
+				<tr>
+					<td>Key data:</td>
+					<td><input type="text" name="issuerKey" value=""></td>
+				</tr>
+				<tr>
+					<td colspan="2"><input type="submit" value="Set Shared Secret Key">
+				</tr>
+			</table>
+		</form>
 	{% elif deviceStatus.config.requestedMode == 1 %}
 		<p>
 		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{deviceStatus.config.requestedModeTimeout}} seconds and select

@@ -272,9 +272,5 @@ class IotsaDiscoveryPlugin(object):
         """Helper for templates: return list of all capabilities valid for this device as subject"""
         return []
         
-    def _getSharedKeyForDevice(self, device=None, token=None):
-        """Helper for templates: return shared secret key between Igor and device"""
-        return None
-        
 def igorPlugin(igor, pluginName, pluginData):
     return IotsaDiscoveryPlugin(igor, pluginName, pluginData)

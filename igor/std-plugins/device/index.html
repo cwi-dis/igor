@@ -191,6 +191,35 @@
 		</table>
 	</form>
 	
+	<p>Add a new iotsa-based device or sensor to Igor:</p>
+	
+	<form action="_newDevice.html">
+		<input type="hidden" name="plugin" value="iotsaDevice">
+		<input type="hidden" name="obj" value="/api">
+		<table>
+			<tr>
+				<td>Name</td>
+				<td><input name="name" type="text"></td>
+				<td>User-visible name in Igor (must be an identifier)</td>
+			</tr>
+			<tr>
+				<td>Type</td>
+				<td>
+					<input type="radio" name="deviceType" value="activeDevice" checked>Output only<br>
+					<input type="radio" name="deviceType" value="activeSensorDevice">Can trigger actions
+				</td>
+				<td>
+					Does this device contact Igor?
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="submit" value="Add Device">
+				</td>
+			</tr>
+		</table>
+	</form>
+	
 	{% if hasCapabilitySupport %}
 		<h2>Secret Shared Keys</h2>
 	

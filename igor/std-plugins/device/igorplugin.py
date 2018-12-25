@@ -32,7 +32,7 @@ class DevicePlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
 
-    def _add(self, token=None, name=None, description=None, **kwargs):
+    def _add(self, token=None, name=None, description=None, exportTokens=None, **kwargs):
         if not NAME_RE.match(name):
             self.igor.app.raiseHTTPError('400 Illegal name for device')
         if not description:
@@ -72,6 +72,7 @@ class DevicePlugin(object):
         if hostname:
             rv['hostname'] = hostname
 
+        tokenOwner = 'identities/{}'.format(self.igor.app.getSessionItem('user', 'admin'))
         if hasPlugin:
             pluginName = description.get('plugin', '')
             if not pluginName:
@@ -79,6 +80,7 @@ class DevicePlugin(object):
             msg = self.igor.plugins.installstd(pluginName=name, stdName=pluginName, token=token)
             if msg:
                 rv['message'] = msg
+            tokenWantedOwner = 'plugindata/{}'.format(pluginName)
         else:
             # Create item
             entryValues = {}
@@ -93,7 +95,7 @@ class DevicePlugin(object):
             deviceTokenId = self.igor.internal.accessControl('newToken',
                 token=token,
                 tokenId='external',
-                newOwner='identities/admin',
+                newOwner=tokenOwner,
                 newPath=description.get('obj', '/'),
                 get='descendant-or-self',
                 put='descendant-or-self',
@@ -103,6 +105,9 @@ class DevicePlugin(object):
                 aud=hostname
                 )
             rv['deviceTokenId'] = deviceTokenId
+            rv['tokenOwner'] = tokenOwner
+            if tokenWantedOwner:
+                rv['deviceTokenWantedOwner'] = tokenWantedOwner
         if isActive and self.hasCapabilities:
             deviceKey = self._genSecretKey(sub=hostname, token=token)
             rv['subSharedKeyId'] = deviceKey
@@ -110,7 +115,7 @@ class DevicePlugin(object):
             if actions:
                 actionResults = {}
                 for actionName in list(actions.keys()):
-                    actionData = self._addAction(token, subject=hostname, **actions[actionName])
+                    actionData = self._addActionCap(token, subject=hostname, tokenOwner=tokenOwner, exportTokens=exportTokens, **actions[actionName])
                     actionResults[actionName] = actionData
                 rv['actions'] = actionResults
         return rv
@@ -118,8 +123,11 @@ class DevicePlugin(object):
     def _genSecretKey(self, token=None, aud=None, sub=None):
         return self.igor.internal.accessControl('createSharedKey', token=token, aud=aud, sub=sub)
                 
-    def addAction(self, token=None, subject=None, verb='get', obj=None, returnTo=None):
-        rv = self._addAction(token, subject, verb, obj)
+    def addActionCap(self, token=None, subject=None, verb='get', obj=None, returnTo=None, tokenOwner=None, exportTokens=False):
+        if tokenOwner == None:
+            tokenOwner = 'identities/{}'.format(igor.app.getSessionItem('user', 'admin'))
+        rv = self._addActionCap(token, subject, verb, obj, tokenOwner, exportTokens)
+        rv['tokenOwner'] = tokenOwner
         if returnTo:
             queryString = urllib.parse.urlencode(rv)
             if '?' in returnTo:
@@ -129,7 +137,7 @@ class DevicePlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
 
-    def _addAction(self, token=None, subject=None, verb='get', obj=None):
+    def _addActionCap(self, token=None, subject=None, verb='get', obj=None, tokenOwner='identities/admin', exportTokens=False):
         if not self.hasCapabilities:
             return{}
         if not obj:
@@ -138,25 +146,27 @@ class DevicePlugin(object):
             parentTokenId = 'admin-action'
         else:
             self.igor.app.raiseHTTPError('400 bad action %s' % obj)
-        print('xxxjack obj', obj)
         newTokenId = actionTokenId = self.igor.internal.accessControl('newToken',
             token=token,
             tokenId=parentTokenId,
-            newOwner='identities/admin',
+            newOwner=tokenOwner,
             newPath=obj,
             delegate=True,
             **{verb : 'self'}
             )
-        newTokenRepresentation = self.igor.internal.accessControl('exportToken',
-            token=token,
-            tokenId=newTokenId,
-            subject=subject
-            )
-        return dict(verb=verb, obj=obj, newToken=newTokenRepresentation)
-        
+        rv = dict(verb=verb, obj=obj, actionTokenId=newTokenId)
+        if exportTokens:
+            newTokenRepresentation = self.igor.internal.accessControl('exportToken',
+                token=token,
+                tokenId=newTokenId,
+                subject=subject
+                )
+            rv['actionTokenRepresentation'] = newTokenRepresentation
+        return rv
+                    
     def delete(self, name, hostname=None, token=None, returnTo=None):
         if not NAME_RE.match(name):
-            self.igor.app.raiseHTTPError('400 Illegal name for user')
+            self.igor.app.raiseHTTPError('400 Illegal name for device')
         if not hostname:
             hostname = name + '.local'
         if self.hasCapabilities:

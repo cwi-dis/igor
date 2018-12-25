@@ -22,15 +22,23 @@
 	needs a capability to emit http(s) GET requests to trigger an Igor action use this form:
 	</p>
 
-	<form action="/plugin/device/addAction">
+	<form action="/plugin/device/addActionCap">
 		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_addActionResult.html">
 		<input type="hidden" name="subject" value="{{hostname}}">
 		Action: <select name="obj">
 			{% for _, actionName in igor.database.getValues('actions/action/name', token=token) %}
 				<option value="/action/{{actionName}}">{{actionName}}</option>
 			{% endfor %}
-		</select>
-		<input type="submit" value="Add Action">
+		</select><br>
+		Export capability now: <input type="checkbox" name="exportTokens" value="true"><br>
+		Capability owner: <select name="tokenOwner">
+			<option value="plugindata/{{name}}"><i>{{name}}</i> device plugindata</option>
+			<option value="identities/admin"><i>admin</i> user</i></option>
+			{% if user %}
+				<option value="identities/{{user}}"><i>{{user}}</i> user</i></option>
+			{% endif %}
+		</select><br>
+		<input type="submit" value="Add capability for action">
 	</form>
 
 	<p>
@@ -41,7 +49,7 @@
 	needs a capability to emit other http(s) requests to Igor action use this form:
 	</p>
 
-	<form action="/plugin/device/addAction">
+	<form action="/plugin/device/addActionCap">
 		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_addActionResult.html">
 		<input type="hidden" name="subject" value="/{{hostname}}">
 		Verb: <select name="verb">
@@ -51,7 +59,15 @@
 			<option value="delete">delete</option>
 		</select>
 		Object path: <input name="obj" type="text" value="/data/">
-		<input type="submit" value="Add Action">
+		Export capability now: <input type="checkbox" name="exportTokens" value="true"><br>
+		Capability owner: <select name="tokenOwner">
+			<option value="plugindata/{{name}}"><i>{{name}}</i> device plugindata</option>
+			<option value="identities/admin"><i>admin</i> user</i></option>
+			{% if user %}
+				<option value="identities/{{user}}"><i>{{user}}</i> user</i></option>
+			{% endif %}
+		</select><br>
+		<input type="submit" value="Add capability">
 	</form>
 
 	<hr>

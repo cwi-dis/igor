@@ -731,6 +731,9 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # Create the new token
         #
+        # xxxjack we should check whehter the given external token already exists and
+        # simply return the external representation if it does...
+        #
         newTokenId = self.newToken(token, tokenId, self._getExternalTokenOwner(), **kwargs)
         tokenToExport = token._getTokenWithIdentifier(newTokenId)
         if not tokenToExport:

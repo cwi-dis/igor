@@ -21,8 +21,8 @@ class BaseAccessToken(object):
         return [self.identifier]
         
     def _hasExternalRepresentationFor(self, url):
-        """Internal method - return True if this token can be represented externally and _getExternalRepresentation can be called"""
-        return False
+        """Internal method - return token ID if this token can be represented externally and _getExternalRepresentation can be called"""
+        return None
         
     def _getExternalRepresentation(self):
         """Internal method - return the external representation of this token"""
@@ -141,24 +141,24 @@ class AccessToken(BaseAccessToken):
         return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
         
     def _hasExternalRepresentationFor(self, url):
-        if not 'iss' in self.content:
-            return False
         if not 'aud' in self.content:
-            return False
+            return None
         if url.startswith(self.content['aud']):
             if DEBUG: print('access: capability %s matches url %s' % (self, url))
-            return True
+            return self.identifier
         p = urllib.parse.urlparse(url)
         if p.netloc == self.content['aud']:
             if DEBUG: print('access: capability %s matches hostname in %s' % (self, url))
-            return True
-        return False
+            return self.identifier
+        return None
 
     def _getExternalContent(self):
         rv = dict(cid=self.identifier)
         for key in ['obj', 'iss', 'aud', 'sub', 'nvb', 'nva', 'get', 'put', 'post', 'delete']:
             if key in self.content:
                 rv[key] = self.content[key]
+        if not 'iss' in rv:
+            rv['iss'] = singleton.getSelfIssuer()
         return rv
         
     def _getExternalRepresentation(self):
@@ -396,13 +396,14 @@ class MultiAccessToken(BaseAccessToken):
         if url in self.externalTokenCache:
             return not not self.externalTokenCache[url]
         for t in self.tokens:
-            if t._hasExternalRepresentationFor(url):
+            tid = t._hasExternalRepresentationFor(url)
+            if tid:
                 if DEBUG: print('access: capability %s has child matching url %s' % (self, url))
                 self.externalTokenCache[url] = t
-                return True
+                return tid
         if DEBUG: print('access: capability %s has no children matching url %s' % (self, url))
         self.externalTokenCache[url] = False
-        return False
+        return None
         
     def _allows(self, operation, accessChecker):
         if DEBUG: print('access: %s %s: MultiAccessToken(%d)' % (operation, accessChecker.destination, len(self.tokens)))

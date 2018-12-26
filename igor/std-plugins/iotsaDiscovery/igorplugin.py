@@ -165,10 +165,16 @@ class IotsaDiscoveryPlugin(object):
             port=(int(port) if port else None), 
             noverify=(not not noverify)
             )
-        # xxxjack need to call setBearerToken() with token for this device, if needed.
+        # Now we try to set either the token or the credentials
         if credentials:
+            print('xxxjack iotsaDiscovery: use supplied credentials')
             username, password = credentials.split(':')
             handler.setLogin(username, password)
+        else:
+            extToken = self.igor.access.externalTokenForHost(device, token)
+            if extToken:
+                print('xxxjack iotsaDiscovery: use external token {}'.format(extToken))
+                handler.setBearerToken(extToken)
         return handler
         
     def _getpersist(self, device, clearNoverify=False):

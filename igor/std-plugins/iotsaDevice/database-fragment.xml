@@ -7,13 +7,6 @@
 		</{plugin}>
 	</devices>
 	<actions>
-		<action own:plugin="{plugin}">
-			<name>action-{plugin}</name>
-			<interval>600</interval>
-			<url>/plugin/{plugin}/pull</url>
-			<representing>devices/{plugin}</representing>
-			<aggregate>true</aggregate>
-		</action>			
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
@@ -38,12 +31,12 @@
 				<get>descendant-or-self</get>
 				<put>descendant-or-self</put>
 			</au:needCapability>
-			<au:mayNeedCapability>
+			<au:needCapability>
 				<obj>/api</obj>
 				<get>descendant-or-self</get>
 				<put>descendant-or-self</put>
 				<aud>{plugin}.local</aud>
-			</au:mayNeedCapability>
+			</au:needCapability>
 		</{plugin}>
 	</plugindata>
 </data>

@@ -515,6 +515,24 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         if DEBUG: print('access: no token found for request %s' % headers.get('PATH_INFO', '???'), 'returning', self._defaultToken())
         return self._defaultToken()
         
+    def externalTokenForHost(self, host, token=None):
+        """If an external token for the given host is available (with the current token) return it"""
+        # If the current token gives access to the plugindata for the plugin with this <host> field we also allow access.
+        # xxxjack whether we should check for GET access or something else is open to discussion
+        pluginElements = self.igor.database.getElements("/data/plugindata/*[host='{}']".format(host), 'get', token)
+        for pe in pluginElements:
+            pluginName = pe.tagName
+            token = self.tokenForPlugin(pluginName, token)
+        tid = token._hasExternalRepresentationFor(host)
+        if not tid:
+            print('access: WARNING: requested external token for request to {} but not available'.format(host))
+            return
+        extToken = token._getTokenWithIdentifier(tid)
+        assert extToken
+        rv = extToken._getExternalRepresentation()
+        assert rv
+        return rv
+            
     def _externalAccessToken(self, data):
         """Internal method - Create a token from the given "Authorization: bearer" data"""
         content = self._decodeIncomingData(data)

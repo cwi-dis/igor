@@ -145,7 +145,11 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def tokenForRequest(self, headers):
         """Return token for the given incoming http(s) request"""
         return _token
-
+        
+    def externalTokenForHost(self, host, token=None):
+        """If an external token for the given host is available (with the current token) return it"""
+        return None
+        
     def getTokenDescription(self, token, tokenId=None):
         """Returns a list of dictionaries which describe the tokens"""
         return []

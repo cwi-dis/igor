@@ -167,13 +167,11 @@ class IotsaDiscoveryPlugin(object):
             )
         # Now we try to set either the token or the credentials
         if credentials:
-            print('xxxjack iotsaDiscovery: use supplied credentials')
             username, password = credentials.split(':')
             handler.setLogin(username, password)
         else:
             extToken = self.igor.access.externalTokenForHost(device, token)
             if extToken:
-                print('xxxjack iotsaDiscovery: use external token {}'.format(extToken))
                 handler.setBearerToken(extToken)
         return handler
         

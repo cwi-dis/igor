@@ -99,14 +99,14 @@
 				</tr>
 				<tr>
 					<td rowspan="2">url</td>
-					<td><input type="checkbox" name="change_url" id="change_url"></td>
-					<td><input type="text" name="new_url" value="{{button.url}}" oninput="document.getElementById('change_url').checked=true"></td>
+					<td><input type="checkbox" name="change_url" id="change_url_1_{{loop.index0}}"></td>
+					<td><input type="text" name="new_url" value="{{button.url}}" oninput="document.getElementById('change_url_1_{{loop.index0}}').checked=true"></td>
 					<td>URL to contact on button changes</td>
 				</tr>
 				<tr>
-					<td><input type="checkbox" name="change_url_2" id="change_url_2"></td>
+					<td><input type="checkbox" name="change_url_2" id="change_url_2_{{loop.index0}}"></td>
 					<td>
-					<select name="new_url_2" onchange="document.getElementById('change_url_2').checked=true">
+					<select name="new_url_2" onchange="document.getElementById('change_url_2_{{loop.index0}}').checked=true">
 						{% set igorPrefix=pluginObject._getIgorUrl(token=token) %}
 						<option value="">- select action -</option>
 						{% for actionName in pluginObject._getActionsForDevice(device, token=token) %}
@@ -118,25 +118,25 @@
 				</tr>
 				<tr>
 					<td rowspan="2">fingerprint</td>
-					<td><input type="checkbox" name="change_fingerprint" id="change_fingerprint"></td>
-					<td><input type="text" name="new_fingerprint" value="{{button.fingerprint}}" oninput="document.getElementById('change_fingerprint').checked=true"></td>
+					<td><input type="checkbox" name="change_fingerprint" id="change_fingerprint_1_{{loop.index0}}"></td>
+					<td><input type="text" name="new_fingerprint" value="{{button.fingerprint}}" oninput="document.getElementById('change_fingerprint_1_{{loop.index0}}').checked=true"></td>
 					<td>Certificate fingerprint to check when contacting URL (https only)</td>
 				</tr>
 				<tr>
-					<td><input type="checkbox" name="change_fingerprint_2" id="change_fingerprint_2"></td>
-					<td><input type="text" readonly name="new_fingerprint_2" value="{{pluginObject._getIgorFingerprint(token=token)}}" oninput="document.getElementById('change_fingerprint_2').checked=true"></td>
+					<td><input type="checkbox" name="change_fingerprint_2" id="change_fingerprint_2_{{loop.index0}}"></td>
+					<td><input type="text" readonly name="new_fingerprint_2" value="{{pluginObject._getIgorFingerprint(token=token)}}" oninput="document.getElementById('change_fingerprint_2_{{loop.index0}}').checked=true"></td>
 					<td>Check that URL is served by this Igor (https only)</td>
 				</tr>
 				<tr>
 					<td rowspan="2">token</td>
-					<td><input type="checkbox" name="change_token" id="change_token"></td>
-					<td><input type="text" name="new_token" value="{{button.token}}" oninput="document.getElementById('change_token').checked=true"></td>
+					<td><input type="checkbox" name="change_token" id="change_token_1_{{loop.index0}}"></td>
+					<td><input type="text" name="new_token" value="{{button.token}}" oninput="document.getElementById('change_token_1_{{loop.index0}}').checked=true"></td>
 					<td>Bearer token supplied when contacting URL</td>
 				</tr>
 				<tr>
-					<td><input type="checkbox" name="change_token_2" id="change_token_2"></td>
+					<td><input type="checkbox" name="change_token_2" id="change_token_2_{{loop.index0}}"></td>
 					<td>
-					<select name="new_token_2" value="" onchange="document.getElementById('change_token_2').checked=true">
+					<select name="new_token_2" value="" onchange="document.getElementById('change_token_2_{{loop.index0}}').checked=true">
 						<option value="">- select token -</option>
 						{% for tokItem in pluginObject._getTokensForDevice(device, token=token) %}
 							<option value="{{tokItem[1]}}">{{tokItem[0]}}</option>
@@ -147,20 +147,20 @@
 				</tr>
 				<tr>
 					<td>credentials</td>
-					<td><input type="checkbox" name="change_credentials" id="change_credentials"></td>
-					<td><input type="text" name="new_credentials" value="{{button.credentials}}" oninput="document.getElementById('change_credentials').checked=true"></td>
+					<td><input type="checkbox" name="change_credentials" id="change_credentials_{{loop.index0}}"></td>
+					<td><input type="text" name="new_credentials" value="{{button.credentials}}" oninput="document.getElementById('change_credentials_{{loop.index0}}').checked=true"></td>
 					<td>Credentials supplied when contacting URL (username:password)</td>
 				</tr>
 				<tr>
 					<td>onPress</td>
-					<td><input type="checkbox" name="change_onPress" id="change_onPress"></td>
-					<td><input type="checkbox" name="new_onPress" {{"checked" if button.onPress else ""}} onchange="document.getElementById('change_onPress').checked=true"></td>
+					<td><input type="checkbox" name="change_onPress" id="change_onPress_{{loop.index0}}"></td>
+					<td><input type="checkbox" name="new_onPress" {{"checked" if button.onPress else ""}} onchange="document.getElementById('change_onPress_{{loop.index0}}').checked=true"></td>
 					<td>Call URL when button is pressed</td>
 				</tr>
 				<tr>
 					<td>onRelease</td>
-					<td><input type="checkbox" name="change_onRelease" id="change_onRelease"></td>
-					<td><input type="checkbox" name="new_onRelease" {{"checked" if button.onRelease else ""}} onchange="document.getElementById('change_onRelease').checked=true"></td>
+					<td><input type="checkbox" name="change_onRelease" id="change_onRelease_{{loop.index0}}"></td>
+					<td><input type="checkbox" name="new_onRelease" {{"checked" if button.onRelease else ""}} onchange="document.getElementById('change_onRelease_{{loop.index0}}').checked=true"></td>
 					<td>Call URL when button is released</td>
 				</tr>
 				<tr>

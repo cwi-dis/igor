@@ -13,6 +13,7 @@
 	<h1>Iotsa Devices</h1>
 	{% set module = "users" %}
 	{% if set %}
+		<p>set is set</p>
 		{% set modUser = {} %}
 		{% set _ = modUser.update(username=new_username) if change_username else None %}
 		{% set _ = modUser.update(password=new_password) if change_password else None %}
@@ -23,7 +24,9 @@
 		{% endif %}
 	{% endif %}
 	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
+	<p>DeviceStatus is {{deviceStatus}}</p>
 	{% set device = deviceStatus.device %}
+	{% set config = deviceStatus.get('config', {}) %}
 	{% set userStatus = deviceStatus.get(module, {}) %}
 	{% set users = userStatus.users %}
 	{% set message = deviceStatus.message %}	
@@ -63,11 +66,11 @@
 	
 	<h2>Changing users and passwords</h2>
 	
-	{% if deviceStatus.config.currentMode == 1 %}
-		<p>Device {{device}} is in configuration mode, you have {{deviceStatus.config.modeTimeout}} seconds to change user settings.</p>
-	{% elif deviceStatus.config.requestedMode == 1 %}
+	{% if config.currentMode == 1 %}
+		<p>Device {{device}} is in configuration mode, you have {{config.modeTimeout}} seconds to change user settings.</p>
+	{% elif config.requestedMode == 1 %}
 		<p>
-		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{deviceStatus.config.requestedModeTimeout}} seconds and select
+		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{config.requestedModeTimeout}} seconds and select
 		<a href="_showModuleUsers.html?device={{device}}&module={{module}}">refresh</a>
 		to reload this page.
 		</p>
@@ -92,22 +95,22 @@
 				</tr>
 				<tr>
 					<td>username</td>
-					<td><input type="checkbox" name="change_username" id="change_username"></td>
-					<td><input type="text" name="new_username" value="{{user.username}}" oninput="document.getElementById('change_username').checked=true"></td>
+					<td><input type="checkbox" name="change_username" id="change_username_{{loop.index0}}"></td>
+					<td><input type="text" name="new_username" value="{{user.username}}" oninput="document.getElementById('change_username_{{loop.index0}}').checked=true"></td>
 					<td></td>
 				</tr>
 
 				<tr>
 					<td>password</td>
-					<td><input type="checkbox" name="change_password" id="change_password"></td>
-					<td><input type="password" name="new_password" oninput="document.getElementById('change_password').checked=true"></td>
+					<td><input type="checkbox" name="change_password" id="change_password_{{loop.index0}}"></td>
+					<td><input type="password" name="new_password" oninput="document.getElementById('change_password_{{loop.index0}}').checked=true"></td>
 					<td></td>
 				</tr>
-				{% if users.multi %}
+				{% if userStatus.multi %}
 					<tr>
 						<td>token</td>
-						<td><input type="checkbox" name="change_rights" id="change_rights"></td>
-						<td><input type="text" name="new_rights" value="{{user.rights}}" oninput="document.getElementById('change_rights').checked=true"></td>
+						<td><input type="checkbox" name="change_rights" id="change_rights_{{loop.index0}}"></td>
+						<td><input type="text" name="new_rights" value="{{user.rights}}" oninput="document.getElementById('change_rights_{{loop.index0}}').checked=true"></td>
 						<td>Slash-delimited list or *, for example <i>/users/config/</i></td>
 					</tr>
 				{% endif %}
@@ -117,7 +120,7 @@
 			</table>
 		</form>
 	{% endfor %}
-	{% if users.multi %}
+	{% if userStatus.multi %}
 		<h3>Add new user</h3>
 		<form>
 			<input type="hidden" name="device" value="{{device}}">
@@ -133,25 +136,23 @@
 				</tr>
 				<tr>
 					<td>username</td>
-					<td><input type="checkbox" name="change_username" id="change_username"></td>
-					<td><input type="text" name="new_username" value="" oninput="document.getElementById('change_username').checked=true"></td>
+					<td><input type="checkbox" name="change_username" id="change_username_new"></td>
+					<td><input type="text" name="new_username" value="" oninput="document.getElementById('change_username_new').checked=true"></td>
 					<td></td>
 				</tr>
 
 				<tr>
 					<td>password</td>
-					<td><input type="checkbox" name="change_password" id="change_password"></td>
-					<td><input type="password" name="new_password" oninput="document.getElementById('change_password').checked=true"></td>
+					<td><input type="checkbox" name="change_password" id="change_password_new"></td>
+					<td><input type="password" name="new_password" oninput="document.getElementById('change_password_new').checked=true"></td>
 					<td></td>
 				</tr>
-				{% if users.multi %}
-					<tr>
-						<td>token</td>
-						<td><input type="checkbox" name="change_rights" id="change_rights"></td>
-						<td><input type="text" name="new_rights" value="" oninput="document.getElementById('change_rights').checked=true"></td>
-						<td>Slash-delimited list or *, for example <i>/users/config/</i></td>
-					</tr>
-				{% endif %}
+				<tr>
+					<td>token</td>
+					<td><input type="checkbox" name="change_rights" id="change_rights_new"></td>
+					<td><input type="text" name="new_rights" value="" oninput="document.getElementById('change_rights_new').checked=true"></td>
+					<td>Slash-delimited list or *, for example <i>/users/config/</i></td>
+				</tr>
 				<tr>
 					<td colspan="3"><input type="submit" value="Add user"></td>
 				</tr>

@@ -24,7 +24,6 @@
 		{% endif %}
 	{% endif %}
 	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
-	<p>DeviceStatus is {{deviceStatus}}</p>
 	{% set device = deviceStatus.device %}
 	{% set config = deviceStatus.get('config', {}) %}
 	{% set userStatus = deviceStatus.get(module, {}) %}
@@ -37,9 +36,10 @@
 			<p>If the SSL certificate of iotsa device "{{device}}" is not trusted by this Igor please try to connect using the form at the bottom of the
 			<a href="_showDeviceList.html">iotsa device list</a> page and select the <em>Do not check SSL certificates</em> option.</p>
 		{% elif message[:4] == '401 ' %}
-			<p>To allow access to module "{{module}}" iotsa device "{{device}}" requires either a trusted capability (which Igor does not have yet) or
+			<p>To allow access to module "users" iotsa device "{{device}}" requires
 			username/passord credentials. You can use the latter by selecting this device on the form at the bottom of 
 			<a href="_showDeviceList.html">iotsa device list</a> and providing them in the <em>credentials</em> field.</p>
+			<p>Note that for the <em>users</em> module capability-based access does not work, you must specify username/password credentials.</p>
 		{% endif %}
 	{% endif %}
 	

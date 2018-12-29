@@ -533,6 +533,21 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert rv
         return rv
             
+    def tokensForSubject(self, sub, token):
+        """Return list of token descriptions (accessible via token) valid for subject sub"""
+        # First get the list of all tokens valid for this subject (we filter later for accessible tokens)
+        idExpr = "au:access/au:exportedCapabilities/au:capability[sub='{}']/cid".format(sub)
+        print('xxxjack idExpr', idExpr)
+        idList = self.igor.database.getValues(idExpr, _accessSelfToken, namespaces=NAMESPACES)
+        print('xxxjack tokensForSubject list', idList)
+        # Now attempt to get each of these through the token we carry
+        rv = []
+        for _, tokId in idList:
+            tok = token._getTokenWithIdentifier(tokId)
+            if tok:
+                rv = rv + tok._getTokenDescription()
+        return rv
+        
     def _externalAccessToken(self, data):
         """Internal method - Create a token from the given "Authorization: bearer" data"""
         content = self._decodeIncomingData(data)
@@ -774,6 +789,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         return externalRepresentation
         
     def externalRepresentation(self, token, tokenId):
+        """Return external representation for given token"""
         tokenToExport = token._getTokenWithIdentifier(tokenId)
         if not tokenToExport:
             identifiers = token.getIdentifiers()

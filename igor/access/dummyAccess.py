@@ -150,6 +150,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """If an external token for the given host is available (with the current token) return it"""
         return None
         
+    def tokensForSubject(self, sub, token):
+        """Return list of token descriptions (accessible via token) valid for subject sub"""
+        return []
+        
     def getTokenDescription(self, token, tokenId=None):
         """Returns a list of dictionaries which describe the tokens"""
         return []

@@ -25,12 +25,12 @@
 	<form action="/plugin/device/addActionCap">
 		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_addActionResult.html">
 		<input type="hidden" name="subject" value="{{hostname}}">
+		<input type="hidden" name="exportTokens" value="true">
 		Action: <select name="obj">
 			{% for _, actionName in igor.database.getValues('actions/action/name', token=token) %}
 				<option value="/action/{{actionName}}">{{actionName}}</option>
 			{% endfor %}
 		</select><br>
-		Export capability now: <input type="checkbox" name="exportTokens" value="true"><br>
 		Capability owner: <select name="tokenOwner">
 			<option value="plugindata/{{name}}"><i>{{name}}</i> device plugindata</option>
 			<option value="identities/admin"><i>admin</i> user</i></option>
@@ -52,14 +52,14 @@
 	<form action="/plugin/device/addActionCap">
 		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/_addActionResult.html">
 		<input type="hidden" name="subject" value="/{{hostname}}">
+		<input type="hidden" name="exportTokens" value="true">
 		Verb: <select name="verb">
 			<option value="get">get</option>
 			<option value="put">put</option>
 			<option value="post">post</option>
 			<option value="delete">delete</option>
 		</select>
-		Object path: <input name="obj" type="text" value="/data/">
-		Export capability now: <input type="checkbox" name="exportTokens" value="true"><br>
+		Object path: <input name="obj" type="text" value="/data/"><br>
 		Capability owner: <select name="tokenOwner">
 			<option value="plugindata/{{name}}"><i>{{name}}</i> device plugindata</option>
 			<option value="identities/admin"><i>admin</i> user</i></option>

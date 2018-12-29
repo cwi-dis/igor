@@ -410,6 +410,18 @@ class IgorInternal(object):
         if not self.igor.actionHandler:
             self.igor.app.raiseNotfound()
         nodes = self.igor.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
+        # xxxjack should I also run named actions inside plugindata elements????
+        if not nodes:
+            self.igor.app.raiseNotfound()
+        for node in nodes:
+            self.igor.actionHandler.triggerAction(node)
+        return 'OK'
+    
+    def runPluginAction(self, pluginname, actionname, token):
+        """Mechanism behind running plugin actions. Not intended for human use."""
+        if not self.igor.actionHandler:
+            self.igor.app.raiseNotfound()
+        nodes = self.igor.database.getElements('plugindata/%s/action[name="%s"]'%(pluginname, actionname), 'get', self.igor.access.tokenForIgor())
         if not nodes:
             self.igor.app.raiseNotfound()
         for node in nodes:

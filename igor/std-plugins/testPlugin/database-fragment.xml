@@ -14,6 +14,13 @@
 				<representing>devices/{plugin}</representing>
 				<aggregate>true</aggregate>
 			</action>
+			<action>
+				<name>add-tested</name>
+				<url>/data/devices/{plugin}/tested</url>
+				<method>PUT</method>
+				<representing>devices/{plugin}</representing>
+				<data>true</data>
+			</action>
 			<au:needCapability>
 				<obj>/data/devices/{plugin}</obj>
 				<get>descendant-or-self</get>

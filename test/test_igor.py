@@ -277,6 +277,15 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         duration = self.servlet.waitDuration()
         self.assertNotEqual(duration, None)
         
+    def test64_call_plugin_action(self):
+        """Check that calling a plugin action works"""
+        pAdmin = self._igorVar(credentials='admin:')
+        result = pAdmin.get('/action/testPlugin/add-tested')
+        self.assertTrue(result)
+        self._flush(pAdmin, MAX_FLUSH_DURATION)
+        result = pAdmin.get('devices/testPlugin/tested')
+        self.assertTrue(result)
+        
     def test71_action(self):
         """Check that a PUT action runs when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')

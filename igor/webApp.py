@@ -369,6 +369,18 @@ def get_action(actionname):
     except xmlDatabase.DBAccessError:
         myWebError("401 Unauthorized (while running action)", 401)
         
+@_WEBAPP.route('/action/<string:pluginname>/<string:actionname>')
+def get_plugin_action(pluginname, actionname):
+    token = _SERVER.igor.access.tokenForRequest(request.environ)
+    checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
+    if not checker.allowed('get', token):
+        myWebError('401 Unauthorized', 401)
+
+    try:
+        return _SERVER.igor.internal.runPluginAction(pluginname, actionname, token)
+    except xmlDatabase.DBAccessError:
+        myWebError("401 Unauthorized (while running action)", 401)
+        
 @_WEBAPP.route('/trigger/<string:triggername>')
 def get_trigger(triggername):
     token = _SERVER.igor.access.tokenForRequest(request.environ)

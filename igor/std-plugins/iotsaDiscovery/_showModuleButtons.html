@@ -19,7 +19,7 @@
 		{% set _ = modButton.update(fingerprint=new_fingerprint) if change_fingerprint else None %}
 		{% set _ = modButton.update(fingerprint=new_fingerprint_2) if change_fingerprint_2 else None %}
 		{% set _ = modButton.update(token=new_token) if change_token else None %}
-		{% set _ = modButton.update(token=new_token_2) if change_token_2 else None %}
+		{% set _ = modButton.update(token=igor.access.externalRepresentation(token, new_token_2)) if change_token_2 else None %}
 		{% set _ = modButton.update(credentials=new_credentials) if change_credentials else None %}
 		{% set _ = modButton.update(onPress=not not new_onPress) if change_onPress else None %}
 		{% set _ = modButton.update(onRelease=not not new_onRelease) if change_onRelease else None %}

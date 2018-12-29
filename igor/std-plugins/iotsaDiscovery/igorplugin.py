@@ -274,7 +274,15 @@ class IotsaDiscoveryPlugin(object):
         
     def _getTokensForDevice(self, device=None, token=None):
         """Helper for templates: return list of all capabilities valid for this device as subject"""
-        return []
+        descriptions = self.igor.access.tokensForSubject(device, token)
+        rv = []
+        for desc in descriptions:
+            items = []
+            for k in ['obj', 'get', 'put', 'post', 'delete']:
+                if k in desc:
+                    items.append('{}={}'.format(k, desc[k]))
+            rv.append((' '.join(items), desc['cid']))
+        return rv
         
 def igorPlugin(igor, pluginName, pluginData):
     return IotsaDiscoveryPlugin(igor, pluginName, pluginData)

@@ -15,15 +15,23 @@ Evaluate an XPath expression that can return any XPath expression value. `GET` o
 
 ## /*
 
-Get static or template web pages or other files. `GET` only. Returns static data from the `static` directory or an interpolated template from the `template` directory.
+Get static or template web pages or other files. `GET` only. Returns static data from the `static` directory or an interpolated Jinja2 template from the `template` directory. Parameters are passed to the template.
 
 ## /action/\*
 
 Trigger a named action. `GET` only.
 
+## /action/\*/\*
+
+Trigger a named plugin action. `GET` only. The first field is the plugin name. The second field is the action name, which is looked up in `/data/plugindata/pluginname`.
+
 ## /plugin/\*[/*]
 
 Run a plugin. `GET` only. First field is the plugin name, optional second field is the method of the plugin to call (default _index_). Query parameters are passed to the Python method as named arguments. Plugin data from `/data/plugindata/_name_` is made available to the plugin factory function, and if a _user_ query parameter is present Igor will add a _userData_ argument containing the data from `/data/identities/_user_/plugindata/_name_` (as a Python dictionary).
+
+## /plugin/\*/page/\*.html
+
+Retrieve a plugin UI (user interface) page. The template page is looked up inside the plugin directory and rendered through Jinja2. Query parameters are passed to the template.
 
 ## /pluginscript/\*/\*
 

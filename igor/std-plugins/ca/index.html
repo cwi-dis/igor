@@ -75,5 +75,10 @@
 		Certificate sequence number: <input name="number"></br>
 		<input type="submit" value="Revoke Certificate">
 	</form>
+	<hr>
+	<p><a href="/">Return to Igor homepage</a></p>
+	{% if 'returnTo' in kwargs %}
+		<p><a href="{{kwargs['returnTo']}}">Return to {{kwargs['returnTo']}}.</a></p>
+	{% endif %}
 </body>
 </html>

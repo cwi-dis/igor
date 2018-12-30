@@ -462,7 +462,7 @@ class IgorCA(object):
         sys.stdout.write(csr)
         return True
         
-    def do_genCSR(self, keyFile, csrFile, csrConfigFile, *allNames, keysize=None):
+    def do_genCSR(self, keyFile, csrFile, csrConfigFile, keysize=None, *allNames):
         """Create key and CSR for a service. Returns CSR."""
         if len(allNames) < 1:
             print('%s: genCSR requires ALL names (commonName first) as arguments' % self.argv0, file=sys.stderr)

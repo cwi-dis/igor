@@ -116,5 +116,10 @@
 		<p>Unknown action <i>{{action}}</i>.</p>
 		<p><a href="/plugins.html">Return to plugin listing</a></p>
 	{% endif %}
+	<hr>
+	<p><a href="/">Return to Igor homepage</a></p>
+	{% if 'returnTo' in kwargs %}
+		<p><a href="{{kwargs['returnTo']}}">Return to {{kwargs['returnTo']}}.</a></p>
+	{% endif %}
 </body>
 </html>

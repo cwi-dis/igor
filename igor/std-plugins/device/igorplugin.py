@@ -21,7 +21,7 @@ class DevicePlugin(object):
     def index(self, token=None):
         raise self.igor.app.raiseNotfound()
     
-    def add(self, token=None, name=None, description=None, returnTo=None, **kwargs):
+    def add(self, token=None, name=None, description=None, returnTo=None, secured=False, **kwargs):
         rv = self._add(token, name, description, **kwargs)
         if returnTo:
             queryString = urllib.parse.urlencode(rv)
@@ -32,7 +32,7 @@ class DevicePlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return json.dumps(rv)
 
-    def _add(self, token=None, name=None, description=None, exportTokens=None, **kwargs):
+    def _add(self, token=None, name=None, description=None, exportTokens=None, secured=False, **kwargs):
         if not NAME_RE.match(name):
             self.igor.app.raiseHTTPError('400 Illegal name for device')
         if not description:
@@ -89,7 +89,7 @@ class DevicePlugin(object):
             self.igor.databaseAccessor.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', token, replace=True)
 
         
-        if isDevice and self.hasCapabilities:
+        if secured and isDevice and self.hasCapabilities:
             deviceKey = self._genSecretKey(aud=hostname, token=token)
             rv['audSharedKeyId'] = deviceKey
             deviceTokenId = self.igor.internal.accessControl('newToken',
@@ -108,7 +108,7 @@ class DevicePlugin(object):
             rv['tokenOwner'] = tokenOwner
             if tokenWantedOwner:
                 rv['deviceTokenWantedOwner'] = tokenWantedOwner
-        if isActive and self.hasCapabilities:
+        if secured and isActive and self.hasCapabilities:
             deviceKey = self._genSecretKey(sub=hostname, token=token)
             rv['subSharedKeyId'] = deviceKey
             actions = description.get('actions', {})
@@ -178,6 +178,8 @@ class DevicePlugin(object):
         self.igor.databaseAccessor.delete_key('sensors/%s' % name, token)
         self.igor.databaseAccessor.delete_key('status/devices/%s' % name, token)
         self.igor.databaseAccessor.delete_key('status/sensors/%s' % name, token)
+        if self.igor.plugins.exists(name):
+            self.igor.plugins.uninstall(name, token)
         self.igor.internal.save(token)
         if returnTo:
             return self.igor.app.raiseSeeother(returnTo)

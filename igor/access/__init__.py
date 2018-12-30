@@ -537,9 +537,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Return list of token descriptions (accessible via token) valid for subject sub"""
         # First get the list of all tokens valid for this subject (we filter later for accessible tokens)
         idExpr = "au:access/au:exportedCapabilities/au:capability[sub='{}']/cid".format(sub)
-        print('xxxjack idExpr', idExpr)
         idList = self.igor.database.getValues(idExpr, _accessSelfToken, namespaces=NAMESPACES)
-        print('xxxjack tokensForSubject list', idList)
         # Now attempt to get each of these through the token we carry
         rv = []
         for _, tokId in idList:
@@ -790,7 +788,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         
     def externalRepresentation(self, token, tokenId):
         """Return external representation for given token"""
-        tokenToExport = token._getTokenWithIdentifier(tokenId)
+        tokenToExport = token._getTokenWithIdentifier(tokenId, recursive=True)
         if not tokenToExport:
             identifiers = token.getIdentifiers()
             print('\taccess: externalRepresentation: no such token ID: %s. Tokens:' % tokenId)

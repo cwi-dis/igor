@@ -40,7 +40,7 @@ class BaseAccessToken(object):
         """Internal method - return True if the given path/rights are a subset of this token, and if this token can be delegated"""
         return False
         
-    def _getTokenWithIdentifier(self, identifier):
+    def _getTokenWithIdentifier(self, identifier, recursive=False):
         """Internal method - return the individual (sub)token with the given ID or None"""
         return None
         
@@ -265,7 +265,7 @@ class AccessToken(BaseAccessToken):
         # Everything seems to be fine.
         return True       
         
-    def _getTokenWithIdentifier(self, identifier):
+    def _getTokenWithIdentifier(self, identifier, recursive=False):
         if identifier == self.identifier:
             return self
         #
@@ -275,9 +275,16 @@ class AccessToken(BaseAccessToken):
         children = self.content.get('child', [])
         if type(children) != type([]):
             children = [children]
-        if not identifier in children:
-            return None
-        return singleton._loadTokenWithIdentifier(identifier)
+        if identifier in children:
+            return singleton._loadTokenWithIdentifier(identifier)
+        # If we search recursively we also look in our children (and so forth)
+        if recursive:
+            for childId in children:
+                childToken = singleton._loadTokenWithIdentifier(childId)
+                candidate = childToken._getTokenWithIdentifier(identifier, recursive=True)
+                if candidate:
+                    return candidate
+        return None
         
     def _getTokenDescription(self):
         """Returns a list with descriptions of all tokens in this tokenset"""
@@ -414,9 +421,9 @@ class MultiAccessToken(BaseAccessToken):
                 return True
         return False      
 
-    def _getTokenWithIdentifier(self, identifier):
+    def _getTokenWithIdentifier(self, identifier, recursive=False):
         for t in self.tokens:
-            rv = t._getTokenWithIdentifier(identifier)
+            rv = t._getTokenWithIdentifier(identifier, recursive)
             if rv: 
                 return rv
         return None

@@ -13,7 +13,6 @@
 	<h1>Iotsa Devices</h1>
 	{% set module = "users" %}
 	{% if set %}
-		<p>set is set</p>
 		{% set modUser = {} %}
 		{% set _ = modUser.update(username=new_username) if change_username else None %}
 		{% set _ = modUser.update(password=new_password) if change_password else None %}

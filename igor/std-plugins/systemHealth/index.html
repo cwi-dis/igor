@@ -58,9 +58,11 @@
 		<p>The following exceptional conditions (for services, sensors and actuators) are currently noted:</p>
 		<ul>
 			{% for xp, msg in messages %}
-				<li>{{msg}}</li>
+				<li>{{xp.split('/')[-1]}}:</li>
+				<dt><blockquote>{{msg}}</blockquote></dt>
 			{% endfor %}
 		</ul>
+		<p>If have have the correct permissions you can <a href="/data/environment/systemHealth/messages?.METHOD=PUT">clear all messages</a>.
 	{% else %}
 		<p>Igor is currently not aware of any exceptional conditions (for services, sensors and actuators). </p>
 	{% endif %}

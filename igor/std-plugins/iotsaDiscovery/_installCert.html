@@ -14,7 +14,7 @@
 	{% if not deviceKey and not deviceCertificate %}
 		{% set caPlugin = igor.plugins._getPluginObject(pluginName="ca", token=token) %}
 		{% if caPlugin %}
-			{% set deviceKey, deviceCertificate = caPlugin._generateKeyAndSign(names=[device, "192.168.4.1"], token=token) %}
+			{% set deviceKey, deviceCertificate = caPlugin._generateKeyAndSign(names=[device, "192.168.4.1"], keysize=1024, token=token) %}
 		{% else %}
 			<p><b>Error:</b> The Igor <i>ca</i> plugin is needed to sign certificates for iotsa devices.</p>
 		{% endif %}

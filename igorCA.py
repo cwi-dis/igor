@@ -145,6 +145,9 @@ class CAInterface(object):
 class CARemoteInterface(object):
     def __init__(self, parent, igorServer):
         self.parent = parent
+        # igorServer can either be a URL or an igorServer instance
+        if isinstance(igorServer, str):
+            igorServer = igorVar.IgorServer(igorServer)
         self.igor = igorServer
         
     def isLocal(self):
@@ -459,7 +462,7 @@ class IgorCA(object):
         sys.stdout.write(csr)
         return True
         
-    def do_genCSR(self, keyFile, csrFile, csrConfigFile, *allNames):
+    def do_genCSR(self, keyFile, csrFile, csrConfigFile, *allNames, keysize=None):
         """Create key and CSR for a service. Returns CSR."""
         if len(allNames) < 1:
             print('%s: genCSR requires ALL names (commonName first) as arguments' % self.argv0, file=sys.stderr)
@@ -468,7 +471,9 @@ class IgorCA(object):
         #
         # Create key
         #
-        ok = self.runSSLCommand('genrsa', '-out', keyFile, '2048' if self.keysize is None else self.keysize)
+        if keysize == None:
+            keysize = self.keysize
+        ok = self.runSSLCommand('genrsa', '-out', keyFile, '2048' if keysize is None else str(keysize))
         if not ok:
             return None
         os.chmod(keyFile, 0o400)

@@ -1,3 +1,9 @@
+igor 0.97 - December 2018
+- Implementation of capability-related support for iotsa devices
+- plugins can now contain actions
+- plugins can specify which capabilities they need
+- Moved various UIs from toplevel to the corresponding plugin
+
 igor 0.96 - November 2018
 - Another new version of plugin interfaces
 - plugins can now have requirements.txt

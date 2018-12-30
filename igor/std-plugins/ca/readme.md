@@ -4,7 +4,11 @@ Igor includes a certificate authority implementation that allows local use of SS
 
 By installing the Igor root certificate on all machines that need access to Igor (or devices) all https accesses become transparent to the user (and to automatic scripts, and Igor itself).
 
-the _ca_ plugin is only a frontend to the _igorCA_ command line tool. In turn, that tool is only a front end op the _openssl_ command which does all the heavy lifting of generating keys, certificate signing requests, certificates, etc.
+the _ca_ plugin is only a frontend (and UI) to the _igorCA_ command line tool. In turn, that tool is only a front end op the _openssl_ command which does all the heavy lifting of generating keys, certificate signing requests, certificates, etc.
+
+## schema
+
+* `plugindata/ca/ca`: if non-empty this should be the URL for the Igor that this Igor uses as its CA. If empty (or if it doesn't exist) this Igor is its own CA.
 
 ## Using Igor ca certificates
 

@@ -125,7 +125,7 @@ It is advisable to run Igor with the secure _https_ protocol as opposed to the c
 
 ### Igor as a CA
 
-Enabling Igor as a Certificate Authority is the best option if there are other services (such as [Iotsa](https://github.com/cwi-dis/iotsa)-based devices, or other Igors) that you want to protect with _https_. Details on using Igor as a CA are in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md) but here are the commands needed to get this kickstarted:
+Enabling Igor as a Certificate Authority is the best option if there are other services (such as [Iotsa](https://github.com/cwi-dis/iotsa)-based devices, or other Igors) that you want to protect with _https_. Details on using Igor as a CA are in [../igor/std-plugins/ca/readmd.md](../igor/std-plugins/ca/readme.md) but here are the commands needed to get this kickstarted:
 
 ```
 igorCA initialize
@@ -217,7 +217,7 @@ The _igorVar_ utility can also be used to communicate with other services that h
 
 ### igorCA
 
-Certificate Authority command line tool. Call `igorCA help` for a list of commands. More detail (a little more:-) can be found in [../igor/plugins/ca/readmd.md](../igor/plugins/ca/readme.md).
+Certificate Authority command line tool. Call `igorCA help` for a list of commands. More detail (a little more:-) can be found in [../igor/std-plugins/ca/readmd.md](../igor/std-plugins/ca/readme.md).
 
 ## Supporting modules
 

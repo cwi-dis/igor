@@ -353,7 +353,7 @@ class CapabilityConsistency(StructuralConsistency):
         
             self._hasCapability('/data/actions', cid='action-plugin', obj='/plugin', get='descendant')
             self._hasCapability('/data/actions', cid='action-pluginscript', obj='/pluginscript', get='descendant')
-            self._hasCapability('/data/actions', cid='action-action', obj='/action', get='child')
+            self._hasCapability('/data/actions', cid='action-action', obj='/action', get='descendant')
             self._hasCapability('/data/actions', cid='action-internal', obj='/internal', get='descendant')
             self._hasCapability('/data/actions', cid='action-environment', obj='/data/environment', get='descendant', put='descendant', post='descendant', delete='descendant')
             

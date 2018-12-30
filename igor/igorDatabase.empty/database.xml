@@ -182,7 +182,7 @@
 			<cid>action-pluginscript</cid>
 		</au:capability>
 		<au:capability>
-			<get>child</get>
+			<get>descendant</get>
 			<obj>/action</obj>
 			<parent>root</parent>
 			<cid>action-action</cid>

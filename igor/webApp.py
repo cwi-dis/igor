@@ -620,22 +620,22 @@ def get_data(name):
         variant = optArgs['.VARIANT']
         del optArgs['.VARIANT']
         
-    if optArgs and '.method' in optArgs:
+    if optArgs and '.METHOD' in optArgs:
         # GET with a query is treated as POST/PUT/DELETE with the query as JSON data,
         # if .METHOD argument states it should be treaded as another method.
         optArgs = dict(optArgs)
-        method = putOrPost_data
         kwargs = {}
-        methodName = optArgs['.METHOD']
-        del optArgs['.METHOD']
+        methodName = optArgs.pop('.METHOD')
         methods = {
             'PUT' : putOrPost_data,
             'POST' : putOrPost_data,
             'DELETE' : delete_data,
             }
-        method = getattr(methods, methodName)
+        method = methods.get(methodName)
+        if not method:
+            myWebError("400 Unknown .METHOD={}".format(methodName))
         if methodName == 'POST':
-            mwargs['replace'] = False
+            kwargs['replace'] = False
         rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded", **kwargs)
         return rv
         
@@ -665,7 +665,7 @@ def putOrPost_data(name, data=None, mimetype=None, replace=True):
         variant = optArgs['.VARIANT']
         del optArgs['.VARIANT']
     
-    if not data:
+    if data == None:
         # We either have a url-encoded query in optArgs or read raw data
         if request.values:
             data = request.values.to_dict()

@@ -11,8 +11,16 @@
 </head>
 <body>
 	<h1>Iotsa Devices</h1>
+	{% if set %}
+		{% set modModule = {} %}
+		{% set _ = modModule.update({key_1 : value_1}) if change_1 else None %}
+		{% set _ = modModule.update({key_2 : value_2}) if change_2 else None %}
+		{% set _ = modModule.update({key_3 : value_3}) if change_3 else None %}
+		{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, token=token, **modModule) %}
+	{% endif %}
 	{% set deviceStatus = pluginObject._getorset(device, module=module, protocol=protocol, credentials=credentials, port=port, noverify=noverify, includeConfig=True, token=token) %}
 	{% set device = deviceStatus.device %}
+	{% set config = deviceStatus.get('config', {}) %}
 	{% set module = deviceStatus.module %}
 	{% set status = deviceStatus.get(module, {}) %}
 	{% set message = deviceStatus.message %}	
@@ -40,19 +48,49 @@
 	
 	<h2>Changing {{module}} configuration</h2>
 	
-	{% if deviceStatus.config.currentMode == 1 %}
-		<p>Changing {{module}} configuration not yet implemented</p>
-	{% elif deviceStatus.config.requestedMode == 1 %}
+	{% if config.currentMode == 1 %}
+		<p>Device {{device}} is in configuration mode.</p>
+	{% elif config.requestedMode == 1 %}
 		<p>
-		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{deviceStatus.config.requestedModeTimeout}} seconds and select
+		You have requested configuration mode, but not rebooted {{device}} yet. Please do so within {{config.requestedModeTimeout}} seconds and select
 		<a href="_showModule.html?device={{device}}&module={{module}}">refresh</a>
 		to reload this page.
 		</p>
 	{% else %}
-		<p>To change {{module}} configuration {{device}} must be in configuration mode. You can request the device to go to configuration mode on the 
+		<p>To change {{module}} configuration {{device}} may have to be in configuration mode. You can request the device to go to configuration mode on the 
 		<a href="_showDevice.html?device={{device}}">device status page</a>.
 		</p>
 	{% endif %}
+	<form>
+		<input type="hidden" name="device" value="{{device}}">
+		<input type="hidden" name="module" value="{{module}}">
+		<input type="hidden" name="set" value="1">
+		<table>
+			<tr>
+				<th>Set?</th>
+				<th><Key/th>
+				<th>Value</th>
+			</tr>
+			<tr>
+				<td><input type="checkbox" name="change_1" value="1" id="change_1">
+				<td><input type="text" name="key_1" oninput="document.getElementById('change_1').checked=true"></td>
+				<td><input type="text" name="value_1"></td>
+			</tr>
+			<tr>
+				<td><input type="checkbox" name="change_2" value="1" id="change_2">
+				<td><input type="text" name="key_2" oninput="document.getElementById('change_2').checked=true"></td>
+				<td><input type="text" name="value_2"></td>
+			</tr>
+			<tr>
+				<td><input type="checkbox" name="change_3" value="1" id="change_3">
+				<td><input type="text" name="key_3" oninput="document.getElementById('change_3').checked=true"></td>
+				<td><input type="text" name="value_3"></td>
+			</tr>
+			<tr>
+				<td colspan="2"><input type="submit" value="Set key/value pairs">
+			</tr>
+		</table>
+	</form>
 	<hr>
 	<a href="_showDevice.html?device={{device}}">Return to {{device}} device status page.</a><br>
 	{% if returnTo %}

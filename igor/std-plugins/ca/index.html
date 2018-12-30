@@ -12,6 +12,14 @@
 <body>
 	<h1>Igor Certificate Authority</h1>
 	
+	{% if pluginData.ca %}
+		<p>This Igor uses the Certificate Authority of another Igor, located at <a href="{{pluginData.ca}}">{{pluginData.ca}}</a>.</p>
+	{% else %}
+		<p>This Igor serves as its own certificate authority.</p>
+	{% endif %}
+	<p>To change this, add an entry <i>ca</i> to <a href="/data/plugindata/{{pluginName}}">/data/plugindata/{{pluginName}}</a> (or remove that entry)
+	and reboot igor.</p>
+	
 	<h2>Root Certificate Chain</h2>
 	
 	<p>To trust certificates signed by this Igor CA, download the <a href="/plugin/{{pluginName}}/root">root certificate chain</a> and install in your browser or system.</p>
@@ -46,9 +54,16 @@
 	<p>Note that Igor does <i>not</i> keep a copy of the key, it is only returned to you (and used to sign the CSR). You must keep
 	the key safe once you have received it.</p>
 	
-	<p>Enter hostnames (canonical name first), one per line:
 	<form action="/plugin/{{pluginName}}/generateKeyAndSign">
+		Enter hostnames (canonical name first), one per line:<br>
 		<textarea name="names" rows="4" cols="20"></textarea><br>
+		Key size: 
+		<select name="keysize">
+			<option value="">default</option>
+			<option value="2048">2048 bits (safe)</option>
+			<option value="1024">1024 bits (less safe, practical for iotsa devices)</option>
+			<option value="512">512 bits (considered unsafe)</option>
+		</select>
 		<input type="submit" value="Generate Key and Certificate">
 	</form>
 	

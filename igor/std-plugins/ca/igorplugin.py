@@ -35,13 +35,14 @@ INDEX_HTML="""<html lang="en">
 """
 
 class CAPlugin(object):
-    def __init__(self, igor):
+    def __init__(self, igor, pluginData):
         self.igor = igor
         self.ca = None
-    
+        self.caServerUrl = pluginData.get('ca')
+        
     def initCA(self):
         if self.ca: return
-        self.ca = igorCA.IgorCA('igor/plugin/ca')
+        self.ca = igorCA.IgorCA('igor/plugin/ca', igorServer=self.caServerUrl)
         
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
@@ -87,12 +88,14 @@ class CAPlugin(object):
             return ''
         return self.igor.app.raiseHTTPError('500 Error while revoking %s' % number)
         
-    def _generateKeyAndSign(self, names, token=None):
+    def _generateKeyAndSign(self, names, keysize=None, token=None):
         self.initCA()
         _, keyFile = tempfile.mkstemp(suffix=".key")
         _, csrFile = tempfile.mkstemp(suffix=".csr")
         _, csrConfigFile = tempfile.mkstemp(suffix=".csrconfig")
-        csrData = self.ca.do_genCSR(keyFile, csrFile, csrConfigFile, *names)
+        if not keysize:
+            keysize = None
+        csrData = self.ca.do_genCSR(keyFile, csrFile, csrConfigFile, *names, keysize=keysize)
         certData = self.ca.do_signCSR(csrData)
         keyData = open(keyFile).read()
         os.unlink(keyFile)
@@ -113,5 +116,5 @@ class CAPlugin(object):
 
         
 def igorPlugin(igor, pluginName, pluginData):
-    return CAPlugin(igor)
+    return CAPlugin(igor, pluginData)
     

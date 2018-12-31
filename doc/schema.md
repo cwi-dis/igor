@@ -92,15 +92,6 @@ _systemHealth_ creates entries in `environment/systemHealth/messages` with descr
 ```
 The user can silence anomalous conditions he or she knows about (and does not want to be bothered with) for a period of time by setting fields in `/data/status`.
 
-### environment/introspection
-
-**(outdated, used only by some plugins that have not been converted yet)**
-
-Information about activity of various plugins and Igor itself.
-
-#### environment/introspection/lastActivity
-For most plugins, an _isotime_ telling when the plugin was last active. `igor` reflects the last activity of igor itself. These fields are here mainly to check that the individual devices or services are still alive, so an _action_ can be triggered when an important device has not been active for too long.
-
 ## status
 
 Status information on everything Igor knows about, such as whether services and devices are functioning, when they were last accessed correctly and any error messages produced. Updated by `/internal/updateStatus`, governed by the `representing` variable in actions and such. Interpreted by the _systemHealth_ plugin, among others.
@@ -182,11 +173,12 @@ A special user _admin_ will carry a set of _master capabilities_.
 
 ## actions
 
-Stores all the triggers and actions that operate on the database. *(this name is hardcoded in the Igor implementation)*
+Stores triggers and actions that operate on the database. *(this name is hardcoded in the Igor implementation)* Action elements can also be present
+inside `plugindata` children.
 
 Actions can be triggered by external access, timers, conditions in the database or a combination of those:
 
-* Actions that are named, for example `save`, can be triggered by external means (by accessing `http://igorhost:igorport/action/save`). Multiple actions can have the same name, and external access will trigger all of them.
+* Actions that are named, for example `save`, can be triggered by external means (by accessing `http://igor.local:9333/action/save`). Multiple actions can have the same name, and external access will trigger all of them.
 * Actions can have an interval and will then be triggered periodically.
 * Actions can have an XPath expression and will the be triggered whenever any database element matching this expression is modified. As an example, the `save` action above has an expression of `/data/identities//*` resulting the in the database being saved whenever anything in the _identities_ section is changed.
 
@@ -218,9 +210,10 @@ Here is a description of the available elements:
 If capabilities are enabled each action can carry a set of capabilities and the _actions_ element itself can also carry a set (that will be inherited by each action).
 
 ### Standard actions
+
 There are a number of standard actions, which are used by Igor itself or used to fill some of the standard elements in the database. Multiple actions with the same name can exist, and all of them will fire (so you can add actions to do additional things if these events happen). These actions (by _name_) are:
 
-* _start_: fired when Igor is started (automatically by Igor). There are additional events (with name _rebooted_) triggered by the automatic update of `devices/igor/startTime` that update some of the introspection values.
+* _start_: fired when Igor is started (automatically by Igor). 
 * _save_: saves the in-memory copy of the database to the external file. Called periodically, and whenever a part of the database that is somehow considered important is changed.
 * _cleanup_: deletes old elements in `environment/messages` and such.
 * _updateActions_: updates the internal action datastructure whenever elements are added (not changed) in `actions`.
@@ -244,4 +237,8 @@ Contains references to Server-Sent event (SSE) sources, and where in the databas
 
 ## plugindata
 
-Contains per-plugin configuration data, such as the mapping of hardware network addresses (MAC addresses) to device names. See the descriptions of the individual plugins for details.
+Contains per-plugin configuration data, such as the mapping of hardware network addresses (MAC addresses) to device names. Can also contain
+_action_ elements (for actions that are specific to the plugin implementation). These actions will run with all the access control rights of
+the plugin itself.
+
+See the descriptions of the individual plugins for details on per-plugin data.

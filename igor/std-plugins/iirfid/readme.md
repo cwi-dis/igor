@@ -12,14 +12,16 @@ To use this plugin as the basis for support of another RFID reader: modify the s
 
 ## schema
 
-* `sensors/rfid`: Collects hardware unique IDs (in order of the time the tags were presented) in sub-elements:
+Some of the data is unique to the iirfid plugin, some other data (with _tags_ or _rfid_ in the name in stead of _iirfid_) is shared with other rfid reader plugins.
+
+* `sensors/iirfidrfid`: Collects hardware unique IDs (in order of the time the tags were presented) in sub-elements:
 	* `rfidtag`: 4 colon-separated hex bytes.
 * `sensors/tags`: Collects "known" tags in order presented in sub-elements:
 	* `tag`: human-readable name.
 * `plugindata/iirfid/host`: if non-empty, host to which the RFID reader is connected (must be reachable with _ssh_ without password). String.
 * `plugindata/iirfid/serial`: Serial device to which RFID reader is connected. String.
 * `plugindata/iirfid/baud`: Baud rate. Integer.
-* `plugindata/rfid/tag`: Maps mifar tag unique IDs to human-readable names:
+* `plugindata/rfid/tag`: Maps mifare tag unique IDs to human-readable names:
 	* `id`: 4 colon-separated hex bytes.
 	* `name`: human readable name.
 
@@ -27,5 +29,7 @@ To use this plugin as the basis for support of another RFID reader: modify the s
 
 * _start_: starts the rfid reader asynchronously, telling it to POST each tag presented to this Igor, `sensors/rfid/rfidtag`.
 * _cleanup_: remove all entries in `sensors/rfid` and `sensors/tags` except the last one.
-* When a new raw tag is entered into `sensors/rfid` look it up in `plugindata/iirfid` and post the user-friendly name in `sensors/tags`.
-* When a new tag is entered into `sensors/rfid` update `environment/introspection/lastActivity/rfid`.
+
+## internal actions
+
+* When a new raw tag is entered into `sensors/iirfidrfid` look it up in `plugindata/rfid` and post the user-friendly name in `sensors/tags`.

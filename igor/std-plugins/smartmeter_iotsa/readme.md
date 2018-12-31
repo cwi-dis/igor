@@ -26,7 +26,7 @@ It reads all information including current electricity and gas use, electricity 
 * `plugindata/smartmeter_iotsa/host`: string, host name or IP address of the iotsa p1 reader.
 * `plugindata/smartmeter_iotsa/protocol`: protocol to access the iotsa p1 reader (`http`, `https` or `coap`).
 
-## actions
+## internal actions
 
 * Once every minute the smart meter is read and the data deposited into `sensors/smartMeter`.
-* Whenever the data in `sensors/smartMeter/timestamp` is changed `environment/introspection/lastActivity/smartMeter` is updated.
+* Whenever the data in `sensors/smartMeter` is changed `environment/energy/electricity` is updated.

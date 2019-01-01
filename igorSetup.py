@@ -400,13 +400,17 @@ class IgorSetup(object):
             fp.close()
             print("%s: igor will install %s on the next restart" % (self.progname, fragDest), file=sys.stderr)
         return True
-    
-def main():
+
+def argumentParser():
     parser = argparse.ArgumentParser(usage=USAGE)
     parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: ~/.igor, environment IGORSERVER_DIR)")
     parser.add_argument("-r", "--run", action="store_true", help="Run any needed shell commands (default is to print them only)")
     parser.add_argument("action", help="Action to perform: help, initialize, ...", default="help")
     parser.add_argument("arguments", help="Arguments to the action", nargs="*")
+    return parser
+    
+def main():
+    parser = argumentParser()
     args = parser.parse_args()
     m = IgorSetup(database=args.database, progname=sys.argv[0])
     if not m.main(args.action, args.arguments):

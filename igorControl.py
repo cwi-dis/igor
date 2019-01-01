@@ -7,11 +7,14 @@ import argparse
 import igorVar
 import traceback
 
-def main():
+def argumentParser():
     parser = igorVar.igorArgumentParser(description="Control Igor home automation service")
     parser.add_argument("action", help="Action to perform: help, save, stop, restart, command, ...")
     parser.add_argument("arguments", help="Arguments to the action", metavar="NAME=VALUE", nargs="*")
+    return parser
     
+def main():
+    parser = argumentParser()    
     args = parser.parse_args()
     igorVar.VERBOSE = args.verbose
     query = {}

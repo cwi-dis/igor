@@ -168,7 +168,7 @@ def igorArgumentDefaults(configFile=None, config=None):
             c.set(config, k, os.environ[envKey])
     return dict(c[config])
 
-def igorArgumentParser(description):
+def igorArgumentParser(description=None):
     """Return argument parser with common arguments for Igor and defaults already filled in"""
     conf_parser = argparse.ArgumentParser(add_help=False)
     conf_parser.add_argument("--configFile", metavar="FILE", help="Get default arguments from ini-style config FILE (default: ~/.igor/igor.cfg)")
@@ -177,7 +177,7 @@ def igorArgumentParser(description):
 
     parser = argparse.ArgumentParser(
         parents=[conf_parser],
-        description="Access Igor home automation service and other http databases",
+        description=description,
         epilog="Argument defaults can also be specified in environment variables like IGORSERVER_URL (for --url), etc."
         )
     parser.set_defaults(**igorArgumentDefaults(configFile=args.configFile, config=args.config))
@@ -190,9 +190,8 @@ def igorArgumentParser(description):
     parser.add_argument("--certificate", metavar='CERTFILE', help="Verify https certificates from given file")
     parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has')
     return parser
-             
-def main():
-    global VERBOSE
+
+def argumentParser():
     parser = igorArgumentParser(description="Access Igor home automation service and other http databases")
 
     parser.add_argument("-e", "--eval", action="store_true", help="Evaluate XPath expression in stead of retrieving variable (by changing /data to /evaluate in URL)")
@@ -213,6 +212,12 @@ def main():
     parser.add_argument("-0", "--allow-empty", action="store_true", help="Allow empty data from stdin")
     
     parser.add_argument("var", help="Variable to retrieve")
+    return parser
+
+def main():
+    global VERBOSE
+    parser = argumentParser()
+    
     args = parser.parse_args()
     VERBOSE=args.verbose
     

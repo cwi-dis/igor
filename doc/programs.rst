@@ -171,6 +171,7 @@ file ``~/.igor/igor.cfg``, section ``[igor]`` (but these are overridable through
 
 The following *igor.cfg* file causes ``igorVar`` to access an Igor on machine *downstairs.local* and ``igorVar --config upstairs`` to
 access an Igor an machine *upstairs.local* with HTTPS certification turned off::
+
 	[igor]
 	url = https://downstairs.local:9333/data/
 	[upstairs]

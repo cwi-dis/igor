@@ -597,9 +597,17 @@ class IgorCA(object):
     def do_getRoot(self):
         return self.ca.ca_getRoot()
         
-    def cmd_sign(self):
-        """Sign a Certificate Signing Request. Not yet implemented."""
-        return False
+    def cmd_sign(self, csrfile=None, certfile=None):
+        """Sign a Certificate Signing Request and return the certificate."""
+        if not csrfile or not certfile:
+            print("Usage: %s sign csrfile certfile" % sys.argv[0], file=sys.stderr)
+            return False
+        csrdata = open(csrfile).read()
+        certdata = sekf.do_signCSR(csrdata)
+        if not certdata:
+            return False
+        open(certfile, 'w').write(certdata)
+        return True
         
     def cmd_gen(self, prefix=None, *allNames):
         """Generate a a server key and certificate for a named service and sign it with the intermediate Igor CA key."""
@@ -655,14 +663,18 @@ class IgorCA(object):
     def do_csrtemplate(self):
         fn = self.ca.get_csrConfigTemplate()
         return open(fn).read()
-        
-def main():
+     
+def argumentParser():
     parser = igorVar.igorArgumentParser(description="Igor Certificate and Key utility")
     parser.add_argument("-s", "--keysize", metavar="BITS", help="Override key size (default: 2048)")
     parser.add_argument("-r", "--remote", action="store_true", help="Use CA on remote Igor (default is on the local filesystem)")
     parser.add_argument("-d", "--database", metavar="DIR", help="(local only) Database and scripts are stored in DIR (default: ~/.igor, environment IGORSERVER_DIR)")
     parser.add_argument("action", help="Action to perform: help, initialize, ...", default="help")
     parser.add_argument("arguments", help="Arguments to the action", nargs="*")
+    return parser
+       
+def main():
+    parser = argumentParser()
     args = parser.parse_args()
     igorServer = None
     if args.remote:

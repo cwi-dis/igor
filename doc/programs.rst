@@ -7,11 +7,13 @@ and a number of environment variables to set defaults for arguments.
  
 igorVar
 -------
+.. index::
+	single: igorVar (command line utility)
+
 
 *igorVar* is the main program used to access the database from the command line
 and from shell scripts. It allows getting and setting of database variables in
 various different formats (text, xml, json, python).
-
 
 .. argparse::
 	:ref: igorVar.argumentParser
@@ -35,6 +37,9 @@ various different formats (text, xml, json, python).
 		
 igorCA
 ------
+.. index::
+	single: igorCA (command line utility)
+
 
 *igorCA* is the command line interface to using Igor as a Certificate Authority.
 Under the hood it is implemented using the ``openssl`` command line tool. It is
@@ -89,6 +94,9 @@ igorCA actions
 	
 igorControl
 -----------
+.. index::
+	single: igorControl (command line utility)
+
 
 *igorControl* allows some control over a running Igor, through the REST interface. All functions it allows can
 also be accessed through *igorVar* but *igorControl* provides a more convenient interface.
@@ -119,6 +127,9 @@ flush
 
 igorSetup
 ---------
+.. index::
+	single: igorSetup (command line utility)
+
 
 *igorSetup* is the utility to initialize an Igor installation on the current machine and
 control it from the command line. Unlike the other command line utilities this utility
@@ -166,6 +177,11 @@ igorSetup actions
 Configuration file
 ------------------
 
+.. index::
+	single: igor.cfg configuration file
+
+
+
 *igorVar*, *igorCA* and *igorControl* all read default values for named arguments from a configuration
 file ``~/.igor/igor.cfg``, section ``[igor]`` (but these are overridable through the ``--configFile`` and ``--config`` arguments).
 
@@ -181,6 +197,10 @@ access an Igor an machine *upstairs.local* with HTTPS certification turned off::
 
 Environment variables
 ---------------------
+.. index::
+	single: IGORSERVER_* environment variables
+
+
 
 *igorVar*, *igorCA* and *igorControl* can also get their default values for named arguments from environment variables. These environment
 variables start with ``IGORSERVER_`` followed by the upper-cased argument name. As an example, ``IGORSERVER_URL`` can be used to provide

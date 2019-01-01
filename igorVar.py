@@ -127,7 +127,8 @@ class IgorServer(object):
         """Replace or create an item in the database.
         
         If *item* refers to a non-existing location in the database the item is created,
-        if the item already exists it is replaced.
+        if the item already exists it is replaced. It is an error to refer to multiple
+        existing items.
         
         Arguments:
             item (str): the XPath expression defining the item to delete.

@@ -59,6 +59,11 @@ High-level information about temperature and such. Indirectly set by plugins lik
 * `tempInside`: temperature inside in degrees Celcius (float).
 * `tempOutside`: temperature outside in degrees Celcius (float).
 
+### environment/people
+Information about people that is not considered privacy-sensitive:
+
+* `count`: number of people on the premises
+
 ### environment/messages
 Informational messages produced by various plugins (or by external agents with a `POST` through the REST inferface). New messages will be picked up by plugins like _lcd_ or _say_ to present them to the user. Standard action _cleanup_ will remove them after a while.
 
@@ -151,6 +156,11 @@ See the descriptions of the individual plugins for details:
 
 Stores high level information about actual people, such as whether they are home or not. Names in the _people_ section match names in the _identities_ section.
 
+The intention about the separation between _people_ and _environment/people_ is that the latter is available to everyone who has access to the database, while the
+former is only accessible to users who have logged in (assuming capability-based access control is enabled). The data in _identities/username_ is even more protected
+and only available to that specific user. So, _identities/username_ can contain contain private information (such as hardware address of mobile phone), _people/username_
+can contain semi-private information (such as whether _username_ is at home or not) and _identities/people_ non-private information (such as the number of people currently at home).
+
 As an example:
 
 * `people/jack/home`: Boolean that indicates whether a use "jack" is considered to be in the house (as determined by rules that trigger on his devices).
@@ -158,7 +168,7 @@ As an example:
 
 ## identities
 
-Stores identifying information about people, such as the identity of their cellphone or login information for clould-based health data storage.
+Stores identifying information about people, such as the identity of their cellphone or login information for cloud-based health data storage.
 
 As an example:
 
@@ -219,7 +229,7 @@ There are a number of standard actions, which are used by Igor itself or used to
 * _updateActions_: updates the internal action datastructure whenever elements are added (not changed) in `actions`.
 * _checkNight_: maintains the value of `environment/night`.
 * _updatePeople_: updates people availability in `people` when device availability in `environment/devices` changes.
-* _updateIgor_: fires every minute to update `environment/introspection/lastActivity/igor` to show Igor itself is still alive.
+* _countPeopleAtHome_: updates `environment/people/count` when people availability changes.
 
 ## sandbox
 

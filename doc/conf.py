@@ -15,8 +15,7 @@
 from __future__ import unicode_literals
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
-
+sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 import igor._version
 
 # -- Project information -----------------------------------------------------
@@ -41,6 +40,7 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinxarg.ext'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -165,7 +165,7 @@ from recommonmark.transform import AutoStructify
 
 def setup(app):
     app.add_config_value('recommonmark_config', {
-        'url_resolver': lambda url: github_doc_root + url,
+#        'url_resolver': lambda url: github_doc_root + url,
         'enable_auto_toc_tree' : True,
 #        'auto_toc_tree_section': 'Contents',
         'enable_eval_rst': True,

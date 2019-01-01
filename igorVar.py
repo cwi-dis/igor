@@ -22,11 +22,29 @@ except ImportError:
     import ConfigParser as configparser
 
 class IgorError(EnvironmentError):
+    """Exception raised by this module when an error occurs"""
     pass
 
 VERBOSE=False
 
 class IgorServer(object):
+    """Main object used to access an Igor server.
+    
+    The object is instantiated with parameters that specify how to contact Igor. After that it provides
+    an interface similar to ``requests`` to allow REST operations on the Igor database.
+
+    Arguments:
+        url (str): URL of Igor, including the /data/ bit. For example ``https://igor.local:9333/data/``.
+        bearer_token (str): An Igor external capability that has been supplied to your program and that governs which access rights your program has.
+            Passed to Igor in the http ``Authorization: Bearer`` header.
+        access_token (str): An alternative (and possibly less safe) way to pass an external capability to Igor, through an ``access_token`` query parameter in the URL.
+        credentials (str): A *username:password* string used to authenticate your program to Igor and thereby govern which access rights you have. Passed to
+            Igor in the http ``Authorization: Basic`` header.
+        certificate (str): If the certificate of the Igor to contact is not trusted system-wide you can supply it here.
+        noverify (bool): If you want to use https but bypass certificate verification you can pass ``True`` here.
+        printmessages (bool): Be a bit more verbose (on stderr).
+    """
+
     def __init__(self, url, bearer_token=None, access_token=None, credentials=None, certificate=None, noverify=False, printmessages=False):
         self.baseUrl = url
         if url[-1] != '/':
@@ -42,11 +60,63 @@ class IgorServer(object):
         self.printmessages = printmessages or VERBOSE
         
     def get(self, item, variant=None, format=None, query=None):
+        """Get a value (or values) from the database.
+        
+        Relative *item* names are relative to the toplevel ``/data`` element in the
+        database. Absolute names are also allowed (so ``/data/environment`` is equivalent
+        to ``environment``).
+        
+        Access to non-database portions of the REST API is allowed, so
+        getting ``/action/save`` will have the side-effect of saving the database.
+        
+        Full XPath syntax is allowed, so something like ``actions/action[name='save']``
+        will retrieve the definition of the *save* action. For XPath expressions
+        matching multiple elements you must specify *variant='multi'*.
+        
+        Arguments:
+            item (str): The XPath expression defining the value(s) to get.
+            variant (str): An optional modifier to specify which data you want returned:
+            
+                - ``multi`` allows the query to match multiple elements and return all of them (otherwise this is an error)
+                - ``raw`` also returns attributes and access-control information (for XML only)
+                - ``multiraw`` combines those two
+                - ``ref`` returns an XPath reference in stead of the value(s) found
+                
+            format (str): The mimetype you want returned. Supported are:
+            
+                - ``text/plain`` plaintext without any structuring information
+                - ``application/xml`` an XML string (default)
+                - ``application/json`` a JSON string
+                
+            query (dict): An optional http query to pass in the request. Useful mainly
+                when accessing non-database entrypoints in Igor, such as ``/action`` or
+                ``/plugin`` entries.
+                
+        Returns:
+            The value of the item, as a string in the format specified by *format*.
+            
+        Raises:
+            IgorError: in case of both communication errors and http errors returned by Igor.
+        """
         if format == None:
             format = 'application/xml'
         return self._action("GET", item, variant, format=format, query=query)
         
     def delete(self, item, variant=None, format=None, query=None):
+        """Delete an item in the database.
+        
+        Arguments:
+            item (str): the XPath expression defining the item to delete.
+            variant (str): Same as for *get()* but not generally useful.
+            format (str): Same as for *get()* but not generally useful.
+            query (dict): Same as for *get()* but not generally useful.
+            
+        Returns:
+            An empty string in case of success (or in case of the item not existing)
+            
+        Raises:
+            IgorError: in case of both communication errors and http errors returned by Igor.
+        """
         if variant == None:
             variant = "ref"
         if format == None:
@@ -54,16 +124,82 @@ class IgorServer(object):
         return self._action("DELETE", item, variant, format=format, query=query)
         
     def put(self, item, data, datatype, variant=None, format=None, query=None):
+        """Replace or create an item in the database.
+        
+        If *item* refers to a non-existing location in the database the item is created,
+        if the item already exists it is replaced.
+        
+        Arguments:
+            item (str): the XPath expression defining the item to delete.
+            data (str): new value for the item.
+            datatype (str): mimetype of the *data* argument:
+
+                - ``text/plain`` plaintext without any structuring information (default)
+                - ``application/xml`` an XML string
+                - ``application/json`` a JSON string
+            
+            variant (str): Same as for *get()* but not generally useful.
+            format (str): Same as for *get()* but not generally useful.
+            query (dict): Same as for *get()* but not generally useful.
+            
+        Returns:
+            The XPath of the element created (or modified).
+            
+        Raises:
+            IgorError: in case of both communication errors and http errors returned by Igor.
+        """
         if format == None:
             format = 'text/plain'
         return self._action("PUT", item, variant, format=format, data=data, datatype=datatype, query=query)
         
     def post(self, item, data, datatype, variant=None, format=None, query=None):
+        """Create an item in the database.
+        
+        Even if *item* refers to an existing location in the database 
+        a new item is created, after all items with the same name.
+        
+        Arguments:
+            item (str): the XPath expression defining the item to delete.
+            data (str): new value for the item.
+            datatype (str): mimetype of the *data* argument:
+
+                - ``text/plain`` plaintext without any structuring information (default)
+                - ``application/xml`` an XML string
+                - ``application/json`` a JSON string
+            
+            variant (str): Same as for *get()* but not generally useful.
+            format (str): Same as for *get()* but not generally useful.
+            query (dict): Same as for *get()* but not generally useful.
+            
+        Returns:
+            The XPath of the element created.
+            
+        Raises:
+            IgorError: in case of both communication errors and http errors returned by Igor.
+        """
         if format == None:
             format = 'text/plain'
         return self._action("POST", item, variant, format, data=data, datatype=datatype)
         
     def _action(self, method, item, variant, format=None, data=None, datatype=None, query=None):
+        """Low-level REST interface to the database, can be used to do GET, PUT, POST,
+        DELETE and other calls under program control.
+        
+        Arguments:
+            method (str): the REST method to call.
+            item (str): the XPath expression defining the item to operate on.
+            variant (str): Same as for *get()*.
+            format (str): Same as for *get()*.
+            data (str): new value for the item, same as for *put()*.
+            datatype (str): mimetype of the *data* argument, same as for *put()*.
+            query (dict): Same as for *get()*.
+            
+        Returns:
+            The REST call result.
+            
+        Raises:
+            IgorError: in case of both communication errors and http errors returned by Igor.
+        """
         # Convert to unicode for Python 2
         try:
             item = unicode(item)
@@ -169,7 +305,11 @@ def igorArgumentDefaults(configFile=None, config=None):
     return dict(c[config])
 
 def igorArgumentParser(description=None):
-    """Return argument parser with common arguments for Igor and defaults already filled in"""
+    """Return argument parser with common arguments for Igor and defaults already filled in.
+    
+    Used by Igor command line utilities and IgorServlet, and may be useful for other Python programs
+    that communicate with Igor.
+    """
     conf_parser = argparse.ArgumentParser(add_help=False)
     conf_parser.add_argument("--configFile", metavar="FILE", help="Get default arguments from ini-style config FILE (default: ~/.igor/igor.cfg)")
     conf_parser.add_argument("--config", metavar="SECTION", help="Get default arguments from config file section [SECTION] (default: igor).")

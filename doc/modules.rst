@@ -29,3 +29,35 @@ communicate with another *igorCA* embedded in Igor through the REST interface.
 .. automodule:: igorCA
 	:members:
 	:undoc-members:
+
+igorServlet
+-----------
+
+This module allows you to easily create a REST microservice that supports
+Igor capability-based access control. You create an *IgorServlet* object
+passing all the parameters needed to listen for requests and check capabilities.
+
+You supply callback methods for the REST endpoints and start the service. 
+
+Then, as requests come in, capabilities are checked, the REST parameters are decoded and
+passed as arguments to your callback methods, the return value of your
+callback is optionally JSON-encoded and sent back to the caller.
+
+Intended use is that the requests come from the Igor server, and the microservice
+implements a device or sensor (or group of sensors), or is used to check the status
+of a service.
+
+.. automodule:: igorServlet
+	:members:
+	
+argumentParser arguments
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you use *igorServlet.IgorServlet.argumentParser()* to create your *argparse*
+parser your program will have the following arguments (aside from any you add yourself):
+
+.. argparse::
+	:ref: igorServlet.argumentParser
+	:prog: igorServlet
+	:nodefaultconst:
+	

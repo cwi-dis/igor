@@ -20,9 +20,65 @@ def myWebError(msg, code=400):
     abort(resp)
 
 class IgorServlet(threading.Thread):
+    """Class implementing a REST server for use with Igor.
+    
+    Objects of this class implement a simple REST server, which can optionally be run in a separate
+    thread. After creating the server object (either before the service is running or while it is running)
+    the calling application can use ``addEndpoint()`` to create endpoints with callbacks
+    for the various http(s) verbs.
+    
+    The service understands Igor access control (external capabilities and issuer shared
+    secret keys) and takes care of implementing the access control policy set by the issuer.
+    Callbacks are only made when the REST call carries a capability that allows the specific
+    operation.
+    
+    The service is implemented using *Flask* and *gevent.pywsgi*.
+    
+    The service can by used by calling ``run()``, which will run forever in the current thread and not return.
+    Alternatively you can call ``start()`` which will run the service in a separate thread until
+    ``stop()`` is called.
+    
+    Arguments:
+        port (int): the TCP port the service will listen to.
+        name (str): name of the service.
+        nossl (bool): set to ``True`` to serve http (default: serve https).
+        capabilities (bool): set to ``True`` to enable using Igor capability-based access control.
+        noCapabilities (bool): set to ``True`` to disable using Igor capability-based access control.
+            The default for those two arguments is currently to *not* use capabilities but this is expected
+            to change in a future release.
+        database (str): the directory containing the SSL key *sslname*\ ``.key`` and certificate *sslname*\ ``.crt``.
+            Default is ``'.'``, but ``argumentParser()`` will return ``database='~/.igor'``. This is because
+            certificates contain only a host name, not a port or protocol, hence if ``IgorServlet`` is running
+            on the same machine as Igor they must share a certificate.
+        sslname (str): The name used in the key and certificate filename. Default is ``igor`` for reasons explained above.
+        nolog (bool): Set to ``True`` to disable *gevent.pywsgi* apache-style logging of incoming requests to stdout
+        audience (str): The ``<aud>`` value trusted in the capabilities. Usually either the hostname or the base URL of this service.
+        issuer (str): The ``<iss>`` value trusted in the capabilities. Usually the URL for the Igor running the issuer with ``/issuer`` as endpoint. Can be set after creation.
+        issuerSharedKey (str): The secret symmetric key shared between the audience (this program) and the issuer. Can be set after creation.
+        
+    Note that while it is possible to specify ``capabilities=True`` and ``nossl=True`` at the same time this
+    is not a good idea: the capabilities are encrypted but have a known structure, and therefore the *issuerSharedKey*
+    would be open to a brute-force attack.
+    """
     
     @staticmethod
     def argumentParser(parser=None, description=None, port=None, name=None):
+        """Static method to create ArgumentParser with common arguments for IgorServlet.
+        
+        Programs using IgorServlet as their REST interface will likely share a number of command
+        line arguments (to allow setting of port, protocol, capability support, etc). This
+        method returns such a parser, which will return (from ``parse_args()``) a namespace
+        with arguments suitable for IgorServlet.
+        
+        Arguments:
+            parser (argparse.ArgumentParser): optional parser (by default one is created)
+            description (str): description for the parser constructor (if one is created)
+            port (int): default for the ``--port`` argument (the port the service listens to)
+            name (str): name of the service (default taken from ``sys.argv[0]``)
+            
+        Returns:
+            A pre-populated ``argparse.ArgumentParser``
+        """
         if parser is None:
             if description is None:
                 description = "Mini-server for use with Igor"
@@ -90,13 +146,28 @@ class IgorServlet(threading.Thread):
         self.app = Flask(__name__)
         
     def setIssuer(self, issuer, issuerSharedKey):
+        """Set URL of issuer trusted by this service and shared symmetric key.
+        
+        If the issuer and shared key are not known yet during IgorServlet creation they can be
+        set later using this method, or changed.
+        
+        Arguments:
+            issuer (str): The ``<iss>`` value trusted in the capabilities. Usually the URL for the Igor running the issuer with ``/issuer`` as endpoint.
+            issuerSharedKey (str): The secret symmetric key shared between the audience (this program) and the issuer.
+        """
         self.issuer = issuer
         self.issuerSharedKey = issuerSharedKey
 
     def hasIssuer(self):
+        """Return ``True`` if this IgorServlet has an issuer and shared key"""
         return not not self.issuer and not not self.issuerSharedKey
         
     def run(self):
+        """Run the REST service.
+        
+        This will start serving and never return, until ``stop()`` is called (in a callback
+        or from another thread).
+        """
         if self.ssl:
             kwargs = dict(keyfile=self.privateKeyFile, certfile=self.certificateFile)
         else:
@@ -107,12 +178,45 @@ class IgorServlet(threading.Thread):
         self.server.serve_forever(stop_timeout=10)
         
     def stop(self):
+        """Stop the REST service.
+        
+        This will stop the service and ``join()`` the thread that was running it.
+        """
         if self.server:
             self.server.stop(timeout=10)
             self.server = None
         return self.join()
         
     def addEndpoint(self, path, mimetype='application/json', get=None, put=None, post=None, delete=None):
+        """Add REST endpoint.
+        
+        Use this call to add an endpoint to this service and supply the corresponding
+        callback methods.
+        
+        When a REST request is made to this endpoint the first things that happens (if
+        capability support has been enabled) is that a capability is carried in the request
+        and that it is valid (using *audience*, *issuer* and *issuerSecretKey*). Then
+        it is checked that the capability gives the right to execute this operation.
+        
+        Arguments to the REST call (and passed to the callback method) can be supplied
+        in three different ways:
+        
+        - if the request carries a URL query the values are supplied to the callback
+          as named parameters.
+        - otherwise, if the request contains JSON data this should be an object, and
+          the items in the object are passed as named parameters.
+        - otherwise, if the request contains data that is not JSON this data is
+          passed (as a string) as the ``data`` argument.
+          
+        Arguments:
+            path (str): The new endpoint, starting with ``/``.
+            mimetype (str): How the return value of the callback should be encoded.
+              Currently ``application/json`` and ``text/plain`` are supported.
+            get: Callback for GET calls.
+            put: Callback for PUT calls.
+            post: Callback for POST calls.
+            delete: Callback for DELETE calls.
+        """
         self.endpoints[path] = dict(mimetype=mimetype, get=get, put=put, post=post, delete=delete)
         methods = []
         if get:
@@ -247,7 +351,9 @@ class IgorServlet(threading.Thread):
             return myWebError('401 Unauthorized, incorrect audience on key', 401)
         return content
 
-        
+def argumentParser(*args, **kwargs):
+    return IgorServlet.argumentParser(*args, **kwargs)
+    
 def main():
     global DEBUG
     DEBUG = True

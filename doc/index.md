@@ -2,13 +2,16 @@
 
 ## Contents
 
-* [Using Igor](using.md)
-* [REST interface](rest.md)
+* [Installation](install.rst)
+* [Server setup](setup.rst)
+* [Server administration](administration.rst)
 * [Command line tools](programs.rst)
 * [Python modules](modules.rst)
+* [REST interface](rest.md)
 * [Database Schema](schema.md)
 * [Using Capabilities](capabilities.md)
 * [Access Control Implementation](access-control.md)
+* [Implementation details](implementation.md)
 
 ## Indexes
 

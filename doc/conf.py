@@ -82,8 +82,30 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
-
+html_theme = 'alabaster'
+html_sidebars = {
+    '**': [
+        'about.html',
+        'navigation.html',
+        'relations.html',
+        'searchbox.html',
+        'donate.html',
+    ]
+}
+html_theme_options = {
+    'description' : 'Your personal IoT butler',
+    'fixed_sidebar' : True,
+    'logo': '../../igor-icon.svg',
+    'logo_name' : 'igor',
+    'logo_text_align' : 'center',
+    'github_banner' : True,
+    'github_button' : True,
+    'github_user': 'cwi-dis',
+    'github_repo': 'igor',
+    'travis_button' : True,
+    'sidebar_collapse' : True,
+    'show_relbars' : True,
+}
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.

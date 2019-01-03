@@ -95,8 +95,8 @@ html_sidebars = {
 html_theme_options = {
     'description' : 'Your personal IoT butler',
     'fixed_sidebar' : True,
-    'logo': '../../igor-icon.svg',
-    'logo_name' : 'igor',
+    'logo': 'igor-icon.svg',
+    'logo_name' : True,
     'logo_text_align' : 'center',
     'github_banner' : True,
     'github_button' : True,

@@ -1,6 +1,6 @@
 
-Igor, your personal IoT butler
-==============================
+Introduction
+============
 
 Igor is named after the Discworld characters of the same name. You should
 think of it as a butler (or valet, or majordomo, I am not quite sure of the

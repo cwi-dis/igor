@@ -1,5 +1,5 @@
-Igor Documentation
-==================
+Igor, your personal IoT butler
+==============================
 
 .. toctree::
 	:maxdepth: 2
@@ -14,7 +14,6 @@ Igor Documentation
 	rest
 	schema
 	capabilities
-	access-control
 	implementation
 
 Indices and tables

@@ -1,5 +1,5 @@
-Modules
-**********************
+Python modules
+==============
 
 Igor comes with a number of Python extension modules to access and control the database.
 These modules actually also implement the functionality of the corresponding

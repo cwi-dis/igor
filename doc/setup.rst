@@ -1,5 +1,5 @@
-Setup Igor for the first time
-=============================
+Initial setup
+=============
 
 Setup the database
 ------------------

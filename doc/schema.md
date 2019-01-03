@@ -108,7 +108,7 @@ Each entry has a number of fields:
 - `lastActivity` (timestamp) time of the last attempt to access the device or service.
 - `lastSuccess` (timestamp, optional) time of the most recent successful access.
 - `lastFailure` (timestamp, optional) time of the most recent unsuccessful access.
-- `ignoreErrorsUntil` (timestamp, optional) "silencing" timestamp, the [systemHealth](igor/std-plugins/systemHealth/readme.md) plugin will not complain about errors in this entry until the given time.
+- `ignoreErrorsUntil` (timestamp, optional) "silencing" timestamp, the [systemHealth](std-plugins/systemHealth/readme.md) plugin will not complain about errors in this entry until the given time.
 
 Entries are grouped by their type:
 
@@ -122,24 +122,24 @@ Entries are grouped by their type:
 	- `status/igor/core` the Igor main server loop
 	- `status/igor/save` saving the Igor database to disk
 	- `status/igor/web` the external HTTP interface to Igor
-- `status/sensors` Sensors, or sensor categories (for sensors such as [ble](igor/std-plugins/ble/readme.md) where a single plugin handles multiple sensors. Entries are named for the sensor or category.
+- `status/sensors` Sensors, or sensor categories (for sensors such as [ble](std-plugins/ble/readme.md) where a single plugin handles multiple sensors. Entries are named for the sensor or category.
 - `status/devices` Devices (actuators and appliances). Entries are named for the individual device.
 - `status/services` Services external to Igor, for which only status information is kept. Some examples:
-	- `status/services/internet` whether the internet connection works. Determined by the [lan plugin](igor/std-plugins/lan/readme.md) by trying to access _google.com_.
-	- `status/services/backup` whether Time Machine backups are made. Determined by the [timemachine plugin](igor/std-plugins/timemachine/readme.md).
+	- `status/services/internet` whether the internet connection works. Determined by the [lan plugin](std-plugins/lan/readme.md) by trying to access _google.com_.
+	- `status/services/backup` whether Time Machine backups are made. Determined by the [timemachine plugin](std-plugins/timemachine/readme.md).
 
 ## sensors
 
 Stores low level information from devices that are generally considered read-only such as temperature sensors. See the descriptions of the individual plugins for details:
 
-* `sensors/dhcp`: DHCP leases. See [dhcp plugin readme](igor/std-plugins/dhcp/readme.md).
-* `sensors/ble`: Visible Bluetooth LE devices. See [ble plugin readme](igor/std-plugins/ble/readme.md).
-* `sensors/rfid`: RFID tags recently presented. See [iirfid plugin readme](igor/std-plugins/iirfid/readme.md) and [homey plugin readme](igor/std-plugins/homey/readme.md).
-* `sensors/tags`: Named RFID tags recently presented. See [iirfid plugin readme](igor/std-plugins/iirfid/readme.md) and [homey plugin readme](igor/std-plugins/homey/readme.md).
-* `sensors/netAtmo`: Weather data. See [netatmo plugin readme](igor/std-plugins/netatmo/readme.md).
-* `sensors/smartMeter`: Energy consumption. See [smartMeter plugin readme](igor/std-plugins/smartMeter/readme.md).
-* `sensors/fitbit`: Health data. See [fitbit plugin readme](igor/std-plugins/fitbit/readme.md).
-* `sensors/buienradar`: Expected rainfall data. See [buienradar plugin readme](igor/std-plugins/buienradar/readme.md) and [neoclock plugin readme](igor/std-plugins/neoclock/readme.md).
+* `sensors/dhcp`: DHCP leases. See [dhcp plugin readme](std-plugins/dhcp/readme.md).
+* `sensors/ble`: Visible Bluetooth LE devices. See [ble plugin readme](std-plugins/ble/readme.md).
+* `sensors/rfid`: RFID tags recently presented. See [iirfid plugin readme](std-plugins/iirfid/readme.md) and [homey plugin readme](std-plugins/homey/readme.md).
+* `sensors/tags`: Named RFID tags recently presented. See [iirfid plugin readme](std-plugins/iirfid/readme.md) and [homey plugin readme](std-plugins/homey/readme.md).
+* `sensors/netAtmo`: Weather data. See [netatmo plugin readme](std-plugins/netatmo/readme.md).
+* `sensors/smartMeter`: Energy consumption. See [smartMeter plugin readme](std-plugins/smartMeter-iotsa/readme.md).
+* `sensors/fitbit`: Health data. See [fitbit plugin readme](std-plugins/_fitbit/readme.md).
+* `sensors/buienradar`: Expected rainfall data. See [buienradar plugin readme](std-plugins/buienradar/readme.md) and [neoclock plugin readme](std-plugins/neoclock/readme.md).
 
 
 ## devices
@@ -148,9 +148,9 @@ Stores low level information for devices that are write-only (actuators, such as
 
 See the descriptions of the individual plugins for details:
 
-* `devices/tv`: Television set, information like power status, current channel, etc. See [philips plugin readme](igor/std-plugins/philips/readme.md).
-* `devices/plant`: Current position of the movable plant, see [plant plugin readme](igor/std-plugins/plant/readme.md).
-* `devices/lcd`: Adding a new `devices/lcd/message` will result in this message being displayed. See [lcd plugin readme](igor/std-plugins/lcd/readme.md).
+* `devices/tv`: Television set, information like power status, current channel, etc. See [philips plugin readme](std-plugins/philips/readme.md).
+* `devices/plant`: Current position of the movable plant, see [plant plugin readme](std-plugins/plant/readme.md).
+* `devices/lcd`: Adding a new `devices/lcd/message` will result in this message being displayed. See [lcd plugin readme](std-plugins/lcd/readme.md).
 
 ## people
 
@@ -174,7 +174,7 @@ As an example:
 
 * `identities/jack/encryptedPassword` The encrypted Igor password for user _jack_. Verified by the `/login` entry point, after which the user identity is stored in the session, or when supplied through the HTTP `Authorization: Basic` header.
 * `identities/jack/plugindata`: Per-user data for plugins. For example:
-	* `identities/jack/plugindata/fitbit`: Information that allows the [fitbit plugin](igor/std-plugins/fitbit/readme.md) to obtain health information for user "Jack".
+	* `identities/jack/plugindata/fitbit`: Information that allows the [fitbit plugin](std-plugins/_fitbit/readme.md) to obtain health information for user "Jack".
 * `identities/jack/device`: Name of a device that user "Jack" tends to carry with him (string).
 
 If capability support is enabled, identity entries will also carry the set of capabilities for that user, but these are inaccessible during normal operation.

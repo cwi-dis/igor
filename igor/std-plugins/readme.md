@@ -1,9 +1,7 @@
-
-# Included Igor Standard Plugins
-
+# Standard Plugins
 ## ble
 
-Listens to Bluetooth Low Energy advertisements to determine which devices are in range. See [ble/readme.md](ble/readme.md) for details.
+Listens to Bluetooth Low Energy advertisements to determine which devices are in range. See the [ble readme](ble/readme.md) for details.
 
 ## buienradar
 
@@ -116,3 +114,11 @@ Low-level interface to add and delete users, including capabilities and such, an
 
 Reboots the host system in case of problems. See [watchdog/readme.md](watchdog/readme.md) for details.
 
+```eval_rst
+.. toctree::
+   :glob:
+   :hidden:
+   
+   */readme
+
+```

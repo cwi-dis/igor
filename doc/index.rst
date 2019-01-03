@@ -18,12 +18,6 @@ Igor, your personal IoT butler
 	plugin-structure
 	implementation
 	
-.. toctree::
-	:glob:
-	:hidden:
-	
-	std-plugins/*/readme
-
 Indices and tables
 ==================
 

@@ -137,7 +137,7 @@ Stores low level information from devices that are generally considered read-onl
 * `sensors/rfid`: RFID tags recently presented. See [iirfid plugin readme](std-plugins/iirfid/readme.md) and [homey plugin readme](std-plugins/homey/readme.md).
 * `sensors/tags`: Named RFID tags recently presented. See [iirfid plugin readme](std-plugins/iirfid/readme.md) and [homey plugin readme](std-plugins/homey/readme.md).
 * `sensors/netAtmo`: Weather data. See [netatmo plugin readme](std-plugins/netatmo/readme.md).
-* `sensors/smartMeter`: Energy consumption. See [smartMeter plugin readme](std-plugins/smartMeter-iotsa/readme.md).
+* `sensors/smartMeter`: Energy consumption. See [smartMeter plugin readme](std-plugins/smartmeter_iotsa/readme.md).
 * `sensors/fitbit`: Health data. See [fitbit plugin readme](std-plugins/_fitbit/readme.md).
 * `sensors/buienradar`: Expected rainfall data. See [buienradar plugin readme](std-plugins/buienradar/readme.md) and [neoclock plugin readme](std-plugins/neoclock/readme.md).
 

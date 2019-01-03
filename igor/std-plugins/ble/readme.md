@@ -6,7 +6,7 @@ Listens to Bluetooth Low Energy advertisements to determine which devices are in
 
 Only tested on a Raspberry PI with an external Bluetooth LE USB dongle and the Bluez bluetooth stack.
 
-Requires the _bleServer_, see [Igor Helpers](../../../helpers/readme.md)
+Requires the _bleServer_, see ```../../../helpers```.
 
 Stores raw data (mac-address, last time seen) data for all devices in ```sensors/ble```, and current availability by name for specific "known" devices (programmable via ```plugindata/bleDevices```) into ```environment/devices```.
 

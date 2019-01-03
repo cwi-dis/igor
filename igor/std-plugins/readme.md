@@ -1,4 +1,26 @@
 # Standard Plugins
+
+Igor comes with a set of standard plugins. Some of these can be used as-is, and installed using (for example):
+
+```
+   igorSetup addstd copytree
+```
+
+Some are more examples that you should copy and adapt to your own need, or use as inspiration. 
+
+Plugins take their name (for use in ```plugindata```, for example) from the name they are installed
+under (which can be different than the standard name).
+So you can install multiple independent copies (for example as *say* and *sayInBedroom*) 
+and use different plugindata to control each copy of the plugin.
+
+Various plugins should be considered standard to Igor operations and usually installed:
+
+* *ca* allows access to the Certificate Authority
+* *device* allows adding and removing devices
+* *user* allows adding and removing users
+* *systemHealth* implements the self-checks and health-checks of Igor
+* *user* allows managing users: adding new users, changing passwords, etc
+ 
 ## ble
 
 Listens to Bluetooth Low Energy advertisements to determine which devices are in range. See the [ble readme](ble/readme.md) for details.

@@ -2,23 +2,13 @@
 Plugin implementation
 =====================
 
-Igor comes with a set of standard plugins. Some of these can be used as-is, and installed using (for example):
+The description here is probably not complete enough yet. Examine some of the standard
+plugins to see how things work. Some good examples plugins:
 
-.. code-block:: sh
-
-   igorSetup addstd copytree
-
-Some are more examples that you should copy and adapt to your own need, or use as inspiration. 
-
-Plugins take their name (for use in ``plugindata``\ , for example) from the name they are installed under. So you can install multiple independent copies (for example as *say* and *sayInBedroom*\ ) and use different plugindata to control each copy of the plugin.
-
-Various plugins should be considered standard to Igor operations and usually installed:
-
-
-* *ca* allows access to the Certificate Authority
-* *device* allows adding and removing devices
-* *user* allows adding and removing users
-* *systemHealth* implements the self-checks and health-checks of Igor
+* *say* is a simple output-only plugin that uses shell commands to drive a speech synthesizer.
+* *lan* uses Python sockets and *requests* to check whether services are available.
+* *iotsaDiscovery* is a plugin with an elaborate user interface and a good example of the Jinja HTML templates working together with the Python plugin code.
+* *_fitbit* obtains data for one or more users from an external cloud service, and uses the three-way *OAuth2* handshake to authenticate to that service.
 
 Plugin Structure
 ----------------
@@ -84,6 +74,8 @@ Usually there is a file ``database-fragment.xml`` that show the entries needed. 
 
 This database fragment is overlayed onto the database when installing the plugin. Every occurrence of the exact string ``{plugin}`` is replaced by the name of the plugin before installing into the database.
 
+	*Note*: this looks somewhat like a Jinja construct but it is not, for the current release. Simple text substitution is used.
+
 The fragment overlay installation may be delayed until the next time the Igor server is restarted.
 
 It may be necessary to do some hand editing of the database after installing, because you may have to modify some elements (such as hostname fields) and you may need to duplicate some (with modifications) for example if you want the *lan* plugin to test different services.
@@ -98,8 +90,16 @@ A plugin can contain a user interface through HTML pages. These are accessed wit
 * *pluginObject* the plugin object (if the plugin has an ``igorplugin.py`` Python module).
 * *token* is the capability of the current user (the user visiting the page).
 * *pluginData* is the internal data of the plugin (from ``/data/plugindata``\ ).
+* *igor* is the toplevel Igor object.
 * *user* is the current user (if logged in).
 * *userData* is the per-plugin data for the current user (if logged in).
 * all url parameters.
 
-In general, the template should provide forms and such to allow the user to change settings, and then call methods in the plugin proper to implement those changes (because the plugin will run with a *token* that allows read/write access to the plugin data).
+	*Note*: the availability of the *igor* object means that a plugin has rather unlimited power, and can probably run any command
+	and access any file that the userID under which Igor is executing can access. This is a security issue, and you should never install
+	plugins from sources you do not trust. This will be addressed in a future release.
+
+In general, the template should provide forms and such to allow the user to change settings, and then call methods in the plugin proper to implement those changes (because the plugin will run with a *token* that allows read/write access to the plugin data). 
+If methods are intended to be called solely from templates and never directly through the REST interface you should start the methodname with an underscore.
+
+Plugins can access other plugins through the ``igor.plugins`` object.

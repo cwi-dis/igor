@@ -5,7 +5,7 @@ Turns lights (or other devices) on and off using a [KlikAanKlikUit](https://www.
 ## requirements
 
 * A KAKU USB controller (and some KAKU outlets)
-* The KAKU helper program from [../../helpers/kaku](../../helpers/kaku), which in turn requires _pyusb_.
+* The KAKU helper program from ```../../helpers/kaku```, which in turn requires _pyusb_.
 
 ## schema
 

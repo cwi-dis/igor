@@ -7,7 +7,7 @@ Implementation details
 The ``~/.igor`` directory can contain the following files and subdirectories:
 
 
-* ``database.xml`` The main XML database.
+* ``database.xml`` The main XML database. See :doc:`schema` and :doc:`capabilities` for the format.
 * ``database.xml.YYYYMMDDHHMMSS`` Backups of the database (created automatically).
 * ``plugins`` directory with installed plugins. Many will be symlinks into ``std-plugins`` directory.
 * ``std-plugins`` symlink to standard plugins directory in the igor package (will be re-created on every startup).
@@ -16,21 +16,26 @@ The ``~/.igor`` directory can contain the following files and subdirectories:
 * ``igor.crt`` and ``igor.key`` if Igor is run in *https* mode these are the certificate and key used. ``igor.crt`` is also used by *igorVar* and *igorControl* to check the server identity.
 * ``ca`` certificate authority data such as signing keys and certificates.
 * ``igorSessions.db`` may be available to store igor user sessions.
-* ``igor.cfg`` configuration file for *igorVar*\ , *igorControl* and *igorCA* (not used by *igorServer* or *igorSetup*\ ). Default argument values are stored in the ``[igor]`` section, with names identical to the long option name. By supplying the ``--config`` argument to *igorVar* or one of the other tools another section can be selected.
+* ``igor.cfg`` configuration file for *igorVar*\ , *igorControl* and *igorCA* (not used by *igorServer* or *igorSetup*\ ). See :ref:`configuration-file` for details.
 
-So, the following ``igor.cfg`` file will change the default server used by *igorVar* and *igorControl*\ :
+Internal APIs
+-------------
 
-.. code-block:: ini
+This section still needs to be written. For now you have to look at the source code.
+Here is a quick breakdown of the object structure to get you started:
 
-   [igor]
-   url = https://myigor.local:9333/data
+The toplevel singleton object is of class ``IgorServer``, declared in __main__.py. It is usually called ``igor`` in plugins and such, and many objects have a ``self.igor`` backlink to this object.
 
-Default option values can also be specified in the environment by specifying the name in capitals and prefixed with IGORSERVER\_. So the following environment variable setting will have the same effect:
+The igor object has the following attributes that are considered part of its public (internal) interface:
 
-.. code-block:: sh
-
-   IGORSERVER_URL="https://myigor.local:9333/data"
-
+* ``pathnames`` is an object storing all relevant pathnames.
+* ``internal`` (class ``__main__.IgorInternal``) implements the methods of the ``/internal`` REST endpoint.
+* ``access`` (class ``access.__init__.Access``) implements capabilities, access control, external shared secret keys and storage of all these.
+* ``database`` is the low-level XML database (class ``xmlDatabase.DBImpl``) which allows fairly unrestricted access to all data, including the underlying DOM tree.
+* ``databaseAccessor`` is a higher level, more secure API to the database (class ``webApp.XmlDatabaseAccess``).
+* ``urlCaller`` is used to make REST calls, both internally within Igor and to external services (class ``callUrl.UrlCaller``)
+* ``plugins`` is the plugin manager (class ``pluginHandler.IgorPlugins``)
+* ``actionHandler`` implements actions, when they are triggered and what they do (class ``actions.ActionCollection``)
 
 Access Control Implementation
 -----------------------------

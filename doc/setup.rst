@@ -61,6 +61,9 @@ The ``self`` command should be given all hostnames and IP addresses via which yo
 Self-signed Certificate
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+.. deprecated:: 0.9
+	Enabling Igor as a CA is better than using a self-signed certificate
+	
 Alternatively, to use a self-signed certificate for Igor, run
 
 .. code-block:: sh

@@ -174,6 +174,8 @@ igorSetup actions
 ``rebuildedit``
 	stop, edit database, rebuild and start the service (must be run in source directory).
 
+.. _configuration-file:
+
 Configuration file
 ------------------
 

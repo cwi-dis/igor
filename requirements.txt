@@ -9,5 +9,3 @@ passlib
 pyjwt
 pyopenssl
 markdown
-Sphinx
-sphinx-argparse

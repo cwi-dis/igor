@@ -1,0 +1,4 @@
+-r ../requirements.txt
+Sphinx
+sphinx-argparse
+-e git+https://github.com/rtfd/recommonmark.git#egg=recommonmark

@@ -13,8 +13,13 @@ Your system might well have both Python 2.7 and Python 3.X installed, for that r
 
 See also https://packaging.python.org/tutorials/installing-packages/.
 
-Installing the software
------------------------
+Installing from PyPi
+--------------------
+
+At the moment Igor isn't hosted on PyPi. Once it is this section will be written.
+
+Installing from source
+----------------------
 
 Download the source via https://github.com/cwi-dis/igor. 
 
@@ -37,7 +42,7 @@ The instructions above, using ``sudo`` for installation, will install Igor and t
 You may also want to install some of the helper utilities from the ``helpers`` subdirectory.
 
 Testing the software (optional)
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There is a unittest-based test suite in the ``test`` subdirectory. The easiest way to run the tests is to first install the software (as per the instructions above) and then run
 
@@ -64,6 +69,10 @@ will run a set of actions similar to the unittests (for a minimum number of call
 Updating the software
 ---------------------
 
+	*Note:* currently the database format (particularly the schema) may change between releases.
+	You should check the release notes to ensure your database is still compatible, and otherwise
+	convert it manually after updating.
+	
 Stop the server if necessary:
 
 .. code-block:: sh

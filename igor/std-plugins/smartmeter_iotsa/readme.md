@@ -1,6 +1,6 @@
 # smartmeter_iotsa - read current household energy use
 
-This plugin interfaces to a _iotsa p1 reader_ <https://github.com/dis-git/iotsaSmartMeter>. It consists of an esp8266 that interfaces to the standardised dutch smart meter p1 port, see [DSMR v2.2](http://www.netbeheernederland.nl/themas/dossier/documenten/).
+This plugin interfaces to a _iotsa p1 reader_ <https://github.com/cwi-dis/iotsaSmartMeter>. It consists of an esp8266 that interfaces to the standardised dutch smart meter p1 port, see [DSMR v2.2](http://www.netbeheernederland.nl/themas/dossier/documenten/).
 
 It reads all information including current electricity and gas use, electricity delivered back to the net, total consumption, etc.
 

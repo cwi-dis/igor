@@ -122,7 +122,7 @@ them or to inspect their current status.
 	* Adding (or changing or deleting) action rules.
 	
 	This expected to be addresed in a future release. In the mean time you
-	either have to use the command line tools or stop Igor and edit the XML
+	either have to use the :doc:`programs` or stop Igor and edit the XML
 	database manually.
 	
 There are also some command line tools that are meant primarily for use in
@@ -148,7 +148,7 @@ server handles conversion between the internal (XML) format and external
 XML, JSON or plain text format.
 
 In addition to database access, the web server exposes internal
-functionality (for example to save the database), more general XPath
+functionality (for example to save the database) and more general XPath
 expressions over the database. It can also serve static content and
 template-based content (using the `Jinja2
 <http://jinja.pocoo.org/docs/2.10/>`_ template engine and data from the
@@ -163,8 +163,8 @@ change database variables to reflect the state of external devices. Or both.
 
 A number of plugins is included. Some of these are generally useful, some
 should be considered example code to help you develop your own plugins. See
-`igor/std-plugins/readme.md <igor/std-plugins/readme.md>`_ for a description
-of the plugin architecture and the standard plugins.
+:doc:`plugin-structure` for a description
+of the plugin architecture and :doc:`std-plugins/readme` for the standard plugins.
 
 Some of the plugins come with helper utilities or servers. See
 `helpers/readme.md <helpers/readme.md>`_ for details.
@@ -191,7 +191,9 @@ fine-grained control over which agent (user, external device, plugin, etc)
 is allowed  to do which operation. Human users can log in to the Igor server
 to gain access to their set of capabilities, external devices can carry
 their capabilities in requests. Igor can handle signing those capabilities
-with a secret key shared between the device and Igor.
+with a secret key shared between the device and Igor. Actions and plugins
+can also carry a private set of capabilities, so you can design things so
+that the action has privileges that its caller does not have.
 
 For convenience on a local subnet Igor can also function as a Certificate
 Authority (CA), signing the SSL certificates needed to allow trusted *https*
@@ -201,12 +203,12 @@ have).
 External interfaces
 ^^^^^^^^^^^^^^^^^^^
 
-There are a number of command-line utilities and Python modules, such as
+There are a number of :doc:`programs` and :doc:`modules`, such as
 ``igorVar`` to allow access to the database REST interface from shell
 scripts, ``igorSetup`` to initialize and control the database or ``igorCA``
 to access the Certificate Authority.
 
-And of course there is the main REST interface.
+And of course there is the main REST interface described in :doc:`rest`.
 
 
 Missing functionality

@@ -2,7 +2,7 @@
 
 This plugin interfaces to a Iotsa MotorServer board. This board is a esp8266-based small REST-like web server that controls a stepper motor, thereby allowing the physicl position of something in the house to be controlled over the internet.
 
-The MotorServer repository <https://github.com/dis-git/iotsaMotorServer> contains the source code for the server, as well as schematics and 3D-models of the hardware needed.
+The MotorServer repository <https://github.com/cwi-dis/iotsaMotorServer> contains the source code for the server, as well as schematics and 3D-models of the hardware needed.
 
 ## schema
 * `environment/energy/electricity`: float, current electricity consumption in kW. Stored here by a plugin like [smartmeter_iotsa](../smartmeter_iotsa/readme.md).

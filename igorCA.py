@@ -45,6 +45,8 @@ Initialize or use igor Certificate Authority.
 """
 
 class CAInterface(object):
+    """Helper class to implement commands on local CA (using openSSL tool)"""
+    
     def __init__(self, parent, database):
         self.parent = parent
         self.caDatabase = os.path.join(database, 'ca')
@@ -143,6 +145,8 @@ class CAInterface(object):
         return self.intConfigFile
         
 class CARemoteInterface(object):
+    """Helper class to implement commands on remote CA (using REST calls to Igor server)"""
+
     def __init__(self, parent, igorServer):
         self.parent = parent
         # igorServer can either be a URL or an igorServer instance
@@ -187,6 +191,15 @@ class CARemoteInterface(object):
         return configFile
         
 class IgorCA(object):
+    """Interface to Certificate Authority for Igor.
+    
+    Arguments:
+        argv0 (str): program name (for error messages and such)
+        igorServer (str): optional URL for Igor server to use as CA (default: use local CA through openSSL commands)
+        keySize (int): default keysize (default default: 2048 bits)
+        database (str): for local CA: the location of the Igor database (default: ~/.igor)
+    """
+    
     def __init__(self, argv0, igorServer=None, keysize=None, database=None):
         self.argv0 = argv0
         self.keysize = keysize
@@ -451,6 +464,7 @@ class IgorCA(object):
         return True
         
     def do_dn(self):
+        """Return CA distinghuished name as a JSON structure"""
         dnData = self.ca.get_distinguishedNameForCA()
         return json.dumps(dnData)
                 
@@ -595,6 +609,7 @@ class IgorCA(object):
         return True
         
     def do_getRoot(self):
+        """Returns the signing certificate chain (for installation in browser or operating system)"""
         return self.ca.ca_getRoot()
         
     def cmd_sign(self, csrfile=None, certfile=None):
@@ -644,6 +659,7 @@ class IgorCA(object):
         return False
         
     def do_list(self):
+        """Return list of certificates signed."""
         return self.ca.ca_list()
         
     def cmd_status(self):
@@ -651,6 +667,7 @@ class IgorCA(object):
         return self.ca.isOK()
         
     def do_status(self):
+        """Returns nothing if CA status is ok, otherwise error message"""
         if self.ca.isOK():
             return ""
         return "CA server configuration error, or not initialized"
@@ -661,6 +678,7 @@ class IgorCA(object):
         sys.stdout.write(open(fn).read())
         
     def do_csrtemplate(self):
+        """Return template config file for for openSSL CSR request"""
         fn = self.ca.get_csrConfigTemplate()
         return open(fn).read()
      

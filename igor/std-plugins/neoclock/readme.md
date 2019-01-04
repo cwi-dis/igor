@@ -2,7 +2,7 @@
 
 A NeoClock is a clock with 60 LEDs that shows the time, but additionally can show status information and alerts through a REST-like web service. It is built around an esp8266-based microprocessor board with NeoPixel LEDs.
 
-Instructions for building (hardware and software) can be found at <https://github.com/dis-git/iotsaNeoClock>.
+Instructions for building (hardware and software) can be found at <https://github.com/cwi-dis/iotsaNeoClock>.
 
 This plugin uses the NeoClock to show three types of status information:
 

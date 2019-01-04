@@ -64,7 +64,7 @@ Example RFID reader integration. See [iirfid/readme.md](iirfid/readme.md) for de
 
 ## iotsaDiscovery
 
-A plugin to discover devices based on the [iotsa](https://github.com/dis-git/iotsa) architecture and configure those devices (install certificates, install Igor capabilities, etc). The _NeoClock_, _Plant_ and _Smartmeter\_iotsa_ devices below are examples of _iotsa_ devices.
+A plugin to discover devices based on the [iotsa](https://github.com/cwi-dis/iotsa) architecture and configure those devices (install certificates, install Igor capabilities, etc). The _NeoClock_, _Plant_ and _Smartmeter\_iotsa_ devices below are examples of _iotsa_ devices.
 User interface is provided.
 
 ## kaku

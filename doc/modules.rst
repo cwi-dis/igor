@@ -27,9 +27,10 @@ It can run all needed ``openssl`` commands locally, but will usually be used to
 communicate with another *igorCA* embedded in Igor through the REST interface.
 
 .. automodule:: igorCA
-	:members:
-	:undoc-members:
 
+.. autoclass:: igorCA.IgorCA
+	:members: do_dn, do_genCSR, do_signCSR, do_getRoot, do_list, do_status, do_csrtemplate, do_revoke
+	
 igorServlet
 -----------
 

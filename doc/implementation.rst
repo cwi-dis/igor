@@ -1,6 +1,8 @@
 Implementation details
 ======================
 
+.. _directory-structure:
+
 ~/.igor directory structure
 ---------------------------
 

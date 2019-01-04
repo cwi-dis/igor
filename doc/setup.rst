@@ -18,7 +18,7 @@ Next add the standard plugins:
 
    igorSetup addstd lan systemHealth ca user device
 
-(these are the standard plugins used by the default database, which as distributed do little more than check the health of your internet connection).
+(these are the standard plugins used by the default database, which as distributed does little more than check whether it is day or night).
 
 You should now be able to run the server with
 
@@ -44,20 +44,26 @@ or alternatively you can try to automatically fix it with
 Security
 --------
 
-It is advisable to run Igor with the secure *https* protocol as opposed to the completely open *http* protocol. Igor can use any SSL certificate, but simplest is to use a self-signed certificate or to configure Igor as a Certificate Authority.
+It is advisable to run Igor with the secure *https* protocol as opposed to the completely open *http* protocol. Igor can use any SSL certificate, but simplest is to configure Igor as a Certificate Authority.
 
 Igor as a CA
 ^^^^^^^^^^^^
 
-Enabling Igor as a Certificate Authority is the best option if there are other services (such as `Iotsa <https://github.com/cwi-dis/iotsa>`_\ -based devices, or other Igors) that you want to protect with *https*. Details on using Igor as a CA are in `../igor/std-plugins/ca/readmd.md <../igor/std-plugins/ca/readme.md>`_ but here are the commands needed to get this kickstarted:
+Enabling Igor as a Certificate Authority is the best option if there are other services (such as `Iotsa <https://github.com/cwi-dis/iotsa>`_\ -based devices, or other Igors) that you want to protect with *https*. Details on using Igor as a CA are in :doc:`std-plugins/ca/readme` but here are the commands needed to get this kickstarted:
 
 .. code-block:: sh
 
    igorCA initialize
    igorCA self igor.local localhost 127.0.0.1 ::1
 
-The ``self`` command should be given all hostnames and IP addresses via which you expect to access Igor, and the "canonical name" should be first.
+The ``self`` command should be given all hostnames and IP addresses via which you expect to access Igor, and the "canonical name" should be first. So, the ``igor.local`` in the example above should be replaced by the DNS or mDNS name you normally use to access this host.
 
+Next you need to install the root certificate for the Igor CA into your system. How this is done depends on whether you run Linux or OSX and which version you run (google for *"install root certificate"* with your OS name) but you get the Igor CA root certificate chain with the following command:
+
+.. code-block:: sh
+
+	igorCA getRoot
+	
 Self-signed Certificate
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -102,14 +108,20 @@ It is also possible to let Igor go through all the motions of capability-based a
 Igor configuration
 ------------------
 
-You will need to configure your Igor to do something useful. On the Igor landing page there are links to pages that allow you to add *devices*\ , *plugins* and *users*. However, this functionality is currently incomplete, so various things will have to be configured manually.
+You will need to configure your Igor to do something useful. On the Igor landing page there are links to pages that allow you to add *devices*\ , *plugins* and *users*. 
+
+	Note: this functionality is currently incomplete, so some things will have to be configured manually.  Specifically: actions cannot be created through a user interface.
 
 Manual configuration
 ^^^^^^^^^^^^^^^^^^^^
 
-See `../igor/std-plugins/readmd.md <../igor/std-plugins/readme.md>`_ for a list of useful plugins that are included with Igor, and `schema.md <schema.md>`_ for how to add useful actions to your database.
+The database is an XML file, so it can be edited in a normal text editor. But: you should make sure Igor is not running while you are editing, or it may override your changes.
 
-Stop Igor before editing your ``~/.igor/database.xml`` in a text editor. The following command helps you with this:
+See :doc:`schema` and :ref:`directory-structure` for information
+on how to add things manually.
+
+
+The following command helps you with stopping Igor during an edit and restarting it afterwards:
 
 .. code-block:: sh
 
@@ -123,3 +135,6 @@ Igor can be started automatically at system boot with the following command:
 .. code-block:: sh
 
    igorSetup runatboot
+   
+On OSX and Linux this should start Igor as a deamon process. Igor will run under your user ID, and use the `.igor` database in your
+home directory.

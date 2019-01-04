@@ -44,11 +44,11 @@ Low level API to add devices and their capabilities and secret keys, and allow d
 
 Queries database of DHCP server on local machine and stores all active dhcp leases. See [dhcp/readme.md](dhcp/readme.md) for details.
 
-## _fitbit
+## fitbit
 
-Retrieves health data from Fitbit devices using the Fitbit cloud API and stores this in ```sensors/_fitbit```. See [_fitbit/readme.md](_fitbit/readme.md) for details.
+Retrieves health data from Fitbit devices using the Fitbit cloud API and stores this in ```sensors/fitbit```. See [fitbit/readme.md](fitbit/readme.md) for details.
 
-Note the underscore: the plugin is called `_fitbit` because otherwise it would have a name clash with the underlying Python module it uses.
+Note the underscore: the plugin is called `fitbit` because otherwise it would have a name clash with the underlying Python module it uses.
 
 As of October 2018 this is the first plugin to have a user interface through a `setup.html` page, it can be used as an example of such. It is also currently the only plugin that implements _OAuth2_ to retrieve data from external websites.
 

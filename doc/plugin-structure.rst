@@ -8,7 +8,7 @@ plugins to see how things work. Some good examples plugins:
 * *say* is a simple output-only plugin that uses shell commands to drive a speech synthesizer.
 * *lan* uses Python sockets and *requests* to check whether services are available.
 * *iotsaDiscovery* is a plugin with an elaborate user interface and a good example of the Jinja HTML templates working together with the Python plugin code.
-* *_fitbit* obtains data for one or more users from an external cloud service, and uses the three-way *OAuth2* handshake to authenticate to that service.
+* *fitbit* obtains data for one or more users from an external cloud service, and uses the three-way *OAuth2* handshake to authenticate to that service.
 
 Plugin Structure
 ----------------

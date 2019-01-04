@@ -139,7 +139,7 @@ class FitbitPlugin(object):
         return 'ok\n'
 
     def settings(self, client_id='', client_secret='', system='', token=None, returnTo=None, **kwArgs):
-        """Set global settings for _fitbit plugin"""
+        """Set global settings for fitbit plugin"""
         rv = 'ok\n'
         if client_id:
             rv = self.igor.databaseAccessor.put_key('plugindata/%s/client_id' % self.pluginName, 'text/plain', None, client_id, 'text/plain', token, replace=True)

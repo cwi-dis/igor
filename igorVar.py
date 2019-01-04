@@ -303,7 +303,12 @@ def igorArgumentDefaults(configFile=None, config=None):
         envKey = 'IGORSERVER_' + k.upper()
         if envKey in os.environ:
             c.set(config, k, os.environ[envKey])
-    return dict(c[config])
+    try:
+        rv =  dict(c[config])
+    except AttributeError:
+        # Python 2 ConfigParser doesn't have the dict-like interface
+        rv = dict(c.items(config))
+    return rv
 
 def igorArgumentParser(description=None):
     """Return argument parser with common arguments for Igor and defaults already filled in.

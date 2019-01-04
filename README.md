@@ -31,7 +31,7 @@ It also comes with a number of useful plugins and a set of Python modules and co
 
 Full documentation is available [here](doc/index.rst). 
 
-> Shortly it will also be available on readthedocs.
+Formatted documentation is also available online, at <https://igor-iot.readthedocs.io>.
 
 ## Getting Started
 

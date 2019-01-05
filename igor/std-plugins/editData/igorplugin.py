@@ -23,7 +23,7 @@ class EditDataPlugin(object):
         try:
             xmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', None, token)
             if hasattr(xmldata, 'get_data'): xmldata = xmldata.get_data()
-            rawxmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', None, token)
+            rawxmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', "raw", token)
             if hasattr(rawxmldata, 'get_data'): rawxmldata = rawxmldata.get_data()
         except self.igor.app.getHTTPError() as e:
             message = "Error accessing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
@@ -53,7 +53,7 @@ class EditDataPlugin(object):
         message = ""
         xmldata = ""
         try:
-            rawxmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', None, token)
+            rawxmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', "raw", token)
             if hasattr(rawxmldata, 'get_data'): rawxmldata = rawxmldata.get_data()
         except self.igor.app.getHTTPError() as e:
             message = "Error accessing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))

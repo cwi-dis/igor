@@ -1,0 +1,53 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Edit XML data</title>
+</head>
+<body>
+	<h1>Edit XML data</h1>
+	
+	<h2>View or edit existing item</h2>
+	
+	<p>You can enter any XPath expression, but it must evaluate to exactly one element in the database.</p>
+	
+	<form action="_edit.html">
+		<input type="hidden" name="action" value="get">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
+		Path:
+		<input type="text" name="xpath" size="40">
+		<input type="submit" value="Edit">
+	</form>
+	
+	<h2>Add new item</h2>
+	
+	<p>Your XPath expression must end in an element, and that element name must be the same as for your toplevel element.</p>
+	
+	<form action="_edit.html">
+		<input type="hidden" name="action" value="add">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
+		Path:
+		<input type="text" name="xpath" size="40" value="{{xpath}}">
+		<br>
+		XML:
+		<textarea name="newData" rows="10" cols="60">{{newData}}</textarea>
+		<br>
+		<input type="submit" value="Add">
+	</form>
+	
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/">Return to Igor homepage</a>
+</body>
+</html>

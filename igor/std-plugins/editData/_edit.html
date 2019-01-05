@@ -1,0 +1,64 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Edit XML data</title>
+</head>
+<body>
+	<h1>Edit XML data</h1>
+	
+	{% if action == "get" %}
+		{% set result = pluginObject._get(xpath, token) %}
+	{% elif action == "add" %}
+		{% set result = pluginObject._post(xpath, newData, token) %}
+	{% elif action == "replace" %}
+		{% set result = pluginObject._replace(xpath, oldData, newData, token) %}
+	{% else %}
+		{% set result = {'message' : 'Unknown action="%s"' % action} %}
+	{% endif %}
+	<h2>View or edit existing item</h2>
+	
+	{% if result.message %}
+		<p><b>Warning:</b> {{result.message}}</p>
+	{% endif %}
+		
+	<form action="_edit.html">
+		<input type="hidden" name="action" value="replace">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
+		
+		Path:
+		<input type="text" name="xpath" size="40" value="{{result.xpath}}" readonly>
+		<br>
+		Old:
+	<textarea name="oldData" rows="10" cols="60" readonly>{{result.xmldata}}</textarea>
+		<br>
+		New:
+		<textarea name="newData" rows="10" cols="60">{{result.xmldata}}</textarea>
+		<br>
+		<input type="submit" value="Replace">
+	</form>
+	
+	<form action="_edit.html">
+		<input type="hidden" name="action" value="get">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
+		
+		Path: <input type="text" name="xpath" size="40" value="{{result.xpath}}" readonly>
+		<input type="submit" value="Refresh">
+	</form>
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="index.html">Return to main editData page</a><br>
+	<a href="/">Return to Igor homepage</a>
+</body>
+</html>

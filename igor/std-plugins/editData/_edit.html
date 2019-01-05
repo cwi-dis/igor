@@ -15,9 +15,9 @@
 	{% if action == "get" %}
 		{% set result = pluginObject._get(xpath, token) %}
 	{% elif action == "add" %}
-		{% set result = pluginObject._post(xpath, newData, token) %}
+		{% set result = pluginObject._post(xpath, newData, save=save, token=token) %}
 	{% elif action == "replace" %}
-		{% set result = pluginObject._replace(xpath, oldData, newData, token) %}
+		{% set result = pluginObject._replace(xpath, oldData, newData, save=save, token=token) %}
 	{% else %}
 		{% set result = {'message' : 'Unknown action="%s"' % action} %}
 	{% endif %}
@@ -33,16 +33,17 @@
 			<input type="hidden" name="returnTo" value="{{returnTo}}">
 		{% endif %}
 		
-		Path:
+		<label>Path:</label>
 		<input type="text" name="xpath" size="40" value="{{result.xpath}}" readonly>
 		<br>
-		Old:
+		<label>Old:</label>
 	<textarea name="oldData" rows="10" cols="60" readonly>{{result.xmldata}}</textarea>
 		<br>
-		New:
+		<label>New:</label>
 		<textarea name="newData" rows="10" cols="60">{{result.xmldata}}</textarea>
 		<br>
 		<input type="submit" value="Replace">
+		<input type="submit" name="save" value="Replace and save database">
 	</form>
 	
 	<form action="_edit.html">
@@ -51,8 +52,8 @@
 			<input type="hidden" name="returnTo" value="{{returnTo}}">
 		{% endif %}
 		
-		Path: <input type="text" name="xpath" size="40" value="{{result.xpath}}" readonly>
-		<input type="submit" value="Refresh">
+		Path: <input type="text" name="xpath" size="40" value="{{result.xpath}}">
+		<input type="submit" value="Reload edit form">
 	</form>
 	<hr>
 	{% if returnTo %}

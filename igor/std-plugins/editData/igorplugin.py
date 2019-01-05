@@ -32,7 +32,7 @@ class EditDataPlugin(object):
                 message = "Element contains hidden (namespaced) data such as capabilities or ownership information. Editing is not possible."
         return dict(message=message, xpath=xpath, xmldata=xmldata)
         
-    def _post(self, xpath, newData, token=None):
+    def _post(self, xpath, newData, save=None, token=None):
         """Add a new entry to the database. Returns dict with message, xpath, xmldata"""
         message = ""
         xmldata = ""
@@ -46,9 +46,11 @@ class EditDataPlugin(object):
         else:
             xmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', None, token)
             if hasattr(xmldata, 'get_data'): xmldata = xmldata.get_data()
+            if save:
+                self.igor.internal.save(token=token)
         return dict(message=message, xpath=xpath, xmldata=xmldata)
         
-    def _replace(self, xpath, oldData, newData, token=None):
+    def _replace(self, xpath, oldData, newData, save=None, token=None):
         """Replace the value of a data item with a new one. Returns dict with message, xpath, xmldata"""
         message = ""
         xmldata = ""
@@ -59,8 +61,6 @@ class EditDataPlugin(object):
             message = "Error accessing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
             return dict(message=message, xpath=xpath, xmldata=xmldata)
         if rawxmldata.strip() != oldData.strip():
-            print('xxxjack new', oldData.strip())
-            print('xxxjack raw', rawxmldata.strip())
             message = "Old data does not match. Element may have changed in the mean time, or it contains hidden (namespaced) data and cannot be edited."
         else:
             try:
@@ -73,6 +73,8 @@ class EditDataPlugin(object):
             else:
                 xmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', None, token)
                 if hasattr(xmldata, 'get_data'): xmldata = xmldata.get_data()
+                if save:
+                    self.igor.internal.save(token=token)
         return dict(message=message, xpath=xpath, xmldata=xmldata)
         
 def igorPlugin(igor, pluginName, pluginData):

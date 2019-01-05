@@ -21,7 +21,7 @@
 		{% if returnTo %}
 			<input type="hidden" name="returnTo" value="{{returnTo}}">
 		{% endif %}
-		Path:
+		<label>Path:</label>
 		<input type="text" name="xpath" size="40">
 		<input type="submit" value="Edit">
 	</form>
@@ -35,13 +35,14 @@
 		{% if returnTo %}
 			<input type="hidden" name="returnTo" value="{{returnTo}}">
 		{% endif %}
-		Path:
+		<label>Path:</label>
 		<input type="text" name="xpath" size="40" value="{{xpath}}">
 		<br>
-		XML:
+		<label>XML:</label>
 		<textarea name="newData" rows="10" cols="60">{{newData}}</textarea>
 		<br>
 		<input type="submit" value="Add">
+		<input type="submit" name="save" value="Add and save database">
 	</form>
 	
 	<hr>

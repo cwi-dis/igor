@@ -45,9 +45,9 @@
 					<td><a href="/data/people/{{username}}">people/{{username}}</a></td>
 					<td>
 						{% if username != 'admin' and username != currentUser %}
-							<a href="_delete.html&username={{username}}">delete</a><br>
+							<a href="_delete.html?username={{username}}">delete</a><br>
 						{% endif %}
-						<a href="_password.html&username={{username}}">change password</a>
+						<a href="_password.html?username={{username}}">change password</a>
 					</td>
 				</tr>
 			{% endif %}

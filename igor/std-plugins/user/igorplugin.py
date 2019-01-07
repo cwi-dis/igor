@@ -17,12 +17,6 @@ class UserPlugin(object):
         raise self.igor.app.raiseNotfound()
     
     def add(self, token=None, callerToken=None, username=None, password=None, returnTo=None):
-        if True:
-                identifiers = callerToken.getIdentifiers()
-                print('\tuser: add: Tokens:')
-                for i in identifiers:
-                    print('\t\t%s' % i)
-
         if not NAME_RE.match(username):
             self.igor.app.raiseHTTPError('400 Illegal name for user')
         if self.igor.databaseAccessor.get_key('identities/%s' % username, 'application/x-python-object', 'multi', callerToken):
@@ -59,11 +53,6 @@ class UserPlugin(object):
         return ''
         
     def delete(self, token=None, callerToken=None, username=None, returnTo=None):
-        if True:
-                identifiers = callerToken.getIdentifiers()
-                print('\tuser: delete: Tokens:')
-                for i in identifiers:
-                    print('\t\t%s' % i)
         if not NAME_RE.match(username):
             self.igor.app.raiseHTTPError('400 Illegal name for user')
         if not self.igor.databaseAccessor.get_key('identities/%s' % username, 'application/x-python-object', 'multi', callerToken):

@@ -179,7 +179,7 @@ class IssuerInterface(object):
         parentElement = parentElement[0]
         element = self._shadowDatabase.elementFromTagAndData("sharedKey", keyData, namespace=AU_NAMESPACE)
         parentElement.appendChild(element)
-        self._save()
+        self._shadowDatabase.saveFile()
         return keyBits
         
     def deleteSharedKey(self, iss=None, sub=None, aud=None, token=None):
@@ -193,6 +193,6 @@ class IssuerInterface(object):
         if sub:
             keyPath += "[sub='%s']" % sub
         self._shadowDatabase.delValues(keyPath, _accessSelfToken, namespaces=NAMESPACES)
-        self._save()
+        self._shadowDatabase.saveFile()
         return ''
         

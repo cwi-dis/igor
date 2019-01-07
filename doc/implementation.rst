@@ -11,6 +11,7 @@ The ``~/.igor`` directory can contain the following files and subdirectories:
 
 * ``database.xml`` The main XML database. See :doc:`schema` and :doc:`capabilities` for the format.
 * ``database.xml.YYYYMMDDHHMMSS`` Backups of the database (created automatically).
+* ``shadow.xml`` Database for secrets. Structurally identical to main database but only contains issuer shared secret keys.
 * ``plugins`` directory with installed plugins. Many will be symlinks into ``std-plugins`` directory.
 * ``std-plugins`` symlink to standard plugins directory in the igor package (will be re-created on every startup).
 * ``igor.log`` the *httpd-style* log of all Igor activity.

@@ -1,0 +1,6 @@
+<?xml version="1.0" ?><data xmlns:au="http://jackjansen.nl/igor/authentication" xmlns:own="http://jackjansen.nl/igor/owner">
+	<au:access>
+		<au:sharedKeys>
+		</au:sharedKeys>
+	</au:access>
+</data>

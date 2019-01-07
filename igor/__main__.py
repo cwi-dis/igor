@@ -414,7 +414,8 @@ class IgorInternal(object):
         # If this is an igor-administrative action also run it within plugins
         if actionname[0] == '_':
             nodes += self.igor.database.getElements('plugindata/*/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
-        if not nodes:
+        elif not nodes:
+            # For a user-called action it's an error if it doesn't exist
             self.igor.app.raiseNotfound()
         for node in nodes:
             self.igor.actionHandler.triggerAction(node)

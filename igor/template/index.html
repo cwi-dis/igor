@@ -52,6 +52,10 @@
 		<p>To view known devices (and add or remove them) see the <a href="/plugin/device/page/index.html">devices page</a>.</p>
 	{% endif %}
 
+	{% if igor.plugins.exists('actions') %}
+		<p>To view known actions (and add or remove them) see the <a href="/plugin/actions/page/index.html">action editor</a>.</p>
+	{% endif %}
+
 	{% if igor.internal.accessControl('hasCapabilitySupport') %}
 		<p>To view your capabilities and perform operations on them see the <a href="/capabilities.html">capability page</a>.</p>
 	{% endif %}
@@ -62,11 +66,15 @@
 		Your raw database in XML can be found at <a href="/data/">/data/</a> (and you can see even more detail at <a href="/data/?.VARIANT=raw">/data/?.VARIANT=raw</a>)
 		You can append a path (technically: an XPath expression that resolves to a single node) to view a subsection of the database.
 	</p>
-
+	
 	<p>
 		You can also run general XPath expressions by appending them to <a href="/evaluate/">/evaluate/</a>.
 	</p>
 	
+	{% if igor.plugins.exists('editData') %}
+		<p>To edit the database there is a rudimentary <a href="/plugin/editData/page/index.html">data editor</a> available.</p>
+	{% endif %}
+
 	<p>
 		You can run
 		individual actions by prefixing with <a href="/action/">/action/</a> (for example <a href="/action/save">/action/save</a>),

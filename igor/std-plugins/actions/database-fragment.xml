@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
+	<identities>
+		<au:needCapability>
+			<obj>/plugin/{plugin}</obj>
+			<get>descendant-or-self</get>
+		</au:needCapability>
+	</identities>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+		</{plugin}>
+	</plugindata>
+</data>

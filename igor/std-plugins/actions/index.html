@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Igor Actions</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	<h1>Actions</h1>
+
+	{% set allActions = pluginObject._list(callerToken) %}
+	{% set message = allActions.pop('message', None) %}
+	{% if message %}
+		<p><b>Warning:</b> {{message}}</p>
+
+	{% endif %}
+
+	<h2>List of current actions</h2>	
+	<table style="width:100%">
+		<tr>
+			<th>Name</th>
+			<th>Abbreviated description</th>
+			<th>Operation</th>
+		</tr>
+	
+		{% set userList = igor.database.getElements('/data/identities/*', 'get', callerToken) %}
+		{% for path, description in allActions|dictsort %}
+			{% set shortName = description.name if 'name' in description else path|replace('/data/actions/','') %}
+			{% set _ = description.pop('notBefore', None) %}
+			{% set shortDescriptionList = description|dictsort %}
+			{% set shortDescription = shortDescriptionList|map('join', '=')|join(' ') %}
+			<tr>
+				<td>{{shortName}}</td>
+				<td>{{shortDescription}}</td>
+				<td>
+					<form action="_edit.html">
+						<input type="hidden" name="xpath" value="{{path}}">
+						<input type="hidden" name="action" value="get">
+						<input type="submit" value="edit">
+					</form><br>
+					<form action="_delete.html">
+						<input type="hidden" name="xpath" value="{{path}}">
+						<input type="submit" value="delete">
+					</form>
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+	
+	<h1>Add Action</h1>
+	
+	<p>To add a new action:</p>
+	<form action="_edit.html">
+		<input type="hidden" name="action" value="new">
+		<input type="submit" value="new">
+	</form>
+	
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/plugin/{{pluginName}}/page/index.html">Return to action listing page.</a><br>
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

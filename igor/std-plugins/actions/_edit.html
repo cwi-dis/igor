@@ -1,0 +1,168 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Edit XML data</title>
+</head>
+<body>
+	<h1>Edit XML data</h1>
+	
+	{% if action == "get" %}
+		{% set result = pluginObject._get(xpath, callerToken) %}
+		{% set description = result.description or {} %}
+	{% elif action == "new" %}
+		{% set result = {} %}
+		{% set description = {} %}
+		{% set _ = description.update(name=name) if name else None %}
+		{% set _ = description.update(interval=interval) if interval  else None %}
+		{% set _ = description.update(xpath=xpath) if xpath else None %}
+		{% set _ = description.update(multiple=multiple) if multiple  else None %}
+		{% set _ = description.update(condition=condition) if condition else None %}
+		{% set _ = description.update(minInterval=minInterval) if minInterval else None %}
+		{% set _ = description.update(aggregate=aggregate) if aggregate else None %}
+		{% set _ = description.update(method=method) if method else None %}
+		{% set _ = description.update(url=url) if url else None %}
+		{% set _ = description.update(data=data) if data else None %}
+		{% set _ = description.update(mimetype=mimetype) if mimetype else None %}
+	{% elif action == "add" %}
+		{% set description = {} %}
+		{% set _ = description.update(name=name) if name else None %}
+		{% set _ = description.update(interval=interval) if interval  else None %}
+		{% set _ = description.update(xpath=xpath) if xpath else None %}
+		{% set _ = description.update(multiple=multiple) if multiple  else None %}
+		{% set _ = description.update(condition=condition) if condition else None %}
+		{% set _ = description.update(minInterval=minInterval) if minInterval else None %}
+		{% set _ = description.update(aggregate=aggregate) if aggregate else None %}
+		{% set _ = description.update(method=method) if method else None %}
+		{% set _ = description.update(url=url) if url else None %}
+		{% set _ = description.update(data=data) if data else None %}
+		{% set _ = description.update(mimetype=mimetype) if mimetype else None %}
+		{% set result = pluginObject._post(description, callerToken) %}
+		{% set description = result.description or {} %}
+	{% elif action == "replace" %}
+		{% set result = pluginObject._get(xpath, callerToken) %}
+		{% set description = result.description or {} %}
+		{% set _ = description.update(name=name) if name != description.name else None %}
+		{% set _ = description.update(interval=interval) if interval != description.interval else None %}
+		{% set _ = description.update(xpath=xpath) if xpath != description.xpath else None %}
+		{% set _ = description.update(multiple=multiple) if multiple != description.multiple else None %}
+		{% set _ = description.update(condition=condition) if condition != description.condition else None %}
+		{% set _ = description.update(minInterval=minInterval) if minInterval != description.minInterval else None %}
+		{% set _ = description.update(aggregate=aggregate) if aggregate != description.aggregate else None %}
+		{% set _ = description.update(method=method) if method != description.method else None %}
+		{% set _ = description.update(url=url) if url != description.url else None %}
+		{% set _ = description.update(data=data) if data != description.data else None %}
+		{% set _ = description.update(mimetype=mimetype) if mimetype != description.mimetype else None %}
+		{% set result = pluginObject._replace(xpath, description, callerToken) %}
+		{% set description = result.description or {} %}
+	{% else %}
+		{% set result = {'message' : 'Unknown action="%s"' % action} %}
+	{% endif %}
+	{% if action == "new" %}
+		<h2>Create new action</h2>
+	{% else %}
+		<h2>View or edit existing action</h2>
+	{% endif %}	
+	{% set message = result.pop('message', None) %}
+	{% if message %}
+		<p><b>Warning:</b> {{message}}</p>
+	{% endif %}
+		
+	<form action="_edit.html">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
+		<label>XPath for <i>&lt;action&gt;</i> element:</label><input type="text" name="replaceXPath" value="{{result.xpath}}" {{"readonly" if result.xpath}}>
+		<table>
+			<tr>
+				<th>Group</th>
+				<th>Key</th>
+				<th>Value</th>
+				<th>Help</th>
+			</tr>
+			<tr>
+				<td rowspan="4">Triggers</td>
+				<td>Name</td>
+			<td><input type="text" name="name" value="{{description.pop('name', '')}}"></td>
+				<td>Name for triggering through call to /action/<i>name</i></td>
+			</tr>
+			<tr>
+				<td>Interval</td>
+				<td><input type="text" name="interval" value="{{description.pop('interval', '')}}"></td>
+				<td>Automatically trigger approximately every <i>interval</i> seconds</td>
+			</tr>
+			<tr>
+				<td>Expression</td>
+				<td><input type="text" name="xpath" value="{{description.pop('xpath', '')}}"></td>
+				<td>Enter an XPath expression. Trigger whenever an element matching the expression is changed</td>
+			</tr>
+			<tr>
+				<td>Multiple</td>
+				<td><input type="checkbox" name="multiple" value="true" {{"checked" if description.pop('multiple', False) else ""}}></td>
+				<td>When checked, this action triggers for each element matched by <i>expression<i>, otherwise it triggers once</td>
+			</tr>
+			<tr>
+				<td rowspan="3">Conditions</td>
+				<td>Condition</td>
+				<td><input type="text" name="condition" value="{{description.pop('condition', '')}}"></td>
+				<td>Enter an XPath expression. If it evaluates to <i>false</i> or empty when a trigger happens the action does not run</td>
+			</tr>
+			<tr>
+				<td>Min Interval</td>
+				<td><input type="text" name="minInterval" value="{{description.pop('minInterval', '')}}"></td>
+				<td>Action runs at most once every <i>Min Interval</i> seconds</td>
+			</tr>
+			<tr>
+				<td>Aggregate</td>
+				<td><input type="checkbox" name="aggregate" value="true" {{'checked' if description.pop('aggregate', False) else ''}}></td>
+				<td>Multiple triggers happening in close succession are aggregated into one</td>
+			</tr>
+			<tr>
+				<td rowspan="4">Action</td>
+				<td>Method</td>
+				<td><input type="text" name="method" value="{{description.pop('method', '')}}"></td>
+				<td>The REST method to call (GET/PUT/POST/DELETE) on <i>URL</i>, default GET</td>
+			</tr>
+			<tr>
+				<td>URL</td>
+				<td><input required type="text" name="url" value="{{description.pop('url', '')}}"></td>
+				<td>The URL to call the <i>method</i> on. Can be internal (starting with <i>/</i> or external (full URL)</td>
+			</tr>
+			<tr>
+				<td>Data</td>
+				<td><input type="text" name="data" value="{{description.pop('data', '')}}"></td>
+				<td>Data to pass to <i>method</i></td>
+			</tr>
+			<tr>
+				<td>Mimetype</td>
+				<td><input type="text" name="mimetype" value="{{description.pop('mimetype', '')}}"></td>
+				<td>The mimetype of the <i>data</i>. Default <i>text/plain</i></td>
+			</tr>
+			<tr>
+				<td colspan="4">
+				{% if action == "new" %}
+					<input type="hidden" name="action" value="add">
+					<input type="submit" value="Create">
+				{% else %}
+					<input type="hidden" name="action" value="replace">
+					<input type="submit" value="Change">
+				{% endif %}
+			</tr>
+		</table>
+
+	<p>Most text fields can contain Attribute Value Templates (AVTs), XPath expressions bracketed by
+	braces (<i>{</i> and <i>}</i>). These expressions will be evaluated at the time the action runs and the value
+	inserted. The value <i>$originalContext</i> can be used in an AVT to refer to the element matched by <i>expression</i>.
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="index.html">Return to main action editor page</a><br>
+	<a href="/">Return to Igor homepage</a>
+</body>
+</html>

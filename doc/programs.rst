@@ -154,7 +154,10 @@ igorSetup actions
 ``stop``
 	stop service (using normal OSX or Linux commands).
 ``add`` *pathname* [...]
-	add plugin (copy) from given *pathname*. Only use this command while Igor is not running. Using the `plugin.html` Igor interface is easier.
+	add plugin (copy) from given *pathname*. Only use this command while Igor is not running. Note that it is potentially
+	dangerous to install an Igor plugin, especially if it comes from an unknown source: an Igor plugin currently has
+	complete access to the Igor internals, and can therefore access any data or modify it, and probably also read or
+	write files on your Igor host.
 ``addstd`` *name*[=*srcname*] [...]
 	add standard plugin *srcname* (linked) with given *name*. Only use this command while Igor is not running. Using the `plugin.html` Igor interface is easier.
 ``remove`` *name* [...]

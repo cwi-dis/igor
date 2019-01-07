@@ -100,7 +100,9 @@
 		
 		<h2>Add Plugin</h2>
 		
-		<p>Not yet implemented</p>
+		<p>Plugins from external sources have full control over your Igor database (and even over the machine Igor is running on).
+		For this reason you must use the command-line interface to install such plugins. 
+		See the <a target="_blank" href="https://igor-iot.readthedocs.io/en/latest/programs.html#igorsetup">igorSetup command line tool documentation</p> for details.</p>
 		
 	{% elif action == 'delete' %}
 		<p>{{igor.plugins.uninstall(pluginName, token)}}</p>

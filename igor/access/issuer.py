@@ -8,12 +8,14 @@ from builtins import str
 from builtins import object
 import random
 import urllib.parse
+import os
 import jwt
 
 from .vars import *
 from .capability import *
 from .checker import *
 from .consistency import *
+from .. import xmlDatabase
 
 _accessSelfToken = None # Set by __init__ after importing
 
@@ -23,9 +25,16 @@ class IssuerInterface(object):
         self._self_audience = None
         self._shadowDatabase = None
         
-    def _setShadowDatabase(self):
+    def _initIssuer(self, now=False):
+        """Initialize the issuer, may op its private database."""
         if not self._shadowDatabase:
-            self._shadowDatabase = self.igor.database
+            shadowFilename = os.path.join(self.igor.pathnames.datadir, 'shadow.xml')
+            if os.path.exists(shadowFilename):
+                self._shadowDatabase = xmlDatabase.DBImpl(shadowFilename)
+            else:
+                print('Warning: secret keys in main database, no shadow database {}'.format(shadowFilename))
+                if now:
+                    self._shadowDatabase = self.igor.database
         return
 
     def getSelfAudience(self, token=None):
@@ -41,7 +50,7 @@ class IssuerInterface(object):
 
     def _getSharedKey(self, iss=None, aud=None):
         """Get secret key shared between issuer and audience"""
-        self._setShadowDatabase()
+        self._initIssuer(now=True)
         if iss is None:
             iss = self.getSelfIssuer()
         if aud is None:
@@ -95,9 +104,9 @@ class IssuerInterface(object):
     def getSubjectList(self, token=None):
         """Return list of subjects that trust this issuer"""
         # xxxjack should perform some checks on token
+        self._initIssuer(now=True)
         assert self.igor
         assert self.igor.database
-        self._setShadowDatabase()
         # xxxjack this is wrong: it also returns keys shared with other issuers
         subjectValues = self._shadowDatabase.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
         subjectValues = [x[1] for x in subjectValues]
@@ -107,8 +116,8 @@ class IssuerInterface(object):
 
     def getAudienceList(self, token=None):
         """Return list of audiences that trust this issuer"""
-        self._setShadowDatabase()
         # xxxjack should perform some checks on token
+        self._initIssuer(now=True)
         audienceValues = self._shadowDatabase.getValues('au:access/au:sharedKeys/au:sharedKey/sub', _accessSelfToken, namespaces=NAMESPACES)
         audienceValues = set(audienceValues)
         audienceValues = list(audienceValues)
@@ -120,7 +129,7 @@ class IssuerInterface(object):
         # xxxjack should perform some checks on token
         assert self.igor
         assert self.igor.database
-        self._setShadowDatabase()
+        self._initIssuer(now=True)
         keyElements = self._shadowDatabase.getElements('au:access/au:sharedKeys/au:sharedKey', 'get', _accessSelfToken, namespaces=NAMESPACES)
         rv = []
         for kElement in keyElements:
@@ -149,8 +158,8 @@ class IssuerInterface(object):
         """Create a secret key that is shared between issues and audience"""
         assert self.igor
         assert self.igor.database
+        self._initIssuer(now=True)
         iss = self.getSelfIssuer()
-        self._setShadowDatabase()
         if not aud:
             aud = self.getSelfAudience()
         keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
@@ -175,7 +184,7 @@ class IssuerInterface(object):
         
     def deleteSharedKey(self, iss=None, sub=None, aud=None, token=None):
         """Delete a shared key"""
-        self._setShadowDatabase()
+        self._initIssuer(now=True)
         if not iss:
             iss = self.getSelfIssuer()
         if not aud:

@@ -241,6 +241,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Inform Access singleton of main Igor object. Not passed on __init__ because of app initialization sequence."""
         assert self.igor is None
         self.igor = igor
+        self._initIssuer()
 
     def checkerForElement(self, element):
         """Returns an AccessChecker for an XML element"""

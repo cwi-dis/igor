@@ -5,26 +5,26 @@
 		<tags/>
 	</sensors>
     <actions>
-        <action own:plugin="{plugin}">
-            <name>start</name>
-            <url>/pluginscript/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
-        </action>
-        <action own:plugin="{plugin}">
-            <name>cleanup</name>
-            <method>DELETE</method>
-            <url>/data/sensors/rfid/rfidtag[position()&lt;last()]</url>
-        </action>
-        <action own:plugin="{plugin}">
-            <name>cleanup</name>
-            <method>DELETE</method>
-            <url>/data/sensors/tags/tag[position()&lt;last()]</url>
-        </action>
     </actions>
     <plugindata>
         <{plugin} own:plugin="{plugin}">
             <serial>/dev/tty.usbserial-A700ekiO</serial>
             <baud>57600</baud>
             <host/>
+			<action>
+				<name>_start</name>
+				<url>/pluginscript/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
+			</action>
+			<action>
+				<name>_cleanup</name>
+				<method>DELETE</method>
+				<url>/data/sensors/rfid/rfidtag[position()&lt;last()]</url>
+			</action>
+			<action>
+				<name>_cleanup</name>
+				<method>DELETE</method>
+				<url>/data/sensors/tags/tag[position()&lt;last()]</url>
+			</action>
 			<au:needCapability>
 				<obj>/data/plugindata/{plugin}</obj>
 				<get>descendant-or-self</get>

@@ -3,36 +3,26 @@
 	<sensors>
 		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
-	<actions>
-		<action own:plugin="{plugin}">
-			<name>start</name>
-			<xpath>/data/environment/location/lon</xpath>
-			<url>/data/plugindata/{plugin}/lon</url>
-			<method>PUT</method>
-			<mimetype>text/plain</mimetype>
-			<data>{/data/environment/location/lon}</data>
-			<au:needCapability>
-				<obj>/data/plugindata/{plugin}</obj>
-				<put>child</put>
-			</au:needCapability>
-		</action>
-		<action own:plugin="{plugin}">
-			<name>start</name>
-			<xpath>/data/environment/location/lat</xpath>
-			<url>/data/plugindata/{plugin}/lat</url>
-			<method>PUT</method>
-			<mimetype>text/plain</mimetype>
-			<data>{/data/environment/location/lat}</data>
-			<au:needCapability>
-				<obj>/data/plugindata/{plugin}</obj>
-				<put>child</put>
-			</au:needCapability>
-		</action>
-	</actions>
 	<plugindata>
 	    <{plugin} own:plugin="{plugin}">
 	        <lat>52.3566777</lat>
 	        <lon>4.9496814</lon>
+			<action own:plugin="{plugin}">
+				<name>_start</name>
+				<xpath>/data/environment/location/lon</xpath>
+				<url>/data/plugindata/{plugin}/lon</url>
+				<method>PUT</method>
+				<mimetype>text/plain</mimetype>
+				<data>{/data/environment/location/lon}</data>
+			</action>
+			<action own:plugin="{plugin}">
+				<name>_start</name>
+				<xpath>/data/environment/location/lat</xpath>
+				<url>/data/plugindata/{plugin}/lat</url>
+				<method>PUT</method>
+				<mimetype>text/plain</mimetype>
+				<data>{/data/environment/location/lat}</data>
+			</action>
 			<action>
 				<interval>300</interval>
 				<url>/pluginscript/{plugin}/pull</url>

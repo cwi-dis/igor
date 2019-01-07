@@ -108,13 +108,13 @@
 		</au:capability>
 	</identities>
 	<actions>
-	    <action>
-	        <name>start</name>
+	    <action own:igor="igor">
+	        <name>_start</name>
 			<representing>igor/start</representing>
 	        <url>/internal/started</url>
 	    </action>
-		<action>
-			<name>save</name>
+		<action own:igor="igor">
+			<name>_save</name>
 			<interval>3600</interval>
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
@@ -122,51 +122,18 @@
 			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
 			<notBefore/>
 		</action>
-        <action>
-            <name>cleanup</name>
+        <action own:igor="igor">
+            <name>_cleanup</name>
             <method>DELETE</method>
 			<representing>igor/std</representing>
             <url>/data/environment/messages/message[position()&lt;last()]</url>
 			<notBefore/>
         </action>
-		<action>
-			<name>updateActions</name>
+		<action own:igor="igor">
+			<name>_updateActions</name>
 			<xpath>/data/actions/* | /data/plugindata/*/action</xpath>
 			<representing>igor/core</representing>
 			<url>/internal/updateActions</url>
-			<notBefore/>
-		</action>
-		<action>
-			<name>checkNight</name>
-			<interval>900</interval>
-			<method>PUT</method>
-			<url>/data/environment/night</url>
-			<mimetype>text/plain</mimetype>
-			<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
-			<representing>igor/std</representing>
-			<notBefore/>
-		</action>
-		<action>
-			<name>updatePeople</name>
-			<xpath>/data/environment/devices/*</xpath>
-			<condition>/data/identities/*[device=name($originalContext)]</condition>
-			<url>/data/people/{name(/data/identities/*[device=name($originalContext)])}/home</url>
-			<method>PUT</method>
-			<mimetype>text/plain</mimetype>
-			<data>{.}</data>
-			<multiple>true</multiple>
-			<representing>igor/std</representing>
-			<notBefore/>
-		</action>
-		<action>
-			<name>countPeopleAtHome</name>
-			<interval>3600</interval>
-			<xpath>/data/people/*/home</xpath>
-			<method>PUT</method>
-			<url>/data/environment/people/count</url>
-			<mimetype>text/plain</mimetype>
-			<data>{count(/data/people/*[home='true'])}</data>
-			<representing>igor/std</representing>
 			<notBefore/>
 		</action>
 		<au:capability>

@@ -183,10 +183,7 @@ class IgorServer(object):
         self.internal.updateActions()
         self.internal.updateEventSources()
         self.internal.updateTriggers()
-        #
-        # Send start action to start any plugins
-        #
-        self.urlCaller.callURL(dict(method='GET', url='/action/start', token=self.access.tokenForIgor()))
+        # Start advertising on Rendezvous/mDNS
         if self._do_advertise:
             self._startAdvertising(self.port)
             
@@ -232,6 +229,10 @@ class IgorServer(object):
         if self._do_ssl:
             self.app.setSSLInfo(self.pathnames.certificateFile, self.pathnames.privateKeyFile)
         signal.signal(signal.SIGTERM, self._sigterm_caught)
+        #
+        # Send start action to start any plugins
+        #
+        self.internal.runAction('_start', self.access.tokenForIgor())
         self.app.run(self.port)
         print('Igor terminating')
 
@@ -410,7 +411,9 @@ class IgorInternal(object):
         if not self.igor.actionHandler:
             self.igor.app.raiseNotfound()
         nodes = self.igor.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
-        # xxxjack should I also run named actions inside plugindata elements????
+        # If this is an igor-administrative action also run it within plugins
+        if actionname[0] == '_':
+            nodes += self.igor.database.getElements('plugindata/*/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
         if not nodes:
             self.igor.app.raiseNotfound()
         for node in nodes:

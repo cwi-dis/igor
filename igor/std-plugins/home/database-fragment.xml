@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
+	<environment>
+		<night/>
+		<devices/>
+		<people/>
+	</environment>
+	<actions>
+		<action own:plugin="{plugin}">
+			<name>checkNight</name>
+			<interval>900</interval>
+			<method>PUT</method>
+			<url>/data/environment/night</url>
+			<mimetype>text/plain</mimetype>
+			<data>{igor_hours_from_dateTime(igor_dateTime()) &lt; 8 or igor_hours_from_dateTime(igor_dateTime()) &gt;= 23}</data>
+			<representing>igor/std</representing>
+			<notBefore/>
+		</action>
+		<action own:plugin="{plugin}">
+			<name>updatePeople</name>
+			<xpath>/data/environment/devices/*</xpath>
+			<condition>/data/identities/*[device=name($originalContext)]</condition>
+			<url>/data/people/{name(/data/identities/*[device=name($originalContext)])}/home</url>
+			<method>PUT</method>
+			<mimetype>text/plain</mimetype>
+			<data>{.}</data>
+			<multiple>true</multiple>
+			<representing>igor/std</representing>
+			<notBefore/>
+		</action>
+		<action own:plugin="{plugin}">
+			<name>countPeopleAtHome</name>
+			<interval>3600</interval>
+			<xpath>/data/people/*/home</xpath>
+			<method>PUT</method>
+			<url>/data/environment/people/count</url>
+			<mimetype>text/plain</mimetype>
+			<data>{count(/data/people/*[home='true'])}</data>
+			<representing>igor/std</representing>
+			<notBefore/>
+		</action>
+	</actions>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+		</{plugin}>
+	</plugindata>
+</data>

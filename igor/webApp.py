@@ -407,6 +407,7 @@ def get_plugin(pluginName, methodName='index'):
     allArgs = request.values.to_dict()
     pluginToken = _SERVER.igor.access.tokenForPlugin(pluginName, token=token)
     allArgs['token'] = pluginToken
+    allArgs['callerToken'] = token
     #
     # If there is a user argument also get userData
     #
@@ -475,7 +476,7 @@ def get_plugin_page(pluginName, pageName='index'):
     if template:
         # Note that we pass the incoming token, not the pluginToken, to the template
         try:
-            data = template.render(kwargs=allArgs, token=token, **allArgs)
+            data = template.render(kwargs=allArgs, token=pluginToken, callerToken=token, **allArgs)
         except werkzeug.exceptions.HTTPException:
             raise
         except xmlDatabase.DBAccessError:

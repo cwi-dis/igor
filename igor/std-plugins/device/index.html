@@ -47,8 +47,8 @@
 			<th>Actions</th>
 			<th>OP</th>
 		</tr>
-		{% set keyListData = pluginObject._keyList(token) %}
-		{% set deviceList = pluginObject._list(token) %}
+		{% set keyListData = pluginObject._keyList(callerToken) %}
+		{% set deviceList = pluginObject._list(callerToken) %}
 		{% for device in deviceList %}
 			{% set name=device.get('name') %}
 			{% set hostName = device.get('hostname', '') %}
@@ -94,7 +94,7 @@
 				{% endif %}
 				<td>
 					{% for action in device.get('actions', []) %}
-						{% set actionName = igor.database.getValues(action+'/name', token=token) %}
+						{% set actionName = igor.database.getValues(action+'/name', token=callerToken) %}
 						{% set actionNameDisplay = actionName[0][1] if actionName else action %}
 						<a href={{action}}>{{actionNameDisplay}}</a><br>
 					{% endfor %}
@@ -179,7 +179,7 @@
 				<td>
 					<select name="plugin">
 						<option value="">None</option>
-						{% for stdName in igor.plugins.liststd(token) %}
+						{% for stdName in igor.plugins.liststd(callerToken) %}
 							<option value="{{stdName}}">{{stdName}}</option>
 						{% endfor %}
 					</select>

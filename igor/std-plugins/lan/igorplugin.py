@@ -10,7 +10,7 @@ class LanPlugin(object):
     def __init__(self, igor):
         self.igor = igor
         
-    def index(self, name=None, service='services/%s', ip=None, port=80, timeout=5, url=None, token=None):
+    def index(self, name=None, service='services/%s', ip=None, port=80, timeout=5, url=None, token=None, callerToken=None):
         if not name:
             self.igor.app.raiseHTTPError("401 Required argument name missing")
         if not ip:

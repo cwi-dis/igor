@@ -27,7 +27,10 @@ A plugin can be implemented in Python. Then it must define a class (or factory f
 which is called whenever any method of the plugin is to be called. This function should return an object on which the individual methods are looked up. The ``igorPlugin`` function is called every time a plugin method needs to be called, but it can of course return a singleton object. See the *watchdog* plugin for an example. *igor* is a pointer to the global Igor object (see below), *PluginName*
 is the name under which the plugin has been installed, and *PluginData* is filled from ``/data/plugindata/_pluginname_``. 
 
-Each operation will call a method on the object. There will always be an argument ``token`` which will be the current set of capabilities (or ``None`` if Igor is running without capability support) and which the plugin will have to pass to most Igor API calls.
+Each operation will call a method on the object. There will always be an argument ``token`` which will be the current full set of capabilities (or ``None`` if Igor is running without capability support) and which the plugin will have to pass to most Igor API calls.
+The full set of capabilities consists of the capabilities carried by the caller of this plugin *plus* the capabilities of the plugin itself. There is another argument ``callerToken`` which contains only the capabilities of the caller.
+The intention of these two sets of capabilities is that the plugin code will use the *token* set when accessing private data and *callerToken* when accessing data that is passed in by the user (or when it wants to ensure
+the calling user actually has the right to access the data).
 
 Accessing ``/plugin/pluginname`` will call the ``index()`` method. 
 
@@ -88,7 +91,8 @@ A plugin can contain a user interface through HTML pages. These are accessed wit
 
 * *pluginName* is the name under which the plugin has been installed.
 * *pluginObject* the plugin object (if the plugin has an ``igorplugin.py`` Python module).
-* *token* is the capability of the current user (the user visiting the page).
+* *callerToken* is the capability of the current user (the user visiting the page).
+* *token* is the capability of the current user (the user visiting the page) plus the capability owned by the plugin itself.
 * *pluginData* is the internal data of the plugin (from ``/data/plugindata``\ ).
 * *igor* is the toplevel Igor object.
 * *user* is the current user (if logged in).
@@ -101,5 +105,7 @@ A plugin can contain a user interface through HTML pages. These are accessed wit
 
 In general, the template should provide forms and such to allow the user to change settings, and then call methods in the plugin proper to implement those changes (because the plugin will run with a *token* that allows read/write access to the plugin data). 
 If methods are intended to be called solely from templates and never directly through the REST interface you should start the methodname with an underscore.
+
+The plugin decides whether to use *token* or *callerToken* to access data depending on whether it is accessing data on behalf of itself (then it uses *token*) or on behalf of the person visiting the web page (in which case it uses *callerToken*).
 
 Plugins can access other plugins through the ``igor.plugins`` object.

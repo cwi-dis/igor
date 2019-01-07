@@ -13,7 +13,7 @@ class BLEPlugin(object):
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
     
-    def pull(self, token=None):
+    def pull(self, token=None, callerToken=None):
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', 'localhost')
         port = self.pluginData.get('port', '8081')

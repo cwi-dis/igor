@@ -35,7 +35,7 @@
 			<th>Operation</th>
 		</tr>
 	
-		{% set userList = igor.database.getElements('/data/identities/*', 'get', token) %}
+		{% set userList = igor.database.getElements('/data/identities/*', 'get', callerToken) %}
 		{% for user in userList %}
 			{% if not ':' in user.tagName %}
 				{% set username = user.tagName %}

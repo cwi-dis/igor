@@ -53,7 +53,7 @@ def dologparse(logfiles, goodREs, badREs, timeparser, timeformat):
             rv['errorMessage'] = subgroups['message']
     return rv
         
-def logparse(name=None, service='services/%s', path=None, max=0, good=None, bad=None, timeparser=None, timeformat=None, token=None):
+def logparse(name=None, service='services/%s', path=None, max=0, good=None, bad=None, timeparser=None, timeformat=None, token=None, callerToken=None):
     pass
 
 def main():

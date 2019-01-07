@@ -16,7 +16,7 @@ class CopyTree(object):
     def __init__(self, igor):
         self.igor = igor
 
-    def index(self, src=None, dst=None, mimetype="text/plain", method='PUT', token=None):
+    def index(self, src=None, dst=None, mimetype="text/plain", method='PUT', token=None, callerToken=None):
         if not src:
             self.igor.app.raiseHTTPError("401 Required argument name missing")
         if not dst:
@@ -25,7 +25,7 @@ class CopyTree(object):
         srcParsed = urllib.parse.urlparse(src)
         if srcParsed.scheme == '' and srcParsed.netloc == '':
             # Local source
-            srcValue = self.igor.databaseAccessor.get_key(srcParsed.path, mimetype, None, token)
+            srcValue = self.igor.databaseAccessor.get_key(srcParsed.path, mimetype, None, token=callerToken)
         else:
             # Remote source
             h = httplib2.Http()
@@ -35,7 +35,7 @@ class CopyTree(object):
     
         dstParsed = urllib.parse.urlparse(dst)
         if dstParsed.scheme == '' and dstParsed.netloc == '':
-            rv = self.igor.databaseAccessor.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, token, method=='PUT')
+            rv = self.igor.databaseAccessor.put_key(dstParsed.path, 'text/plain', None, srcValue, mimetype, callerToken, method=='PUT')
         else:
             headers = {'Content-type' : mimetype}
             h = httplib2.Http()

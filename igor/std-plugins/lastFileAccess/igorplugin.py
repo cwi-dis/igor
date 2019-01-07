@@ -29,7 +29,7 @@ class LastFileAccess(object):
     def __init__(self, igor):
         self.igor = igor
         
-    def index(self, name=None, service='services/%s', path=None, stamp="mtime", max=0, token=None):
+    def index(self, name=None, service='services/%s', path=None, stamp="mtime", max=0, token=None, callerToken=None):
         if not name or not path:
             self.igor.app.raiseHTTPError("401 Required arguments (name or path) missing")
         message = None

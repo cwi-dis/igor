@@ -18,7 +18,7 @@ class IotsaDiscoveryPlugin(object):
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
         
-    def _findNetworks(self, token=None):
+    def _findNetworks(self, token=None, callerToken=None):
         rv = {}
         try:
             rv['networks'] = self.wifi.findNetworks()
@@ -26,7 +26,7 @@ class IotsaDiscoveryPlugin(object):
             rv['message'] = e
         return rv
     
-    def _findDevices(self, token=None):
+    def _findDevices(self, token=None, callerToken=None):
         rv = {}
         try:
             rv['devices'] = self.wifi.findDevices()
@@ -34,7 +34,7 @@ class IotsaDiscoveryPlugin(object):
             rv['message'] = e
         return rv
         
-    def _getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None, reboot=None, _name=None, _value=None, includeConfig=False, **kwargs):
+    def _getorset(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, callerToken=None, returnTo=None, reboot=None, _name=None, _value=None, includeConfig=False, **kwargs):
         #
         # Get a handle on the device
         #
@@ -83,7 +83,7 @@ class IotsaDiscoveryPlugin(object):
         rv = self._getorset(*args, **kwargs)
         return self._returnOrSeeother(rv, returnTo)
         
-    def pull(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None):
+    def pull(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, callerToken=None, returnTo=None):
         handler = self._getHandler(device, protocol, credentials, port, noverify, token)
         modules = module.split('/')
         key = 'devices/%s/%s' % (self.pluginName, device)
@@ -108,7 +108,7 @@ class IotsaDiscoveryPlugin(object):
         rv = {}
         return self._returnOrSeeother(rv, returnTo)
             
-    def push(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, returnTo=None):
+    def push(self, device, protocol=None, credentials=None, port=None, module="config", noverify=False, token=None, callerToken=None, returnTo=None):
         handler = self._getHandler(device, protocol, credentials, port, noverify, token)
         key = 'devices/%s/%s/%s' % (self.pluginName, device, module)
         #
@@ -131,7 +131,7 @@ class IotsaDiscoveryPlugin(object):
             rv['message'] = str(e)
         return self._returnOrSeeother(rv, returnTo)
                     
-    def _getHandler(self, device, protocol, credentials, port, noverify, token=None):
+    def _getHandler(self, device, protocol, credentials, port, noverify, token=None, callerToken=None):
         """Return a handler for this device"""
         #
         # Persist settings for protocol, credentials, port, noverify for one device
@@ -236,7 +236,7 @@ class IotsaDiscoveryPlugin(object):
                 return self.igor.app.raiseHTTPError(value)
             return self.igor.app.raiseHTTPError("502 Error while accessing %s: %s" % (e.request.url, value))
             
-    def _setIndexed(self, device, module, index, newSettings, protocol=None, credentials=None, port=None, noverify=False, token=None):
+    def _setIndexed(self, device, module, index, newSettings, protocol=None, credentials=None, port=None, noverify=False, token=None, callerToken=None):
         """Helper for templates: change settings for a single entry for a module that has multiple entries"""
         handler = self._getHandler(device, protocol, credentials, port, noverify, token)
         apiName = "%s/%d" % (module, int(index))
@@ -252,7 +252,7 @@ class IotsaDiscoveryPlugin(object):
             rv = self.igor.app.stringFromHTTPError(e)
         return rv
                 
-    def _getIgorUrl(self, token=None):
+    def _getIgorUrl(self, token=None, callerToken=None):
         """Helper for templates: get base URL for this igor, in a iotsa-compatible form.
         This method is a workaround for iotsa currently not being able to handle .local hostnames
         so we convert such a hostname into IP address.
@@ -263,16 +263,16 @@ class IotsaDiscoveryPlugin(object):
             host = socket.gethostbyname(host)
         return "%s://%s:%s" % (igorInfo['protocol'], host, igorInfo['port'])
         
-    def _getIgorFingerprint(self, token=None):
+    def _getIgorFingerprint(self, token=None, callerToken=None):
         """Helper for templates: return the SSL certificate fingerprint for this igor."""
         return self.igor.database.getValue('services/igor/fingerprint', token=token)
         
-    def _getActionsForDevice(self, device=None, token=None):
+    def _getActionsForDevice(self, device=None, token=None, callerToken=None):
         """Helper for templates: returns list of action names this device might trigger"""
         list = self.igor.database.getValues('actions/action/name', token=token)
         return [x[1] for x in list]
         
-    def _getTokensForDevice(self, device=None, token=None):
+    def _getTokensForDevice(self, device=None, token=None, callerToken=None):
         """Helper for templates: return list of all capabilities valid for this device as subject"""
         descriptions = self.igor.access.tokensForSubject(device, token)
         rv = []

@@ -27,7 +27,7 @@ class SystemHealthPlugin(object):
         self.igor = igor
         self.pluginData = pluginData
         
-    def index(self, ignore=None, duration=0, returnTo=None, token=None):
+    def index(self, ignore=None, duration=0, returnTo=None, token=None, callerToken=None):
         #
         # See if we have a request to ignore errors for a specific service (or sensor)
         #

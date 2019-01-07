@@ -13,11 +13,11 @@
 	<h1>Edit XML data</h1>
 	
 	{% if action == "get" %}
-		{% set result = pluginObject._get(xpath, token) %}
+		{% set result = pluginObject._get(xpath, callerToken) %}
 	{% elif action == "add" %}
-		{% set result = pluginObject._post(xpath, newData, save=save, token=token) %}
+		{% set result = pluginObject._post(xpath, newData, callerToken, save=save) %}
 	{% elif action == "replace" %}
-		{% set result = pluginObject._replace(xpath, oldData, newData, save=save, token=token) %}
+		{% set result = pluginObject._replace(xpath, oldData, newData, callerToken, save=save) %}
 	{% else %}
 		{% set result = {'message' : 'Unknown action="%s"' % action} %}
 	{% endif %}

@@ -47,48 +47,48 @@ class CAPlugin(object):
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
         
-    def list(self, token=None):
+    def list(self, token=None, callerToken=None):
         self.initCA()
         listData = self.ca.do_list()
         return listData
         
-    def status(self, token=None):
+    def status(self, token=None, callerToken=None):
         self.initCA()
         statusData = self.ca.do_status()
         return statusData
 
-    def dn(self, token=None):
+    def dn(self, token=None, callerToken=None):
         self.initCA()
         dnData = self.ca.do_dn()
         return dnData
         
-    def csrtemplate(self, token=None):
+    def csrtemplate(self, token=None, callerToken=None):
         self.initCA()
         tmplData = self.ca.do_csrtemplate()
         return tmplData
         
-    def sign(self, csr, token=None):
+    def sign(self, csr, token=None, callerToken=None):
         self.initCA()
         cert = self.ca.do_signCSR(csr)
         if not cert:
             self.igor.app.raiseHTTPError('500 Could not sign certificate')
         return self.igor.app.responseWithHeaders(cert, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="certificate.pem"'})
         
-    def root(self, token=None):
+    def root(self, token=None, callerToken=None):
         self.initCA()
         chain = self.ca.do_getRoot()
         if not chain:
             self.igor.app.raiseHTTPError('500 Could not obtain root certificate chain')
         return self.igor.app.responseWithHeaders(chain, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="igor-root-certificate-chain.pem"'})
 
-    def revoke(self, number, token=None):
+    def revoke(self, number, token=None, callerToken=None):
         self.initCA()
         ok = self.ca.do_revoke(number)
         if ok:
             return ''
         return self.igor.app.raiseHTTPError('500 Error while revoking %s' % number)
         
-    def _generateKeyAndSign(self, names, keysize=None, token=None):
+    def _generateKeyAndSign(self, names, keysize=None, token=None, callerToken=None):
         self.initCA()
         _, keyFile = tempfile.mkstemp(suffix=".key")
         _, csrFile = tempfile.mkstemp(suffix=".csr")
@@ -109,7 +109,7 @@ class CAPlugin(object):
             return self.igor.app.raiseHTTPError("500 Could not create certificate")
         return keyData, certData
         
-    def generateKeyAndSign(self, names, token=None):
+    def generateKeyAndSign(self, names, token=None, callerToken=None):
         names = names.split()
         keyData, certData = self._generateKeyAndSign(names, token)
         return self.igor.app.responseWithHeaders(keyData+certData, {"Content-type":"text/plain"})

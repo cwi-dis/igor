@@ -13,7 +13,7 @@ class IotsaPlugin(object):
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
     
-    def pull(self, token=None):
+    def pull(self, token=None, callerToken=None):
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', '%s.local' % self.pluginName)
         endpoint = self.pluginData.get('endpoint', 'api')
@@ -53,7 +53,7 @@ class IotsaPlugin(object):
         self.igor.urlCaller.callURL(tocall)
         return 'ok\n'
         
-    def push(self, token=None):
+    def push(self, token=None, callerToken=None):
         target = self.igor.databaseAccessor.get_key('devices/%s/target' % self.pluginName, 'application/json', 'content', token)
         
         protocol = self.pluginData.get('protocol', 'http')

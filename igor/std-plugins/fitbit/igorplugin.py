@@ -42,7 +42,7 @@ class FitbitPlugin(object):
         self.igor.internal.queue('save', self.token)
         if DEBUG: print('xxxjack queued save call')
     
-    def index(self, user=None, userData={}, methods=None, token=None, **kwargs):
+    def index(self, user=None, userData={}, methods=None, token=None, callerToken=None, **kwargs):
         """Main entry point - get Fitbit data for a single user"""
         if not user:
             self.igor.app.raiseHTTPError("400 Fitbitplugin requires user argument")
@@ -93,7 +93,7 @@ class FitbitPlugin(object):
         self.igor.databaseAccessor.put_key('sensors/%s/%s' % (self.pluginName, user), 'application/x-python-object', None, results, 'application/x-python-object', token, replace=True)
         return str(results)
     
-    def auth1(self, user=None, userData=None, token=None, **kwargs):
+    def auth1(self, user=None, userData=None, token=None, callerToken=None, **kwargs):
         """OAuth2 entry point 1 - start with authentication sequence, redirect user's browser to Fitbit site"""
         if not user:
             self.igor.app.raiseHTTPError("401 fitbitplugin/auth1 requires 'user' argument")
@@ -114,7 +114,7 @@ class FitbitPlugin(object):
         redirectUrl, _ = fb.client.authorize_token_url(redirect_uri=step2url, state=user)
         return self.igor.app.raiseSeeother(redirectUrl)
     
-    def auth2(self, code=None, state=None, token=None, **kwargs):
+    def auth2(self, code=None, state=None, token=None, callerToken=None, **kwargs):
         """Oatth2 entry point 2 - return data from Fitbit site via the user's browser"""
         oauthSettings = {}
         self.user = state
@@ -138,7 +138,7 @@ class FitbitPlugin(object):
         self._refresh(fbToken)
         return 'ok\n'
 
-    def settings(self, client_id='', client_secret='', system='', token=None, returnTo=None, **kwArgs):
+    def settings(self, client_id='', client_secret='', system='', token=None, callerToken=None, returnTo=None, **kwArgs):
         """Set global settings for fitbit plugin"""
         rv = 'ok\n'
         if client_id:
@@ -151,7 +151,7 @@ class FitbitPlugin(object):
             return self.igor.app.raiseSeeother(returnTo)
         return rv
         
-    def userSettings(self, user=None, delete=False, userData=None, token=None, returnTo=None, _newName=None, _newValue=None, **kwArgs):
+    def userSettings(self, user=None, delete=False, userData=None, token=None, callerToken=None, returnTo=None, _newName=None, _newValue=None, **kwArgs):
         """Create or delete Fitbit user, or change per-user settings"""
         rv = ''
         if delete:

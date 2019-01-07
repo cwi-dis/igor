@@ -16,7 +16,7 @@ class NeoclockPlugin(object):
     # xxxjack should add methods to get/set timezone, etc.
     # xxxjack should add general iotsa methods
     
-    def push(self, token=None):
+    def push(self, token=None, callerToken=None):
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', '%s.local' % self.pluginName)
         url = "%s://%s/alert" % (protocol, host)

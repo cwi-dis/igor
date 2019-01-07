@@ -19,7 +19,7 @@ class WatchdogClass(object):
         if self.watchdog_device:
             self.watchdog_device.magic_close()
         
-    def index(self, timeout=None, device='/dev/watchdog', token=None):
+    def index(self, timeout=None, device='/dev/watchdog', token=None, callerToken=None):
         """Initialize and/or feed the watchdog"""
         # Close the watchdog, if that is what is wanted
         if timeout == 0:

@@ -87,7 +87,8 @@
 		<form action="/plugins.html">
 			<input type="hidden" name="action" value="addstd">
 			Standard plugin to install:<br>
-			<select name="stdName">
+			<select name="stdName" required>
+				<option value="">- select -</option>
 				{% for stdName in igor.plugins.liststd(token) %}
 					<option value="{{stdName}}">{{stdName}}</option>
 				{% endfor %}

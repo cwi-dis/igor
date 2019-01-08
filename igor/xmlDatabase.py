@@ -428,7 +428,7 @@ class DBImpl(DBSerializer):
             self._checkAccess('get', self._doc.documentElement, token)
             return self._doc.documentElement
         
-    def splitXPath(self, location, allowNamespaces=False):
+    def splitXPath(self, location, allowNamespaces=False, stripPredicate=False):
         lastSlashPos = location.rfind('/')
         if lastSlashPos == 0:
             parent = '.'
@@ -439,6 +439,11 @@ class DBImpl(DBSerializer):
         else:
             parent = '.'
             child = location
+        # If wanted strip any predicates from the child
+        if stripPredicate and child[-1:] == ']':
+            firstBracketPos = child.find('[')
+            if firstBracketPos > 0:
+                child = child[:firstBracketPos]
         # Test that child is indeed a tag name
         if allowNamespaces:
             if not TAG_PATTERN_WITH_NS.match(child):

@@ -750,7 +750,7 @@ class XmlDatabaseAccess(object):
             nodesToSignal = []
             with self.igor.database:
                 unchanged = False
-                parentPath, tag = self.igor.database.splitXPath(key)
+                parentPath, tag = self.igor.database.splitXPath(key, stripPredicate=True)
                 if not tag:
                     myWebError("400 PUT path must end with an element tag", 400)
                 element = self.convertfrom(data, tag, datamimetype)

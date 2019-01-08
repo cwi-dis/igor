@@ -47,7 +47,7 @@ package_data={
 }
 
 setup(
-    name='igor',
+    name='igor-iot',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -56,9 +56,10 @@ setup(
 
     description='REST-like IoT server',
     long_description=long_description,
-
+    long_description_content_type="text/markdown",
+    
     # The project's main homepage.
-    url='http://www.cwi.nl',
+    url='https://github.com/cwi-dis/igor',
 
     # Author details
     author='Jack Jansen',
@@ -69,8 +70,8 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 3 - Alpha',
-
+        'Development Status :: 4 - Beta',
+        'Framework :: Flask',
         # Indicate who your project is intended for
         'Intended Audience :: End Users/Desktop',
         'Topic :: Database',

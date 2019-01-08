@@ -1,0 +1,90 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+	}
+	</style>
+	<title>Delete action</title>
+</head>
+<body>
+	<h1>Delete action</h1>
+	
+	{% set result = pluginObject._get(xpath, callerToken) %}
+	{% set description = result.description or {} %}
+	{% set message = result.pop('message', None) %}
+	{% if message %}
+		<p><b>Warning:</b> {{message}}</p>
+	{% endif %}
+	<table>
+		<tr>
+			<th>Group</th>
+			<th>Key</th>
+			<th>Value</th>
+		</tr>
+		<tr>
+			<td colspan="2">XPath for action</td>
+			<td>{{result.xpath}}</td>
+		</tr>
+		<tr>
+			<td rowspan="4">Triggers</td>
+			<td>Name</td>
+			<td>{{description.name}}</td>
+		</tr>
+		<tr>
+			<td>Interval</td>
+			<td>description.interval</td>
+		</tr>
+		<tr>
+			<td>Expression</td>
+			<td>{{description.xpath}}</td>
+		</tr>
+		<tr>
+			<td>Multiple</td>
+			<td>{{description.multiple}}</td>
+		</tr>
+		<tr>
+			<td rowspan="3">Conditions</td>
+			<td>Condition</td>
+			<td>{{description.condition}}</td>
+		</tr>
+		<tr>
+			<td>Min Interval</td>
+			<td>{{description.minInterval}}</td>
+		</tr>
+		<tr>
+			<td>Aggregate</td>
+			<td>{{description.aggregate}}</td>
+		</tr>
+		<tr>
+			<td rowspan="4">Action</td>
+			<td>Method</td>
+			<td>{{description.method}}</td>
+		</tr>
+		<tr>
+			<td>URL</td>
+			<td>{{description.url}}</td>
+		</tr>
+		<tr>
+			<td>Data</td>
+			<td>{{description.data}}</td>
+		</tr>
+		<tr>
+			<td>Mimetype</td>
+			<td>{{description.mimetype}}</td>
+		</tr>
+		<tr>
+			<td colspan="4">
+			<a href="{{xpath}}?.METHOD=DELETE">Delete this action</a>. <b>Note</b> that this action cannot be undone.
+		</tr>
+	</table>
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="index.html">Return to main action editor page</a><br>
+	<a href="/">Return to Igor homepage</a>
+</body>
+</html>

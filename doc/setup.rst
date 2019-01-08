@@ -16,9 +16,17 @@ Next add the standard plugins:
 
 .. code-block:: sh
 
-   igorSetup addstd lan systemHealth ca user device
+   igorSetup addstd systemHealth ca user device actions editData
+   igorSetup addstd lan home say
 
-(these are the standard plugins used by the default database, which as distributed does little more than check whether it is day or night).
+The first set of those are plugins that are used for Igor administration. Technically
+they are optional, i.e. Igor will work fine without them, but practically they are
+needed to allow you to administer your Igor server.
+
+The second set are really optional, but they provide convenience functions such as checking
+that the internet works, and determining how any people ar currently at home. You may
+want to skip installing these right now and add them later via the :doc:`administration`
+interface.
 
 You should now be able to run the server with
 

@@ -8,4 +8,4 @@ py-dom-xpath-six
 passlib
 pyjwt
 pyopenssl
-markdown
+Markdown

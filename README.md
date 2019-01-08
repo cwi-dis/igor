@@ -29,20 +29,24 @@ It also comes with a number of useful plugins and a set of Python modules and co
 
 ## Documentation
 
-Full documentation is available [here](doc/index.rst). 
+Formatted documentation is available online, at <https://igor-iot.readthedocs.io>.
 
-Formatted documentation is also available online, at <https://igor-iot.readthedocs.io>.
+When viewing source documentation is also available [here](doc/index.rst). 
+
 
 ## Getting Started
 
 You need to have Python 3.6 or later installed.
 (Python 2.7 is also still supported but Python 3 is preferred).
 
-You need the _pip_ package manager for the version of Python that you are going to use. Installing Python's package installation program _pip_ will also install _setuptools_.
+You need the _pip_ package manager for the version of Python that you are going to use.
 
-> Shortly Igor will be installable through pypi.
+```
+python3 -m pip install igor-iot
+```
 
-Complete installation instructions are in [doc/install.rst](doc/install.rst)
-and [doc/setup.rst](doc/restup.rst).
+After that follow the instructions in <https://igor-iot.readthedocs.io/en/latest/setup.html>
+or [doc/setup.rst](doc/setup.rst) to setup your Igor system.
+
 
 

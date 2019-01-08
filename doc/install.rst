@@ -16,7 +16,16 @@ See also https://packaging.python.org/tutorials/installing-packages/.
 Installing from PyPi
 --------------------
 
-At the moment Igor isn't hosted on PyPi. Once it is this section will be written.
+Assuming you are using Python 3, run the following command:
+
+.. code-block:: sh
+	python3 -m pip install igor-iot
+	
+Depending on your system installation (if this command fails with an error)
+you may have to run it with ``sudo``.
+
+Note that installing with ``--user`` or installing in a *virtualenv* has not
+been tested.
 
 Installing from source
 ----------------------

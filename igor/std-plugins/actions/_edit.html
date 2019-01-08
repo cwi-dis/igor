@@ -44,24 +44,28 @@
 		{% set _ = description.update(mimetype=mimetype) if mimetype else None %}
 		{% set result = pluginObject._post(description, callerToken) %}
 		{% set description = result.description or {} %}
-	{% elif action == "replace" %}
-		{% set result = pluginObject._get(xpath, callerToken) %}
+	{% elif action == "replace" and not replaceXPath.startswith('/data/actions/action') %}
+		{% set result = {'message' : 'Invalid XPath for replace: %s' % replaceXPath} %}
+		{% set description = {} %}
+	{% elif action == "replace"  %}
+		{% set result = pluginObject._get(replaceXPath, callerToken) %}
 		{% set description = result.description or {} %}
-		{% set _ = description.update(name=name) if name != description.name else None %}
-		{% set _ = description.update(interval=interval) if interval != description.interval else None %}
-		{% set _ = description.update(xpath=xpath) if xpath != description.xpath else None %}
-		{% set _ = description.update(multiple=multiple) if multiple != description.multiple else None %}
-		{% set _ = description.update(condition=condition) if condition != description.condition else None %}
-		{% set _ = description.update(minInterval=minInterval) if minInterval != description.minInterval else None %}
-		{% set _ = description.update(aggregate=aggregate) if aggregate != description.aggregate else None %}
-		{% set _ = description.update(method=method) if method != description.method else None %}
-		{% set _ = description.update(url=url) if url != description.url else None %}
-		{% set _ = description.update(data=data) if data != description.data else None %}
-		{% set _ = description.update(mimetype=mimetype) if mimetype != description.mimetype else None %}
-		{% set result = pluginObject._replace(xpath, description, callerToken) %}
+		{% set _ = description.update(name=name) if name != description.name and (name or description.name) else None %}
+		{% set _ = description.update(interval=interval) if interval != description.interval and (interval or description.interval) else None %}
+		{% set _ = description.update(xpath=xpath) if xpath != description.xpath and (xpath or description.xpath) else None %}
+		{% set _ = description.update(multiple=multiple) if multiple != description.multiple and (multiple or description.multiple) else None %}
+		{% set _ = description.update(condition=condition) if condition != description.condition and (condition or description.condition) else None %}
+		{% set _ = description.update(minInterval=minInterval) if minInterval != description.minInterval and (minInterval or description.minInterval) else None %}
+		{% set _ = description.update(aggregate=aggregate) if aggregate != description.aggregate and (aggregate or description.aggregate) else None %}
+		{% set _ = description.update(method=method) if method != description.method and (method or description.method) else None %}
+		{% set _ = description.update(url=url) if url != description.url and (url or description.url) else None %}
+		{% set _ = description.update(data=data) if data != description.data and (data or description.data) else None %}
+		{% set _ = description.update(mimetype=mimetype) if mimetype != description.mimetype and (mimetype or description.mimetype) else None %}
+		{% set result = pluginObject._replace(replaceXPath, description, callerToken) %}
 		{% set description = result.description or {} %}
 	{% else %}
 		{% set result = {'message' : 'Unknown action="%s"' % action} %}
+		{% set description = {} %}
 	{% endif %}
 	{% if action == "new" %}
 		<h2>Create new action</h2>

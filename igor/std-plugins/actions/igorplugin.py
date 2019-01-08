@@ -55,11 +55,14 @@ class ActionsPlugin(object):
                 rv['xpath'] = xpath
             except self.igor.app.getHTTPError() as e:
                 rv['message'] = "Error getting action {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+            self.igor.internal.save(callerToken) # xxxjack should not be needed, but it seems it is...
         return rv
         
     def _replace(self, xpath, description, callerToken):
         """Replace an existing action"""
         rv = {}
+        if not 'url' in description:
+            return dict(message="Ill-formatted action, should contain url")
         try:
             xpath = self.igor.databaseAccessor.put_key(xpath, "text/plain", "ref", description, "application/x-python-object", callerToken, replace=True)
             if hasattr(xpath, 'get_data'): xpath = xpath.get_data()
@@ -73,6 +76,7 @@ class ActionsPlugin(object):
                 rv['xpath'] = xpath
             except self.igor.app.getHTTPError() as e:
                 rv['message'] = "Error getting action {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+            self.igor.internal.save(callerToken) # xxxjack should not be needed, but it seems it is...
         return rv
         
 def igorPlugin(igor, pluginName, pluginData):

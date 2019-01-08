@@ -1,3 +1,13 @@
+igor 0.98 - January 2018
+- implemented token and callerToken distinction for plugins
+- moved secret keys out of main database to shadow.xml database
+- editData plugin added
+- actions plugin added
+- Fitbit plugin is called fitbit again
+- moved some convenience actions into new home plugin
+- Documentation finished, and available at https://igor-iot.readthedocs.io
+- First release to be available on pypi.org (as a beta)
+
 igor 0.97 - December 2018
 - Implementation of capability-related support for iotsa devices
 - plugins can now contain actions

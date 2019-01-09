@@ -60,6 +60,11 @@ setup(
     
     # The project's main homepage.
     url='https://github.com/cwi-dis/igor',
+    # Other URLs
+    project_urls={
+        'Documentation': 'https://igor-iot.readthedocs.io',
+        'Issue tracker': 'https://github.com/cwi-dis/igor/issues',
+    },
 
     # Author details
     author='Jack Jansen',

@@ -8,3 +8,7 @@ The following parameters are accepted:
 * `remoteHost`: hostname or ip-address where `tmutil` is run, using `ssh`. Default is to run locally.
 
 The status of the backup (including any error messages) is stored in `/data/status/services/_name_`.
+
+## User Interface
+
+There is a user interface page _index.html_ that allows adding of Time Machine service watchers and deleting them again.

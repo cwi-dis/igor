@@ -1,0 +1,70 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+	<title>Setup {{pluginName}}</title>
+</head>
+<body>
+	{% if igor.plugins.exists('actions') %}
+		{% set actionPlugin = igor.plugins._getPluginObject(pluginName="actions", token=callerToken) %}
+		{% set message = "" %}
+		{% if action == "add" %}
+			{% set action = {} %}
+			{% set url = "/pluginscript/" + pluginName + "/get?name=" + name %}
+			{% set url = url + (("remoteHost=" + remoteHost) if remoteHost else "") %} 
+			{% set description = {'url' : url, 'representing' : 'services/' + name, 'aggregate' : True, 'creator' : pluginName, 'interval' : interval} %}
+			{% set result = actionPlugin._post(description, callerToken) %}
+			{% set message = result.message %}
+		{% endif %}
+		{% set myActions = actionPlugin._list(creator=pluginName, callerToken=callerToken) %}
+		{% set message = message or myActions.message %}
+	{% else %}
+		{% set message = "actions plugin must be installed to be able to list and install services to watch" %}
+	{% endif %}
+	<h1>Setup {{pluginName}}</h1>
+	
+	{% if message %}
+		<p><b>Note:</b> {{message}}</p>
+	{% endif %}
+	<h2>Installed {{pluginName}} service actions</h2>
+	<table>
+		<tr>
+			<th>Service name</th>
+			<th>Interval</th>
+			<th>Command</th>
+			<th>OP</th>
+		</tr>
+		{% for xpath, actionDescr in myActions.items() %}
+			<tr>
+				<td>{{actionDescr.representing}}</td>
+				<td>{{actionDescr.interval}}</td>
+				<td>{{actionDescr.url}}</td>
+				<td><a href="{{xpath}}?.METHOD=DELETE">Delete this action</a></td>
+			</tr>
+		{% endfor %}
+	</table>
+	<h2>Install new {{pluginName}} service watcher</h2>
+	
+	<p>Install a watcher for Apple Time Machine backups (using the <i>tmutil</i> utility). Will report last backup time in <tt>status/services/</tt><i>name</i> and
+	indirectly in <i>systemHealth</i>.</p>
+	
+	<form>
+		<input type="hidden" name="action" value="add">
+		Service name: <input name="name" value="backup.localhost">(how you call this backup service. letters/digits/hyphen/dot only)<br>
+		Host: <input name="remoteHost" value=""> (leave empty for Igor host. If non-empty must be accessible with <i>ssh</i> from Igor machine)<br>
+		Interval: <input name="interval" value="36000">(how often to check, in seconds)<br>
+		<input type="submit" value="Add watcher action">
+	</form>
+
+	<hr>
+	{% if returnTo %}
+		<p><a href="{{returnTo}}">Return to {{returnTo}}</a></p>
+	{% endif %}
+	<p><a href="/">Return to Igor homepage</a></p>
+</body>
+</html>

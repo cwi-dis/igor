@@ -1,26 +1,8 @@
 <?xml version="1.0" ?>
 <data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
 	<services>
-		<router/>
-		<internet/>
 	</services>
 	<actions>
-		<action own:plugin="{plugin}">
-			<interval>60</interval>
-			<url>/plugin/lan?name=router&amp;ip=192.168.1.1</url>
-			<aggregate>true</aggregate>
-		</action>
-		<action own:plugin="{plugin}">
-			<interval>60</interval>
-			<url>/plugin/lan?name=internet&amp;ip=google.com.</url>
-			<aggregate>true</aggregate>
-		</action>
-		<action own:plugin="{plugin}">
-			<interval>60</interval>
-			<url>/plugin/lan?name=igor&amp;service=igor/web&amp;url={/data/services/igor/url}/services/igor/host</url>
-			<aggregate>true</aggregate>
-			<notBefore>1512862407</notBefore>
-		</action>
 	</actions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">

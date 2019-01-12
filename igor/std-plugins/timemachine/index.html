@@ -16,7 +16,7 @@
 		{% if action == "add" %}
 			{% set action = {} %}
 			{% set url = "/pluginscript/" + pluginName + "/get?name=" + name %}
-			{% set url = url + (("remoteHost=" + remoteHost) if remoteHost else "") %} 
+			{% set url = url + (("&remoteHost=" + remoteHost) if remoteHost else "") %} 
 			{% set description = {'url' : url, 'representing' : 'services/' + name, 'aggregate' : True, 'creator' : pluginName, 'interval' : interval} %}
 			{% set result = actionPlugin._post(description, callerToken) %}
 			{% set message = result.message %}

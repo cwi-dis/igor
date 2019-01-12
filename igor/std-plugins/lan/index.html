@@ -1,0 +1,117 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+	<title>Setup {{pluginName}}</title>
+</head>
+<body>
+	{% if igor.plugins.exists('actions') %}
+		{% set actionPlugin = igor.plugins._getPluginObject(pluginName="actions", token=callerToken) %}
+		{% set message = "" %}
+		{% if action == "add" %}
+			{% set action = {} %}
+			{% set actionUrl = "/plugin/" + pluginName + "?name=" + name %}
+			{% set actionUrl = actionUrl + (("&service=" + service) if service else "") %} 
+			{% set actionUrl = actionUrl + (("&remoteHost=" + remoteHost) if remoteHost else "") %} 
+			{% set actionUrl = actionUrl + (("&url=" + url) if url else "") %} 
+			{% set actionUrl = actionUrl + (("&ip=" + ip) if ip else "") %} 
+			{% set actionUrl = actionUrl + (("&port=" + port) if port else "") %} 
+			{% set actionUrl = actionUrl + (("&timeout=" + timeout) if timeout else "") %} 
+			{% set description = {'url' : actionUrl, 'aggregate' : True, 'creator' : pluginName, 'interval' : interval} %}
+			{% set result = actionPlugin._post(description, callerToken) %}
+			{% set message = result.message %}
+		{% endif %}
+		{% set myActions = actionPlugin._list(creator=pluginName, callerToken=callerToken) %}
+		{% set message = message or myActions.message %}
+	{% else %}
+		{% set message = "actions plugin must be installed to be able to list and install services to watch" %}
+	{% endif %}
+	<h1>Setup {{pluginName}}</h1>
+	
+	{% if message %}
+		<p><b>Note:</b> {{message}}</p>
+	{% endif %}
+	<h2>Installed {{pluginName}} service actions</h2>
+	<table>
+		<tr>
+			<th>Interval</th>
+			<th>Command</th>
+			<th>OP</th>
+		</tr>
+		{% for xpath, actionDescr in myActions.items() %}
+			<tr>
+				<td>{{actionDescr.interval}}</td>
+				<td>{{actionDescr.url}}</td>
+				<td><a href="{{xpath}}?.METHOD=DELETE">Delete this action</a></td>
+			</tr>
+		{% endfor %}
+	</table>
+	<h2>Install new {{pluginName}} web service watcher</h2>
+	
+	<p>Install a watcher for a web-based service that will report availability in <tt>status/services/</tt><i>name</i> and
+	indirectly in <i>systemHealth</i>. URL can incorporate Igor database entries using Attribute Value Template constructs.</p>
+	
+	<form>
+		<input type="hidden" name="action" value="add">
+		Name: <input name="name" value="" required>(name of this service)<br>
+		Report path: <input name="service" value="">(defaults to <tt>services/</tt><i>name</i>, change for watching other things like sensors)<br>
+		URL: <input name="url" value="" required> (URL to contact)<br>
+		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		<input type="submit" value="Add watcher">
+	</form>
+
+	<h2>Install new {{pluginName}} TCP/IP service watcher</h2>
+	
+	<p>Install a watcher that tries to connect to a given TCP <i>port</i> on a given <i>host</i>. Will report availability in <tt>status/services/</tt><i>name</i> and
+	indirectly in <i>systemHealth</i>. This is handy for testing availability of things like printers, ssh servers, etc.</p>
+	
+	<form>
+		<input type="hidden" name="action" value="add">
+		Name: <input name="name" value="" required>(name of this service)<br>
+		Report path: <input name="service" value="">(defaults to <tt>services/</tt><i>name</i>, change for watching other things like sensors)<br>
+		Host: <input name="ip" value="" required> (full hostname or IP address)<br>
+		Port: <input name="port" value="80"> (TCP port number)<br>
+		Timeout: <input name="timeout" value="">(How long to try contacting the service before giving up. Default 5 seconds)<br>
+		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		<input type="submit" value="Add watcher">
+	</form>
+
+	<h2>Suggested standard watchers</h2>
+	<h3>Internet Router Health</h3>
+	<form>
+		<input type="hidden" name="action" value="add">
+		Name: <input name="name" value="net.router" required>(name of this service)<br>
+		Host: <input name="ip" value="192.168.1.1" required> (IP address (or full local hostname) of your internet router)<br>
+		Port: <input name="port" value="80"> (TCP port number)<br>
+		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		<input type="submit" value="Add watcher">
+	</form>
+	<h3>Internet Connection Health</h3>
+	<form>
+		<input type="hidden" name="action" value="add">
+		Name: <input name="name" value="net.internet" required>(name of this service)<br>
+		Host: <input name="ip" value="google.com" required> (full hostname (or IP address) of a machine on the internet that is always up)<br>
+		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		<input type="submit" value="Add watcher">
+	</form>
+	<h3>Igor Web Interface Health</h3>
+	<form>
+		<input type="hidden" name="action" value="add">
+		Name: <input name="name" value="igor" required><br>
+		Report path: <input name="service" value="igor/web"><br>
+		URL: <input name="url" value="{/data/services/igor/url}/services/igor/host" required><br>
+		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		<input type="submit" value="Add watcher">
+	</form>
+	<hr>
+	{% if returnTo %}
+		<p><a href="{{returnTo}}">Return to {{returnTo}}</a></p>
+	{% endif %}
+	<p><a href="/">Return to Igor homepage</a></p>
+</body>
+</html>

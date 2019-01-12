@@ -10,6 +10,7 @@ The following parameters are accepted:
 * `ip`: hostname or ip-address to contact (string). Default is to use the value of _name_.
 * `port`: port to contact (integer), default 80.
 * `timeout`: how many seconds to wait for the connection to be established before giving up (integer), default 5.
+* `url`: alternative to _ip/port/timeout_, try to connect to a http[s]-based service.
 * `service`: where status report will be posted. Default is `services/%s`, where the `name` is filled in for the `%s`.
 
 ## schema
@@ -22,21 +23,7 @@ For each service _name_ there will be an entry `/data/status/services/_name_` wh
 * `lastActivity`: a timestamp telling when the plugin was run most recently
 * `errorMessage`: if this exists it is a string explaining in human-friendly language what is wrong with the service.
 
-## examples
+## user interface
 
-The plugin has two example _actions_, which test availability of a webserver at 192.168.1.1 (usually the internet router) and another one at google.com (where success indicates that the outside internet connection and various other services such as DNS are working):
-
-```
-<actions>
-	<action>
-		<interval>60</interval>
-		<url>/plugin/lan?name=router&amp;ip=192.168.1.1</url>
-	</action>
-	<action>
-		<interval>60</interval>
-		<url>/plugin/lan?name=internet&amp;ip=google.com.</url>
-	</action>
-</actions>
-
-```
-
+There is a user interface at _/plugin/lan/page/index.html_ that allows inspecting/adding/deleting lan plugin watchers.
+It also has some suggested actions to add, to test internet health and Igor health.

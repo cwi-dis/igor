@@ -1,0 +1,55 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Setup {{pluginName}}</title>
+</head>
+<body>
+	<h1>Setup {{pluginName}}</h1>
+	
+	{% set authentication = pluginData.authentication %}
+	<h2>Netatmo website settings for this Igor</h2>
+	
+	<p>Register your Igor as a Netatmo app at <a href="https://dev.netatmo.com/myaccount/createanapp" target="_blank">Netatmo "create an app" page</a> and 
+	fill in the resulting details (Client ID and Client Secret) here. You should be able to login to <i>dev.netatmo.com</i> with the same username and password
+	you use for the normal Netatmo dashboard.</p>
+	
+	<p>Specify the following values:</p>
+	<blockquote>
+		Name: <i>something with igor- is suggested</i><br>
+		Description: <i>doesn't really matter</i><br>
+		App Website: <i>not required</i><br>
+		Company: <i>leave blank</i><br>
+		Company Website: <i>leave blank</i><br>
+		Data protection Officer name: <i>your name</i><br>
+		Data protection Officer email: <i>your email</i><br>
+	</blockquote>
+	
+	<p>That will provide you with the details to enter in the following form.</p>
+	
+	<form action="/plugin/{{pluginName}}/setAuthentication">
+		<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/setup.html">
+		Netatmo Client ID for this Igor: <br>
+		<input type="text" name="clientId" value="{{authentication.clientId}}"><br>
+		Netatmo Client Secret for this Igor: <br>
+		<input type="text" name="clientSecret" value="{{authentication.clientSecret}}"><br>
+		Your Netatmo username:<br>
+		<input type="text" name="username" value="{{authentication.username}}"><br>
+		Your Netatmo password:<br>
+		<input type="password" name="password" value="{{authentication.password}}"><br>
+		<input type="submit" value="Submit authentication data"><br>
+		<input type="submit" name="clear" value="Remove authentication data from Igor database"><br>
+		
+	</form>	
+
+	<h2>Did it work?</h2>
+	
+	<p>Follow <a href="/plugin/{{pluginName}}/pull" target="_blank">this link</a> to trigger pulling data from the Fitbit cloud service into your Igor database.</p>
+	<p>The follow <a href="/data/sensors/{{pluginName}}" target="_blank">this link</a> to view the data in the database. Check whether it conforms to your expectations.</p>
+
+	<hr>
+	{% if returnTo %}
+		<p><a href="{{returnTo}}">Return to {{returnTo}}</a></p>
+	{% endif %}
+	<p><a href="/">Return to Igor homepage</a></p>
+</body>
+</html>

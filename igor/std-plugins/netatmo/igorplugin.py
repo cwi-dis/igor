@@ -41,5 +41,30 @@ class NetatmoPlugin(object):
 
         return 'ok\n'
     
+    def setAuthentication(self, clear=None, clientId=None, clientSecret=None, username=None, password=None, returnTo=None, token=None, callerToken=None):
+        authentication = self.pluginData.get('authentication', {})
+        if clear:
+            authentication['clientId'] = ""
+            authentication['clientSecret'] = ""
+            authentication['username'] = ""
+            authentication['password'] = ""
+        else:
+            if clientId:
+                authentication['clientId'] = clientId
+            if clientSecret:
+                authentication['clientSecret'] = clientSecret
+            if username:
+                authentication['username'] = username
+            if password:
+                authentication['password'] = password
+        # Store in database
+        path = '/data/plugindata/{}/authentication'.format(self.pluginName)
+        self.igor.databaseAccessor.put_key(path, 'text/plain', None, authentication, 'application/x-python-object', token, replace=True)
+        # And keep for ourselves too
+        self.pluginData['authentication'] = authentication
+        if returnTo:
+            return self.igor.app.raiseSeeother(returnTo)
+        return path
+        
 def igorPlugin(igor, pluginName, pluginData):
     return NetatmoPlugin(igor, pluginName, pluginData)

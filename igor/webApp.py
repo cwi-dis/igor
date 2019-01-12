@@ -401,6 +401,8 @@ def get_plugin(pluginName, methodName='index'):
     if not checker.allowed('get', token):
         _SERVER.igor.app.raiseHTTPError('401 Unauthorized')
     pluginObject = _SERVER.igor.plugins._getPluginObject(pluginName, token)
+    if not pluginObject:
+        _SERVER.igor.app.raiseNotfound()
     #
     # Assemble arguments
     #
@@ -447,7 +449,7 @@ def get_plugin_page(pluginName, pageName='index'):
     checker = _SERVER.igor.access.checkerForEntrypoint(request.environ['PATH_INFO'])
     if not checker.allowed('get', token):
         myWebError('401 Unauthorized', 401)
-    # xxxjack should we check for notfound here, so that plugins with scripts only (no module) can also have pages?
+    # None is ok here, for plugins with pages but without a Python implementation
     pluginObject = _SERVER.igor.plugins._getPluginObject(pluginName, token)
 
     allArgs = request.values.to_dict()
@@ -508,7 +510,7 @@ def get_plugin_script(pluginName, scriptName):
         args = []
     # xxxjack need to check that the incoming action is allowed on this plugin
     # Get the token for the plugin itself
-    pluginToken = _SERVER.igor.access.tokenForPlugin(pluginName)
+    pluginToken = _SERVER.igor.access.tokenForPlugin(pluginName, token=token)
     # Setup global, per-plugin and per-user data for plugin scripts, if available
     env = copy.deepcopy(os.environ)
     try:

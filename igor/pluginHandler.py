@@ -39,6 +39,10 @@ class IgorPlugins(object):
             moduleDir = os.path.join(self.igor.pathnames.plugindir, pluginName)
             try:
                 mfile, mpath, mdescr = imp.find_module('igorplugin', [moduleDir])
+            except ImportError:
+                # Module not found
+                return None
+            try:
                 pluginModule = imp.load_module(moduleName, mfile, mpath, mdescr)
             except ImportError:
                 print('------ import failed for', pluginName)

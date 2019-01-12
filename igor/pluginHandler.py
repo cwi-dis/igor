@@ -76,6 +76,14 @@ class IgorPlugins(object):
             pluginData = self.igor.databaseAccessor.get_key('plugindata/%s' % (pluginName), 'application/x-python-object', 'content', token)
         except self.igor.app.getHTTPError():
             pluginData = {}
+        # Replace empty dictionaries with empty strings (except toplevel)
+        def _stripEmptyDicts(d):
+            for k in d:
+                if d[k] == {}:
+                    d[k] = ""
+                elif isinstance(d[k], dict):
+                    _stripEmptyDicts(d[k])
+        _stripEmptyDicts(pluginData)
         return pluginData
         
     def _getPluginUserData(self, pluginName, userName, token=None):

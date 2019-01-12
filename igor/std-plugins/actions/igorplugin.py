@@ -17,11 +17,14 @@ class ActionsPlugin(object):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
         
         
-    def _list(self, callerToken):
+    def _list(self, creator=None, callerToken=None):
         """Return list of current actions, as tuple of (message, dict of xpath:description)."""
         rv = {}
+        path = "actions/action"
+        if creator:
+            path += "[creator='{}']".format(creator)
         try:
-            allActions = self.igor.databaseAccessor.get_key('actions/action', 'application/x-python-object', 'multi', callerToken)
+            allActions = self.igor.databaseAccessor.get_key(path, 'application/x-python-object', 'multi', callerToken)
         except self.igor.app.getHTTPError() as e:
             rv['message'] = "Error listing actions: {}".format(self.igor.app.stringFromHTTPError(e))
         else:

@@ -216,6 +216,8 @@ Here is a description of the available elements:
 * `actions/action/method`: The method used to access the url, default GET (string).
 * `actions/action/data`: For POST and PUT methods, the data to supply to the operation (string). Can use AVTs.
 * `actions/action/mimetype`: The MIME type of _data_ (string), default `text/plain`.
+* `actions/action/representing`: The entity on whose behalf this action runs (string), for reporting in _systemHealth_.
+* `actions/action/creator`: The plugin that created this action (string), for showing the action in the plugin UI.
 
 If capabilities are enabled each action can carry a set of capabilities and the _actions_ element itself can also carry a set (that will be inherited by each action).
 

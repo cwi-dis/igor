@@ -148,6 +148,17 @@
 				<td>The mimetype of the <i>data</i>. Default <i>text/plain</i></td>
 			</tr>
 			<tr>
+				<td rowspan="2">Other</td>
+				<td>Representing</td>
+				<td><input type="text" name="representing" value="{{description.pop('representing', '')}}"></td>
+				<td>If non-empty, name of service/device/sensor this action belongs to, for <i>systemHealth</i> reporting</td>
+			</tr>
+			<tr>
+				<td>Creator</td>
+				<td><input type="text" name="creator" value="{{description.pop('creator', '')}}"></td>
+				<td>If non-empty, name of plugin that created this action</td>
+			</tr>
+			<tr>
 				<td colspan="4">
 				{% if action == "new" %}
 					<input type="hidden" name="action" value="add">

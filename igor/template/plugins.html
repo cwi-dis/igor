@@ -39,7 +39,8 @@
 				<th>Plugin data (per-user)</th>
 				<th>Action</th>
 			</tr>
-			{% for pluginName in igor.plugins.list(token) %}
+			{% set pluginNames = igor.plugins.list(token) %}
+			{% for pluginName in  pluginNames|sort %}
 				{% set pluginData = igor.plugins.info(pluginName, token) %}
 				<tr>
 					<td>{{pluginName}}</td>

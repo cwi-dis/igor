@@ -47,6 +47,9 @@
 			<au:needCapability>
 				<obj>/data/sensors/{plugin}</obj>
 				<put>descendant-or-self</put>
+				<get>descendant-or-self</get>
+				<post>descendant</post>
+				<delete>descendant</delete>
 			</au:needCapability>
 			<au:needCapability>
 				<obj>/data/environment/weather</obj>

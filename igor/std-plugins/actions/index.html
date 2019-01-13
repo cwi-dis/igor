@@ -13,7 +13,7 @@
 <body>
 	<h1>Actions</h1>
 
-	{% set allActions = pluginObject._list(callerToken) %}
+	{% set allActions = pluginObject._list(callerToken=callerToken) %}
 	{% set message = allActions.pop('message', None) %}
 	{% if message %}
 		<p><b>Warning:</b> {{message}}</p>

@@ -110,7 +110,25 @@
 		<p><a href="/plugins.html">Return to plugin listing</a></p>
 		
 	{% elif action == 'addstd' %}
-		<p>{{igor.plugins.installstd(pluginName if pluginName else stdName, stdName, token)}}</p>
+		{% set pluginName = pluginName if pluginName else stdName %}
+		{% set rv = igor.plugins.installstd(pluginName, stdName, token) %}
+		{% if rv %}
+			<p><b>Note:</b> installing plugin returned: {{rv}}</p>
+		{% endif %}
+		{% set pluginData = igor.plugins.info(pluginName, token) %}
+		{% if pluginData.pages %}
+			<p>Standard plugin <i>{{stdName}}</i> installed under name <i>{{pluginName}}</i>. This plugin provides
+			a number of user-interface web pages. Depending on the plugin, these pages may help you to complete the
+			installation process for this plugin:</p>
+			<ul>
+			{% for page in pluginData.pages|sort %}
+				<li><a href="{{page}}">{{page.split('/')[-1]}}</a></li>
+			{% endfor %}
+			</ul>
+		{% else %}
+			<p>Standard plugin <i>{{stdName}}</i> installed under name <i>{{pluginName}}</i>. This plugin does not provide user interface pages.</p>
+		{% endif %}
+		<hr>
 		<p><a href="/plugins.html">Return to plugin listing</a></p>
 		{% if kwargs.get('fromDevicePage') %}
 			<p><a href="/plugin/device/page/index.html">Return to devices listing</a></p>

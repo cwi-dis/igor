@@ -2,7 +2,7 @@
 
 Igor is named after the Discworld characters of the same name. 
 You should think of it as a butler (or valet, or majordomo, 
-I am not quite sure of the difference) that knows everything 
+whatever the difference is) that knows everything 
 that goes on in your household, and makes sure everything runs smoothly. 
 It performs its tasks without passing judgements and maintains complete 
 discretion, even within the household. It can work together with other Igors 

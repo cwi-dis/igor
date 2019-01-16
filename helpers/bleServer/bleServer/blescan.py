@@ -1,5 +1,6 @@
 from __future__ import print_function
 from __future__ import unicode_literals
+from __future__ import absolute_import
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 from future import standard_library
 standard_library.install_aliases()
@@ -22,7 +23,7 @@ import os
 import sys
 import struct
 import bluetooth._bluetooth as bluez
-import bleAdvertisementParser
+from . import bleAdvertisementParser
 import pprint
 import json
 import binascii

@@ -1,14 +1,13 @@
-#!/usr/bin/python3
 from __future__ import print_function
 from __future__ import unicode_literals
-import blescan
+from __future__ import absolute_import
+from . import blescan
 import igorServlet
 import copy
 import json
 import threading
 import sys
 import time
-import argparse
 
 AVAILABLE_TIMEOUT=30   # A device is marked unavailable if it hasn't been seen for 30 seconds
 DELETE_TIMEOUT=120     # A device is removed if it hasn't been seen for 2 minutes
@@ -143,13 +142,3 @@ class BleScanServer(threading.Thread):
             devList.append(item)
         rv = {'bleDevice':devList, 'lastActivity' : time.time()}
         return rv
-                    
-def main():
-    parser = igorServlet.IgorServlet.argumentParser()
-    args = parser.parse_args()
-    bleScanner = BleScanServer(**vars(args))
-    bleScanner.run()
-    
-if __name__ == '__main__':
-    main()
-    print('stopped.')

@@ -13,33 +13,44 @@
 # Process name ( For display )
 NAME=bleServer
 # Daemon name, where is the actual executable
-DAEMON=/home/jack/src/dis-git/igor/helpers/bleServer/bleServer.py
-DAEMON_ARGS="--port 8081 --nolog"
+DAEMON=bleServer
+DAEMON_ARGS="--port 9334 --nolog"
 
-# If the daemon is not there, then exit.
-test -x $DAEMON || exit 5
+SCRIPT="$DAEMON $DAEMON_ARGS"
+PIDFILE=/var/run/bleServer.pid
 
-case $1 in
- start)
-  # Checked the PID file exists and check the actual status of process
-  # Start the daemon.
-  log_daemon_msg "Starting the process" "$NAME"
-  # Start the daemon with the help of start-stop-daemon
-  # Log the message appropriately
-  screen -dmS $NAME $DAEMON $DAEMON_ARGS
-  ;;
- stop)
-  # Stop the daemon.
-  screen -S $NAME -X quit
-  ;;
- restart)
-  # Restart the daemon.
-  screen -S $NAME -X quit
-  screen -dmS $NAME $DAEMON $DAEMON_ARGS
-  ;;
- *)
-  # For invalid arguments, print the usage message.
-  echo "Usage: $0 {start|stop|restart}"
-  exit 2
-  ;;
+start() {
+  if [ -f /var/run/$PIDNAME ] && kill -0 $(cat /var/run/$PIDNAME); then
+    echo 'Service already running' >&2
+    return 1
+  fi
+  echo 'Starting service…' >&2
+  local CMD="PATH=$PATH $SCRIPT & echo \$!"
+  su -c "$CMD" $RUNAS > "$PIDFILE"
+  echo 'Service started' >&2
+}
+
+stop() {
+  if [ ! -f "$PIDFILE" ] || ! kill -0 $(cat "$PIDFILE"); then
+    echo 'Service not running' >&2
+    return 1
+  fi
+  echo 'Stopping service…' >&2
+  kill -15 $(cat "$PIDFILE") && rm -f "$PIDFILE"
+  echo 'Service stopped' >&2
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
 esac

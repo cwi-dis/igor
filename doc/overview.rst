@@ -3,10 +3,10 @@ Introduction
 ============
 
 Igor is named after the Discworld characters of the same name. You should
-think of it as a butler (or valet, or majordomo, I am not quite sure of the
-difference) that knows everything that goes on in your household, and makes
+think of it as a butler (or valet, or majordomo, whatever the
+difference is) that knows everything that goes on in your household, and makes
 sure everything runs smoothly. It performs its tasks without passing
-judgements and maintains complete discretion, even within the household. It
+judgement and maintains complete discretion, even within the household. It
 can work together with other Igors (lending a hand) and with lesser servants
 such as `Iotsa-based devices <https://github.com/cwi-dis/iotsa>`_.
 
@@ -42,18 +42,17 @@ if there are people at home.
 Technical description
 ---------------------
 
-Igor is basically a hierarchical data store, think of an XML file or a JSON 
-file. There are three basic operating agents on the database:
+Igor is basically a hierarchical data store, with three basic operating agents:
 
 
-* Plugin modules for sensing devices modify the database (for example 
+* Plugins for sensing devices modify the data (for example 
   recording a fact such as *"device with MAC address 12:34:56:78:9a:bc has 
   obtained an IP address from the DHCP service"*\ ). 
-* Rules trigger on database 
+* Rules trigger on data 
   changes and modify other entries in the database (for example *"if device 
   12:34:56:78:9a:bc is available then Jack is home"* or *"If Jack is home 
   the TV should be on"*\ ). 
-* Action plugins also trigger on database changes and 
+* Actions trigger on data changes and 
   allow control over external hardware or software (for example *"If the TV 
   should be on emit code 0001 from the infrared emitter in the living room"*\ ).
 
@@ -102,9 +101,9 @@ your household that you consider to be available to anyone.
 
 You can also log in. Initially Igor knows about a single user, *admin*, with
 no password. You can add a password (you should). When logged in you can
-access more information, besically everything in the database for the
-*admin* user. You can then add accounts for other users, such as yourself
-and probably for all other people in the family. You can grant specific
+access more information; for instance the *admin* user can access everything in the database.
+You can then add accounts for other users, such as yourself
+and other people in the family. You can grant specific
 rights (access permissions) to different users. 
 
 In the user interface you can then add devices, sensors and other plugins (for
@@ -114,16 +113,6 @@ rules, examine the Igor log file, etc.
 
 In addition various plugins have their own user interface allowing you to control
 them or to inspect their current status.
-
-	**Note**: there are two common operations that can currently *not* be done through
-	the user interface, at least not easily:
-	
-	* Modifying individual data items,
-	* Adding (or changing or deleting) action rules.
-	
-	This expected to be addresed in a future release. In the mean time you
-	either have to use the :doc:`programs` or stop Igor and edit the XML
-	database manually.
 	
 There are also some command line tools that are meant primarily for use in
 shell scripts but can also be used to manually control Igor.
@@ -131,24 +120,17 @@ shell scripts but can also be used to manually control Igor.
 Implementation overview
 -----------------------
 
-Igor is implemented in Python (2 or 3). At the core of Igor is an XML
-datastore (using ``xml.dom``\ , so the underlying datastore can be replaced
-by a more efficient one if needed) with locking for concurrent access. Only
-elements (and text data) are used for normal storage, no attributes, so the
-data structures can easily be represented in JSON or some other form.
+Igor is implemented in Python (and works with both version 2 as 3). At the core of Igor is an XML
+datastore with locking for concurrent access, and an XPath 1.0 implementation to allow searching,
+selecting and combining (using expressions) of data.
 
-On top of that an XPath 1.0 implementation (currently ``py-dom-xpath`` but
-again: could be replaced for efficiency reasons) to allow searching,
-selecting and combining (using expressions) of database elements.
-
-On top of that is a webserver (based on `Flask <http://flask.pocoo.org>`_\ ,
-using either *http* or *https* access) that allows REST-like access to the
-database (GET, PUT, POST and DELETE methods), by default on port 9333. The
+Alongside that is a webserver with either *http* or *https* access that allows REST access to the
+data (GET, PUT, POST and DELETE methods), by default on port 9333. The
 server handles conversion between the internal (XML) format and external
-XML, JSON or plain text format.
+XML, JSON or plain text formats.
 
-In addition to database access, the web server exposes internal
-functionality (for example to save the database) and more general XPath
+In addition to data access, the web server exposes internal
+functionality (for example for saving the database) and more general XPath
 expressions over the database. It can also serve static content and
 template-based content (using the `Jinja2
 <http://jinja.pocoo.org/docs/2.10/>`_ template engine and data from the
@@ -214,6 +196,15 @@ And of course there is the main REST interface described in :doc:`rest`.
 Missing functionality
 ^^^^^^^^^^^^^^^^^^^^^
 
+There are two common operations that cannot currently be done through
+the user interface, at least not easily:
+
+* Modifying individual data items,
+* Adding (or changing or deleting) action rules.
+	
+For now you have to use the :doc:`programs`, or stop Igor and edit the XML
+database manually.
+
 The user interface is currently not very logically organized, and it is 
 completely unstyled and ugly.
 
@@ -226,5 +217,4 @@ planned but not implemented yet.
 
 A method for easy installation (and updating and removal) of externally
 supplied plugins is not implemented yet.
-
 

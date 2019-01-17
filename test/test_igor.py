@@ -469,13 +469,14 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         
     def test_84_install_all_stdplugins(self):
         pAdmin = self._igorVar(credentials='admin:')
+        dontInstall = ["ble"] # Requires Bluetooth hardware
         txtInstalled = pAdmin.get('/internal/pluginControl/list')
         pluginsInstalled = eval(txtInstalled)
         txtStandard = pAdmin.get('/internal/pluginControl/liststd')
         pluginsAvailable = eval(txtStandard)
         added = []
         for p in pluginsAvailable:
-            if not p in pluginsInstalled:
+            if not p in pluginsInstalled+dontInstall:
                 ok = pAdmin.get('/internal/pluginControl/installstd', query=dict(pluginName=p))
                 added.append(p)
         for p in added:

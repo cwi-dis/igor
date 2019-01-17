@@ -16,7 +16,7 @@ class BLEPlugin(object):
     def pull(self, token=None, callerToken=None):
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', 'localhost')
-        port = self.pluginData.get('port', '8081')
+        port = self.pluginData.get('port', '9334')
         url = "%s://%s:%s/ble" % (protocol, host, port)
         method = 'GET'
         
@@ -54,5 +54,32 @@ class BLEPlugin(object):
         self.igor.urlCaller.callURL(tocall)
         return 'ok\n'
     
+    def _peek(self, token=None, callerToken=None):
+        """Check whether bleServer is running"""
+        protocol = self.pluginData.get('protocol', 'http')
+        host = self.pluginData.get('host', 'localhost')
+        port = self.pluginData.get('port', '9334')
+        url = "%s://%s:%s/ble" % (protocol, host, port)
+        method = 'GET'
+        
+        headers = {}
+        addedTokenId = token.addToHeadersFor(headers, url)
+        
+        kwargs = {}
+        if os.environ.get('IGOR_TEST_NO_SSL_VERIFY'):
+            kwargs['verify'] = False
+        
+        try:
+            r = requests.request(method, url, headers=headers, **kwargs)
+        except requests.exceptions.ConnectionError as e:
+            return "No bleServer running at {}".format(url)
+        except requests.exceptions.Timeout as e:
+            return "Timeout conecting to bleServer at {}".format(url)
+        except requests.exceptions.RequestException as e:
+            return "Error connecting to bleServer at {}".format(url)
+        if r.status_code != 200:
+            return "bleServer at {} returns status code {}".format(url, r.status_code)
+        return None
+        
 def igorPlugin(igor, pluginName, pluginData):
     return BLEPlugin(igor, pluginName, pluginData)

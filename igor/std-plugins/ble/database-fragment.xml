@@ -10,7 +10,7 @@
 		<{plugin} own:plugin="{plugin}">
 			<protocol>http</protocol>
 			<host>localhost</host>
-			<port>8081</port>
+			<port>9334</port>
 			<action>
 				<interval>60</interval>
 				<url>/plugin/{plugin}/pull</url>

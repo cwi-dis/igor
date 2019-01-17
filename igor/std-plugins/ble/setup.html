@@ -1,0 +1,46 @@
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+	<title>Setup {{pluginName}}</title>
+</head>
+<body>
+	{% set message = pluginObject._peek(token=token) %}
+	<h1>Setup {{pluginName}}</h1>
+	
+	<h2>Running the <em>bleServer</em> service</h2>
+	{% if message %}
+		<p><b>Note:</b> {{message}}</p>
+		
+		<p>The {{pluginName}} plugin needs a service <em>bleServer</em> to be running
+		to be able to actually collect the Bluetooth LE advertisement packets.
+		To install the service you should login to that machine and run:</p>
+		<blockquote>
+			<tt>bleServer --installdDaemon</tt>
+		</blockquote>
+	{% else %}
+		<p>The <em>bleServer</em> seems to be running just fine.</p>
+	{% endif %}
+	
+	<p>Parameters:<br>
+	Protocol: <i>{{pluginData.protocol}}</i> (<a href="/plugin/editData/page/_edit.html?action=get&amp;xpath=/data/plugindata/{{pluginName}}/protocol&amp;returnTo=/plugin/{{pluginName}}/page/setup.html">edit</a>)</br>
+	host: <i>{{pluginData.host}}</i> (where <i>localhost</i> means: the host Igor is running on; <a href="/plugin/editData/page/_edit.html?action=get&amp;xpath=/data/plugindata/{{pluginName}}/host&amp;returnTo=/plugin/{{pluginName}}/page/setup.html">edit</a>)</br>
+	Port: <i>{{pluginData.port}}</i> (<a href="/plugin/editData/page/_edit.html?action=get&amp;xpath=/data/plugindata/{{pluginName}}/port&amp;returnTo=/plugin/{{pluginName}}/page/setup.html">edit</a>)</br>
+	</p>
+	
+	<h2>Registering Bluetooth LE devices</h2>
+	
+	<p>For now, you have to manually <a href="/plugin/editData/page/_edit.html?action=get&amp;xpath=/data/plugindata/{{pluginName}}Devices&amp;returnTo=/plugin/{{pluginName}}/page/setup.html">edit the data at <i>/data/plugindata/{{pluginName}}Devices</i></a>.</p>
+	
+	<hr>
+	{% if returnTo %}
+		<p><a href="{{returnTo}}">Return to {{returnTo}}</a></p>
+	{% endif %}
+	<p><a href="/">Return to Igor homepage</a></p>
+</body>
+</html>

@@ -22,7 +22,7 @@ DHCP server.
 VERSION="1.0"    
 
 setup(
-    name='bleServer',
+    name='dhcpleases',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see

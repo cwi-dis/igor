@@ -17,7 +17,7 @@
 				<get>descendant-or-self</get>
 			</au:needCapability>
 			<au:needCapability>
-				<obj>/pluginscript/{plugin}</obj>
+				<obj>/plugin/{plugin}</obj>
 				<get>child</get>
 			</au:needCapability>
 			<au:needCapability>
@@ -32,7 +32,7 @@
 			</au:needCapability>
 			<action>
 				<interval>60</interval>
-				<url>/pluginscript/{plugin}/pull</url>
+				<url>/plugin/{plugin}/pull</url>
 				<representing>sensors/{plugin}</representing>
 				<aggregate>true</aggregate>
 			</action>

@@ -224,12 +224,32 @@ def recursiveNodeSet(node):
         child = child.nextSibling
     return rv
     
+class NoLock:
+    def enter(self):
+        pass
+        
+    def leave(self):
+        pass
+        
+    def __enter__(self):
+        pass
+        
+    def __exit__(self, *args):
+        pass
+        
 class DBSerializer(object):
     """Baseclass with methods to provide a mutex and a condition variable"""
     def __init__(self):   
         self._waiting = {}
         self._callbacks = []
         self._lock = threading.RLock()
+        self._rlock = NoLock()
+        
+    def writelock(self):
+        return self
+        
+    def readlock(self):
+        return self._rlock
 
     def enter(self):
         """Enter the critical section for this database"""
@@ -245,11 +265,11 @@ class DBSerializer(object):
         self.leave()
 
     def registerCallback(self, callback, location):
-        with self:
+        with self.writelock():
             self._callbacks.append((location, callback))
             
     def unregisterCallback(self, callback):
-        with self:
+        with self.writelock():
             for i in range(len(self._callbacks)):
                 if self._callbacks[i][0] == callback:
                     del self._callbacks[i]
@@ -333,12 +353,12 @@ class DBImpl(DBSerializer):
             node.removeChild(n)
                 
     def filterAfterLoad(self, nodeOrDoc, token):
-        with self:
+        with self.writelock():
             self._removeBlanks(nodeOrDoc)
             return nodeOrDoc
         
     def filterBeforeSave(self, nodeOrDoc,token):
-        with self:
+        with self.writelock():
             self._removeBlanks(nodeOrDoc)
             return nodeOrDoc
         
@@ -369,13 +389,13 @@ class DBImpl(DBSerializer):
             
 
     def signalNodelist(self, nodelist):
-        with self:
+        with self.writelock():
             #self.saveFile()
             DBSerializer.signalNodelist(self, nodelist)
         
     def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""
-        with self:
+        with self.writelock():
             if filename:
                 newDoc = xml.dom.minidom.parse(filename)
             elif xmlstring:
@@ -424,7 +444,7 @@ class DBImpl(DBSerializer):
         
     def getDocument(self, token):
         """Return the whole document (as a DOM element)"""
-        with self:
+        with self.readlock():
             self._checkAccess('get', self._doc.documentElement, token)
             return self._doc.documentElement
         
@@ -584,37 +604,36 @@ class DBImpl(DBSerializer):
         return t, v
 
     def elementFromTagAndData(self, tag, data, namespace=None):
-        with self:
-            newnode = self._createElementWithEscaping(tag, namespace)
-            if not isinstance(data, dict):
-                # Not key/value, so a raw value. Convert to something string-like
-                if data is None:
-                    data = ''
-                if type(data) is type(True):
-                    data = 'true' if data else ''
-                data = "%s" % (data,)
-                # Clean illegal unicode characters
-                data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
-                newnode.appendChild(self._doc.createTextNode(data))
-                return newnode
-            for k, v in list(data.items()):
-                if k == '#text':
-                    if not isinstance(v, list):
-                        v = [v]
-                    for string in v:
-                        newtextnode = self._doc.createTextNode(string)
-                        newnode.appendChild(newtextnode)
-                elif k and k[0] == '@':
-                    attrname = k[1:]
-                    newattr = self._doc.createAttribute(attrname)
-                    newattr.value = v
-                    newnode.appendChild(newattr)
-                else:
-                    if not isinstance(v, list):
-                        v = [v]
-                    for childdef in v:
-                        newchild = self.elementFromTagAndData(k, childdef)
-                        newnode.appendChild(newchild)
+        newnode = self._createElementWithEscaping(tag, namespace)
+        if not isinstance(data, dict):
+            # Not key/value, so a raw value. Convert to something string-like
+            if data is None:
+                data = ''
+            if type(data) is type(True):
+                data = 'true' if data else ''
+            data = "%s" % (data,)
+            # Clean illegal unicode characters
+            data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
+            newnode.appendChild(self._doc.createTextNode(data))
+            return newnode
+        for k, v in list(data.items()):
+            if k == '#text':
+                if not isinstance(v, list):
+                    v = [v]
+                for string in v:
+                    newtextnode = self._doc.createTextNode(string)
+                    newnode.appendChild(newtextnode)
+            elif k and k[0] == '@':
+                attrname = k[1:]
+                newattr = self._doc.createAttribute(attrname)
+                newattr.value = v
+                newnode.appendChild(newattr)
+            else:
+                if not isinstance(v, list):
+                    v = [v]
+                for childdef in v:
+                    newchild = self.elementFromTagAndData(k, childdef)
+                    newnode.appendChild(newchild)
             return newnode
         
     def elementFromXML(self, xmltext):
@@ -628,7 +647,7 @@ class DBImpl(DBSerializer):
                 
     def delValues(self, location, token, context=None, namespaces=NAMESPACES):
         """Remove a (possibly empty) set of nodes from the document"""
-        with self:
+        with self.writelock():
             if context == None:
                 context = self._doc.documentElement
             nodeList = xpath.find(location, context, namespaces=namespaces)
@@ -644,7 +663,7 @@ class DBImpl(DBSerializer):
             
     def getValue(self, location, token, context=None, namespaces=NAMESPACES):
         """Return a single value from the document (as string)"""
-        with self:
+        with self.readlock():
             if context is None:
                 context = self._doc.documentElement
             #
@@ -661,7 +680,7 @@ class DBImpl(DBSerializer):
                     
     def getValues(self, location, token, context=None, namespaces=NAMESPACES):
         """Return a list of node values from the document (as names and strings)"""
-        with self:
+        with self.readlock():
             if context is None:
                 context = self._doc.documentElement
             nodeList = xpath.find(location, context, originalContext=[context], namespaces=namespaces)
@@ -671,7 +690,7 @@ class DBImpl(DBSerializer):
         
     def getElements(self, location, operation, token, context=None, namespaces=NAMESPACES, postChild=None):
         """Return a list of DOM nodes (elements only, for now) that match the location"""
-        with self:
+        with self.readlock():
             if context is None:
                 context = self._doc.documentElement
             nodeList = xpath.find(location, context, originalContext=[context], namespaces=namespaces)
@@ -681,7 +700,7 @@ class DBImpl(DBSerializer):
             return nodeList
         
     def _getValueList(self, nodelist):
-        with self:
+        with self.readlock():
             rv = []
             for node in nodelist:
                 rv.append((self.getXPathForElement(node), xpath.expr.string_value(node)))

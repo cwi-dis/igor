@@ -48,7 +48,9 @@ class Action(object):
         tag, self.content = self.collection.igor.database.tagAndDictFromElement(self.element)
         self.content.pop('notBefore', None)
         assert tag == 'action'
-        assert 'url' in self.content
+        if not 'url' in self.content:
+            print("ERROR: action {} misses required url element".format(self.actionXPath))
+            self.content['url'] = '/missing-action-url'
         self.interval = self.content.get('interval')
         self.minInterval = self.content.get('minInterval', 0)
         xpaths = self.content.get('xpath',[])

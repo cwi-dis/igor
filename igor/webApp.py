@@ -749,8 +749,10 @@ class XmlDatabaseAccess(object):
             if key[0] != '/':
                 key = '/%s/%s' % (self.rootTag, key)
             if not variant: variant = 'ref'
+            callbacks = None
             nodesToSignal = []
-            with self.igor.database:
+            # xxxjack this code should move into xmlDatabase, really...
+            with self.igor.database.writelock():
                 unchanged = False
                 parentPath, tag = self.igor.database.splitXPath(key, stripPredicate=True)
                 if not tag:
@@ -822,14 +824,17 @@ class XmlDatabaseAccess(object):
                     # We want to signal the new node
                     #
                 
-                if nodesToSignal: self.igor.database.signalNodelist(nodesToSignal)
-                path = self.igor.database.getXPathForElement(element)
-                rv = self.convertto(path, mimetype, variant)
-                if not isinstance(rv, Response):
-                    rv = Response(rv, mimetype=mimetype)
-                if unchanged:
-                    rv.status_code = 200
-                return rv
+                if nodesToSignal: 
+                    callbacks = self.igor.database._signalNodelist(nodesToSignal)
+            if callbacks:
+                self.igor.database._runSignalCallbacks(callbacks)
+            path = self.igor.database.getXPathForElement(element)
+            rv = self.convertto(path, mimetype, variant)
+            if not isinstance(rv, Response):
+                rv = Response(rv, mimetype=mimetype)
+            if unchanged:
+                rv.status_code = 200
+            return rv
         except xmlDatabase.DBAccessError:
             myWebError("401 Unauthorized", 401)
         except xpath.XPathError as arg:

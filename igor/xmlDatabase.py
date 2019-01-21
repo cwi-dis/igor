@@ -240,29 +240,15 @@ class NoLock:
 class DBSerializer(object):
     """Baseclass with methods to provide a mutex and a condition variable"""
     def __init__(self):   
-        self._waiting = {}
         self._callbacks = []
-        self._lock = threading.RLock()
-        self._rlock = self._lock # NoLock()
+        self._wlock = threading.RLock()
+        self._rlock = NoLock()
         
     def writelock(self):
-        return self
+        return self._wlock
         
     def readlock(self):
         return self._rlock
-
-    def enter(self):
-        """Enter the critical section for this database"""
-        self._lock.acquire()
-        
-    def leave(self):
-        self._lock.release()
-        
-    def __enter__(self):
-        self.enter()
-        
-    def __exit__(self, *args):
-        self.leave()
 
     def registerCallback(self, callback, location):
         with self.writelock():
@@ -274,30 +260,10 @@ class DBSerializer(object):
                 if self._callbacks[i][0] == callback:
                     del self._callbacks[i]
                     return
-            
-    def waitLocation(self, location, oldValue=None):
-        """Register that we are interested in the given XPath. Returns the semaphore"""
-        if not location in self._waiting:
-            self._waiting[location] = [threading.Condition(self._lock), 0]
-        if not oldValue is None:
-            if oldValue < self._waiting[location][1]:
-                #print 'DBG waitLocation returning early for', oldValue
-                return self._waiting[location][1]
-        #print 'DBG waitLocation waiting for', location
-        self._waiting[location][0].wait()
-        return self._waiting[location][1]
         
-    def signalNodelist(self, nodelist):
-        """Wake up clients waiting for the given nodes"""
-        if DEBUG: print('signalNodelist(%s)'%repr(nodelist))
-        for location, cv in list(self._waiting.items()):
-            waitnodelist = xpath.find(location, self._doc.documentElement)
-            for wn in waitnodelist:
-                if wn in nodelist:
-                    #print 'DBG signal for', wn
-                    cv[1] += 1
-                    cv[0].notify_all()
-                    break
+    def _signalNodelist(self, nodelist):
+        """Wake up clients waiting for the given nodes and return dictionary with callbacks. Must be called while holding lock."""
+        if DEBUG: print('_signalNodelist(%s)'%repr(nodelist))
         tocallback = {}
         for location, callback in self._callbacks:
             waitnodelist = xpath.find(location, self._doc.documentElement)
@@ -308,9 +274,18 @@ class DBSerializer(object):
                         tocallback[callback].append(wn)
                     else:
                         tocallback[callback] = [wn]
-        for callback, waitnodes in list(tocallback.items()):
-            if DEBUG: print('signalNodelist calling %s(%s)' % (callback, waitnodes))
+        return tocallback   
+        
+    def _runSignalCallbacks(self, callbacks):
+        """Second part of signalling: call callbacks. Must be called without holding lock"""
+        for callback, waitnodes in list(callbacks.items()):
+            if DEBUG: print('_runSignalCallbacks calling %s(%s)' % (callback, waitnodes))
             callback(*waitnodes)    
+        
+    def signalNodelist(self, nodelist):
+        with self.writelock():
+            callbacks = self._signalNodelist(nodelist)
+        self._runSignalCallbacks(callbacks)
         
 class DBImpl(DBSerializer):
     """Main implementation of the database API"""
@@ -363,36 +338,31 @@ class DBImpl(DBSerializer):
             return nodeOrDoc
         
     def saveFile(self):
-        with self.saveLock:
-            newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
-            if os.path.exists(newFilename):
-                for i in range(10):
-                    nf2 = '{}.{}'.format(newFilename, i)
-                    if not os.path.exists(nf2):
-                        newFilename = nf2
-                        break
-                else:
-                    raise DBParamError('Cannot create tempfile {}'.format(newFilename))
-            docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
-            docToSave.writexml(open(newFilename, 'w'), addindent="\t", newl="\n")
-            os.link(newFilename, newFilename +'.tolink')
-            os.rename(newFilename + '.tolink', self.filename)
-            # Remove outdated saves
-            dir,file = os.path.split(self.filename)
-            allOldDatabases = []
-            for fn in os.listdir(dir):
-                if fn.startswith(file + '.'):
-                    allOldDatabases.append(fn)
-            allOldDatabases.sort()
-            for fn in allOldDatabases[:-10]:
-                os.unlink(os.path.join(dir, fn))
-            
-
-    def signalNodelist(self, nodelist):
         with self.writelock():
-            #self.saveFile()
-            DBSerializer.signalNodelist(self, nodelist)
-        
+            with self.saveLock:
+                newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
+                if os.path.exists(newFilename):
+                    for i in range(10):
+                        nf2 = '{}.{}'.format(newFilename, i)
+                        if not os.path.exists(nf2):
+                            newFilename = nf2
+                            break
+                    else:
+                        raise DBParamError('Cannot create tempfile {}'.format(newFilename))
+                docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
+                docToSave.writexml(open(newFilename, 'w'), addindent="\t", newl="\n")
+                os.link(newFilename, newFilename +'.tolink')
+                os.rename(newFilename + '.tolink', self.filename)
+                # Remove outdated saves
+                dir,file = os.path.split(self.filename)
+                allOldDatabases = []
+                for fn in os.listdir(dir):
+                    if fn.startswith(file + '.'):
+                        allOldDatabases.append(fn)
+                allOldDatabases.sort()
+                for fn in allOldDatabases[:-10]:
+                    os.unlink(os.path.join(dir, fn))
+            
     def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""
         with self.writelock():
@@ -474,134 +444,137 @@ class DBImpl(DBSerializer):
         return parent, child
 
     def getXPathForElement(self, node):
-        if node is None or node.nodeType == node.DOCUMENT_NODE:
-            return ""
-        if node.tagName == "_e":
-            print("Warning: getting xpath for escaped json node may not work very well")
-        count = 0
-        sibling = node.previousSibling
-        while sibling:
-            if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
-                count += 1
-            sibling = sibling.previousSibling
-        countAfter = 0
-        sibling = node.nextSibling
-        while sibling:
-            if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
-                countAfter += 1
-            sibling = sibling.nextSibling
-        if count+countAfter:
-            index = '[%d]' % (count+1)
-        else:
-            index = ''
-        return self.getXPathForElement(node.parentNode) + "/" + node.tagName + index
+        with self.readlock():
+            if node is None or node.nodeType == node.DOCUMENT_NODE:
+                return ""
+            if node.tagName == "_e":
+                print("Warning: getting xpath for escaped json node may not work very well")
+            count = 0
+            sibling = node.previousSibling
+            while sibling:
+                if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
+                    count += 1
+                sibling = sibling.previousSibling
+            countAfter = 0
+            sibling = node.nextSibling
+            while sibling:
+                if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
+                    countAfter += 1
+                sibling = sibling.nextSibling
+            if count+countAfter:
+                index = '[%d]' % (count+1)
+            else:
+                index = ''
+            return self.getXPathForElement(node.parentNode) + "/" + node.tagName + index
 
     def xmlFromElement(self, element, stripHidden=False):
         """Return XML representation, possibly after stripping namespaced elements and attributes"""
-        if not stripHidden:
-            return element.toxml()
-        if element.namespaceURI:
-            return ''
+        with self.readlock():
+            if not stripHidden:
+                return element.toxml()
+            if element.namespaceURI:
+                return ''
             
-        def _hasNS(e):
-            """Helper method to check whether anything is namespaced in the subtree"""
-            if e.namespaceURI:
-                return True
-            if e.attributes:
-                for a in e.attributes.values():
-                    if a.namespaceURI:
+            def _hasNS(e):
+                """Helper method to check whether anything is namespaced in the subtree"""
+                if e.namespaceURI:
+                    return True
+                if e.attributes:
+                    for a in e.attributes.values():
+                        if a.namespaceURI:
+                            return True
+                c = e.firstChild
+                while c:
+                    if c.namespaceURI:
                         return True
-            c = e.firstChild
-            while c:
-                if c.namespaceURI:
-                    return True
-                if _hasNS(c):
-                    return True
-                c = c.nextSibling
-        if not _hasNS(element):
-            return element.toxml()
+                    if _hasNS(c):
+                        return True
+                    c = c.nextSibling
+            if not _hasNS(element):
+                return element.toxml()
 
-        copied = element.cloneNode(True)
-        def _stripNS(e):
-            """Helper method to strip all namespaced items from a subtree"""
-            assert not e.namespaceURI
-            if e.attributes:
-                toRemoveAttrs =[]
-                for av in e.attributes.values():
-                    if av.namespaceURI:
-                        toRemoveAttrs.append(av)
-                for av in toRemoveAttrs:
-                    e.removeAttributeNode(av)
-            toRemove = []
-            for c in e.childNodes:
-                if c.namespaceURI:
-                    toRemove.append(c)
-            for c in toRemove:
-                e.removeChild(c)
-            for c in e.childNodes:
-                _stripNS(c)
-        _stripNS(copied)
-        rv = copied.toxml()
-        copied.unlink()
-        return rv
+            copied = element.cloneNode(True)
+            def _stripNS(e):
+                """Helper method to strip all namespaced items from a subtree"""
+                assert not e.namespaceURI
+                if e.attributes:
+                    toRemoveAttrs =[]
+                    for av in e.attributes.values():
+                        if av.namespaceURI:
+                            toRemoveAttrs.append(av)
+                    for av in toRemoveAttrs:
+                        e.removeAttributeNode(av)
+                toRemove = []
+                for c in e.childNodes:
+                    if c.namespaceURI:
+                        toRemove.append(c)
+                for c in toRemove:
+                    e.removeChild(c)
+                for c in e.childNodes:
+                    _stripNS(c)
+            _stripNS(copied)
+            rv = copied.toxml()
+            copied.unlink()
+            return rv
         
     def tagAndDictFromElement(self, element, stripHidden=False):
-        if stripHidden and element.namespaceURI:
-            return '', {}
-        t = self._getElementTagWithEscaping(element)
-        v = {}
-        texts = []
-        child = element.firstChild
-        # It seems in xml.dom the attributes are not in the children list (??!?).
-        # Get them from the attributes map
-        if element.attributes:
-            for attrName, attrValue in element.attributes.items():
-                if stripHidden and ':' in attrName:
+        with self.readlock():
+            if stripHidden and element.namespaceURI:
+                return '', {}
+            t = self._getElementTagWithEscaping(element)
+            v = {}
+            texts = []
+            child = element.firstChild
+            # It seems in xml.dom the attributes are not in the children list (??!?).
+            # Get them from the attributes map
+            if element.attributes:
+                for attrName, attrValue in element.attributes.items():
+                    if stripHidden and ':' in attrName:
+                        continue
+                    v['@'+attrName] = attrValue
+            while child:
+                if stripHidden and child.namespaceURI:
+                    child = child.nextSibling
                     continue
-                v['@'+attrName] = attrValue
-        while child:
-            if stripHidden and child.namespaceURI:
+                if child.nodeType == child.ELEMENT_NODE:
+                    newt, newv = self.tagAndDictFromElement(child, stripHidden)
+                    # If the element already exists we turn it into a list (if not done before)
+                    if newt in v:
+                        if type(v[newt]) != type([]):
+                            v[newt] = [v[newt]]
+                        v[newt].append(newv)
+                    else:
+                        v[newt] = newv
+                elif child.nodeType == child.ATTRIBUTE_NODE:
+                    # Note: it seems attributes are not in the children, so this code may be non-functional
+                    v['@' + child.name] = child.value
+                elif child.nodeType == child.TEXT_NODE:
+                    # Remove leading and trailing whitespace, and only add text node if it is not empty
+                    d = child.data.strip()
+                    if d:
+                        texts.append(d)
                 child = child.nextSibling
-                continue
-            if child.nodeType == child.ELEMENT_NODE:
-                newt, newv = self.tagAndDictFromElement(child, stripHidden)
-                # If the element already exists we turn it into a list (if not done before)
-                if newt in v:
-                    if type(v[newt]) != type([]):
-                        v[newt] = [v[newt]]
-                    v[newt].append(newv)
+            if len(texts) == 1:
+                if v:
+                    v['#text'] = texts[0]
                 else:
-                    v[newt] = newv
-            elif child.nodeType == child.ATTRIBUTE_NODE:
-                # Note: it seems attributes are not in the children, so this code may be non-functional
-                v['@' + child.name] = child.value
-            elif child.nodeType == child.TEXT_NODE:
-                # Remove leading and trailing whitespace, and only add text node if it is not empty
-                d = child.data.strip()
-                if d:
-                    texts.append(d)
-            child = child.nextSibling
-        if len(texts) == 1:
-            if v:
-                v['#text'] = texts[0]
-            else:
-                v = texts[0]
-                try:
-                    v = int(v)
-                except ValueError:
+                    v = texts[0]
                     try:
-                        v = float(v)
+                        v = int(v)
                     except ValueError:
-                        pass
-                if v == 'null':
-                    v = None
-                elif v == 'true':
-                    v = True
-                elif v == 'false':
-                    v = False
-        elif len(texts) > 1:
-            v['#text'] = texts
-        return t, v
+                        try:
+                            v = float(v)
+                        except ValueError:
+                            pass
+                    if v == 'null':
+                        v = None
+                    elif v == 'true':
+                        v = True
+                    elif v == 'false':
+                        v = False
+            elif len(texts) > 1:
+                v['#text'] = texts
+            return t, v
 
     def elementFromTagAndData(self, tag, data, namespace=None):
         with self.readlock():
@@ -660,7 +633,8 @@ class DBImpl(DBSerializer):
                 parentNode.removeChild(node)
                 if not parentNode in parentList:
                     parentList += nodeSet(parentNode)
-            self.signalNodelist(parentList)
+            callbacks = self._signalNodelist(parentList)
+        self._runSignalCallbacks(callbacks)
             
     def getValue(self, location, token, context=None, namespaces=NAMESPACES):
         """Return a single value from the document (as string)"""
@@ -708,19 +682,23 @@ class DBImpl(DBSerializer):
             return rv
             
     def mergeElement(self, location, tree, token, plugin=False, context=None, namespaces=NAMESPACES):
-        assert plugin # No other merges implemented yet
-        assert location == '/'
-        assert context == None
-        if context == None and location == '/':
-            context = self._doc.documentElement
-        if not self._elementsMatch(context, tree):
-            raise DBParamError('mergeElement: root elements do not match')
-        self.mergeNodesToSignal = []
-        self._mergeTree(context, tree, token, plugin, namespaces=namespaces)
-        if self.mergeNodesToSignal:
-            self.signalNodelist(self.mergeNodesToSignal)
-        self.mergeNodesToSignal = []
-        
+        callbacks = None
+        with self.writelock():
+            assert plugin # No other merges implemented yet
+            assert location == '/'
+            assert context == None
+            if context == None and location == '/':
+                context = self._doc.documentElement
+            if not self._elementsMatch(context, tree):
+                raise DBParamError('mergeElement: root elements do not match')
+            self.mergeNodesToSignal = []
+            self._mergeTree(context, tree, token, plugin, namespaces=namespaces)
+            if self.mergeNodesToSignal:
+                callbacks = self._signalNodelist(self.mergeNodesToSignal)
+            self.mergeNodesToSignal = []
+        if callbacks:
+            self._runSignalCallbacks(callbacks)
+            
     def _elementsMatch(self, elt1, elt2):
         return elt1.tagName == elt2.tagName
         

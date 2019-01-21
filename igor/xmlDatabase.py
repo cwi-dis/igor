@@ -243,7 +243,7 @@ class DBSerializer(object):
         self._waiting = {}
         self._callbacks = []
         self._lock = threading.RLock()
-        self._rlock = NoLock()
+        self._rlock = self._lock # NoLock()
         
     def writelock(self):
         return self
@@ -604,36 +604,37 @@ class DBImpl(DBSerializer):
         return t, v
 
     def elementFromTagAndData(self, tag, data, namespace=None):
-        newnode = self._createElementWithEscaping(tag, namespace)
-        if not isinstance(data, dict):
-            # Not key/value, so a raw value. Convert to something string-like
-            if data is None:
-                data = ''
-            if type(data) is type(True):
-                data = 'true' if data else ''
-            data = "%s" % (data,)
-            # Clean illegal unicode characters
-            data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
-            newnode.appendChild(self._doc.createTextNode(data))
-            return newnode
-        for k, v in list(data.items()):
-            if k == '#text':
-                if not isinstance(v, list):
-                    v = [v]
-                for string in v:
-                    newtextnode = self._doc.createTextNode(string)
-                    newnode.appendChild(newtextnode)
-            elif k and k[0] == '@':
-                attrname = k[1:]
-                newattr = self._doc.createAttribute(attrname)
-                newattr.value = v
-                newnode.appendChild(newattr)
-            else:
-                if not isinstance(v, list):
-                    v = [v]
-                for childdef in v:
-                    newchild = self.elementFromTagAndData(k, childdef)
-                    newnode.appendChild(newchild)
+        with self.readlock():
+            newnode = self._createElementWithEscaping(tag, namespace)
+            if not isinstance(data, dict):
+                # Not key/value, so a raw value. Convert to something string-like
+                if data is None:
+                    data = ''
+                if type(data) is type(True):
+                    data = 'true' if data else ''
+                data = "%s" % (data,)
+                # Clean illegal unicode characters
+                data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
+                newnode.appendChild(self._doc.createTextNode(data))
+                return newnode
+            for k, v in list(data.items()):
+                if k == '#text':
+                    if not isinstance(v, list):
+                        v = [v]
+                    for string in v:
+                        newtextnode = self._doc.createTextNode(string)
+                        newnode.appendChild(newtextnode)
+                elif k and k[0] == '@':
+                    attrname = k[1:]
+                    newattr = self._doc.createAttribute(attrname)
+                    newattr.value = v
+                    newnode.appendChild(newattr)
+                else:
+                    if not isinstance(v, list):
+                        v = [v]
+                    for childdef in v:
+                        newchild = self.elementFromTagAndData(k, childdef)
+                        newnode.appendChild(newchild)
             return newnode
         
     def elementFromXML(self, xmltext):

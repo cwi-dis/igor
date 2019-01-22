@@ -301,7 +301,7 @@ class CapabilityConsistency(StructuralConsistency):
         return tokenDataList
 
     def do_check(self):
-        with self.database:
+        with self.database.writelock():
             StructuralConsistency.do_check(self)
         
             if VERBOSE:

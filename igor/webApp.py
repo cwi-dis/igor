@@ -752,29 +752,29 @@ class XmlDatabaseAccess(object):
             callbacks = None
             nodesToSignal = []
             # xxxjack this code should move into xmlDatabase, really...
-            with self.igor.database.writelock():
-                unchanged = False
-                parentPath, tag = self.igor.database.splitXPath(key, stripPredicate=True)
-                if not tag:
-                    myWebError("400 PUT path must end with an element tag", 400)
-                element = self.convertfrom(data, tag, datamimetype)
-                oldElements = self.igor.database.getElements(key, 'put' if replace else 'post', token)
-                if not oldElements:
-                    #
-                    # Does not exist yet. See if we can create it
-                    #
-                    if not parentPath or not tag:
-                        myWebError("404 Not Found, parent or tag missing", 404)
-                    #
-                    # Find parent
-                    #
-                    # NOTE: we pass the tagname for the child element. This is so put rights on a
-                    # child that does not exist yet can be checked.
-                    parentElements = self.igor.database.getElements(parentPath, 'post', token, postChild=tag)
-                    if not parentElements:
-                        myWebError("404 Parent not found: %s" % parentPath, 404)
-                    if len(parentElements) > 1:
-                        myWebError("400 Bad request, XPath parent selects multiple items", 400)
+            unchanged = False
+            parentPath, tag = self.igor.database.splitXPath(key, stripPredicate=True)
+            if not tag:
+                myWebError("400 PUT path must end with an element tag", 400)
+            element = self.convertfrom(data, tag, datamimetype)
+            oldElements = self.igor.database.getElements(key, 'put' if replace else 'post', token)
+            if not oldElements:
+                #
+                # Does not exist yet. See if we can create it
+                #
+                if not parentPath or not tag:
+                    myWebError("404 Not Found, parent or tag missing", 404)
+                #
+                # Find parent
+                #
+                # NOTE: we pass the tagname for the child element. This is so put rights on a
+                # child that does not exist yet can be checked.
+                parentElements = self.igor.database.getElements(parentPath, 'post', token, postChild=tag)
+                if not parentElements:
+                    myWebError("404 Parent not found: %s" % parentPath, 404)
+                if len(parentElements) > 1:
+                    myWebError("400 Bad request, XPath parent selects multiple items", 400)
+                with self.igor.database.writelock():
                     parent = parentElements[0]
                     #
                     # Add new node to the end of the parent
@@ -785,47 +785,50 @@ class XmlDatabaseAccess(object):
                     #
                     nodesToSignal += xmlDatabase.recursiveNodeSet(element)
                     nodesToSignal += xmlDatabase.nodeSet(parent)
-                else:
-                    #
-                    # Already exists. Check that it exists only once.
-                    #
+                    callbacks = self.igor.database._signalNodelist(nodesToSignal)
+            else:
+                #
+                # Already exists. Check that it exists only once.
+                #
+                if len(oldElements) > 1:
+                    parent1 = oldElements[0].parentNode
+                    for otherNode in oldElements[1:]:
+                        if otherNode.parentNode != parent1:
+                            myWebError("400 Bad Request, XPath selects multiple items from multiple parents", 400)
+                        
+                oldElement = oldElements[0]
+                if replace:
                     if len(oldElements) > 1:
-                        parent1 = oldElements[0].parentNode
-                        for otherNode in oldElements[1:]:
-                            if otherNode.parentNode != parent1:
-                                myWebError("400 Bad Request, XPath selects multiple items from multiple parents", 400)
-                            
-                    oldElement = oldElements[0]
-                    if replace:
-                        if len(oldElements) > 1:
-                            myWebError("400 Bad PUT Request, XPath selects multiple items", 400)
-                        #
-                        # We should really do a selective replace here: change only the subtrees that need replacing.
-                        # That will make the signalling much more fine-grained. Will do so, at some point in the future.
-                        #
-                        # For now we replace the first matching node and delete its siblings, but only if the new content
-                        # is not identical to the old
-                        #
-                        if self.igor.database.identicalSubTrees(oldElement, element):
-                            unchanged = True
-                        else:
+                        myWebError("400 Bad PUT Request, XPath selects multiple items", 400)
+                    #
+                    # We should really do a selective replace here: change only the subtrees that need replacing.
+                    # That will make the signalling much more fine-grained. Will do so, at some point in the future.
+                    #
+                    # For now we replace the first matching node and delete its siblings, but only if the new content
+                    # is not identical to the old
+                    #
+                    if self.igor.database.identicalSubTrees(oldElement, element):
+                        unchanged = True
+                    else:
+                        with self.igor.database.writelock():
                             parent = oldElement.parentNode
                             parent.replaceChild(element, oldElement)
                             nodesToSignal += xmlDatabase.recursiveNodeSet(element)
-                    else:
-                        #
-                        # POST, simply append the new node to the parent (and signal that parent)
-                        #
+                            callbacks = self.igor.database._signalNodelist(nodesToSignal)
+                else:
+                    #
+                    # POST, simply append the new node to the parent (and signal that parent)
+                    #
+                    with self.igor.database.writelock():
                         parent = oldElement.parentNode
                         parent.appendChild(element)
                         nodesToSignal += xmlDatabase.recursiveNodeSet(element)
                         nodesToSignal += xmlDatabase.nodeSet(parent)
-                    #
-                    # We want to signal the new node
-                    #
-                
-                if nodesToSignal: 
-                    callbacks = self.igor.database._signalNodelist(nodesToSignal)
+                        callbacks = self.igor.database._signalNodelist(nodesToSignal)
+                #
+                # We want to signal the new node
+                #
+            
             if callbacks:
                 self.igor.database._runSignalCallbacks(callbacks)
             path = self.igor.database.getXPathForElement(element)

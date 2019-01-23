@@ -16,6 +16,7 @@ import re
 import math
 import datetime
 import dateutil.parser
+from . import rwlock
 
 TAG_PATTERN = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9]*$')
 TAG_PATTERN_WITH_NS = re.compile('^[a-zA-Z_][-_.a-zA-Z0-9:]*$')
@@ -224,31 +225,17 @@ def recursiveNodeSet(node):
         child = child.nextSibling
     return rv
     
-class NoLock:
-    def enter(self):
-        pass
-        
-    def leave(self):
-        pass
-        
-    def __enter__(self):
-        pass
-        
-    def __exit__(self, *args):
-        pass
-        
 class DBSerializer(object):
     """Baseclass with methods to provide a mutex and a condition variable"""
     def __init__(self):   
         self._callbacks = []
-        self._wlock = threading.RLock()
-        self._rlock = NoLock()
+        self._rwlock = rwlock.ReadWriteLock()
         
     def writelock(self):
-        return self._wlock
+        return self._rwlock.writelock()
         
     def readlock(self):
-        return self._rlock
+        return self._rwlock.readlock()
 
     def registerCallback(self, callback, location):
         with self.writelock():
@@ -263,6 +250,7 @@ class DBSerializer(object):
         
     def _signalNodelist(self, nodelist):
         """Wake up clients waiting for the given nodes and return dictionary with callbacks. Must be called while holding lock."""
+        assert self.writelock().locked()
         if DEBUG: print('_signalNodelist(%s)'%repr(nodelist))
         tocallback = {}
         for location, callback in self._callbacks:
@@ -278,11 +266,13 @@ class DBSerializer(object):
         
     def _runSignalCallbacks(self, callbacks):
         """Second part of signalling: call callbacks. Must be called without holding lock"""
+        #assert not self.readlock().locked() and not self.writelock().locked()
         for callback, waitnodes in list(callbacks.items()):
             if DEBUG: print('_runSignalCallbacks calling %s(%s)' % (callback, waitnodes))
             callback(*waitnodes)    
         
     def signalNodelist(self, nodelist):
+        #assert not self.readlock().locked() and not self.writelock().locked()
         with self.writelock():
             callbacks = self._signalNodelist(nodelist)
         self._runSignalCallbacks(callbacks)
@@ -301,13 +291,14 @@ class DBImpl(DBSerializer):
         self.initialize(filename=filename)
         
     def _checkAccess(self, operation, element, token, postChild=None):
+        assert self.readlock().locked()
         assert token
         if not self.access:
             return
         ac = self.access.checkerForElement(element)
         if operation == 'post' and postChild:
             # Special case: POST for a child on a parent element is allowed if PUT on that child would be allowed
-            path = self.getXPathForElement(element) + '/' + postChild
+            path = self._getXPathForElement(element) + '/' + postChild
             ac = self.access.checkerForNewElement(path)
             if ac.allowed('put', token, tentative=True):
                 return
@@ -327,52 +318,47 @@ class DBImpl(DBSerializer):
         for n in toDelete:
             node.removeChild(n)
                 
-    def filterAfterLoad(self, nodeOrDoc, token):
-        with self.writelock():
-            self._removeBlanks(nodeOrDoc)
-            return nodeOrDoc
-        
-    def filterBeforeSave(self, nodeOrDoc,token):
-        with self.writelock():
-            self._removeBlanks(nodeOrDoc)
-            return nodeOrDoc
+    def _filterBeforeSave(self, nodeOrDoc, token):
+        self._removeBlanks(nodeOrDoc)
+        return nodeOrDoc
         
     def saveFile(self):
         with self.writelock():
+            newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
+            if os.path.exists(newFilename):
+                for i in range(10):
+                    nf2 = '{}.{}'.format(newFilename, i)
+                    if not os.path.exists(nf2):
+                        newFilename = nf2
+                        break
+                else:
+                    raise DBParamError('Cannot create tempfile {}'.format(newFilename))
             with self.saveLock:
-                newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
-                if os.path.exists(newFilename):
-                    for i in range(10):
-                        nf2 = '{}.{}'.format(newFilename, i)
-                        if not os.path.exists(nf2):
-                            newFilename = nf2
-                            break
-                    else:
-                        raise DBParamError('Cannot create tempfile {}'.format(newFilename))
-                docToSave = self.filterBeforeSave(self._doc, self.access.tokenForIgor())
-                docToSave.writexml(open(newFilename, 'w'), addindent="\t", newl="\n")
-                os.link(newFilename, newFilename +'.tolink')
-                os.rename(newFilename + '.tolink', self.filename)
-                # Remove outdated saves
-                dir,file = os.path.split(self.filename)
-                allOldDatabases = []
-                for fn in os.listdir(dir):
-                    if fn.startswith(file + '.'):
-                        allOldDatabases.append(fn)
-                allOldDatabases.sort()
-                for fn in allOldDatabases[:-10]:
-                    os.unlink(os.path.join(dir, fn))
+                docToSave = self._filterBeforeSave(self._doc, self.access.tokenForIgor())
+            docToSave.writexml(open(newFilename, 'w'), addindent="\t", newl="\n")
+            os.link(newFilename, newFilename +'.tolink')
+            os.rename(newFilename + '.tolink', self.filename)
+            # Remove outdated saves
+            dir,file = os.path.split(self.filename)
+            allOldDatabases = []
+            for fn in os.listdir(dir):
+                if fn.startswith(file + '.'):
+                    allOldDatabases.append(fn)
+            allOldDatabases.sort()
+            for fn in allOldDatabases[:-10]:
+                os.unlink(os.path.join(dir, fn))
             
     def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""
+        if filename:
+            newDoc = xml.dom.minidom.parse(filename)
+        elif xmlstring:
+            newDoc = xml.dom.minidom.parseString(xmlstring)
+        else:
+            newDoc = self._domimpl.createDocument('', 'root', None)
+        self._removeBlanks(newDoc)
         with self.writelock():
-            if filename:
-                newDoc = xml.dom.minidom.parse(filename)
-            elif xmlstring:
-                newDoc = xml.dom.minidom.parseString(xmlstring)
-            else:
-                newDoc = self._domimpl.createDocument('', 'root', None)
-            self._doc = self.filterAfterLoad(newDoc, self.access.tokenForIgor())
+            self._doc = newDoc
     
     def _createElementWithEscaping(self, tag, namespace=None):
         if namespace:
@@ -396,6 +382,12 @@ class DBImpl(DBSerializer):
         
     def identicalSubTrees(self, element1, element2):
         """Return true if the two subtrees are identical (for our purposes)"""
+        #assert not self.readlock().locked() and not self.writelock().locked()
+        with self.readlock():
+            return self._identicalSubTrees(element1, element2)
+            
+    def _identicalSubTrees(self, element1, element2):
+        assert self.readlock().locked()
         if not element1 and not element2: return True
         if not element1 or not element2: return False
         if element1.nodeType != element2.nodeType: return False
@@ -406,7 +398,7 @@ class DBImpl(DBSerializer):
         ch1 = element1.firstChild
         ch2 = element2.firstChild
         while ch1 or ch2:
-            chEqual = self.identicalSubTrees(ch1, ch2)
+            chEqual = self._identicalSubTrees(ch1, ch2)
             if not chEqual: return False
             ch1 = ch1.nextSibling
             ch2 = ch2.nextSibling
@@ -414,6 +406,7 @@ class DBImpl(DBSerializer):
         
     def getDocument(self, token):
         """Return the whole document (as a DOM element)"""
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.readlock():
             self._checkAccess('get', self._doc.documentElement, token)
             return self._doc.documentElement
@@ -444,31 +437,39 @@ class DBImpl(DBSerializer):
         return parent, child
 
     def getXPathForElement(self, node):
+        # This is a bit tricky, because sometimes we already hold the lock
+        if self.readlock().locked() or self.writelock().locked():        
+            return self._getXPathForElement(node)
         with self.readlock():
-            if node is None or node.nodeType == node.DOCUMENT_NODE:
-                return ""
-            if node.tagName == "_e":
-                print("Warning: getting xpath for escaped json node may not work very well")
-            count = 0
-            sibling = node.previousSibling
-            while sibling:
-                if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
-                    count += 1
-                sibling = sibling.previousSibling
-            countAfter = 0
-            sibling = node.nextSibling
-            while sibling:
-                if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
-                    countAfter += 1
-                sibling = sibling.nextSibling
-            if count+countAfter:
-                index = '[%d]' % (count+1)
-            else:
-                index = ''
-            return self.getXPathForElement(node.parentNode) + "/" + node.tagName + index
+            return self._getXPathForElement(node)
+
+    def _getXPathForElement(self, node):
+        assert self.readlock().locked()
+        if node is None or node.nodeType == node.DOCUMENT_NODE:
+            return ""
+        if node.tagName == "_e":
+            print("Warning: getting xpath for escaped json node may not work very well")
+        count = 0
+        sibling = node.previousSibling
+        while sibling:
+            if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
+                count += 1
+            sibling = sibling.previousSibling
+        countAfter = 0
+        sibling = node.nextSibling
+        while sibling:
+            if sibling.nodeType == sibling.ELEMENT_NODE and sibling.tagName == node.tagName:
+                countAfter += 1
+            sibling = sibling.nextSibling
+        if count+countAfter:
+            index = '[%d]' % (count+1)
+        else:
+            index = ''
+        return self._getXPathForElement(node.parentNode) + "/" + node.tagName + index
 
     def xmlFromElement(self, element, stripHidden=False):
         """Return XML representation, possibly after stripping namespaced elements and attributes"""
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.readlock():
             if not stripHidden:
                 return element.toxml()
@@ -518,97 +519,107 @@ class DBImpl(DBSerializer):
             return rv
         
     def tagAndDictFromElement(self, element, stripHidden=False):
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.readlock():
-            if stripHidden and element.namespaceURI:
-                return '', {}
-            t = self._getElementTagWithEscaping(element)
-            v = {}
-            texts = []
-            child = element.firstChild
-            # It seems in xml.dom the attributes are not in the children list (??!?).
-            # Get them from the attributes map
-            if element.attributes:
-                for attrName, attrValue in element.attributes.items():
-                    if stripHidden and ':' in attrName:
-                        continue
-                    v['@'+attrName] = attrValue
-            while child:
-                if stripHidden and child.namespaceURI:
-                    child = child.nextSibling
+            return self._tagAndDictFromElement(element, stripHidden)
+
+    def _tagAndDictFromElement(self, element, stripHidden=False):
+        assert self.readlock().locked()
+        if stripHidden and element.namespaceURI:
+            return '', {}
+        t = self._getElementTagWithEscaping(element)
+        v = {}
+        texts = []
+        child = element.firstChild
+        # It seems in xml.dom the attributes are not in the children list (??!?).
+        # Get them from the attributes map
+        if element.attributes:
+            for attrName, attrValue in element.attributes.items():
+                if stripHidden and ':' in attrName:
                     continue
-                if child.nodeType == child.ELEMENT_NODE:
-                    newt, newv = self.tagAndDictFromElement(child, stripHidden)
-                    # If the element already exists we turn it into a list (if not done before)
-                    if newt in v:
-                        if type(v[newt]) != type([]):
-                            v[newt] = [v[newt]]
-                        v[newt].append(newv)
-                    else:
-                        v[newt] = newv
-                elif child.nodeType == child.ATTRIBUTE_NODE:
-                    # Note: it seems attributes are not in the children, so this code may be non-functional
-                    v['@' + child.name] = child.value
-                elif child.nodeType == child.TEXT_NODE:
-                    # Remove leading and trailing whitespace, and only add text node if it is not empty
-                    d = child.data.strip()
-                    if d:
-                        texts.append(d)
+                v['@'+attrName] = attrValue
+        while child:
+            if stripHidden and child.namespaceURI:
                 child = child.nextSibling
-            if len(texts) == 1:
-                if v:
-                    v['#text'] = texts[0]
+                continue
+            if child.nodeType == child.ELEMENT_NODE:
+                newt, newv = self._tagAndDictFromElement(child, stripHidden)
+                # If the element already exists we turn it into a list (if not done before)
+                if newt in v:
+                    if type(v[newt]) != type([]):
+                        v[newt] = [v[newt]]
+                    v[newt].append(newv)
                 else:
-                    v = texts[0]
+                    v[newt] = newv
+            elif child.nodeType == child.ATTRIBUTE_NODE:
+                # Note: it seems attributes are not in the children, so this code may be non-functional
+                v['@' + child.name] = child.value
+            elif child.nodeType == child.TEXT_NODE:
+                # Remove leading and trailing whitespace, and only add text node if it is not empty
+                d = child.data.strip()
+                if d:
+                    texts.append(d)
+            child = child.nextSibling
+        if len(texts) == 1:
+            if v:
+                v['#text'] = texts[0]
+            else:
+                v = texts[0]
+                try:
+                    v = int(v)
+                except ValueError:
                     try:
-                        v = int(v)
+                        v = float(v)
                     except ValueError:
-                        try:
-                            v = float(v)
-                        except ValueError:
-                            pass
-                    if v == 'null':
-                        v = None
-                    elif v == 'true':
-                        v = True
-                    elif v == 'false':
-                        v = False
-            elif len(texts) > 1:
-                v['#text'] = texts
-            return t, v
+                        pass
+                if v == 'null':
+                    v = None
+                elif v == 'true':
+                    v = True
+                elif v == 'false':
+                    v = False
+        elif len(texts) > 1:
+            v['#text'] = texts
+        return t, v
 
     def elementFromTagAndData(self, tag, data, namespace=None):
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.readlock():
-            newnode = self._createElementWithEscaping(tag, namespace)
-            if not isinstance(data, dict):
-                # Not key/value, so a raw value. Convert to something string-like
-                if data is None:
-                    data = ''
-                if type(data) is type(True):
-                    data = 'true' if data else ''
-                data = "%s" % (data,)
-                # Clean illegal unicode characters
-                data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
-                newnode.appendChild(self._doc.createTextNode(data))
-                return newnode
-            for k, v in list(data.items()):
-                if k == '#text':
-                    if not isinstance(v, list):
-                        v = [v]
-                    for string in v:
-                        newtextnode = self._doc.createTextNode(string)
-                        newnode.appendChild(newtextnode)
-                elif k and k[0] == '@':
-                    attrname = k[1:]
-                    newattr = self._doc.createAttribute(attrname)
-                    newattr.value = v
-                    newnode.appendChild(newattr)
-                else:
-                    if not isinstance(v, list):
-                        v = [v]
-                    for childdef in v:
-                        newchild = self.elementFromTagAndData(k, childdef)
-                        newnode.appendChild(newchild)
+            return self._elementFromTagAndData(tag, data, namespace)
+            
+    def _elementFromTagAndData(self, tag, data, namespace=None):
+        assert self.readlock().locked()
+        newnode = self._createElementWithEscaping(tag, namespace)
+        if not isinstance(data, dict):
+            # Not key/value, so a raw value. Convert to something string-like
+            if data is None:
+                data = ''
+            if type(data) is type(True):
+                data = 'true' if data else ''
+            data = "%s" % (data,)
+            # Clean illegal unicode characters
+            data = ILLEGAL_XML_CHARACTERS_PATTERN.sub('', data)
+            newnode.appendChild(self._doc.createTextNode(data))
             return newnode
+        for k, v in list(data.items()):
+            if k == '#text':
+                if not isinstance(v, list):
+                    v = [v]
+                for string in v:
+                    newtextnode = self._doc.createTextNode(string)
+                    newnode.appendChild(newtextnode)
+            elif k and k[0] == '@':
+                attrname = k[1:]
+                newattr = self._doc.createAttribute(attrname)
+                newattr.value = v
+                newnode.appendChild(newattr)
+            else:
+                if not isinstance(v, list):
+                    v = [v]
+                for childdef in v:
+                    newchild = self._elementFromTagAndData(k, childdef)
+                    newnode.appendChild(newchild)
+        return newnode
         
     def elementFromXML(self, xmltext):
         try:
@@ -621,6 +632,7 @@ class DBImpl(DBSerializer):
                 
     def delValues(self, location, token, context=None, namespaces=NAMESPACES):
         """Remove a (possibly empty) set of nodes from the document"""
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.writelock():
             if context == None:
                 context = self._doc.documentElement
@@ -638,6 +650,7 @@ class DBImpl(DBSerializer):
             
     def getValue(self, location, token, context=None, namespaces=NAMESPACES):
         """Return a single value from the document (as string)"""
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.readlock():
             if context is None:
                 context = self._doc.documentElement
@@ -655,6 +668,7 @@ class DBImpl(DBSerializer):
                     
     def getValues(self, location, token, context=None, namespaces=NAMESPACES):
         """Return a list of node values from the document (as names and strings)"""
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.readlock():
             if context is None:
                 context = self._doc.documentElement
@@ -665,6 +679,7 @@ class DBImpl(DBSerializer):
         
     def getElements(self, location, operation, token, context=None, namespaces=NAMESPACES, postChild=None):
         """Return a list of DOM nodes (elements only, for now) that match the location"""
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.readlock():
             if context is None:
                 context = self._doc.documentElement
@@ -675,18 +690,19 @@ class DBImpl(DBSerializer):
             return nodeList
         
     def _getValueList(self, nodelist):
-        with self.readlock():
-            rv = []
-            for node in nodelist:
-                rv.append((self.getXPathForElement(node), xpath.expr.string_value(node)))
-            return rv
+        assert self.readlock().locked()
+        rv = []
+        for node in nodelist:
+            rv.append((self._getXPathForElement(node), xpath.expr.string_value(node)))
+        return rv
             
     def mergeElement(self, location, tree, token, plugin=False, context=None, namespaces=NAMESPACES):
         callbacks = None
+        assert plugin # No other merges implemented yet
+        assert location == '/'
+        assert context == None
+        #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.writelock():
-            assert plugin # No other merges implemented yet
-            assert location == '/'
-            assert context == None
             if context == None and location == '/':
                 context = self._doc.documentElement
             if not self._elementsMatch(context, tree):
@@ -711,6 +727,7 @@ class DBImpl(DBSerializer):
         return rv
         
     def _mergeTree(self, context, newTree, token, plugin, namespaces=NAMESPACES):
+        assert self.writelock().locked()
         newChild = newTree.firstChild
         toAdd = []
         while newChild:
@@ -729,7 +746,7 @@ class DBImpl(DBSerializer):
                 newContext = matches[0]
                 self._mergeTree(newContext, newChild, token, plugin, namespaces=namespaces)
             else:
-                raise DBParamError('mergeElement: multiple matches for %s at %s' % (xp, self.getXPathForElement(context)))
+                raise DBParamError('mergeElement: multiple matches for %s at %s' % (xp, self._getXPathForElement(context)))
             newChild = newChild.nextSibling
         for newChild in toAdd:
             newTree.removeChild(newChild)

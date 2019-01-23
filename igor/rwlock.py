@@ -6,7 +6,7 @@ in stead of Locks.
 
 import threading
 
-DEBUG=True
+DEBUG=False
 
 class _RWReadLock(object):
     """Helper class to enable with and enter/exit on ReadWriteLock"""

@@ -696,6 +696,57 @@ class DBImpl(DBSerializer):
             rv.append((self._getXPathForElement(node), xpath.expr.string_value(node)))
         return rv
             
+    def addElement(self, parentPath, tag, element, token=None):
+        """Add a new element to the database."""
+        #
+        # Find parent
+        #
+        # NOTE: we pass the tagname for the child element. This is so put rights on a
+        # child that does not exist yet can be checked.
+        callbacks = None
+        with self.writelock():
+            parentElements = xpath.find(parentPath) # 'post', token, postChild=tag)
+            if not parentElements:
+                raise DBParamError("Parent not found: %s" % parentPath)
+            if len(parentElements) > 1:
+                raise DBParamError("Multiple parents: %s" % parentPath)
+            parent = parentElements[0]
+            self._checkAccess('post', parent, token, tag)        
+            #
+            # Add new node to the end of the parent
+            #
+            parent.appendChild(element)
+            #
+            # Signal both parent and new node
+            #
+            nodesToSignal = recursiveNodeSet(element)
+            nodesToSignal += nodeSet(parent)
+            callbacks = self._signalNodelist(nodesToSignal)
+        if callbacks:
+            self._runSignalCallbacks(callbacks)
+    
+    def replaceElement(self, oldElement, newElement, token):
+        """Replace an existing element in the database. Returns True if nothing changed"""
+        #
+        # We should really do a selective replace here: change only the subtrees that need replacing.
+        # That will make the signalling much more fine-grained. Will do so, at some point in the future.
+        #
+        # For now we replace the first matching node and delete its siblings, but only if the new content
+        # is not identical to the old
+        #
+        callbacks = None
+        with self.writelock():
+            self._checkAccess('put', oldElement, token)
+            if self._identicalSubTrees(oldElement, newElement):
+                return True
+            parent = oldElement.parentNode
+            parent.replaceChild(newElement, oldElement)
+            nodesToSignal = recursiveNodeSet(newElement)
+            callbacks = self._signalNodelist(nodesToSignal)
+        if callbacks:
+            self._runSignalCallbacks(callbacks)
+        return False
+        
     def mergeElement(self, location, tree, token, plugin=False, context=None, namespaces=NAMESPACES):
         callbacks = None
         assert plugin # No other merges implemented yet

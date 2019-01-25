@@ -696,7 +696,7 @@ class DBImpl(DBSerializer):
             rv.append((self._getXPathForElement(node), xpath.expr.string_value(node)))
         return rv
             
-    def addElement(self, parentPath, tag, element, token=None):
+    def addElement(self, parentPath, tag, element, token, context=None, namespaces=NAMESPACES):
         """Add a new element to the database."""
         #
         # Find parent
@@ -705,7 +705,9 @@ class DBImpl(DBSerializer):
         # child that does not exist yet can be checked.
         callbacks = None
         with self.writelock():
-            parentElements = xpath.find(parentPath) # 'post', token, postChild=tag)
+            if context is None:
+                context = self._doc.documentElement
+            parentElements = xpath.find(parentPath, context, namespaces=namespaces)
             if not parentElements:
                 raise DBParamError("Parent not found: %s" % parentPath)
             if len(parentElements) > 1:
@@ -725,7 +727,7 @@ class DBImpl(DBSerializer):
         if callbacks:
             self._runSignalCallbacks(callbacks)
     
-    def replaceElement(self, oldElement, newElement, token):
+    def replaceElement(self, oldElement, newElement, token, context=None, namespaces=NAMESPACES):
         """Replace an existing element in the database. Returns True if nothing changed"""
         #
         # We should really do a selective replace here: change only the subtrees that need replacing.

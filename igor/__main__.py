@@ -353,8 +353,9 @@ class IgorInternal(object):
             for k in list(failureDescription.keys()):
                 if not failureDescription[k]:
                     del failureDescription[k]
-            token = self.igor.access.tokenForIgor()
-            self.igor.databaseAccessor.put_key('/data/services/igor/accessFailures/accessFailure', 'application/x-python-object', None, failureDescription, 'application/x-python-object', token, replace=False)
+            tocall=dict(method='POST', url='/data/services/igor/accessFailures/accessFailure', mimetype='application/json', data=json.dumps(failureDescription), token=self.igor.access.tokenForIgor())
+            self.igor.urlCaller.callURL(tocall)
+            #self.igor.databaseAccessor.put_key('/data/services/igor/accessFailures/accessFailure', 'application/x-python-object', None, failureDescription, 'application/x-python-object', token, replace=False)
         
     def accessControl(self, subcommand=None, returnTo=None, **kwargs):
         """Low-level access control, key and capability interface. Not intended for human use"""

@@ -82,11 +82,9 @@ class ReadWriteLock(object):
     def _acquire_write(self):
         self.__exclude.acquire()
         if DEBUG: print('ReadWriteLock(0x%x): acquire_write() readers=%d' % (id(self), self.readers))
-        assert self.readers == 0
                 
     def _release_write(self):
         if DEBUG: print('ReadWriteLock(0x%x): release_write() readers=%d' % (id(self), self.readers))
-        assert self.readers == 0
         self.__exclude.release()
         
     def _locked_read(self):

@@ -232,7 +232,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def _save(self):
         """Save database or capability store, if possible"""
         if self.igor.internal:
-            self.igor.internal.queue('save', _accessSelfToken)
+            self.igor.internal.save(_accessSelfToken)
 
     def hasCapabilitySupport(self):
         return True

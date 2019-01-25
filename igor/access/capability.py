@@ -336,6 +336,7 @@ class AccessToken(BaseAccessToken):
         newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=AU_NAMESPACE)
         parentElement = oldCapElement.parentNode
         parentElement.replaceChild(newCapElement, oldCapElement)
+        singleton._save()
               
     def _getOwner(self):
         return self.owner

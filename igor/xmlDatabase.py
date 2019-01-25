@@ -283,6 +283,8 @@ class DBImpl(DBSerializer):
     def __init__(self, filename):
         DBSerializer.__init__(self)
         self.saveLock = threading.Lock()
+        self.savedGeneration = None
+        self.currentGeneration = 0
         from . import access
         self.access = access.singleton
         self._terminating = False
@@ -324,6 +326,9 @@ class DBImpl(DBSerializer):
         
     def saveFile(self):
         with self.writelock():
+            if self.savedGeneration == self.currentGeneration:
+                # Nothing changed since last save
+                return
             newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
             if os.path.exists(newFilename):
                 for i in range(10):
@@ -347,6 +352,9 @@ class DBImpl(DBSerializer):
             allOldDatabases.sort()
             for fn in allOldDatabases[:-10]:
                 os.unlink(os.path.join(dir, fn))
+
+            self.savedGeneration = self.currentGeneration
+            print('xmlDatabase: saving to {}'.format(newFilename))
             
     def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""
@@ -358,6 +366,7 @@ class DBImpl(DBSerializer):
             newDoc = self._domimpl.createDocument('', 'root', None)
         self._removeBlanks(newDoc)
         with self.writelock():
+            self.currentGeneration += 1
             self._doc = newDoc
     
     def _createElementWithEscaping(self, tag, namespace=None):
@@ -634,6 +643,7 @@ class DBImpl(DBSerializer):
         """Remove a (possibly empty) set of nodes from the document"""
         #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.writelock():
+            self.currentGeneration += 1
             if context == None:
                 context = self._doc.documentElement
             nodeList = xpath.find(location, context, namespaces=namespaces)
@@ -705,6 +715,7 @@ class DBImpl(DBSerializer):
         # child that does not exist yet can be checked.
         callbacks = None
         with self.writelock():
+            self.currentGeneration += 1
             if context is None:
                 context = self._doc.documentElement
             parentElements = xpath.find(parentPath, context, namespaces=namespaces)
@@ -738,6 +749,7 @@ class DBImpl(DBSerializer):
         #
         callbacks = None
         with self.writelock():
+            self.currentGeneration += 1
             self._checkAccess('put', oldElement, token)
             if self._identicalSubTrees(oldElement, newElement):
                 return True
@@ -756,6 +768,7 @@ class DBImpl(DBSerializer):
         assert context == None
         #assert not self.readlock().locked() and not self.writelock().locked()        
         with self.writelock():
+            self.currentGeneration += 1
             if context == None and location == '/':
                 context = self._doc.documentElement
             if not self._elementsMatch(context, tree):

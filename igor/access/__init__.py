@@ -137,12 +137,11 @@ class TokenStorage(object):
         return rv
         
     def tokensNeededByElement(self, element, optional=False):
-        """Return a list of dictionaries describing the tokens this element needs"""
+        """Return a list of elements describing the tokens this element needs"""
         nodelist = xpath.find("au:needCapability", element, namespaces=NAMESPACES)
         if optional:
             nodelist += xpath.find("au:mayNeedCapability", element, namespaces=NAMESPACES)
-        tokenDataList = [self.igor.database.tagAndDictFromElement(e)[1] for e in nodelist]
-        return tokenDataList
+        return nodelist
         
 class RevokeList(object):
     """Handles revocation list"""

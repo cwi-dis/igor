@@ -271,12 +271,6 @@ class DBSerializer(object):
             if DEBUG: print('_runSignalCallbacks calling %s(%s)' % (callback, waitnodes))
             callback(*waitnodes)    
         
-    def signalNodelist(self, nodelist):
-        #assert not self.readlock().locked() and not self.writelock().locked()
-        with self.writelock():
-            callbacks = self._signalNodelist(nodelist)
-        self._runSignalCallbacks(callbacks)
-        
 class DBImpl(DBSerializer):
     """Main implementation of the database API"""
     

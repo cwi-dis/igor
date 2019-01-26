@@ -138,9 +138,9 @@ class TokenStorage(object):
         
     def tokensNeededByElement(self, element, optional=False):
         """Return a list of elements describing the tokens this element needs"""
-        nodelist = xpath.find("au:needCapability", element, namespaces=NAMESPACES)
+        nodelist = xpath.find(".//au:needCapability", element, namespaces=NAMESPACES)
         if optional:
-            nodelist += xpath.find("au:mayNeedCapability", element, namespaces=NAMESPACES)
+            nodelist += xpath.find(".//au:mayNeedCapability", element, namespaces=NAMESPACES)
         return nodelist
         
 class RevokeList(object):

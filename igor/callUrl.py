@@ -168,6 +168,9 @@ class URLCaller(object):
         self.dataRunner.stop()
         self.extRunner.stop()
         self.otherRunner.stop()
+        self.dataRunner.join()
+        self.extRunner.join()
+        self.otherRunner.join()
 
     def dump(self):
         rv = (self.dataRunner.dump() + '\n' + 

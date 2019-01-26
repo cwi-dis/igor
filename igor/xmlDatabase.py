@@ -434,8 +434,9 @@ class DBImpl(DBSerializer):
         return parent, child
 
     def getXPathForElement(self, node):
-        # This is a bit tricky, because sometimes we already hold the lock
-        if self.readlock().locked() or self.writelock().locked():        
+        # This is a bit tricky, because sometimes we already hold the lock.
+        # But, really, this test doesn't say that this thread is actually holding the write lock....
+        if self.writelock().locked():        
             return self._getXPathForElement(node)
         with self.readlock():
             return self._getXPathForElement(node)

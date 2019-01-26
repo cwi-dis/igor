@@ -1,5 +1,10 @@
 # Igor, your personal IoT butler
 
+[![Build Status](https://travis-ci.org/cwi-dis/igor.svg?branch=master)](https://travis-ci.org/cwi-dis/igor)
+[![Coverage Status](https://coveralls.io/repos/github/cwi-dis/igor/badge.svg?branch=master)](https://coveralls.io/github/cwi-dis/igor?branch=master)
+[![Documentation status](https://readthedocs.org/projects/igor-iot/badge/)](https://igor-iot.readthedocs.io/en/latest/)
+[![PyPI version](https://badge.fury.io/py/igor-iot.svg)](https://badge.fury.io/py/igor-iot)
+
 Igor is named after the Discworld characters of the same name. 
 You should think of it as a butler (or valet, or majordomo, 
 whatever the difference is) that knows everything 

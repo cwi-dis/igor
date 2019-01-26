@@ -468,6 +468,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(resultDict, {'incoming':content})
         
     def test_84_install_all_stdplugins(self):
+        """Test that most standard plugins can be installed and removed"""
         pAdmin = self._igorVar(credentials='admin:')
         dontInstall = ["ble"] # Requires Bluetooth hardware
         txtInstalled = pAdmin.get('/internal/pluginControl/list')
@@ -481,6 +482,15 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
                 added.append(p)
         for p in added:
             ok = pAdmin.get('/internal/pluginControl/uninstall', query=dict(pluginName=p))
+            
+    def test_85_plugin_management_page(self):
+        """Test that plugin management UI can be accessed"""
+        pAdmin = self._igorVar(credentials='admin:')
+        pageContent = pAdmin.get('/plugins.html')
+        # Determine whether the page has rendered correctly by counting the number of times the systemHealt plugin is referenced
+        # in the text. The numbers have been determined experimentally.
+        self.assertEqual(pageContent.count('testPlugin'), 9)        
+        self.assertEqual(pageContent.count('/testPlugin'), 2)        
 
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')

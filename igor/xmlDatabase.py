@@ -383,12 +383,6 @@ class DBImpl(DBSerializer):
             if escaped: return escaped
         return tag
         
-    def identicalSubTrees(self, element1, element2):
-        """Return true if the two subtrees are identical (for our purposes)"""
-        #assert not self.readlock().locked() and not self.writelock().locked()
-        with self.readlock():
-            return self._identicalSubTrees(element1, element2)
-            
     def _identicalSubTrees(self, element1, element2):
         assert self.readlock().locked()
         if not element1 and not element2: return True

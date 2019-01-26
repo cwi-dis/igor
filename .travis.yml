@@ -9,7 +9,7 @@ install:
 script:
     - IGOR_TEST_COVERAGE=True python -m coverage run --parallel-mode --concurrency=greenlet --concurrency=thread --concurrency=gevent setup.py test
     - python -m test.perf_igor
-    - cat test/fixtures/testIgor*/igor.log
+#    - cat test/fixtures/testIgor*/igor.log
 after_success:
     - coverage combine
     - coveralls

@@ -1,3 +1,6 @@
+#
+# First imports for python2/3 compatibility
+#
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
@@ -5,6 +8,16 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 from builtins import object
+
+#
+# Monkey-patch stdlib for gevent coroutines.
+#
+import gevent.monkey
+gevent.monkey.patch_all()
+
+#
+# Rest of imports
+#
 from . import webApp
 from . import xmlDatabase
 from . import access
@@ -29,8 +42,6 @@ from . import myLogger
 from ._version import VERSION
 
 import sys
-#reload(sys)
-#sys.setdefaultencoding('utf8')
 
 _real_stderr = sys.stderr
 def _dump_app_stacks(*args):

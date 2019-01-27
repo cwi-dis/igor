@@ -36,5 +36,8 @@ class TestPlugin(object):
         rv = self.igor.databaseAccessor.put_key(dataPath+'/incoming', 'text/plain', None, data, 'application/x-python-object', token, replace=True)
         return rv
     
+    def _concat(self, first="", second="", token=None, callerToken=None):
+        return first + second
+        
 def igorPlugin(igor, pluginName, pluginData):
     return TestPlugin(igor, pluginName, pluginData)

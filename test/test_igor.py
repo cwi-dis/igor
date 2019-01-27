@@ -519,6 +519,12 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(pageContent.count('testPlugin'), 9)        
         self.assertEqual(pageContent.count('/testPlugin'), 2)        
 
+    def test_86_plugin_page(self):
+        """Test that we can access a plugin template page, and that that page can access the plugin object"""
+        pAdmin = self._igorVar(credentials='admin:')
+        pageContent = pAdmin.get('/plugin/test2plugin/page/_testpage.html')
+        self.assertEqual(pageContent.count('test2plugintail'), 1)
+
 @unittest.skip("IgorTestHttps doesn't test anything that isn't tested by IgorTest or IgorTestCaps")
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')

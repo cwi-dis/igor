@@ -7,8 +7,8 @@ install:
     - pip install -r requirements.txt
     - python setup.py -q install
 script:
-    - COVERAGE_PROCESS_START=.coveragerc.thread python3 -m coverage run --rcfile=.coveragerc.thread setup.py test
-    - COVERAGE_PROCESS_START=.coveragerc.gevent python3 -m coverage run --rcfile=.coveragerc.gevent setup.py test
+    - COVERAGE_PROCESS_START=.coveragerc.thread python -m coverage run --rcfile=.coveragerc.thread setup.py test
+    - COVERAGE_PROCESS_START=.coveragerc.gevent python -m coverage run --rcfile=.coveragerc.gevent setup.py test
     - python -m test.perf_igor
 #    - cat test/fixtures/testIgor*/igor.log
 after_success:

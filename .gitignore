@@ -5,7 +5,8 @@ _build
 dist
 .eggs
 *.egg-info
-.coverage*
+.coverage
+.coverage.*
 coverage_html
 igor.profile
 test/fixtures/testIgor

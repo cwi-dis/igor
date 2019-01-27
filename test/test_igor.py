@@ -239,6 +239,15 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         data = pAdmin.get('/evaluate/igor_upper("lowercase")')
         self.assertEqual(data.count("LOWERCASE"), 1)
         
+    def test55_raw_data(self):
+        """Ensure raw database can be accessed, and is larger than non-raw (because of the added elements and attributes)"""
+        pAdmin = self._igorVar(credentials='admin:')
+        data = pAdmin.get('/data/')
+        rawData = pAdmin.get('/data/', query={'.VARIANT' : 'raw'})
+        self.assertTrue(not not data)
+        self.assertTrue(not not rawData)
+        self.assertTrue(len(rawData) > len(data))
+        
     def test61_call_action(self):
         """GET an action from external and check that it is executed"""
         pAdmin = self._igorVar(credentials='admin:')

@@ -62,7 +62,7 @@ class IgorServlet(threading.Thread):
     """
     
     @staticmethod
-    def argumentParser(parser=None, description=None, port=None, name=None):
+    def argumentParser(parser=None, description=None, port=None, name=None): # pragma: no cover
         """Static method to create ArgumentParser with common arguments for IgorServlet.
         
         Programs using IgorServlet as their REST interface will likely share a number of command
@@ -354,7 +354,7 @@ class IgorServlet(threading.Thread):
 def argumentParser(*args, **kwargs):
     return IgorServlet.argumentParser(*args, **kwargs)
     
-def main():
+def main():  # pragma: no cover
     global DEBUG
     DEBUG = True
     if DEBUG: print('igorServlet: main called')

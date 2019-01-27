@@ -32,7 +32,7 @@ def match(acceptable, mimetypelist):
                 return mimetype
     return None
 
-def main():
+def main(): # pragma: no cover
     if len(sys.argv) < 3:
         print("Usage: %s acceptheader mimetype [...]" % sys.argv[0], file=sys.stderr)
         sys.exit(2)

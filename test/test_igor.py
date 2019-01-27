@@ -42,12 +42,24 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         cls.tearDownIgor()
         super(IgorTest, cls).tearDownClass()
        
-    def test01_get_static(self):
-        """GET a static HTML page"""
+    def test01_get_static_jinja(self):
+        """GET a static HTML page generated from a template"""
         p = self._igorVar()
         result = p.get('/')
         self.assertTrue(result)
         self.assertEqual(result[0], "<")
+        
+    def test01a_get_static_global(self):
+        """GET a static page from the global (package) pages"""
+        p = self._igorVar()
+        result = p.get('/readme.global.txt')
+        self.assertEqual(result.count('test01a'), 1)
+        
+    def test01b_get_static_local(self):
+        """GET a static page from the local (./static in the data dir) pages"""
+        p = self._igorVar()
+        result = p.get('/readme.txt')
+        self.assertEqual(result.count('test01b'), 1)
         
     def test02_get_static_nonexistent(self):
         """GET a nonexistent static HTML page"""
@@ -206,6 +218,21 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         p.delete('sandbox/test32')
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
 
+    def test51_internal_dump(self):
+        """Call /internal/dump"""
+        pAdmin = self._igorVar(credentials='admin:')
+        data = pAdmin.get('/internal/dump')
+        
+    def test52_internal_log(self):
+        """Call /internal/log"""
+        pAdmin = self._igorVar(credentials='admin:')
+        data = pAdmin.get('/internal/log')
+        
+    def test53_internal_help(self):
+        """Call /internal/help"""
+        pAdmin = self._igorVar(credentials='admin:')
+        data = pAdmin.get('/internal/help')
+        
     def test61_call_action(self):
         """GET an action from external and check that it is executed"""
         pAdmin = self._igorVar(credentials='admin:')

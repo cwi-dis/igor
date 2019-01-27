@@ -7,7 +7,7 @@ dist
 *.egg-info
 .coverage
 .coverage.*
-coverage_html
+htmlcov
 igor.profile
 test/fixtures/testIgor
 test/fixtures/testIgorHttps

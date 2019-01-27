@@ -1,0 +1,7 @@
+[run]
+parallel = True
+source = .
+omit = 
+	*/site-packages/*
+concurrency =
+	gevent

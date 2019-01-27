@@ -492,6 +492,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(pageContent.count('testPlugin'), 9)        
         self.assertEqual(pageContent.count('/testPlugin'), 2)        
 
+@unittest.skip("IgorTestHttps doesn't test anything that isn't tested by IgorTest or IgorTestCaps")
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorPort = 29333

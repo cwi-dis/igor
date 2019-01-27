@@ -20,6 +20,8 @@ if os.getenv('IGOR_TEST_DEBUG'):
     DEBUG_TEST=True
 if os.getenv('IGOR_TEST_COVERAGE'):
     COVERAGE=True
+if os.getenv('COVERAGE_PROCESS_START'):
+    COVERAGE=os.getenv('COVERAGE_PROCESS_START')
 if DEBUG_TEST:
     igorVar.VERBOSE=DEBUG_TEST
     igorServlet.DEBUG=DEBUG_TEST
@@ -147,7 +149,9 @@ class IgorSetupAndControl(object):
         else:
             cmdHead = [sys.executable]
         if COVERAGE:
-            cmdHead = ["coverage", "run", "--parallel-mode", "--concurrency=thread", "--concurrency=greenlet", "--concurrency=gevent"]
+            cmdHead = ["coverage", "run"]
+            if isinstance(COVERAGE, str):
+                cmdHead.append("--rcfile={}".format(COVERAGE))
         cmd = cmdHead + ["-m", "igor", "--nologstderr", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
         sts = subprocess.call(cmd + cls.igorServerArgs)
         if sts:

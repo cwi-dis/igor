@@ -233,6 +233,12 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         pAdmin = self._igorVar(credentials='admin:')
         data = pAdmin.get('/internal/help')
         
+    def test54_evaluate(self):
+        """Use evaluate to call an Igor XPath function"""
+        pAdmin = self._igorVar(credentials='admin:')
+        data = pAdmin.get('/evaluate/igor_upper("lowercase")')
+        self.assertEqual(data.count("LOWERCASE"), 1)
+        
     def test61_call_action(self):
         """GET an action from external and check that it is executed"""
         pAdmin = self._igorVar(credentials='admin:')

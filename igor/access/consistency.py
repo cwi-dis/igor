@@ -353,7 +353,14 @@ class CapabilityConsistency(StructuralConsistency):
         self._hasCapability('/data/actions', cid='action-action', obj='/action', get='descendant')
         self._hasCapability('/data/actions', cid='action-internal', obj='/internal', get='descendant')
         self._hasCapability('/data/actions', cid='action-environment', obj='/data/environment', get='descendant', put='descendant', post='descendant', delete='descendant')
+        # Check that actions have the capabilities they need
+        for actionElement in self._getAllElements('/data/actions/action'):
+            actionXPath = self.database.getXPathForElement(actionElement)
+            tokensNeeded = self._getTokensNeededByElement(actionElement, optional=self.extended)
+            for item in tokensNeeded:
+                self._hasCapability(actionXPath, **item)
         
+        # Check that plugins have the capabilities they need.
         for pluginElement in self._getAllElements('/data/plugindata/*'):
             pluginName = pluginElement.tagName
             if ':' in pluginName or '{' in pluginName:
@@ -365,6 +372,7 @@ class CapabilityConsistency(StructuralConsistency):
             tokensNeeded += self._getTokensNeededByElement(pluginElement, optional=self.extended)
             for item in tokensNeeded:
                 self._hasCapability(pluginDataPath, **item)
+        
         #
         # Second set of checks: test that capability tree is indeed a tree
         #

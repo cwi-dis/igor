@@ -543,7 +543,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     def test_87_plugin_script(self):
         """Test that we can run a plugin script. Additionally, test that the pluginscript can call updateStatus."""
         pAdmin = self._igorVar(credentials='admin:')
-        pageContent = pAdmin.get('/pluginscript/test2plugin/concatwithname', query=dict(arg="tail"))
+        pageContent = pAdmin.get('/plugin/test2plugin/script/concatwithname', query=dict(arg="tail"))
         self.assertEqual(pageContent.count('test2plugintail'), 1)
 
 @unittest.skip("IgorTestHttps doesn't test anything that isn't tested by IgorTest or IgorTestCaps")

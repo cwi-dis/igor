@@ -13,7 +13,7 @@
             <host/>
 			<action>
 				<name>_start</name>
-				<url>/pluginscript/iirfid/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
+				<url>/plugin/{plugin}/script/start?url={/data/devices/igor/url}/sensors/rfid/rfidtag%3F.METHOD%3DPOST%26rfidtag%3D%25s</url>
 			</action>
 			<action>
 				<name>_cleanup</name>
@@ -30,7 +30,7 @@
 				<get>descendant-or-self</get>
 			</au:needCapability>
 			<au:needCapability>
-				<obj>/pluginscript/{plugin}</obj>
+				<obj>/plugin/{plugin}</obj>
 				<get>descendant-or-self</get>
 			</au:needCapability>
 			<au:needCapability>

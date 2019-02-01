@@ -33,11 +33,12 @@ Run a plugin. `GET` only. First field is the plugin name, optional second field 
 
 Retrieve a plugin UI (user interface) page. The template page is looked up inside the plugin directory and rendered through Jinja2. Query parameters are passed to the template.
 
-## /pluginscript/\*/\*
+## /plugin/\*/script/\*
 
 Run a plugin script. `GET` only. First argument is the plugin name, second argument is the script name. The script is obtained from file `/plugins/_name_/scripts/_scriptname_.sh`.
 
 query parameters are passed to the script as environment variables, with `igor_` prepended to the query parameter name. Per-plugin data and optional per-user data (as for `/plugin`) is combined into an `igor_pluginData` environment variable with has all the data in JSON encoded form.
+The plugin script has access to the plugin capability set, valid for a single call to the database (through `igorVar`) via a one-time-password mechanism.
 
 ## /login
 

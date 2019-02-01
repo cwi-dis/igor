@@ -478,7 +478,7 @@ def get_plugin_page(pluginName, pageName='index'):
 
     abort(404)
 
-@_WEBAPP.route('/pluginscript/<string:pluginName>/<string:scriptName>')    
+@_WEBAPP.route('/plugin/<string:pluginName>/script/<string:scriptName>')    
 def get_plugin_script(pluginName, scriptName):
     allArgs = request.values.to_dict()
     token = _SERVER.igor.access.tokenForRequest(request.environ)

@@ -12,7 +12,7 @@
             </switch>
 			<action>
 				<xpath>/data/environment/lights/*</xpath>
-				<url>/scripts/pluginscript/{plugin}/switch?state={.}&amp;switch={/data/plugindata/{plugin}/switch[name=name($originalContext)]/id}</url>
+				<url>/scripts/{plugin}/script/switch?state={.}&amp;switch={/data/plugindata/{plugin}/switch[name=name($originalContext)]/id}</url>
 				<representing>devices/{plugin}</representing>
 			</action>
 			<au:needCapability>

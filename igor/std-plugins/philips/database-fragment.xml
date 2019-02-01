@@ -7,17 +7,17 @@
 		<{plugin} own:plugin="{plugin}">
 			<action>
 				<xpath>/data/devices/tv/power</xpath>
-				<url>/pluginscript/philips/power?power={.}</url>
+				<url>/plugin/philips/script/power?power={.}</url>
 				<representing>devices/tv</representing>
 			</action>
 			<action>
 				<xpath>/data/devices/tv/*[name()!='power']</xpath>
-				<url>/pluginscript/philips/push?{name()}={.}</url>
+				<url>/plugin/philips/script/push?{name()}={.}</url>
 				<representing>devices/tv</representing>
 			</action>
 			<action>
 				<interval>60</interval>
-				<url>/pluginscript/philips/pull</url>
+				<url>/plugin/philips/script/pull</url>
 				<aggregate>true</aggregate>
 			</action>
 			<au:needCapability>

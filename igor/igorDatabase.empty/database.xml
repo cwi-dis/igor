@@ -40,10 +40,8 @@
 				<child>admin-action</child>
 				<child>admin-internal</child>
 				<child>admin-plugin</child>
-				<child>admin-pluginscript</child>
 				<child>admin-filesystem</child>
 				<child>action-plugin</child>
-				<child>action-pluginscript</child>
 				<child>action-action</child>
 			    <child>external</child>
 			    <child>action-internal</child>
@@ -78,13 +76,6 @@
 				<obj>/plugin</obj>
 				<parent>root</parent>
 				<cid>admin-plugin</cid>
-				<delegate>true</delegate>
-			</au:capability>
-			<au:capability>
-				<get>descendant</get>
-				<obj>/pluginscript</obj>
-				<parent>root</parent>
-				<cid>admin-pluginscript</cid>
 				<delegate>true</delegate>
 			</au:capability>
 			<au:capability>
@@ -141,12 +132,6 @@
 			<obj>/plugin</obj>
 			<parent>root</parent>
 			<cid>action-plugin</cid>
-		</au:capability>
-		<au:capability>
-			<get>descendant</get>
-			<obj>/pluginscript</obj>
-			<parent>root</parent>
-			<cid>action-pluginscript</cid>
 		</au:capability>
 		<au:capability>
 			<get>descendant</get>

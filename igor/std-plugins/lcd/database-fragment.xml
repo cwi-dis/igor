@@ -6,7 +6,7 @@
 	<actions>
 		<action own:plugin="{plugin}">
 			<xpath>/data/environment/messages/*</xpath>
-			<url>/pluginscript/{plugin}/message?args={.}</url>
+			<url>/plugin/{plugin}/script/message?args={.}</url>
 			<representing>devices/{plugin}</representing>
 		</action>
 	</actions>

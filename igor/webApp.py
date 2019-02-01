@@ -40,20 +40,6 @@ DEBUG=False
 _SERVER = None
 _WEBAPP = Flask(__name__)
 _WEBAPP.secret_key = b'geheimpje'   # Overridden by setSSLInfo in cases where it really matters
-# 
-# urls = (
-##     '/pluginscript/([^/]+)/([^/]+)', 'runScript',
-#     '/data/(.*)', 'abstractDatabaseAccess',
-##     '/evaluate/(.*)', 'abstractDatabaseEvaluate',
-##     '/internal/([^/]+)', 'runCommand',
-##     '/internal/([^/]+)/(.+)', 'runCommand',
-##     '/action/(.+)', 'runAction',
-##     '/trigger/(.+)', 'runTrigger',
-##     '/plugin/([^/]+)', 'runPlugin',
-##     '/plugin/([^/]+)/([^/_]+)', 'runPlugin',
-##     '/login', 'runLogin',
-##     '/([^/]*)', 'static',
-# )
 
 class MyWSGICaller:
     """Encapsulates WSGI app call and reply"""

@@ -552,9 +552,10 @@ class IgorTestHttps(IgorTest):
     igorPort = 29333
     igorProtocol = "https"
     
-class IgorTestCaps(IgorTestHttps):
+class IgorTestCaps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorCaps')
     igorPort = 39333
+    igorProtocol = "https"
     igorServerArgs = ["--capabilities"]
     igorUseCapabilities = True
 

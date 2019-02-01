@@ -15,6 +15,7 @@ import traceback
 
 DEBUG_TEST=False
 COVERAGE=False
+PROFILE=False
 
 if os.getenv('IGOR_TEST_DEBUG'):
     DEBUG_TEST=True
@@ -22,6 +23,8 @@ if os.getenv('IGOR_TEST_COVERAGE'):
     COVERAGE=True
 if os.getenv('COVERAGE_PROCESS_START'):
     COVERAGE=os.getenv('COVERAGE_PROCESS_START')
+if os.getenv('IGOR_TEST_PROFILE'):
+    PROFILE=True
 if DEBUG_TEST:
     igorVar.VERBOSE=DEBUG_TEST
     igorServlet.DEBUG=DEBUG_TEST
@@ -159,8 +162,11 @@ class IgorSetupAndControl(object):
             print('IgorTest: logfile %s:' % logFile)
             sys.stdout.write(open(logFile).read())
             assert 0
+        cmd = cmdHead + ["-m", "igor", "--nologstderr", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs
+        if PROFILE:
+            cmd += ["--profile"]
         if DEBUG_TEST: print('IgorTest: Start server')
-        cls.igorProcess = subprocess.Popen(cmdHead + ["-m", "igor", "--nologstderr", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs)
+        cls.igorProcess = subprocess.Popen(cmd)
         if DEBUG_TEST: print('IgorTest: Start servlet')
         cls.servlet = ServletHelper(
                 port=cls.igorPort+1, 

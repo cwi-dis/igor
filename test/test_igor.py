@@ -124,7 +124,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         root = ET.fromstring(result)
         self.assertEqual(root.tag, "systemHealth")
         
-    @skip("capabilities-only")
+    @unittest.skip("capabilities-only")
     def test_019_get_disallowed(self):
         """Check that GET on a variable for which you have no capability fails"""
 
@@ -191,7 +191,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result3value = json.loads(result3)
         self.assertEqual(result3value, [])
         
-    @skip("capabilities-only")
+    @unittest.skip("capabilities-only")
     def test_029_put_disallowed(self):
         """Check that PUT on a variable for which you have no capability fails"""
 
@@ -226,15 +226,15 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         p.delete('sandbox/test32')
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
 
-    @skip("capabilities-only")
+    @unittest.skip("capabilities-only")
     def test_039_delete_disallowed(self):
         """Check that DELETE on a variable for which you have no capability fails"""
 
-    @skip("capabilities-only")
+    @unittest.skip("capabilities-only")
     def test_040_newcap(self):
         """Create a new capability in the default set and check that a PUT now works"""
 
-    @skip("capabilities-only")
+    @unittest.skip("capabilities-only")
     def test_041_newcap_external(self):
         """Create a new capability, export it, carry it in a request and check that the request is allowed"""
 
@@ -348,11 +348,11 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result = pAdmin.get('devices/testPlugin/tested')
         self.assertTrue(result)
 
-    @skip("capabilities-only")
+    @unittest.skip("capabilities-only")
     def test_068_call_external_disallowed(self):
         """Check that a call to the external servlet without a correct capability fails"""
 
-    @skip("capabilities-only")
+    @unittest.skip("capabilities-only")
     def test_069_call_action_external_disallowed(self):    
         """Check that an action calling to the external servlet without a correct capability fails"""
         

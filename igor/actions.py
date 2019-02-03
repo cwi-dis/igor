@@ -191,6 +191,7 @@ class Action(object):
             doc = self.element.ownerDocument
             nbElement = doc.createElement("notBefore")
             self.element.appendChild(nbElement)
+            # Note we don't call setChanged() on the database, it isn't worth it.
         nbText = nbElement.firstChild
         if nbText:
             #if DEBUG: print 'Action._willRunNow replace notBefore text data'
@@ -200,6 +201,7 @@ class Action(object):
             doc = self.element.ownerDocument
             nbText = doc.createTextNode(str(earliestNextRun))
             nbElement.appendChild(nbText)
+            # Note we don't call setChanged() on the database, it isn't worth it.
         
     def _scheduleNextRunIn(self, interval):
         """Set the preferred (latest) next time this action should run"""

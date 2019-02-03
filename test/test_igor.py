@@ -42,59 +42,59 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         cls.tearDownIgor()
         super(IgorTest, cls).tearDownClass()
        
-    def test01_get_static_jinja(self):
+    def test_001_get_static_jinja(self):
         """GET a static HTML page generated from a template"""
         p = self._igorVar()
         result = p.get('/')
         self.assertTrue(result)
         self.assertEqual(result[0], "<")
         
-    def test01a_get_static_global(self):
+    def test_001a_get_static_global(self):
         """GET a static page from the global (package) pages"""
         p = self._igorVar()
         result = p.get('/readme.global.txt')
         self.assertEqual(result.count('test01a'), 1)
         
-    def test01b_get_static_local(self):
+    def test_001b_get_static_local(self):
         """GET a static page from the local (./static in the data dir) pages"""
         p = self._igorVar()
         result = p.get('/readme.txt')
         self.assertEqual(result.count('test01b'), 1)
         
-    def test02_get_static_nonexistent(self):
+    def test_002_get_static_nonexistent(self):
         """GET a nonexistent static HTML page"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.get, '/nonexistent.html')
         
-    def test03_get_internal(self):
+    def test_003_get_internal(self):
         pAdmin = self._igorVar(credentials='admin:')
         result = pAdmin.get('/internal/version')
         self.assertTrue(result)
         
-    def test04_get_internal_fail(self):
+    def test_004_get_internal_fail(self):
         pAdmin = self._igorVar(credentials='admin:')
         self.assertRaises(igorVar.IgorError, pAdmin.get, '/internal/fail')
 
-    def test05_get_plugin(self):
+    def test_005_get_plugin(self):
         pAdmin = self._igorVar(credentials='admin:')
         result = pAdmin.get('/plugin/testPlugin')
         self.assertTrue(result)
             
-    def test06_get_plugin_subpath(self):
+    def test_006_get_plugin_subpath(self):
         pAdmin = self._igorVar(credentials='admin:')
         result = pAdmin.get('/plugin/testPlugin/method2')
         self.assertTrue(result)
             
-    def test07_get_plugin_fail(self):
+    def test_007_get_plugin_fail(self):
         pAdmin = self._igorVar(credentials='admin:')
         self.assertRaises(igorVar.IgorError, pAdmin.get, '/plugin/nonexistent')
             
-    def test09_get_plugin_othername(self):
+    def test_009_get_plugin_othername(self):
         pAdmin = self._igorVar(credentials='admin:')
         result = pAdmin.get('/plugin/test2plugin')
         self.assertTrue(result)
             
-    def test11_get_xml(self):
+    def test_011_get_xml(self):
         """GET a database variable as XML"""
         p = self._igorVar()
         result = p.get('environment/systemHealth', format='application/xml')
@@ -102,13 +102,13 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         root = ET.fromstring(result)
         self.assertEqual(root.tag, "systemHealth")
         
-    def test12_get_text(self):
+    def test_012_get_text(self):
         """GET a database variable as plaintext"""
         p = self._igorVar()
         result = p.get('environment/systemHealth', format='text/plain')
         self.assertTrue(result)
         
-    def test13_get_json(self):
+    def test_013_get_json(self):
         """GET a database variable as JSON"""
         p = self._igorVar()
         result = p.get('environment/systemHealth', format='application/json')
@@ -117,14 +117,18 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertIsInstance(root, dict)
         self.assertEqual(list(root.keys()), ["systemHealth"])
         
-    def test14_get_xml_unknownquery(self):
+    def test_014_get_xml_unknownquery(self):
         p = self._igorVar()
         result = p.get('environment/systemHealth', format='application/xml', query={'unknownKey':'unknownValue'})
         self.assertTrue(result)
         root = ET.fromstring(result)
         self.assertEqual(root.tag, "systemHealth")
         
-    def test21_put_xml(self):
+    @skip("capabilities-only")
+    def test_019_get_disallowed(self):
+        """Check that GET on a variable for which you have no capability fails"""
+
+    def test_021_put_xml(self):
         """PUT a database variable as XML"""
         p = self._igorVar()
         data = '<test21>21</test21>'
@@ -137,7 +141,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result3dict = json.loads(result3)
         self.assertEqual({"test21" : 21}, result3dict)
         
-    def test22_put_text(self):
+    def test_022_put_text(self):
         """PUT a database variable as plaintext"""
         p = self._igorVar()
         data = 'twenty two'
@@ -150,7 +154,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result3dict = json.loads(result3)
         self.assertEqual({'test22':'twenty two'}, result3dict)
         
-    def test23_put_json(self):
+    def test_023_put_json(self):
         """PUT a database variable as JSON"""
         p = self._igorVar()
         data = json.dumps({"test23" : 23})
@@ -161,7 +165,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result2 = p.get('sandbox/test23', format='application/xml')
         self.assertEqual("<test23>23</test23>", result2.strip())
         
-    def test24_put_multi(self):
+    def test_024_put_multi(self):
         """PUT a database variable twice and check that it has changed"""
         p = self._igorVar()
         data = '<test24>24</test24>'
@@ -173,7 +177,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result = p.get('sandbox/test24', format='application/xml')
         self.assertEqual(data.strip(), result.strip())
         
-    def test_25_get_xpath(self):
+    def test_025_get_xpath(self):
         p = self._igorVar()
         data = '<test25><sub1><key>1</key></sub1><sub2a><key>2</key></sub2a><sub2b><key>2</key></sub2b></test25>'
         p.put('sandbox/test25', data, datatype='application/xml')
@@ -187,7 +191,11 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result3value = json.loads(result3)
         self.assertEqual(result3value, [])
         
-    def test31_post_text(self):
+    @skip("capabilities-only")
+    def test_029_put_disallowed(self):
+        """Check that PUT on a variable for which you have no capability fails"""
+
+    def test_031_post_text(self):
         """POST a database variable twice and check that both get through"""
         p = self._igorVar()
         p.put('sandbox/test31', '', datatype='text/plain')
@@ -209,7 +217,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(result3list[0]['item'], 'thirty')
         self.assertEqual(result3list[1]['item'], 'one')
         
-    def test32_delete(self):
+    def test_032_delete(self):
         """DELETE a database variable"""
         p = self._igorVar()
         p.put('sandbox/test32', 'thirtytwo', datatype='text/plain')
@@ -218,28 +226,40 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         p.delete('sandbox/test32')
         self.assertRaises(igorVar.IgorError, p.get, 'sandbox/test32')
 
-    def test51_internal_dump(self):
+    @skip("capabilities-only")
+    def test_039_delete_disallowed(self):
+        """Check that DELETE on a variable for which you have no capability fails"""
+
+    @skip("capabilities-only")
+    def test_040_newcap(self):
+        """Create a new capability in the default set and check that a PUT now works"""
+
+    @skip("capabilities-only")
+    def test_041_newcap_external(self):
+        """Create a new capability, export it, carry it in a request and check that the request is allowed"""
+
+    def test_051_internal_dump(self):
         """Call /internal/dump"""
         pAdmin = self._igorVar(credentials='admin:')
         data = pAdmin.get('/internal/dump')
         
-    def test52_internal_log(self):
+    def test_052_internal_log(self):
         """Call /internal/log"""
         pAdmin = self._igorVar(credentials='admin:')
         data = pAdmin.get('/internal/log')
         
-    def test53_internal_help(self):
+    def test_053_internal_help(self):
         """Call /internal/help"""
         pAdmin = self._igorVar(credentials='admin:')
         data = pAdmin.get('/internal/help')
         
-    def test54_evaluate(self):
+    def test_054_evaluate(self):
         """Use evaluate to call an Igor XPath function"""
         pAdmin = self._igorVar(credentials='admin:')
         data = pAdmin.get('/evaluate/igor_upper("lowercase")')
         self.assertEqual(data.count("LOWERCASE"), 1)
         
-    def test55_raw_data(self):
+    def test_055_raw_data(self):
         """Ensure raw database can be accessed, and is larger than non-raw (because of the added elements and attributes)"""
         pAdmin = self._igorVar(credentials='admin:')
         data = pAdmin.get('/data/')
@@ -248,7 +268,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertTrue(not not rawData)
         self.assertTrue(len(rawData) > len(data))
         
-    def test61_call_action(self):
+    def test_061_call_action(self):
         """GET an action from external and check that it is executed"""
         pAdmin = self._igorVar(credentials='admin:')
         optBearerToken = self._create_cap_for_call(pAdmin, 'test61action')
@@ -276,7 +296,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         """Create capability required to GET an action from extern"""
         return {}
         
-    def test62_call_external(self):
+    def test_062_call_external(self):
         """GET an action on the external servlet directly"""
         pAdmin = self._igorVar(credentials='admin:')
         newCapID = self._create_caps_for_action(pAdmin, None, obj='/api', get='child', put='child', delegate='external')
@@ -298,7 +318,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         """Export a capability for the servlet audience"""
         return {}
         
-    def test63_call_action_external(self):
+    def test_063_call_action_external(self):
         """GET an action that does a GET on the external servlet"""
         pAdmin = self._igorVar(credentials='admin:')
 
@@ -319,7 +339,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         duration = self.servlet.waitDuration()
         self.assertNotEqual(duration, None)
         
-    def test64_call_plugin_action(self):
+    def test_064_call_plugin_action(self):
         """Check that calling a plugin action works"""
         pAdmin = self._igorVar(credentials='admin:')
         result = pAdmin.get('/action/testPlugin/add-tested')
@@ -327,8 +347,16 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self._flush(pAdmin, MAX_FLUSH_DURATION)
         result = pAdmin.get('devices/testPlugin/tested')
         self.assertTrue(result)
+
+    @skip("capabilities-only")
+    def test_068_call_external_disallowed(self):
+        """Check that a call to the external servlet without a correct capability fails"""
+
+    @skip("capabilities-only")
+    def test_069_call_action_external_disallowed(self):    
+        """Check that an action calling to the external servlet without a correct capability fails"""
         
-    def test71_action(self):
+    def test_071_action(self):
         """Check that a PUT action runs when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
@@ -346,7 +374,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         wantedContent = {'test71':{'src':'seventy-one', 'sink':'copy-seventy-one-copy'}}
         self.assertEqual(resultDict, wantedContent)
         
-    def test72_action_post(self):
+    def test_072_action_post(self):
         """Check that a POST action runs when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
@@ -370,7 +398,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         wantedContent = {'test72':{'src':'72c', 'sink':['72a','72b','72c']}}
         self.assertEqual(resultDict, wantedContent)
         
-    def test73_action_indirect(self):
+    def test_073_action_indirect(self):
         """Check that an action can run another action when the trigger variable is updated"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
@@ -390,7 +418,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         wantedContent = {'test73':{'src':'seventy-three', 'sink':'copy-seventy-three-copy'}}
         self.assertEqual(resultDict, wantedContent)
 
-    def test74_action_external_get(self):
+    def test_074_action_external_get(self):
         """Check that triggering an action that GETs an external action works"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
@@ -414,7 +442,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         """Create capability so that action caller can GET an external action"""
         pass
                 
-    def test75_action_external_get_arg(self):
+    def test_075_action_external_get_arg(self):
         """Check that triggering an action that GETs an external action with a variable works"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
@@ -436,7 +464,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result = self.servlet.get()
         self.assertEqual(result, 'seventy-five')
         
-    def test76_action_external_put(self):
+    def test_076_action_external_put(self):
         """Check that triggering an action that PUTs an external action with a variable works"""
         pAdmin = self._igorVar(credentials='admin:')
         p = self._igorVar()
@@ -458,7 +486,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         result = self.servlet.get()
         self.assertEqual(result, 'seventy-six')
         
-    def test_81_call_plugin(self):
+    def test_081_call_plugin(self):
         """Test that a plugin can run, and read and write the database"""
         pAdmin = self._igorVar(credentials='admin:')
         optBearerToken = self._create_cap_for_plugin(pAdmin, 'copytree')
@@ -477,7 +505,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         """Create capability required to GET a plugin from extern"""
         return {}
 
-    def test_82_call_action_plugin(self):
+    def test_082_call_action_plugin(self):
         """Test that an action can run a plugin, and that plugin can read and write the database"""
         pAdmin = self._igorVar(credentials='admin:')
         optBearerToken = self._create_cap_for_call(pAdmin, 'test82action')
@@ -499,7 +527,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     def _create_cap_for_plugin_for_action(self, pAdmin, caller, callee):
         pass
                 
-    def test_83_plugin_access(self):
+    def test_083_plugin_access(self):
         """Test that a plugin can read and write its own /data/devices/ data"""
         pAdmin = self._igorVar(credentials="admin:")
         content = {"test84" : "eigthy-four"}
@@ -509,7 +537,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         resultDict = json.loads(result)
         self.assertEqual(resultDict, {'incoming':content})
         
-    def test_84_install_all_stdplugins(self):
+    def test_084_install_all_stdplugins(self):
         """Test that most standard plugins can be installed and removed"""
         pAdmin = self._igorVar(credentials='admin:')
         dontInstall = ["ble"] # Requires Bluetooth hardware
@@ -525,7 +553,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         for p in added:
             ok = pAdmin.get('/internal/pluginControl/uninstall', query=dict(pluginName=p))
             
-    def test_85_plugin_management_page(self):
+    def test_085_plugin_management_page(self):
         """Test that plugin management UI can be accessed"""
         pAdmin = self._igorVar(credentials='admin:')
         pageContent = pAdmin.get('/plugins.html')
@@ -534,19 +562,19 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertEqual(pageContent.count('testPlugin'), 9)        
         self.assertEqual(pageContent.count('/testPlugin'), 2)        
 
-    def test_86_plugin_page(self):
+    def test_086_plugin_page(self):
         """Test that we can access a plugin template page, and that that page can access the plugin object"""
         pAdmin = self._igorVar(credentials='admin:')
         pageContent = pAdmin.get('/plugin/test2plugin/page/_testpage.html')
         self.assertEqual(pageContent.count('test2plugintail'), 1)
         
-    def test_87_plugin_script(self):
+    def test_087_plugin_script(self):
         """Test that we can run a plugin script. Additionally, test that the pluginscript can call updateStatus."""
         pAdmin = self._igorVar(credentials='admin:')
         pageContent = pAdmin.get('/plugin/test2plugin/script/concatwithname', query=dict(arg="tail"))
         self.assertEqual(pageContent.count('test2plugintail'), 1)
 
-@unittest.skip("IgorTestHttps doesn't test anything that isn't tested by IgorTest or IgorTestCaps")
+@unittest.skip("https is tested by IgorTestCaps")
 class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorPort = 29333
@@ -559,21 +587,21 @@ class IgorTestCaps(IgorTest):
     igorServerArgs = ["--capabilities"]
     igorUseCapabilities = True
 
-    def test19_get_disallowed(self):
+    def test_019_get_disallowed(self):
         """Check that GET on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.get, 'identities', format='application/xml')
         # Check that the access failure is recorded correctly
         self.assertEqual(p.get("services/igor/accessFailures/accessFailure[requestPath='/data/identities']/operation", format="text/plain"), "get\n")
         
-    def test29_put_disallowed(self):
+    def test_029_put_disallowed(self):
         """Check that PUT on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.put, 'environment/systemHealth/test29', 'twentynine', datatype='text/plain')
         # Check that the access failure is recorded correctly
         self.assertEqual(p.get("services/igor/accessFailures/accessFailure[requestPath='/data/environment/systemHealth/test29']/operation", format="text/plain"), "post\n")
         
-    def test39_delete_disallowed(self):
+    def test_039_delete_disallowed(self):
         """Check that DELETE on a variable for which you have no capability fails"""
         p = self._igorVar()
         self.assertRaises(igorVar.IgorError, p.delete, 'environment/systemHealth')
@@ -586,7 +614,7 @@ class IgorTestCaps(IgorTest):
         rv = pAdmin.get('/internal/accessControl/newToken?' + argStr)
         return rv.strip()
         
-    def test40_newcap(self):
+    def test_040_newcap(self):
         """Create a new capability in the default set and check that a PUT now works"""
         pAdmin = self._igorVar(credentials='admin:')
         pAdmin.put('environment/test40', '', datatype='text/plain')
@@ -612,7 +640,7 @@ class IgorTestCaps(IgorTest):
             if DEBUG_TEST: print('(shared key already exists for %s)' % repr(kwargs))
         return None
         
-    def test41_newcap_external(self):
+    def test_041_newcap_external(self):
         """Create a new capability, export it, carry it in a request and check that the request is allowed"""
         pAdmin = self._igorVar(credentials='admin:')
         pAdmin.put('environment/test41', '', datatype='text/plain')
@@ -632,13 +660,14 @@ class IgorTestCaps(IgorTest):
         result = p.get('environment/test41', format='text/plain')
         self.assertEqual(result.strip(), 'fortyone')
         
-    def test68_call_external_disallowed(self):
+    def test_068_call_external_disallowed(self):
         """Check that a call to the external servlet without a correct capability fails"""
         p = self._igorVar(server=self.servletUrl)
         self.servlet.set('sixtytwo')
         self.assertRaises(igorVar.IgorError, p.get, '/api/get')
 
-    def test69_call_action_external_disallowed(self):        
+    def test_069_call_action_external_disallowed(self):    
+        """Check that an action calling to the external servlet without a correct capability fails"""
         pAdmin = self._igorVar(credentials='admin:')
 
         action = {'action':dict(name='test69action', url=self.servletUrl+'/api/get')}

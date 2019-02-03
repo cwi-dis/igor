@@ -28,25 +28,26 @@ class UserPlugin(object):
         # Create password
         self.igor.internal.accessControl('setUserPassword', token=callerToken, username=username, password=password)
         # Create capabilities
-        self.igor.internal.accessControl('newToken', 
-            token=callerToken, 
-            tokenId='admin-data',
-            newOwner='identities/%s' % username, 
-            newPath='/data/identities/%s' % username,
-            get='descendant-or-self', 
-            put='descendant', 
-            post='descendant', 
-            delete='descendant',
-            delegate=True)
-        self.igor.internal.accessControl('newToken', 
-            token=callerToken, 
-            tokenId='admin-data',
-            newOwner='identities/%s' % username, 
-            newPath='/data/people/%s' % username, 
-            put='descendant', 
-            post='descendant', 
-            delete='descendant',
-            delegate=True)
+        if self.igor.internal.accessControl('hasCapabilitySupport'):
+            self.igor.internal.accessControl('newToken', 
+                token=callerToken, 
+                tokenId='admin-data',
+                newOwner='identities/%s' % username, 
+                newPath='/data/identities/%s' % username,
+                get='descendant-or-self', 
+                put='descendant', 
+                post='descendant', 
+                delete='descendant',
+                delegate=True)
+            self.igor.internal.accessControl('newToken', 
+                token=callerToken, 
+                tokenId='admin-data',
+                newOwner='identities/%s' % username, 
+                newPath='/data/people/%s' % username, 
+                put='descendant', 
+                post='descendant', 
+                delete='descendant',
+                delegate=True)
         self.igor.internal.save(token)
         if returnTo:
             return self.igor.app.raiseSeeother(returnTo)

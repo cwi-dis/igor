@@ -284,6 +284,10 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     def test_058_user_capability(self):
         """Ensure that we can delegate a capability to a user, transfer it and revoke it again"""
 
+    @unittest.skip("capabilities-only")
+    def test_059_user_capability_recursive_revoke(self):
+        """Ensure that we can delegate a capability to a user, delegate that to another user, it and revoke it again"""
+
     def test_061_call_action(self):
         """GET an action from external and check that it is executed"""
         pAdmin = self._igorVar(credentials='admin:')
@@ -718,9 +722,41 @@ class IgorTestCaps(IgorTest):
         self.assertRaises(igorVar.IgorError, pUser.get, 'identities')
         self.assertRaises(igorVar.IgorError, pUser2.get, 'identities')
         
-        
-        
-        
+    def test_059_user_capability_recursive_revoke(self):
+        """Ensure that we can delegate a capability to a user, delegate that to another user, it and revoke it again"""
+        pAdmin = self._igorVar(credentials='admin:')
+        pUser = self._igorVar(credentials='user059:password059')
+        pUser2 = self._igorVar(credentials='user059a:password059a')
+        pAdmin.get('/plugin/user/add', query=dict(username='user059', password='password059'))
+        pAdmin.get('/plugin/user/add', query=dict(username='user059a', password='password059a'))
+        # Check that neither can access identities
+        self.assertRaises(igorVar.IgorError, pUser.get, 'identities')
+        self.assertRaises(igorVar.IgorError, pUser2.get, 'identities')
+        newCapID = self._new_capability(pAdmin,
+            tokenId='admin-data',
+            newOwner='/data/identities/user059',
+            newPath='/data/identities',
+            get='self',
+            delegate='1'
+            )
+        # Delegate to user2
+        newCapID2 = self._new_capability(pUser,
+            tokenId=newCapID,
+            newOwner='/data/identities/user059a',
+            newPath='/data/identities',
+            get='self'
+            )
+        # Check that both can access
+        data = pUser.get('identities')
+        self.assertIn('user059a', data)
+        data = pUser2.get('identities')
+        self.assertIn('user059', data)
+        # Revoke the original capability
+        pAdmin.get('/internal/accessControl/revokeToken', query=dict(tokenId=newCapID, parentId='admin-data'))
+        # Check that neither can access identities
+        self.assertRaises(igorVar.IgorError, pUser.get, 'identities')
+        self.assertRaises(igorVar.IgorError, pUser2.get, 'identities')
+
     def test_068_call_external_disallowed(self):
         """Check that a call to the external servlet without a correct capability fails"""
         p = self._igorVar(server=self.servletUrl)

@@ -161,6 +161,7 @@ class RevokeList(object):
             parents = self.igor.database.getElements('au:access/au:revokedCapabilities', 'post', _accessSelfToken, namespaces=NAMESPACES)
             assert len(parents) == 1
             parents[0].appendChild(element)
+            self.igor.database.setChanged()
         
     def _isTokenOnRevokeList(self, tokenId):
         """Check whether a given token is on the revoke list"""
@@ -217,6 +218,7 @@ class UserPasswords(object):
             self.igor.app.raiseHTTPError('404 Multiple entries for user %s' % username)
         parentElement = parentElements[0]
         parentElement.appendChild(element)
+        self.igor.database.setChanged()
 
 class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPasswords):
     def __init__(self, warnOnly=False):
@@ -467,12 +469,12 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                 tokenData[k] = v
         tokenData.update(newRights)
         tokenData.update(content)
-
         element = self.igor.database.elementFromTagAndData("capability", tokenData, namespace=AU_NAMESPACE)
         #
         # Insert into the tree
         #
         parentElement.appendChild(element)
+        self.igor.database.setChanged()
         #
         # Save
         #

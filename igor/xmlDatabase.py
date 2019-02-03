@@ -286,6 +286,10 @@ class DBImpl(DBSerializer):
         self.filename = filename
         self.initialize(filename=filename)
         
+    def setChanged(self):
+        """Called by external modules when they have changed the database behind our back."""
+        self.currentGeneration += 1
+        
     def _checkAccess(self, operation, element, token, postChild=None):
         assert self.readlock().locked()
         assert token

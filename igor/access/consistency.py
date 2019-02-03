@@ -269,6 +269,7 @@ class CapabilityConsistency(StructuralConsistency):
             raise CannotFix
         parentElement = parentElements[0]
         parentElement.appendChild(newElement)
+        self.database.setChanged()
         self.nChanges += 1
         if content['cid'] == 'root':
             return
@@ -284,6 +285,7 @@ class CapabilityConsistency(StructuralConsistency):
     def _fixParentCapability(self, cap, cid):
         parentCid = 'root'
         cap.appendChild(self.database.elementFromTagAndData('parent', parentCid))
+        self.database.setChanged()
         parent = self._getAllElements("//au:capability[cid='%s']" % parentCid)
         if len(parent) != 1:
             self._status('Cannot update parent capability: Multiple capabilities with cid=%s' % parentCid)

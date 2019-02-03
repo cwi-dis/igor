@@ -268,6 +268,18 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         self.assertTrue(not not rawData)
         self.assertTrue(len(rawData) > len(data))
         
+    def test_056_user_password(self):
+        """Ensure that a user with a password can be added, and that user has access to its own data"""
+        pAdmin = self._igorVar(credentials='admin:')
+        pAdmin.get('/plugin/user/add', query=dict(username='user056', password='password056'))
+        pUser = self._igorVar(credentials='user056:password056')
+        userData = pUser.get('identities/user056')
+        self.assertIn('user056', userData)
+        
+    @unittest.skip("capabilities-only")
+    def test_057_user_password_bad(self):
+        """Ensure that a user with a password can be added, and that user has access to its own data, and after changing the password no longer"""
+
     def test_061_call_action(self):
         """GET an action from external and check that it is executed"""
         pAdmin = self._igorVar(credentials='admin:')
@@ -659,6 +671,16 @@ class IgorTestCaps(IgorTest):
         p.put('environment/test41', 'fortyone', datatype='text/plain')
         result = p.get('environment/test41', format='text/plain')
         self.assertEqual(result.strip(), 'fortyone')
+
+    def test_057_user_password_bad(self):
+        """Ensure that a user with a password can be added, and that user has access to its own data, and after changing the password no longer"""
+        pAdmin = self._igorVar(credentials='admin:')
+        pUser = self._igorVar(credentials='user057:password057')
+        pAdmin.get('/plugin/user/add', query=dict(username='user057', password='notpassword057'))
+        self.assertRaises(igorVar.IgorError, pUser.get, 'identities/user057')
+        pAdmin.get('/plugin/user/password', query=dict(username='user057', password='password057'))
+        userData = pUser.get('identities/user057')
+        self.assertIn('user057', userData)
         
     def test_068_call_external_disallowed(self):
         """Check that a call to the external servlet without a correct capability fails"""

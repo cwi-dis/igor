@@ -39,7 +39,7 @@ def main():
     try:
         result = server.get("/internal/%s" % args.action, query=query)
     except igorVar.IgorError as e:
-        print("%s: %s" % (sys.argv[0], traceback.format_exception_only(type(e), e.message)[0].strip()), file=sys.stderr)
+        print("%s: %s" % (sys.argv[0], e.args[0]), file=sys.stderr)
         sys.exit(1)
     sys.stdout.write(result)
     

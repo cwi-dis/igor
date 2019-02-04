@@ -238,6 +238,10 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     def test_041_newcap_external(self):
         """Create a new capability, export it, carry it in a request and check that the request is allowed"""
 
+    @unittest.skip("capabilities-only")
+    def test_042_list_capabilities(self):
+        """Test UI for listing all capabilities"""
+
     def test_051_internal_dump(self):
         """Call /internal/dump"""
         pAdmin = self._igorVar(credentials='admin:')
@@ -679,6 +683,13 @@ class IgorTestCaps(IgorTest):
         p.put('environment/test41', 'fortyone', datatype='text/plain')
         result = p.get('environment/test41', format='text/plain')
         self.assertEqual(result.strip(), 'fortyone')
+
+    def test_042_list_capabilities(self):
+        """Test UI for listing all capabilities"""
+        pAdmin = self._igorVar(credentials='admin:')
+        result = pAdmin.get('/capabilities.html')
+        # The following value has been determined experimentally:
+        self.assertEqual(result.count('default-status'), 4)
 
     def test_057_user_password_bad(self):
         """Ensure that a user with a password can be added, and that user has access to its own data, and after changing the password no longer"""

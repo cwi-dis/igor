@@ -12,11 +12,11 @@ that goes on in your household, and makes sure everything runs smoothly.
 It performs its tasks without passing judgements and maintains complete 
 discretion, even within the household. It can work together with other Igors 
 (lending a hand) and with lesser servants such as [Iotsa-based devices](https://github.com/cwi-dis/iotsa).
+It includes a Certificate Authority implementation that allows you to use
+secure communication over https on the local network.
 
 Home page is <https://github.com/cwi-dis/igor>. 
-This software is licensed under the [MIT license](LICENSE.txt) by the   CWI DIS group, <http://www.dis.cwi.nl>.
-
-**Please note:** Igor is not a finished product yet, some functionality may be missing. Specifically, the security and privacy mechanisms are not complete yet.
+This software is licensed under the [MIT license](LICENSE.txt) by the CWI DIS group, <http://www.dis.cwi.nl>.
 
 ## Overview
 

@@ -1,3 +1,12 @@
+igor 0.99 - February 2018
+- Capability support enabled by default
+- Cleanup and added user interfaces for plugins lan, ble, dhcp, others
+- Plugin scripts are now accessed as /plugin/_pluginname_/script/_scriptname_.
+- Check code coverage during CI/CD
+- Added more tests (based on code coverage results)
+- Performance: use reader-writer lock on the database
+- Various other performance issues fixed
+
 igor 0.98 - January 2018
 - implemented token and callerToken distinction for plugins
 - moved secret keys out of main database to shadow.xml database

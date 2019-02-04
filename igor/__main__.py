@@ -550,7 +550,7 @@ def main():
         print(VERSION, file=sys.stderr)
         sys.exit(0)
     
-    useCapabilities = False # Default if neither --capabilities nor --noCapabilities has been specified
+    useCapabilities = True # Default if neither --capabilities nor --noCapabilities has been specified
     if args.noCapabilities:
         useCapabilities = False
     if args.capabilities:

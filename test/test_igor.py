@@ -29,7 +29,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
     igorPort = 19333
     igorProtocol = "http"
     igorVarArgs = {}
-    igorServerArgs = []
+    igorServerArgs = ["--noCapabilities"]
     igorUseCapabilities = False
     
     @classmethod
@@ -603,6 +603,7 @@ class IgorTestHttps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorHttps')
     igorPort = 29333
     igorProtocol = "https"
+    igorServerArgs = ["--noCapabilities"]
     
 class IgorTestCaps(IgorTest):
     igorDir = os.path.join(FIXTURES, 'testIgorCaps')

@@ -59,7 +59,8 @@ class IgorCmdlineTest(unittest.TestCase):
             cmd += self.credentials
         cmd += list(args)
         with open(logFile, 'a') as logFP:
-            print('+', ' '.join(cmd), file=logFP, flush=True)
+            print('+', ' '.join(cmd), file=logFP)
+            logFP.flush()
             if 'async' in options:
                 proc = subprocess.Popen(cmd, stdout=logFP, stderr=subprocess.STDOUT)
                 self.processes.append(proc)

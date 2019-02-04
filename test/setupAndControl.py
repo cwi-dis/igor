@@ -2,6 +2,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import str
 from builtins import object
+# Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
+try:
+    import coverage
+    coverage.process_startup()
+except ImportError:
+    pass
 import os
 import shutil
 import sys
@@ -14,15 +20,10 @@ import threading
 import traceback
 
 DEBUG_TEST=False
-COVERAGE=False
 PROFILE=False
 
 if os.getenv('IGOR_TEST_DEBUG'):
     DEBUG_TEST=True
-if os.getenv('IGOR_TEST_COVERAGE'):
-    COVERAGE=True
-if os.getenv('COVERAGE_PROCESS_START'):
-    COVERAGE=os.getenv('COVERAGE_PROCESS_START')
 if os.getenv('IGOR_TEST_PROFILE'):
     PROFILE=True
 if DEBUG_TEST:
@@ -151,10 +152,6 @@ class IgorSetupAndControl(object):
             cmdHead = [os.environ['IGOR_TEST_PYTHON']]
         else:
             cmdHead = [sys.executable]
-        if COVERAGE:
-            cmdHead = ["coverage", "run"]
-            if isinstance(COVERAGE, str):
-                cmdHead.append("--rcfile={}".format(COVERAGE))
         cmd = cmdHead + ["-m", "igor", "--nologstderr", "--check", "--database", cls.igorDir, "--port", str(cls.igorPort)]
         sts = subprocess.call(cmd + cls.igorServerArgs)
         if sts:

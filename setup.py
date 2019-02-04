@@ -4,7 +4,12 @@ See:
 https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
-
+# Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
+try:
+    import coverage
+    coverage.process_startup()
+except ImportError:
+    pass
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 # To use a consistent encoding

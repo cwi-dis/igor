@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from __future__ import unicode_literals
+# Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
+try:
+    import coverage
+    coverage.process_startup()
+except ImportError:
+    pass
 import sys
 import os
 import argparse

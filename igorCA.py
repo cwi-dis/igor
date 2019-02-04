@@ -5,6 +5,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 from builtins import object
+# Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
+try:
+    import coverage
+    coverage.process_startup()
+except ImportError:
+    pass
 import sys
 import igor
 import os

@@ -302,6 +302,13 @@ class AccessToken(BaseAccessToken):
         headers['Authorization'] = 'Bearer ' + externalRepresentation
         return self.identifier
 
+    def _getChildIdList(self):
+        """Return list of token IDs of direct children"""
+        children = self.content.get('child', [])
+        if type(children) != type([]):
+            children = [children]
+        return children
+        
     def _addChild(self, childId):
         """Register a new child token to this one"""
         if DEBUG_DELEGATION: print('access: adding child %s to %s' % (childId, self.identifier))

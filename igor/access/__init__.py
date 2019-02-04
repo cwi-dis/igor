@@ -574,20 +574,31 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             for i in identifiers:
                 print('\t\t%s' % i)
             self.igor.app.raiseHTTPError("404 No such parent token: %s" % parentId)
-        childToken = token._getTokenWithIdentifier(tokenId)
-        if not childToken:
-            print('\taccess: revokeToken: no such token ID: %s. Tokens:' % tokenId)
-            for i in identifiers:
-                print('\t\t%s' % i)
-            self.igor.app.raiseHTTPError("404 No such token: %s" % tokenId)
-        self._addToRevokeList(tokenId, childToken.content.get('nva'))
-        childToken._revoke()
-        parentToken._delChild(tokenId)
+        self._revokeRecursive(parentToken, tokenId, raiseError=True)
         #
         # Save
         #
         self._clearTokenCaches()
         self._save()
+        
+    def _revokeRecursive(self, parentToken, childTokenId, raiseError=False):
+        """Helper for revoking a token"""
+        childToken = parentToken._getTokenWithIdentifier(childTokenId)
+        if not childToken:
+            print('\taccess: revokeToken: no such token ID: %s. Tokens:' % childTokenId)
+            for i in identifiers:
+                print('\t\t%s' % i)
+            if raiseError:
+                self.igor.app.raiseHTTPError("404 No such token: %s" % childTokenId)
+            print('Warning: ignored unknown token during recursive revoke')
+            return
+        # First do the recursion
+        grandChildren = childToken._getChildIdList()
+        for grandChildId in grandChildren:
+            self._revokeRecursive(childToken, grandChildId)
+        self._addToRevokeList(childTokenId, childToken.content.get('nva'))
+        childToken._revoke()
+        parentToken._delChild(childTokenId)
         
     def exportToken(self, token, tokenId, subject=None, lifetime=None, **kwargs):
         """Create an external representation of this token, destined for the given subject"""

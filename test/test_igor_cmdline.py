@@ -145,7 +145,32 @@ class IgorCmdlineTest(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(sts, 0)
         
-    def test_231_stop_igor(self):
+    def test_241_igorControl_helpcmd(self):
+        """Try the igorControl help command"""
+        sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "help")
+        self.assertEqual(sts, 0)
+        
+    def test_242_igorControl_save(self):
+        """Try the igorControl save command"""
+        sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "save")
+        self.assertEqual(sts, 0)
+        
+    def test_243_igorControl_dump(self):
+        """Try the igorControl dump command"""
+        sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "dump")
+        self.assertEqual(sts, 0)
+        
+    def test_244_igorControl_log(self):
+        """Try the igorControl log command"""
+        sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "log")
+        self.assertEqual(sts, 0)
+        
+    def test_245_igorControl_flush(self):
+        """Try the igorControl flush command"""
+        sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "flush")
+        self.assertEqual(sts, 0)
+        
+    def test_299_stop_igor(self):
         """Try the igorControl stop command"""
         sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "stop")
         self.assertEqual(sts, 0)

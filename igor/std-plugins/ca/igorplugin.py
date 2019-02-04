@@ -95,7 +95,7 @@ class CAPlugin(object):
         _, csrConfigFile = tempfile.mkstemp(suffix=".csrconfig")
         if not keysize:
             keysize = None
-        csrData = self.ca.do_genCSR(keyFile, csrFile, csrConfigFile, keysize, *names)
+        csrData = self.ca.do_genCSR(keyFile, csrFile, csrConfigFile, allNames=names, keysize=keysize)
         certData = self.ca.do_signCSR(csrData)
         keyData = open(keyFile).read()
         os.unlink(keyFile)

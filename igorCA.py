@@ -343,6 +343,7 @@ class IgorCA(object):
             # Old igor, probably: self.ca.caDatabase doesn't exist yet
             print()
             print('=============== Creating CA directories and infrastructure')
+            print()
             src = os.path.join(self.igorDir, 'igorDatabase.empty')
             caSrc = os.path.join(src, 'ca')
             print('%s: Creating %s' % (self.argv0, caSrc), file=sys.stderr)
@@ -353,6 +354,7 @@ class IgorCA(object):
         for caGroup in ('root', 'intermediate'):
             print()
             print('=============== Creating config for', caGroup)
+            print()
             caGroupDir = os.path.join(self.ca.caDatabase, caGroup)
             caGroupConf = os.path.join(caGroupDir, 'openssl.cnf')
             caGroupConfIn = os.path.join(caGroupDir, 'openssl.cnf.in')
@@ -373,9 +375,11 @@ class IgorCA(object):
         if  os.path.exists(rootKeyFile) and os.path.exists(rootCertFile) and os.path.exists(rootConfigFile):
             print()
             print('=============== Root key and certificate already exist')
+            print()
         else:
             print()
             print('=============== Creating root key and certificate')
+            print()
             ok = self.runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '2048' if self.keysize is None else self.keysize)
             if not ok:
                 return False
@@ -395,15 +399,22 @@ class IgorCA(object):
             os.chmod(rootCertFile, 0o400)
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', rootCertFile)
         if not ok:
+            print()
+            print("********* Something went wrong creating the root key and certificate.")
+            print()
             return False
         #
         # Create intermediate key, CSR and certificate
         #
         print()
         print('=============== Creating intermediate key and certificate')
+        print()
         ok = self.runSSLCommand('genrsa', '-out', self.ca.intKeyFile, '2048' if self.keysize is None else self.keysize)
         os.chmod(self.ca.intKeyFile, 0o400)
         if not ok:
+            print()
+            print("********* Something went wrong creating the intermediate key and certificate.")
+            print()
             return False
         intCsrFile = os.path.join(self.ca.caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
         ok = self.runSSLCommand('req', 
@@ -414,6 +425,9 @@ class IgorCA(object):
             '-out', intCsrFile
             )
         if not ok:
+            print()
+            print("********* Something went wrong signing the intermediate certificate.")
+            print()
             return False
         ok = self.runSSLCommand('ca',
             '-config', rootConfigFile,
@@ -425,6 +439,9 @@ class IgorCA(object):
             '-out', self.ca.intCertFile
             )
         if not ok:
+            print()
+            print("********* Something went wrong signing the intermediate certificate.")
+            print()
             return False
         os.chmod(self.ca.intCertFile, 0o400)
         #
@@ -435,6 +452,9 @@ class IgorCA(object):
             self.ca.intCertFile
             )
         if not ok:
+            print()
+            print("********* Something went wrong signing the intermediate certificate.")
+            print()
             return False
         #
         # Concatenate
@@ -453,7 +473,9 @@ class IgorCA(object):
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', self.ca.intAllCertFile)
         if not ok:
             return False
-    
+        print()
+        print("=============== Igor CA initialized correctly")
+        print()
         return True
 
     def cmd_dn(self):
@@ -476,7 +498,7 @@ class IgorCA(object):
         sys.stdout.write(csr)
         return True
         
-    def do_genCSR(self, keyFile, csrFile, csrConfigFile, keysize=None, *allNames):
+    def do_genCSR(self, keyFile, csrFile, csrConfigFile, allNames=[], keysize=None):
         """Create key and CSR for a service. Returns CSR."""
         if len(allNames) < 1:
             print('%s: genCSR requires ALL names (commonName first) as arguments' % self.argv0, file=sys.stderr)
@@ -588,7 +610,7 @@ class IgorCA(object):
             print('%s: igor.key and igor.crt already exist in %s' % (self.argv0, self.database), file=sys.stderr)
             return False
             
-        csr = self.do_genCSR(igorKeyFile, igorCsrFile, igorCsrConfigFile, *allNames)
+        csr = self.do_genCSR(igorKeyFile, igorCsrFile, igorCsrConfigFile, allNames)
         if not csr:
             return False
             
@@ -638,7 +660,7 @@ class IgorCA(object):
             print('%s: %s and %s already exist' % (self.argv0, keyFile, certFile), file=sys.stderr)
             return False
             
-        csr = self.do_genCSR(keyFile, csrFile, csrConfigFile, *allNames)
+        csr = self.do_genCSR(keyFile, csrFile, csrConfigFile, allNames)
         if not csr:
             return False
             

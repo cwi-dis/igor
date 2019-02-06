@@ -61,7 +61,12 @@ class IgorCmdlineTest(unittest.TestCase):
         with open(logFile, 'a') as logFP:
             print('+', ' '.join(cmd), file=logFP)
             logFP.flush()
-            if 'async' in options:
+            if 'read' in options:
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=logFP, universal_newlines=True)
+                rv = proc.communicate(timeout=60)
+                proc.wait()
+                return rv[0]
+            elif 'async' in options:
                 proc = subprocess.Popen(cmd, stdout=logFP, stderr=subprocess.STDOUT)
                 self.processes.append(proc)
                 return 0
@@ -70,43 +75,43 @@ class IgorCmdlineTest(unittest.TestCase):
     
     def test_200_igorServer_help(self):
         """check igorServer --help"""
-        sts = self._runCommand("igor", {}, "--help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igor", {"read"}, "--help")
+        self.assertIn("show this help message", data)
         
     def test_201_igorSetup_help(self):
         """check igorSetup --help"""
-        sts = self._runCommand("igorSetup", {}, "--help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorSetup", {"read"}, "--help")
+        self.assertIn("show this help message", data)
         
     def test_202_igorControl_help(self):
         """check igorControl --help"""
-        sts = self._runCommand("igorControl", {}, "--help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorControl", {"read"}, "--help")
+        self.assertIn("show this help message", data)
         
     def test_203_igorVar_help(self):
         """check igorVar --help"""
-        sts = self._runCommand("igorVar", {}, "--help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorVar", {"read"}, "--help")
+        self.assertIn("show this help message", data)
         
     def test_204_igorCA_help(self):
         """check igorCA --help"""
-        sts = self._runCommand("igorCA", {}, "--help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorCA", {"read"}, "--help")
+        self.assertIn("show this help message", data)
         
     def test_205_igorServlet_help(self):
         """check igorServlet --help"""
-        sts = self._runCommand("igorServlet", {}, "--help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorServlet", {"read"}, "--help")
+        self.assertIn("show this help message", data)
 
     def test_206_igorSetup_helpcmd(self):
         """check igorSetup help"""
-        sts = self._runCommand("igorSetup", {}, "help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorSetup", {"read"}, "help")
+        self.assertIn("help - this message", data)
 
     def test_207_igorCA_helpcmd(self):
         """check igorCA help"""
-        sts = self._runCommand("igorCA", {}, "help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorCA", {"read"}, "help")
+        self.assertIn("Show list of available commands", data)
         
         
     #
@@ -134,10 +139,12 @@ class IgorCmdlineTest(unittest.TestCase):
         sts = self._runCommand("igorSetup", {"addDir"}, "list")
         self.assertEqual(sts, 0)
         
-#    def test_220_igorSetup_certificateSelfsigned(self):
-#        """Create self-signed certificate for igor"""
-#        sts = self._runCommand("igorSetup", {"addDir"}, "--run", "certificateSelfsigned", "/CN=%s" % self.igorHostname, self.igorHostname, "localhost", "127.0.0.1")
-#        self.assertEqual(sts, 0)
+    def test_220_igorSetup_certificateSelfsigned(self):
+        """Create self-signed certificate for igor"""
+        if self.igorProtocol == "http":
+            raise unittest.SkipTest("no https support tested")
+        sts = self._runCommand("igorSetup", {"addDir"}, "--run", "certificateSelfsigned", "/CN=%s" % self.igorHostname, self.igorHostname, "localhost", "127.0.0.1")
+        self.assertEqual(sts, 0)
         
     def test_230_start_igor(self):
         """Start the igor server"""
@@ -147,8 +154,8 @@ class IgorCmdlineTest(unittest.TestCase):
         
     def test_241_igorControl_helpcmd(self):
         """Try the igorControl help command"""
-        sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "help")
-        self.assertEqual(sts, 0)
+        data = self._runCommand("igorControl", {"addUrl", "addCredentials", "data", "read"}, "help")
+        self.assertIn("Show list of all internal commands", data)
         
     def test_242_igorControl_save(self):
         """Try the igorControl save command"""
@@ -170,6 +177,40 @@ class IgorCmdlineTest(unittest.TestCase):
         sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "flush")
         self.assertEqual(sts, 0)
         
+    def test_251_igorVar_put_text(self):
+        """Use igorVar to put a text/plain value"""
+        sts = self._runCommand("igorVar", {"addUrl", "addCredentials"}, "--put", "text/plain", "--data", "text data", "sandbox/text")
+        self.assertEqual(sts, 0)
+
+    def test_252_igorVar_put_json(self):
+        """Use igorVar to put a application/json value"""
+        sts = self._runCommand("igorVar", {"addUrl", "addCredentials"}, "--put", "application/json", "--data", '{"json" : "json data"}', "sandbox/json")
+        self.assertEqual(sts, 0)
+
+    def test_253_igorVar_put_xml(self):
+        """Use igorVar to put a application/xml value"""
+        sts = self._runCommand("igorVar", {"addUrl", "addCredentials"}, "--put", "application/xml", "--data", "<xml>xml data</xml>", "sandbox/xml")
+        self.assertEqual(sts, 0)
+
+    def test_254_igorVar_post_text(self):
+        """Use igorVar to post two text/plain values"""
+        sts = self._runCommand("igorVar", {"addUrl", "addCredentials"}, "--post", "text/plain", "--data", "first post text", "sandbox/posttext")
+        self.assertEqual(sts, 0)
+        sts = self._runCommand("igorVar", {"addUrl", "addCredentials"}, "--post", "text/plain", "--data", "second post text", "sandbox/posttext")
+        self.assertEqual(sts, 0)
+
+    def test_261_igorVar_get_text(self):
+        """Use igorVar to get a plaintext value for all three values stored above"""
+        data = self._runCommand("igorVar", {"addUrl", "addCredentials", "read"}, "--mimetype", "text/plain", "sandbox/text")
+        self.assertIn("text data", data)
+        data = self._runCommand("igorVar", {"addUrl", "addCredentials", "read"}, "--mimetype", "text/plain", "sandbox/json")
+        self.assertIn("json data", data)
+        data = self._runCommand("igorVar", {"addUrl", "addCredentials", "read"}, "--mimetype", "text/plain", "sandbox/xml")
+        self.assertIn("xml data", data)
+        data = self._runCommand("igorVar", {"addUrl", "addCredentials", "read"}, "--mimetype", "text/plain", "sandbox/posttext")
+        self.assertIn("first post text", data)
+        self.assertIn("second post text", data)
+
     def test_299_stop_igor(self):
         """Try the igorControl stop command"""
         sts = self._runCommand("igorControl", {"addUrl", "addCredentials"}, "stop")

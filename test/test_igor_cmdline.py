@@ -18,7 +18,7 @@ class IgorCmdlineTest(unittest.TestCase):
     igorHostname=socket.gethostname()
     igorHostname2='localhost'
     igorPort = 49333
-    igorProtocol = "http"
+    igorProtocol = "https"
     igorVarArgs = {}
     igorUseCapabilities = False
     credentials = ['--credentials', 'admin:']
@@ -57,6 +57,9 @@ class IgorCmdlineTest(unittest.TestCase):
             cmd += ["-p", str(self.igorPort)]
         if 'addCredentials' in options:
             cmd += self.credentials
+            certFileName = os.path.join(self.igorDir, "igor.crt")
+            if os.path.exists(certFileName):
+                cmd += ["--certificate", certFileName]
         cmd += list(args)
         with open(logFile, 'a') as logFP:
             print('+', ' '.join(cmd), file=logFP)

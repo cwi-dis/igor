@@ -66,7 +66,7 @@ class IgorCmdlineTest(unittest.TestCase):
             logFP.flush()
             if 'read' in options:
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=logFP, universal_newlines=True)
-                rv = proc.communicate(timeout=60)
+                rv = proc.communicate()
                 proc.wait()
                 return rv[0]
             elif 'async' in options:

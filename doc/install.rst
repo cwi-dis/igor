@@ -19,17 +19,24 @@ Installing from PyPi
 Assuming you are using Python 3, run the following command:
 
 .. code-block:: sh
-	python3 -m pip install igor-iot
+
+	sudo python3 -m pip install igor-iot
 	
-Depending on your system installation (if this command fails with an error)
-you may have to run it with ``sudo``.
+Depending on your system installation
+you may be able to run it without ``sudo``, but even if this gives no permission
+errors it may actually still install in your home directory in stead of in the
+system directories, which may cause problems later if you want to run Igor as a
+system daemon.
 
 Note that installing with ``--user`` or installing in a *virtualenv* has not
-been tested.
+been tested, at least not extensively.
+
+After installing the software you can continue with :doc:`setup`.
 
 Installing from source
 ----------------------
 
+Alternatively you can build Igor from source.
 Download the source via https://github.com/cwi-dis/igor. 
 
 .. code-block:: sh

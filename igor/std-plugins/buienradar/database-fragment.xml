@@ -7,7 +7,7 @@
 	    <{plugin} own:plugin="{plugin}">
 	        <lat>52.3566777</lat>
 	        <lon>4.9496814</lon>
-			<action own:plugin="{plugin}">
+			<action>
 				<name>_start</name>
 				<xpath>/data/environment/location/lon</xpath>
 				<url>/data/plugindata/{plugin}/lon</url>
@@ -15,7 +15,7 @@
 				<mimetype>text/plain</mimetype>
 				<data>{/data/environment/location/lon}</data>
 			</action>
-			<action own:plugin="{plugin}">
+			<action>
 				<name>_start</name>
 				<xpath>/data/environment/location/lat</xpath>
 				<url>/data/plugindata/{plugin}/lat</url>
@@ -34,7 +34,7 @@
 			</au:needCapability>
 			<au:needCapability>
 				<obj>/plugin/{plugin}</obj>
-				<get>child</get>
+				<get>descendant-or-self</get>
 			</au:needCapability>
 			<au:needCapability>
 				<obj>/data/sensors/{plugin}</obj>

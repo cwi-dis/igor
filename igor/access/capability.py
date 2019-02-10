@@ -140,6 +140,11 @@ class AccessToken(BaseAccessToken):
     def __repr__(self):
         return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
         
+    def __eq__(self, other):
+        if not isinstance(other, AccessToken):
+            return False
+        return self.content == other.content
+        
     def _hasExternalRepresentationFor(self, url):
         if not 'aud' in self.content:
             return None
@@ -398,7 +403,7 @@ class MultiAccessToken(BaseAccessToken):
         for c in contentList:
             self.tokens.append(AccessToken(c, owner=owner))
         for t in tokenList:
-            self.tokens.append(t)
+            self._appendToken(t)
         self.externalTokenCache = {}
 
     def getIdentifiers(self):
@@ -463,7 +468,16 @@ class MultiAccessToken(BaseAccessToken):
         self.externalTokenCache = {}
         
     def _appendToken(self, token):
-        """Add a token object to the end of the list of tokens"""
+        """Add a token object to the end of the list of tokens, if it isn't there already'"""
         assert token != self
+        if token in self.tokens:
+            # If the token is in here already we don't need to add it again
+            return
+        if isinstance(token, MultiAccessToken):
+            # If the token is itself a multiaccess token we append its children recursively
+            for t in token.tokens:
+                self._appendToken(t)
+            return
+        # Otherwise it is a normal token that isn't in here yet. Append it (and clear the cache).
         self.tokens.append(token)
         self.externalTokenCache = {}

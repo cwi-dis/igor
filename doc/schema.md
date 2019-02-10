@@ -77,7 +77,7 @@ Example value:
 * `laptopJack`: true if Jack's laptop is in the house (boolean).
 
 ### environments/lights
-A set of booleans indicating the state of lights (or actually any electric device controllable through a smart outlet or something similar). These should be considered write-only, as reading the state of light switches is often impossible. The names should be human-readable, and changes in the values are picked up by plugins like _kaku_ to turn on or off those lights (after converting the names to switch IDs through information in _plugindata_).
+(_Unused, currently_) A set of booleans indicating the state of lights (or actually any electric device controllable through a smart outlet or something similar). These may be write-only, as reading the state of light switches is often impossible. The names should be human-readable, and changes in the values are picked up by plugins like _kaku_ to turn on or off those lights (after converting the names to switch IDs through information in _plugindata_).
 
 Example value:
 

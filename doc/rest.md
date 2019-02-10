@@ -6,7 +6,11 @@ The Igor HTTP or HTTPS server has the following REST entrypoints:
 Accesses data elements. GET, PUT, POST and DELETE allowed. The argument is technically an XPath expression that should resolve to a single element (but see below). Data can be provided with mimetypes `application/xml`, `application/json` or `text/plain`.
 
 Query parameters:
-* `.VARIANT` can be `multi` to get allow getting multiple elements, or `ref` to get an XPath for the resulting objects.
+* `.VARIANT` can be used to get data slightly different:
+  * `multi` to get allow getting multiple elements (normally multiple elements matching the expression is considered an error, except for `text/plain` when the values are concatenated)
+  * `raw` will also include namespaced elements and attributes. These are used for internal administration and usually not returned.
+  * `multiraw` combines `multi` and `raw` behaviour.
+  * `ref` to get an XPath for the resulting objects.
 * `.METHOD` convenience parameter for debugging with the browser. a `GET` request with `.METHOD=DELETE` will do a `DELETE` operation.
 
 ## /evaluate/**
@@ -31,7 +35,7 @@ Run a plugin. `GET` only. First field is the plugin name, optional second field 
 
 ## /plugin/\*/page/\*.html
 
-Retrieve a plugin UI (user interface) page. The template page is looked up inside the plugin directory and rendered through Jinja2. Query parameters are passed to the template.
+Retrieve a plugin UI (user interface) page. The template page is looked up inside the plugin directory and rendered through Jinja2. Query parameters are passed to the template. Plugin data is available as above.
 
 ## /plugin/\*/script/\*
 

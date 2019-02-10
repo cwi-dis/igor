@@ -1,8 +1,10 @@
 # Access Control schema
 
-For the time being, data pertaining to access control is stored in the main database, with an XML namespace of `http://jackjansen.nl/igor/authentication` (usually encoded with the `xmlns:au` prefix).
+Currently data pertaining to access control is stored in the main database, with an XML namespace of `http://jackjansen.nl/igor/authentication` (usually encoded with the `xmlns:au` prefix).
 
-Eventually this data will be hidden from normal Igor access, or moved to a separate database.
+This data is hidden from normal Igor access (unless query parameter `.VARIANT=raw` is used). In principle this should be safe,
+because an external call cannot modify the capabilities and there is no secret information contained in the capability data.
+There is however an issue that a call with the right permissions can accidentally delete a capability be replacing a subtree (with `PUT`).
 
 ## Capability structure
 
@@ -13,7 +15,7 @@ A capability is stored in an `au:capability` element.
 * `child` one entry for each child (delegated) capability of this capability.
 * `parent` parent of this capability.
 * `delegate` boolean, if `true` this capability can be delegated. If the value is the string `external` this capability can be the parent of any capability as long as that new capability has an `aud` field.
-* `obj` an xpath referencing a single element (or a nonexisting element with a single existing parent element) to which this capability refers. Rights on that object and its descendants are governed by a number of other fields:
+* `obj` an XPath referencing a single element (or a nonexisting element with a single existing parent element) to which this capability refers. Rights on that object and its descendants are governed by a number of other fields:
 	* `get` Together with `obj` defines on which elements this capability grants `GET` rights:
 		* empty (or non-existent): none.
 		* `self` the element itself only.
@@ -25,10 +27,17 @@ A capability is stored in an `au:capability` element.
 	* `post` Together with `obj` defines on which elements this capability grants `POST` rights. Values as for `get`.
 	* `delete` Together with `obj` defines on which elements this capability grants `DELETE` rights. Values as for `get`.
 
+The `obj` field will usually be an absolute XPath (starting with `/data`) but there are a number of other values used for non-database accesses (REST and other):
+
+* `/action` is the virtual object tree of actions (the REST `/action` entrypoints)
+* `/internal` is the virtual object tree of internal actions (the REST `/internal` entrypoints)
+* `/plugin` is the virtual object tree of plugins (the REST `/plugin` entrypoint)
+* `/filesystem` is the right to do operations that modify the filesystem. Checking this capability is currently only implemented for installing plugins.
+
 Capabilities that have an external representation may have a few extra fields:
 
 * `iss` Issuer of this capability. Usually the URL of `/issuer` on this igor.
-* `aud` Audience of this capability. Required for capabilities that Igor will encode as a JWT in an outgoing `Authentication: Bearer` header.
+* `aud` Audience of this capability. Required for capabilities that Igor will encode as a JWT (Json Web Token, <https://en.wikipedia.org/wiki/JSON_Web_Token>) in an outgoing `Authentication: Bearer` header.
 * `sub` Subject of this capability. Required for capabilities that Igor receives as JWT in an incoming `Authentication: Bearer` header.
 * For outgoing capabilities there may be other fields that are meaningful to the _audience_ of the capability.
 
@@ -67,20 +76,11 @@ Stores all external capabilities that have been revoced. For each such capabilit
 
 ### /data/au:access/au:unusedCapabilities
 
-This is an optional area to store capabilities that  are valid but currently not used, and that have no owner.
+This is an optional area to store capabilities that  are valid but currently not used, and that have no owner. For Igor development, really.
 
 ### /data/au:access/au:sharedKeys
 
-Stores symmetric keys shared between Igor and a single external party. These keys are used to sign outgoing capabilities (and check incoming capabilities). Each key is stored in an `au:sharedKey` element with the following fields:
-
-* `iss` Issuer.
-* `aud` (optional) Audience.
-* `sub` (optional) Subject.
-* `externalKey` Symmteric key to use.
-
-Keys are looked up either by the combination of _iss_ and _aud_ (for outgoing keys) or _iss_ and _sub_ (for incoming keys).
-
-**NOTE** The `externalKey` data here is truly secret (it is a shared key). Therefore, this data should be moved out of the database and stored externally, really. To be fixed.
+Empty placeholder for the secret shared key data in the _shadow.xml_ database (see below).
 
 ### /data/identities
 
@@ -121,13 +121,35 @@ Capabilities this action will carry when executing.
 
 ### /data/plugindata/_pluginname_/au:capability
 
-Capabilities this plugin will carry when executing.
+Capabilities this plugin will carry when executing. Also available to the template pages and scripts for this plugin.
 
-## Capability consistency checks
+## Shadow database
+
+The main igor database `.igor/database.xml` does not contain any secret information, so that access control secrets cannot be leaked accidentally through the REST interface.
+Therefore, all secret information is kept in a separate database `.igor/shadow.xml` which has in principle the same structure as the main database, but only contains secret information.
+
+In practice, the shadow database contains only the shared secret keys:
+
+### /data/au:access/au:sharedKeys
+
+Stores symmetric keys shared between Igor and a single external party. These keys are used to sign outgoing capabilities (and check incoming capabilities). Each key is stored in an `au:sharedKey` element with the following fields:
+
+* `iss` Issuer.
+* `aud` (optional) Audience.
+* `sub` (optional) Subject.
+* `externalKey` Symmteric key to use.
+
+Keys are looked up either by the combination of _iss_ and _aud_ (for outgoing keys) or _iss_ and _sub_ (for incoming keys).
+
+## Implementation details
+
+This section lists some of the ideas that came up when designing the capability structure. They may not be true anymore, but the text is kept here because it is not currently stored anywhere else.
+
+### Capability consistency checks
 
 Capabilities need to be checked for consistency, and for adherence to the schema. 
 
-The following checks are needed as a first order check, and ensure the base infrastructure for the schema is in place:
+The following checks are done as a first order check, and ensure the base infrastructure for the schema is in place:
 
 - `/data/au:access` exists.
 - `/data/au:access/au:defaultCapabilities` exists.
@@ -159,7 +181,7 @@ As a fourth check we check that every capability is in an expected location. In 
 
 Capabilities that fail this check are moved into `/data/au:access/au:unusedCapabilities`.
 
-## Actions on adding a new user
+### Actions on adding a new user
 
 To be refined, but at least:
 
@@ -170,14 +192,14 @@ To be refined, but at least:
 
 The API will need at least _name_ and _password_. Because of access control policies it is implied that only the _admin_ user can call this API (or any agent that the _admin_ user has granted the corresponding capabilities to).
 
-## Actions on deleting a user
+### Actions on deleting a user
 
 - Move any non-standard capabilities (really: any capability with `aud` not the current Igor) to a safe place (probably the _admin_ user).
 - Delete `/data/people` and `/data/identities` entries.
 
 The API will need just the user name, and the same access control rules as for adding users will apply.
 
-## Actions on adding a new device
+### Actions on adding a new device
 
 - Create SSL key with `igorCA` (or `iotsa/extras/make-igor-signed-cert.sh` or via _/plugin/ca_) and copy the key and certificate to the device.
 - Create a shared secret key with new device as audience, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
@@ -185,13 +207,13 @@ The API will need just the user name, and the same access control rules as for a
 	- Igor should automatically pick up the correct secret key and encode the capability with it, when talking to the device.
 - If the device is also a _sensor_, i.e. if it can also trigger actions in Igor, all of the _sensor_ actions must also be done.
 
-## Actions on adding a new sensor
+### Actions on adding a new sensor
 
 - Create a shared secret key with the new sensor as subject, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
 - Create a capability (with the sensor as subject and audience Igor) for each action the sensor should be able to trigger.
 - Export these capabilities (Igor will pick up the correct secret key based on the subject) and copy them to the sensor.
 
-## Generalized API for adding a device or sensor
+### Generalized API for adding a device or sensor
 
 Data to be supplied to this action:
 
@@ -223,13 +245,13 @@ It needs to be worked out what the access control rights are that are needed for
 
 It also needs to be worked out whether the user (or other agent) that calls this API gets permissions to the `/data/devices` or `/data/sensors` areas.
 
-## Deleting a device or sensor
+### Deleting a device or sensor
 
 - The entries in `/data/devices` and `/data/sensors` should be deleted.
 - The shared keys should be deleted.
 - The SSL certificate should be revoked.
 
-## Other actions on agent changes
+### Other actions on agent changes
 
 To be determined what is needed when adding/removing/changing plugins and actions. 
 

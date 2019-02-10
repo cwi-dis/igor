@@ -67,17 +67,17 @@ x509_extensions     = v3_ca
 
 [ req_distinguished_name ]
 # See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
-countryName                     = Country Name (2 letter code)
-stateOrProvinceName             = State or Province Name
-0.organizationName              = Organization Name
-organizationalUnitName          = Organizational Unit Name
-commonName                      = Common Name
+## countryName                     = Country Name (2 letter code)
+## stateOrProvinceName             = State or Province Name
+## 0.organizationName              = Organization Name
+## organizationalUnitName          = Organizational Unit Name
+## commonName                      = Common Name
 
 # Optionally, specify some defaults.
-countryName_default             = NL
-stateOrProvinceName_default     = Netherlands
-0.organizationName_default      = Igor Inc
-organizationalUnitName_default  =
+## countryName_default             = NL
+## stateOrProvinceName_default     = Netherlands
+## 0.organizationName_default      = Igor Inc
+## organizationalUnitName_default  =
 
 [ v3_ca ]
 # Extensions for a typical CA (`man x509v3_config`).

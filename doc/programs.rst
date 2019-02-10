@@ -49,7 +49,8 @@ between local devices and Igor (and other local devices).
 When used as a command line tool *igorCA* can also comunicate to another
 *igorCA* operating as a plugin in another Igor, thereby making it possible to
 run the CA only on a single machine in the local network, even if multiple
-Igor instances are used.
+Igor instances are used. This mode of operation is enabled by using the *--remote* argument
+to *igorCA*.
 
 .. argparse::
 	:ref: igorCA.argumentParser
@@ -59,8 +60,20 @@ Igor instances are used.
 igorCA actions
 ^^^^^^^^^^^^^^
 
-``initialize``	
-	create CA infrastructure, root key and certificate and intermediate key and certificate.
+``initialize``	*root-issuer* *intermediate-issuer*
+	Create CA infrastructure, root key and certificate and intermediate key and certificate. 
+	
+	The *root-issuer* argument is the name of this Certificate Authority, according to the X.509 standard. 
+	See <https://tools.ietf.org/rfc/rfc5280.txt> section 4.1.2.4 for exact details of the fields allowed, but some
+	fields are required: *C* for country name, *ST* for state and *O* for organization. Adding *CN* for common name is probably a good idea, this will allow people on the local network to recognize the certificate issuer.
+	
+	The fields are introduced by slashes, so the following is an example of what you could use as *root-issuer* after replacing the various fields with the correct values for your situation:
+	
+	``'/CN=root.ca.igor.local/C=NL/ST=Netherlands/O=Jack Jansen'``
+	
+	
+	The *intermediate-issuer* is the same, but for the intermediate certificate. ``CN=intermediate.ca.igor.local`` is suggested.
+	
 ``getRoot``   	
 	Returns the signing certificate chain (for installation in browser or operating system).
 ``status``    	

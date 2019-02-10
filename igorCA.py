@@ -277,7 +277,7 @@ class IgorCA(object):
             sys.exit(1)
         
         if command == 'initialize':
-            ok = self.cmd_initialize()
+            ok = self.cmd_initialize(*args)
             if not ok:
                 sys.exit(1)
             sys.exit(0)
@@ -334,13 +334,20 @@ class IgorCA(object):
             print('%-10s\t%s' % (name[4:], handler.__doc__))
         return True
     
-    def cmd_initialize(self):
+    def cmd_initialize(self, rootIssuer=None, intermediateIssuer=None):
         """create CA infrastructure, root key and certificate and intermediate key and certificate"""
         if not self.ca.isLocal():
             print("%s: initialize should only be used for local CA" % self.argv0, file=sys.stderr)
             return False
+        if not rootIssuer or not intermediateIssuer:
+            print("%s: requires both rootIssuer and intermediateIssuer identifiers" % self.argv0, file=sys.stderr)
+            return False
         if os.path.exists(self.ca.intKeyFile) and os.path.exists(self.ca.intCertFile) and os.path.exists(self.ca.intAllCertFile):
             print('%s: Intermediate key and certificate already exist in %s' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
+            return False
+        if os.path.exists(self.ca.intKeyFile) or os.path.exists(self.ca.intCertFile) or os.path.exists(self.ca.intAllCertFile):
+            print('%s: Some key and certificate files already exist in %s.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
+            print('%s: Partial initialize failure, maybe? Remove directory %s and try again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
             return False
         #
         # Create infrastructure if needed
@@ -366,6 +373,7 @@ class IgorCA(object):
             caGroupConfIn = os.path.join(caGroupDir, 'openssl.cnf.in')
             if os.path.exists(caGroupConf):
                 print('%s: %s already exists' % (self.argv0, caGroupConf), file=sys.stderr)
+                print('%s: Partial initialize failure, maybe? Remove directory %s and try again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
                 return False
             # Insert igor directory name into config file
             cfg = SSLConfigParser(allow_no_value=True)
@@ -386,13 +394,15 @@ class IgorCA(object):
             print()
             print('=============== Creating root key and certificate')
             print()
-            ok = self.runSSLCommand('genrsa', '-aes256', '-out', rootKeyFile, '2048' if self.keysize is None else self.keysize)
+            ok = self.runSSLCommand('genrsa', '-out', rootKeyFile, '2048' if self.keysize is None else self.keysize)
             if not ok:
+                print('%s: Error during root key generation. Remove directory %s before trying again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
                 return False
             os.chmod(rootKeyFile, 0o400)
             ok = self.runSSLCommand('req', 
                 '-config', rootConfigFile, 
                 '-key', rootKeyFile, 
+                '-subj', rootIssuer,
                 '-new', 
                 '-x509', 
                 '-days', '7300', 
@@ -401,13 +411,12 @@ class IgorCA(object):
                 '-out', rootCertFile
                 )
             if not ok:
+                print('%s: Error during root request generation. Remove directory %s before trying again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
                 return False
             os.chmod(rootCertFile, 0o400)
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', rootCertFile)
         if not ok:
-            print()
-            print("********* Something went wrong creating the root key and certificate.")
-            print()
+            print('%s: Error during root certificate signing. Remove directory %s before trying again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
             return False
         #
         # Create intermediate key, CSR and certificate
@@ -418,22 +427,19 @@ class IgorCA(object):
         ok = self.runSSLCommand('genrsa', '-out', self.ca.intKeyFile, '2048' if self.keysize is None else self.keysize)
         os.chmod(self.ca.intKeyFile, 0o400)
         if not ok:
-            print()
-            print("********* Something went wrong creating the intermediate key and certificate.")
-            print()
+            print('%s: Error during intermediate key generation. Remove directory %s before trying again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
             return False
         intCsrFile = os.path.join(self.ca.caDatabase, 'intermediate', 'certs', 'intermediate.csr.pem')
         ok = self.runSSLCommand('req', 
             '-config', self.ca.intConfigFile, 
             '-key', self.ca.intKeyFile, 
+            '-subj', intermediateIssuer,
             '-new', 
             '-sha256', 
             '-out', intCsrFile
             )
         if not ok:
-            print()
-            print("********* Something went wrong signing the intermediate certificate.")
-            print()
+            print('%s: Error during intermediate request generation. Remove directory %s before trying again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
             return False
         ok = self.runSSLCommand('ca',
             '-config', rootConfigFile,
@@ -445,9 +451,7 @@ class IgorCA(object):
             '-out', self.ca.intCertFile
             )
         if not ok:
-            print()
-            print("********* Something went wrong signing the intermediate certificate.")
-            print()
+            print('%s: Error during intermediate certificate signing. Remove directory %s before trying again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
             return False
         os.chmod(self.ca.intCertFile, 0o400)
         #
@@ -458,9 +462,7 @@ class IgorCA(object):
             self.ca.intCertFile
             )
         if not ok:
-            print()
-            print("********* Something went wrong signing the intermediate certificate.")
-            print()
+            print('%s: Error during intermediate certificate verification. Remove directory %s before trying again.' % (self.argv0, self.ca.caDatabase), file=sys.stderr)
             return False
         #
         # Concatenate

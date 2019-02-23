@@ -53,6 +53,7 @@ class StructuralConsistency(object):
                 else:
                     newElement = self.database.elementFromTagAndData(tag, '')
                 parentElement.appendChild(newElement)
+                self.database.setChanged()
                 self.nChanges += 1
                 self._status('Created: %s' % path, isError=False)
             else:
@@ -131,6 +132,7 @@ class StructuralConsistency(object):
                 if self.fix:
                     rootElement.setAttribute('xmlns:' + nsName, nsUrl)
                     self._status('Added namespace declaration for xmlns:%s=%s' % (nsName, nsUrl), isError=False)
+                    self.database.setChanged()
                     self.nChanges += 1
                 else:
                     self._status('Missing namespace declaration xmlns:%s=%s' % (nsName, nsUrl))
@@ -151,6 +153,7 @@ class StructuralConsistency(object):
             xp = self.database.getXPathForElement(elt)
             if self.fix:
                 self.database.delValues(xp, self.token)
+                self.database.setChanged()
                 self._status('Deleted %s, belonged to missing plugin %s' % (xp, owner), isError=False)
                 self.nChanges += 1
             else:
@@ -281,6 +284,7 @@ class CapabilityConsistency(StructuralConsistency):
             raise CannotFix
         parent = parent[0]
         parent.appendChild(self.database.elementFromTagAndData('child', content['cid']))
+        self.database.setChanged()
         
     def _fixParentCapability(self, cap, cid):
         parentCid = 'root'
@@ -292,6 +296,7 @@ class CapabilityConsistency(StructuralConsistency):
             raise CannotFix
         parent = parent[0]
         parent.appendChild(self.database.elementFromTagAndData('child', cid))
+        self.database.setChanged()
         self.nChanges += 1
         
     def _getTokensNeededByElement(self, element, optional=False):
@@ -408,6 +413,7 @@ class CapabilityConsistency(StructuralConsistency):
                 if not childCid in cid2cap:
                     if self.fix:
                         self.database.delValues("child::child[text()='%s']" % childCid, token=self.token, context=cap)
+                        self.database.setChanged()
                         self.nChanges += 1
                         self._status('Removed child %s from %s' % (childCid, cid), isError=False)
                     else:
@@ -439,6 +445,7 @@ class CapabilityConsistency(StructuralConsistency):
                             self._status('Cannot fix yet: %s has no parent, but is listed as child of %s' % (cid, expectedParent))
                             raise CannotFix
                     self.database.delValues('child::parent', token=self.token, context=cap)
+                    self.database.setChanged()
                     self.nChanges += 1
                     parentCid = None
                 else:

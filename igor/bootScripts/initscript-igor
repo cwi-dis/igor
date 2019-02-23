@@ -46,7 +46,7 @@ stop() {
     echo 'Service not running' >&2
     return 1
   fi
-  echo 'Stopping service…' >&2
+  echo 'Stopping service...' >&2
   kill -15 $(cat "$PIDFILE") && rm -f "$PIDFILE"
   echo 'Service stopped' >&2
 }

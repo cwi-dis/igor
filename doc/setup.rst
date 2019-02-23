@@ -109,6 +109,9 @@ And again, you have to get and install the root certificate:
 
 	igorCA --remote --url https://masterigor.local:9333/data/ --noverify getRoot
 	
+Note:
+	You may need to pass username and password to the ``igorCA`` commands if the master Igor needs them. Add arguments of the form ``--credentials username:password`` after the ``--noverify``.
+	
 Alternative: Self-signed Certificate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

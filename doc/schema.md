@@ -174,7 +174,7 @@ As an example:
 
 * `identities/jack/encryptedPassword` The encrypted Igor password for user _jack_. Verified by the `/login` entry point, after which the user identity is stored in the session, or when supplied through the HTTP `Authorization: Basic` header.
 * `identities/jack/plugindata`: Per-user data for plugins. For example:
-	* `identities/jack/plugindata/fitbit`: Information that allows the [fitbit plugin](std-plugins/_fitbit/readme.md) to obtain health information for user "Jack".
+	* `identities/jack/plugindata/fitbit`: Information that allows the [fitbit plugin](std-plugins/fitbit/readme.md) to obtain health information for user "Jack".
 * `identities/jack/device`: Name of a device that user "Jack" tends to carry with him (string).
 
 If capability support is enabled, identity entries will also carry the set of capabilities for that user, but these are inaccessible during normal operation.

@@ -147,7 +147,7 @@ def parse_mf_estimote(payload):
     correct = True
     adv['version'] = unpack("B", payload[0:1])[0]
 
-    adv['uuid'] = "d0d3fa86ca7645ec9bd96af4" + ''.join(x.encode("hex") for x in payload[1:5])
+    adv['uuid'] = "d0d3fa86ca7645ec9bd96af4" + ''.join("%02.2x"%x for x in payload[1:5])
     adv['major'] = unpack(">H", payload[5:7])[0]
     adv['minor']  = unpack(">H", payload[7:9])[0]
 

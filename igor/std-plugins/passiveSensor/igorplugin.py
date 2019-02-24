@@ -4,7 +4,7 @@ import requests
 import os
 
 from builtins import object
-class BLEPlugin(object):
+class PassiveSensorPlugin(object):
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName
@@ -17,7 +17,8 @@ class BLEPlugin(object):
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', 'localhost')
         port = self.pluginData.get('port', '9334')
-        url = "%s://%s:%s/ble" % (protocol, host, port)
+        endpoint = self.pluginData.get('endpoint', self.pluginName)
+        url = "%s://%s:%s/%s" % (protocol, host, port, endpoint)
         method = 'GET'
         
         headers = {}
@@ -55,11 +56,12 @@ class BLEPlugin(object):
         return 'ok\n'
     
     def _peek(self, token=None, callerToken=None):
-        """Check whether bleServer is running"""
+        """Check whether REST server is running"""
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', 'localhost')
         port = self.pluginData.get('port', '9334')
-        url = "%s://%s:%s/ble" % (protocol, host, port)
+        endpoint = self.pluginData.get('endpoint', self.pluginName)
+        url = "%s://%s:%s/%s" % (protocol, host, port, endpoint)
         method = 'GET'
         
         headers = {}
@@ -72,14 +74,14 @@ class BLEPlugin(object):
         try:
             r = requests.request(method, url, headers=headers, **kwargs)
         except requests.exceptions.ConnectionError as e:
-            return "No bleServer running at {}".format(url)
+            return "No REST server running at {}".format(url)
         except requests.exceptions.Timeout as e:
-            return "Timeout conecting to bleServer at {}".format(url)
+            return "Timeout conecting to REST server at {}".format(url)
         except requests.exceptions.RequestException as e:
-            return "Error connecting to bleServer at {}".format(url)
+            return "Error connecting to REST server at {}".format(url)
         if r.status_code != 200:
-            return "bleServer at {} returns status code {}".format(url, r.status_code)
+            return "REST server at {} returns status code {}".format(url, r.status_code)
         return None
         
 def igorPlugin(igor, pluginName, pluginData):
-    return BLEPlugin(igor, pluginName, pluginData)
+    return PassiveSensorPlugin(igor, pluginName, pluginData)

@@ -51,6 +51,9 @@ class BleScanServer(threading.Thread):
     def initServer(self, servletArgs):
         self.server = igorServlet.IgorServlet(**servletArgs)
         self.server.addEndpoint('/ble', get=self.GET_bleData)
+        self.server.addEndpoint('/ibeacon', get=self.GET_ibeaconData)
+        self.server.addEndpoint('/nearable', get=self.GET_nearableData)
+        self.server.addEndpoint('/cwi_sensortag', get=self.GET_cwi_sensortagData)
 
     def startServer(self):
         self.server.start()
@@ -128,6 +131,7 @@ class BleScanServer(threading.Thread):
             self.significantChange = False
             return copy.deepcopy(self.devices)
 
+
     def GET_bleData(self, all=True):
         devices = self.getDevices()
         devList = []
@@ -142,3 +146,57 @@ class BleScanServer(threading.Thread):
             devList.append(item)
         rv = {'bleDevice':devList, 'lastActivity' : time.time()}
         return rv
+        
+    def GET_cwi_sensortagData(self, all=True):
+        devices = self.getDevices()
+        devDict = {}
+        for address, values in list(devices.items()):
+            if not 'advertisements' in values or not 'cwi_sensortag' in values['advertisements']:
+                continue
+            item = values['advertisements']['cwi_sensortag']
+            k = address
+            if k in devDict:
+                if devDict[k].get('lastSeen') > values.get('lastSeen'):
+                    # We already recorded a later reading for this sensor
+                    continue
+            item['address'] = k
+            item['lastSeen'] = values['lastSeen']
+            devDict[k] = item
+        rv = {'cwi_sensortagDevice':list(devDict.values()), 'lastActivity' : time.time()}
+        return rv
+
+    def GET_ibeaconData(self, all=True):
+        devices = self.getDevices()
+        devDict = {}
+        for address, values in list(devices.items()):
+            if not 'advertisements' in values or not 'ibeacon' in values['advertisements']:
+                continue
+            item = values['advertisements']['ibeacon']
+            k = item.get('uuid', address)
+            if k in devDict:
+                if devDict[k].get('lastSeen') > values.get('lastSeen'):
+                    # We already recorded a later reading for this sensor
+                    continue
+            item['lastSeen'] = values['lastSeen']
+            devDict[k] = item
+        rv = {'ibeaconDevice':list(devDict.values()), 'lastActivity' : time.time()}
+        return rv
+
+    def GET_nearableData(self, all=True):
+        devices = self.getDevices()
+        devDict = {}
+        for address, values in list(devices.items()):
+            if not 'advertisements' in values or not 'nearable' in values['advertisements']:
+                continue
+            item = values['advertisements']['nearable']
+            k = item.get('uuid', address)
+            if k in devDict:
+                if devDict[k].get('lastSeen') > values.get('lastSeen'):
+                    # We already recorded a later reading for this sensor
+                    continue
+            item['lastSeen'] = values['lastSeen']
+            devDict[k] = item
+        rv = {'nearableDevice':list(devDict.values()), 'lastActivity' : time.time()}
+        return rv
+
+    

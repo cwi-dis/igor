@@ -11,7 +11,7 @@
 			<protocol>http</protocol>
 			<host>localhost</host>
 			<port>9334</port>
-			<endpoint>{plugin}</plugin>
+			<endpoint>{plugin}</endpoint>
 			<action>
 				<interval>2</interval>
 				<url>/plugin/{plugin}/pull</url>

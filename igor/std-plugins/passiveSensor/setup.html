@@ -13,18 +13,18 @@
 	{% set message = pluginObject._peek(token=token) %}
 	<h1>Setup {{pluginName}}</h1>
 	
-	<h2>Running the <em>bleServer</em> service</h2>
+	<h2>Contacting the <em>{{pluginName}}</em> REST service</h2>
 	{% if message %}
 		<p><b>Note:</b> {{message}}</p>
 		
-		<p>The {{pluginName}} plugin needs a service <em>bleServer</em> to be running
-		to be able to actually collect the Bluetooth LE advertisement packets.
-		To install the service you should login to that machine and run:</p>
+		<p>The {{pluginName}} plugin needs a REST service (for example the <em>bleServer</em>) to be running
+		to be able to actually collect the sensor data. If your sensors indeed need the <em>bleServer</em>,
+		to install the service you should login to that machine and run:</p>
 		<blockquote>
 			<tt>bleServer --installdDaemon</tt>
 		</blockquote>
 	{% else %}
-		<p>The <em>bleServer</em> seems to be running just fine.</p>
+		<p>The REST service at <em>{{pluginData.protocol}}://{{pluginData.host}}:{{pluginData.port}}/{{pluginData.endpoint}}</em> seems to be running just fine.</p>
 	{% endif %}
 	
 	<p>Parameters:<br>
@@ -34,9 +34,9 @@
 	Endpoint: <i>{{pluginData.endpoint}}</i> (<a href="/plugin/editData/page/_edit.html?action=get&amp;xpath=/data/plugindata/{{pluginName}}/endpoint&amp;returnTo=/plugin/{{pluginName}}/page/setup.html">edit</a>)</br>
 	</p>
 	
-	<h2>Registering Bluetooth LE devices</h2>
+	<h2>Examine {{pluginName}} sensor readings</h2>
 	
-	<p>For now, you have to manually <a href="/plugin/editData/page/_edit.html?action=get&amp;xpath=/data/plugindata/{{pluginName}}Devices&amp;returnTo=/plugin/{{pluginName}}/page/setup.html">edit the data at <i>/data/plugindata/{{pluginName}}Devices</i></a>.</p>
+	<p>For now, you have to manually inspect <a href="/data/sensors/{{pluginName}}">/data/sensors/{{pluginName}}</a>.</p>
 	
 	<hr>
 	{% if returnTo %}

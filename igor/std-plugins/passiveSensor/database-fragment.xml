@@ -1,0 +1,59 @@
+<?xml version="1.0" ?>
+<data xmlns:own="http://jackjansen.nl/igor/owner" xmlns:au="http://jackjansen.nl/igor/authentication">
+	<environment>
+		<{plugin}Devices own:plugin="{plugin}"/>
+	</environment>
+	<sensors>
+		<{plugin} own:plugin="{plugin}"/>
+	</sensors>
+	<plugindata>
+		<{plugin} own:plugin="{plugin}">
+			<protocol>http</protocol>
+			<host>localhost</host>
+			<port>9334</port>
+			<action>
+				<interval>60</interval>
+				<url>/plugin/{plugin}/pull</url>
+				<representing>sensors/{plugin}</representing>
+				<aggregate>true</aggregate>
+			</action>
+			<action>
+				<xpath>/data/sensors/{plugin}/{plugin}Device</xpath>
+				<condition>/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/address)]/name</condition>
+				<url>/data/environment/devices/{/data/plugindata/{plugin}Devices/{plugin}Device[id=string($originalContext/address)]/name}</url>
+				<method>PUT</method>
+				<mimetype>text/plain</mimetype>
+				<data>{available}</data>
+				<multiple>True</multiple>
+			</action>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}</obj>
+				<put>child</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/plugindata/{plugin}Devices</obj>
+				<put>child</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/plugin/{plugin}</obj>
+				<get>descendant-or-self</get>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/sensors/{plugin}</obj>
+				<get>descendant-or-self</get>
+				<put>descendant-or-self</put>
+			</au:needCapability>
+			<au:needCapability>
+				<obj>/data/environment/{plugin}Devices</obj>
+				<put>descendant</put>
+			</au:needCapability>
+		</{plugin}>
+		<{plugin}Devices own:plugin="{plugin}">
+			<!-- example: -->
+			<{plugin}Device>
+				<id>00:11:22:33:44:55</id>
+				<name>{plugin}DeviceName</name>
+			</{plugin}Device>
+		</{plugin}Devices>
+	</plugindata>
+</data>

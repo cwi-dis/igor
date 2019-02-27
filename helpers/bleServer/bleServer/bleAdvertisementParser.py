@@ -158,7 +158,7 @@ def parse_mf_estimote(payload):
     else:
         adv['temp']  = old_div(raw_temp, 256.0)
 
-    adv['is_moving'] = unpack("B", payload[13:14])[0] & 0x40 != 0
+    adv['moving'] = unpack("B", payload[13:14])[0] & 0x40 != 0
 
     x_axis = unpack("b", payload[14:15])[0] * 15.625 / 1000.0
     y_axis = unpack("b", payload[15:16])[0] * 15.625 / 1000.0

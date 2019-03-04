@@ -1,3 +1,9 @@
+igor 0.99.1 - March 2018
+- bleServer now supports nearables, iBeacons
+- new stdplugin passiveSensor (for nearables, iBeacons)
+- more command-line tool testing
+- various bug fixes
+
 igor 0.99 - February 2018
 - Capability support enabled by default
 - Cleanup and added user interfaces for plugins lan, ble, dhcp, others

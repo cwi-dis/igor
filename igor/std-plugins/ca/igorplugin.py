@@ -109,9 +109,9 @@ class CAPlugin(object):
             return self.igor.app.raiseHTTPError("500 Could not create certificate")
         return keyData, certData
         
-    def generateKeyAndSign(self, names, token=None, callerToken=None):
+    def generateKeyAndSign(self, names, keysize=None, token=None, callerToken=None):
         names = names.split()
-        keyData, certData = self._generateKeyAndSign(names, token)
+        keyData, certData = self._generateKeyAndSign(names, keysize, token)
         return self.igor.app.responseWithHeaders(keyData+certData, {"Content-type":"text/plain"})
 
         

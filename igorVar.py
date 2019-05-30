@@ -316,7 +316,7 @@ def igorArgumentDefaults(configFile=None, config=None):
         rv = dict(c.items(config))
     return rv
 
-def igorArgumentParser(description=None, epilog=None, formatter_class=None):
+def igorArgumentParser(description=None, epilog=None, formatter_class=argparse.HelpFormatter):
     """Return argument parser with common arguments for Igor and defaults already filled in.
     
     Used by Igor command line utilities and IgorServlet, and may be useful for other Python programs

@@ -216,7 +216,8 @@ class CARemoteInterface(object):
         return self.igor.get('/plugin/ca/root', format='text/plain')
         
     def ca_list(self):
-        return self.igor.get('/plugin/ca/list', format='application/json')
+        rv = self.igor.get('/plugin/ca/list', format='application/json')
+        return json.loads(rv)
            
     def ca_signCSR(self, csr):
         return self.igor.get('/plugin/ca/sign', format='text/plain', query=dict(csr=csr))

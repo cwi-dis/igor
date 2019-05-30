@@ -25,8 +25,10 @@ except ImportError:
     import ConfigParser as configparser
 import re
 import json
+import datetime
 import argparse
 import igorVar
+import csv
 
 
 #IS_IP=re.compile(r'^[0-9.:]*$') # Not good enough, but does not match hostnames
@@ -44,6 +46,30 @@ class SSLConfigParser(configparser.RawConfigParser):
     def optionxform(self, optionstr):
         return optionstr
 
+def _distinguishedNameToDict(data):
+    # grr... Some openSSL implementations use / as separator, some use ,
+    rv = {}
+    if '/' in data:
+        dataItems = data.split('/')
+        for di in dataItems:
+            if not di: continue
+            diSplit = di.split('=')
+            k = diSplit[0]
+            v = '='.join(diSplit[1:])
+            rv[k] = v
+    else:
+        dataItems = data.split(',')
+        for di in dataItems:
+            if not di: continue
+            diSplit = di.split('=')
+            k = diSplit[0]
+            v = '='.join(diSplit[1:])
+            k = k.strip()
+            v = v.strip()
+            rv[k] = v
+    return rv
+    
+            
 USAGE="""
 Usage: %s command [args]
 
@@ -80,10 +106,26 @@ class CAInterface(object):
     def ca_list(self):
         """Return list of all signatures signed"""
         indexFile = os.path.join(self.caDatabase, 'intermediate', 'index.txt')
+        rv = []
         try:
-            rv = open(indexFile).read()
+            with open(indexFile) as fp:
+                rdr = csv.DictReader(fp, fieldnames=['status', 'timeStringExpired', 'timeStringRevoked', 'serial', 'filename', 'dn' ], dialect='excel-tab')
+                for row in rdr:
+                    item = {}
+                    item['status'] = dict(V='valid', R='revoked', E='expired').get(row['status'], 'unknown')
+                    ts = row.get('timeStringExpired')
+                    if ts:
+                        dt = datetime.datetime.strptime(ts, '%y%m%d%H%M%SZ')
+                        item['expires'] = dt.isoformat()
+                    ts = row.get('timeStringRevoked')
+                    if ts:
+                        dt = datetime.datetime.strptime(ts, '%y%m%d%H%M%SZ')
+                        item['revoked'] = dt.isoformat()
+                    item['serial'] = row['serial']
+                    item['dn'] = _distinguishedNameToDict(row['dn'])
+                    rv.append(item)
         except IOError:
-            rv = ''
+            return []
         return rv            
 
     def ca_signCSR(self, csr):
@@ -174,7 +216,7 @@ class CARemoteInterface(object):
         return self.igor.get('/plugin/ca/root', format='text/plain')
         
     def ca_list(self):
-        return self.igor.get('/plugin/ca/list', format='text/plain')
+        return self.igor.get('/plugin/ca/list', format='application/json')
            
     def ca_signCSR(self, csr):
         return self.igor.get('/plugin/ca/sign', format='text/plain', query=dict(csr=csr))
@@ -236,26 +278,7 @@ class IgorCA(object):
             return None
         data = data[8:]
         data = data.strip()
-        # grr... Some openSSL implementations use / as separator, some use ,
-        rv = {}
-        if '/' in data:
-            dataItems = data.split('/')
-            for di in dataItems:
-                if not di: continue
-                diSplit = di.split('=')
-                k = diSplit[0]
-                v = '='.join(diSplit[1:])
-                rv[k] = v
-        else:
-            dataItems = data.split(',')
-            for di in dataItems:
-                if not di: continue
-                diSplit = di.split('=')
-                k = diSplit[0]
-                v = '='.join(diSplit[1:])
-                k = k.strip()
-                v = v.strip()
-                rv[k] = v
+        rv = _distinguishedNameToDict(data)
         return rv
         
     def runSSLCommand(self, *args):
@@ -685,7 +708,11 @@ class IgorCA(object):
 
     def cmd_list(self):
         """Return list of certificates signed."""
-        sys.stdout.write(self.ca.ca_list())
+        items = self.ca.ca_list()
+        for item in items:
+            for k,v in item.items():
+                print('{}={}'.format(k,v), end=' ')
+            print()
         return False
         
     def do_list(self):

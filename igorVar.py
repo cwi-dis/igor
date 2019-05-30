@@ -316,7 +316,7 @@ def igorArgumentDefaults(configFile=None, config=None):
         rv = dict(c.items(config))
     return rv
 
-def igorArgumentParser(description=None):
+def igorArgumentParser(description=None, epilog=None, formatter_class=None):
     """Return argument parser with common arguments for Igor and defaults already filled in.
     
     Used by Igor command line utilities and IgorServlet, and may be useful for other Python programs
@@ -327,10 +327,13 @@ def igorArgumentParser(description=None):
     conf_parser.add_argument("--config", metavar="SECTION", help="Get default arguments from config file section [SECTION] (default: igor).")
     args, _ = conf_parser.parse_known_args()
 
+    if epilog == None:
+        epilog="Argument defaults can also be specified in environment variables like IGORSERVER_URL (for --url), etc."
     parser = argparse.ArgumentParser(
         parents=[conf_parser],
         description=description,
-        epilog="Argument defaults can also be specified in environment variables like IGORSERVER_URL (for --url), etc."
+        epilog=epilog,
+        formatter_class=formatter_class
         )
     parser.set_defaults(**igorArgumentDefaults(configFile=args.configFile, config=args.config))
     parser.add_argument("-u", "--url", help="Base URL of the server (default: %(default)s)")

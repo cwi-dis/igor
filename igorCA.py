@@ -71,7 +71,7 @@ def _distinguishedNameToDict(data):
     
             
 USAGE="""
-Usage: %s command [args]
+Usage: %s [options] command [args]
 
 Initialize or use igor Certificate Authority.
 """
@@ -351,12 +351,22 @@ class IgorCA(object):
     def cmd_help(self, *args):
         """Show list of available commands"""
         print(USAGE % self.argv0)
-        for name in dir(self):
-            if not name.startswith('cmd_'): continue
-            handler = getattr(self, name)
-            print('%-10s\t%s' % (name[4:], handler.__doc__))
+        print(self._helpinfo())
         return True
-    
+
+    @classmethod
+    def _helpinfo(cls):
+        """Return available command help"""
+        # Get attributes that refer to commands 
+        names = dir(cls)
+        names = filter(lambda x: x.startswith('cmd_'), names)
+        names = sorted(names)
+        rv = []
+        for name in names:
+            handler = getattr(cls, name)
+            rv.append('%-10s\t%s' % (name[4:], handler.__doc__))
+        return '\n'.join(rv)
+   
     def cmd_initialize(self, rootIssuer=None, intermediateIssuer=None):
         """create CA infrastructure, root key and certificate and intermediate key and certificate"""
         if not self.ca.isLocal():
@@ -740,7 +750,8 @@ class IgorCA(object):
         return open(fn).read()
      
 def argumentParser():
-    parser = igorVar.igorArgumentParser(description="Igor Certificate and Key utility")
+    epilog = "Available commands:\n" + IgorCA._helpinfo()
+    parser = igorVar.igorArgumentParser(description="Igor Certificate and Key utility", epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-s", "--keysize", metavar="BITS", help="Override key size (default: 2048)")
     parser.add_argument("-r", "--remote", action="store_true", help="Use CA on remote Igor (default is on the local filesystem)")
     parser.add_argument("-d", "--database", metavar="DIR", help="(local only) Database and scripts are stored in DIR (default: ~/.igor, environment IGORSERVER_DIR)")

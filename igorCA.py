@@ -608,11 +608,20 @@ class IgorCA(object):
         return True
         
     def cmd_revoke(self, number):
-        """Revoke a certificate. Argument is the number of the certificate to revoke (see list). Regenerates CRL as well."""
+        """Revoke a certificate. Argument is the number of the certificate to revoke (see list)."""
         ok = self.ca.ca_revoke(number)
         return ok
         
     do_revoke = cmd_revoke
+    
+    def cmd_revokecn(self, cn):
+        """Revoke certificate for a given Common Name, if one exists"""
+        seqno = self.do_current(cn)
+        if seqno:
+            self.do_revoke(seqno)
+        return True
+        
+    do_revokecn = cmd_revokecn
     
     def gen_configFile(self, commonName, altNames, configFile=None):
         """Helper function to create CSR or signing config file"""
@@ -721,18 +730,40 @@ class IgorCA(object):
             return False
         return True
 
-    def cmd_list(self):
-        """Return list of certificates signed."""
-        items = self.ca.ca_list()
+    def cmd_list(self, cn=None):
+        """Return list of certificates signed (optional arguments restricts to single Common Name)."""
+        items = self.do_list(cn=cn)
         for item in items:
             for k,v in item.items():
                 print('{}={}'.format(k,v), end=' ')
             print()
         return False
         
-    def do_list(self):
+    def do_list(self, cn=None):
         """Return list of certificates signed."""
-        return self.ca.ca_list()
+        rv = self.ca.ca_list()
+        if cn:
+            rv = filter(lambda item : item['dn'].get('CN') == cn, rv)
+        return rv
+                
+    def cmd_current(self, cn):
+        """Print current certificate serial for given Common Name"""
+        serial = self.do_current(cn)
+        if serial:
+            print(serial)
+            return True
+        return False
+        
+    def do_current(self, cn):
+        """Return current certificate serial for given Common Name (or None)"""
+        items = self.do_list(cn=cn)
+        items = list(filter(lambda item : item.get('status')=='valid', items))
+        if len(items) > 1:
+            print('%s: multiple valid certs for cn=%st' % (self.argv0, cn), file=sys.stderr)
+            return None
+        if not items:
+            return None
+        return items[0].get('serial')
         
     def cmd_status(self):
         """Returns nothing if CA status is ok, otherwise error message"""

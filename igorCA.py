@@ -707,11 +707,12 @@ class IgorCA(object):
             print("Usage: %s gen keyfilenameprefix commonName [subjectAltNames ...]" % sys.argv[0], file=sys.stderr)
             return False
             
-        keyData, certData = self.do_gen(prefix=prefix, cn=allNames[0], altNames=[allNames[1:]])
+        keyData, certData = self.do_gen(prefix=prefix, cn=allNames[0], altNames=allNames[1:])
         if not certData:
             return False
 
         # Verify it
+        certFile = prefix + '.crt'
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', certFile)
         if not ok:
             return False
@@ -726,6 +727,7 @@ class IgorCA(object):
             _, prefix = tempfile.mkstemp(prefix="igorCA")
         
         keyFile = prefix + '.key'
+        certFile = prefix + '.crt'
         csrFile = prefix + '.csr'
         csrConfigFile = prefix + '.csrConfig'
             

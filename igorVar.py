@@ -269,7 +269,8 @@ class IgorServer(object):
             print("<<< Headers", r.headers, file=sys.stderr)
             print("...", r.text, file=sys.stderr)
         if r.status_code != 200:
-            msg = "Error %s for %s" % (r.status_code, url)
+            status_str = requests.status_codes._codes.get(r.status_code, [''])[0]
+            msg = "Error %s %s for %s" % (r.status_code, status_str, url)
             if self.printmessages:
                 contentLines = r.text.splitlines()
                 if len(contentLines) > 1:

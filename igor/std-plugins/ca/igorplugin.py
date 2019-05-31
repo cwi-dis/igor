@@ -5,34 +5,9 @@ import igorCA
 import os
 import sys
 import tempfile
+import urllib
 
 DEBUG=False
-
-INDEX_HTML="""<html lang="en">
-<head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-	<title>Igor Certificate Authority</title>
-</head>
-<body>
-	<h1>Igor Certificate Authority</h1>
-	<h2>Root Certificate Chain</h2>
-	<p>To trust certificates signed by this Igor CA, download the <a href="ca/root">root certificate chain</a> and install in your browser or system.</p>
-	<p>If available, the <a href="/static/crl.pem">Certificate Revocation List</a> can be downloaded too.</p>
-	<h2>Listing all Certificates</h2>
-	<p>To list certificates signed by this Igor CA, see the <a href="ca/list">certificate listing</a>.</p>
-	<p>CRL and Revocation to be done later.</p>
-	<h2>Signing a certificate</h2>
-	<p>Create a key and CSR (Certificate Signing Request) locally, possibly using the <i>igorCA csr</i> command.</p>
-	<p>Enter the CSR in PEM for in the following field and submit.</p>
-	<form action="ca/sign">
-	<textarea name="csr" rows="8" cols="60"></textarea>
-	<br>
-	<input type="submit" value="Submit">
-	</form>
-	<p>The result is the (PEM-encoded) certificate you can use for your service (together with the key form the previous step).</p>
-</body>
-</html>
-"""
 
 class CAPlugin(object):
     def __init__(self, igor, pluginData):
@@ -67,11 +42,19 @@ class CAPlugin(object):
         tmplData = self.ca.do_csrtemplate()
         return tmplData
         
-    def sign(self, csr, token=None, callerToken=None):
+    def sign(self, csr, token=None, callerToken=None, returnTo=None):
         self.initCA()
         cert = self.ca.do_signCSR(csr)
         if not cert:
             self.igor.app.raiseHTTPError('500 Could not sign certificate')
+        if returnTo:
+            q = dict(cert=cert)
+            queryString = urllib.parse.urlencode(q)
+            if '?' in returnTo:
+                returnTo += '&' + queryString
+            else:
+                returnTo += '?' + queryString
+            return self.igor.app.raiseSeeother(returnTo)
         return self.igor.app.responseWithHeaders(cert, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="certificate.pem"'})
         
     def root(self, token=None, callerToken=None):
@@ -81,12 +64,14 @@ class CAPlugin(object):
             self.igor.app.raiseHTTPError('500 Could not obtain root certificate chain')
         return self.igor.app.responseWithHeaders(chain, {'Content-type':'application/x-pem-file', 'Content-Disposition':'attachment; filename="igor-root-certificate-chain.pem"'})
 
-    def revoke(self, number, token=None, callerToken=None):
+    def revoke(self, number, token=None, callerToken=None, returnTo=None):
         self.initCA()
         ok = self.ca.do_revoke(number)
-        if ok:
-            return ''
-        return self.igor.app.raiseHTTPError('500 Error while revoking %s' % number)
+        if not ok:
+            return self.igor.app.raiseHTTPError('500 Error while revoking %s' % number)
+        if returnTo:
+            return self.igor.app.raiseSeeother(returnTo)
+        return ''
         
     def _generateKeyAndSign(self, names, keysize=None, token=None, callerToken=None):
         self.initCA()
@@ -109,9 +94,17 @@ class CAPlugin(object):
             return self.igor.app.raiseHTTPError("500 Could not create certificate")
         return keyData, certData
         
-    def generateKeyAndSign(self, names, keysize=None, token=None, callerToken=None):
+    def generateKeyAndSign(self, names, keysize=None, token=None, callerToken=None, returnTo=None):
         names = names.split()
         keyData, certData = self._generateKeyAndSign(names, keysize, token)
+        if returnTo:
+            q = dict(key=keyData, cert=certData)
+            queryString = urllib.parse.urlencode(q)
+            if '?' in returnTo:
+                returnTo += '&' + queryString
+            else:
+                returnTo += '?' + queryString
+            return self.igor.app.raiseSeeother(returnTo)
         return self.igor.app.responseWithHeaders(keyData+certData, {"Content-type":"text/plain"})
 
         

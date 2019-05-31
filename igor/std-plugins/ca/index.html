@@ -19,6 +19,7 @@
 	{% endif %}
 	<p>To change this, add an entry <i>ca</i> to <a href="/data/plugindata/{{pluginName}}">/data/plugindata/{{pluginName}}</a> (or remove that entry)
 	and reboot igor.</p>
+	<p>The CA uses Distinghuished Name <em>{{pluginObject.dn()}}</em> and the current status is <em>{{pluginObject.status()}}</em>.</p>
 	
 	<h2>Root Certificate Chain</h2>
 	
@@ -26,17 +27,48 @@
 	
 	<p>If available, the <a href="/static/crl.pem" download="igor-crl.pem">Certificate Revocation List</a> can be downloaded too.</p>
 	
-	<h2>Listing all Certificates</h2>
+	<h2>Certificates Created</h2>
 	
-	<p>To list certificates signed by this Igor CA, see the <a href="/plugin/{{pluginName}}/list">certificate listing</a>.</p>
-	
-	<p>Revocation user interface is not implemented yet.</p>
+	<p>Here is the list of all certificates ever created by this CA:</p>
+	{% set allCertificates = pluginObject.list(callerToken=callerToken) %}
+	<table style="width:100%">
+		<tr>
+			<th>Serial</th>
+			<th>Canonical Name</th>
+			<th>Distinghuished Name</th>
+			<th>Status</th>
+			<th>Valid until</th>
+			<th>OP</th>
+		</tr>
+		{% for item in allCertificates|sort(attribute='dn.CN') %}
+			<tr>
+				<td>{{item.serial}}</td>
+				<td>{{item.dn.CN}}</td>
+				<td>
+					{% for k,v in item.dn.items() %}
+						{{k}}={{v}}<br>
+					{% endfor %}
+				</td>
+				<td>{{item.status}}</td>
+				<td>{{item.revoked or item.expires}}</td>
+				<td>
+					{% if item.status == 'valid' %}
+						<form action="/plugin/{{pluginName}}/revoke">
+							<input type="hidden" name="number" value="{{item.serial}}">
+							<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/index.html">
+							<input type="submit" value="revoke">
+						</form>
+					{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
 	
 	<h2>Signing a certificate</h2>
 	
-	<p>Create a key and CSR (Certificate Signing Request) locally, possibly using the <i>igorCA csr</i> command (user interface not implemented yet).</p>
+	<p>Create a key and CSR (Certificate Signing Request) locally, for example using the <tt>igorCA csr</tt> command.</p>
 	
-	<p>Enter the CSR in PEM for in the following field and submit:</p>
+	<p>Enter the CSR (PEM encoded) in the following field and submit:</p>
 	
 	<form action="/plugin/{{pluginName}}/sign">
 		<textarea name="csr" rows="8" cols="60"></textarea>
@@ -44,41 +76,35 @@
 		<input type="submit" value="Sign CSR">
 	</form>
 	
-	<p>The result is the (PEM-encoded) certificate you can use for your service (together with the key from the <i>igorCA csr</i> step).</p>
+	<p>The result is the (PEM-encoded) certificate you can use for your service (together with the key from the <tt>igorCA csr</tt> step).</p>
+	<p>Alternatively you can use <tt>igorCA gen</tt> to have igorCA submit the CSR here (so you don't have to copy and paste it).</p>
 
 	<h2>Creating a key and certificate</h2>
 	
-	<p>You can also have the Igor CA module do all of the steps above for you: create a key, create a CSR and sign it. You will get
+	<p>Another alternative is to have the Igor CA module do all of the steps above for you: create a key, create a CSR and sign it. You will get
 	the private key and certificate as a result (encoded in DER form and concatenated). </p>
 	
-	<p>Note that Igor does <i>not</i> keep a copy of the key, it is only returned to you (and used to sign the CSR). You must keep
+	<p>Note that Igor does <i>not</i> keep a copy of the key, it is only returned to you (and used to sign the CSR), but the key is transmitted 
+	back to you over the internet so if you are very security-conscious you should use one of the other methods to create the key and certificate. You must keep
 	the key safe once you have received it.</p>
 	
 	<form action="/plugin/{{pluginName}}/generateKeyAndSign">
 		Enter hostnames (canonical name first), one per line:<br>
 		<textarea name="names" rows="4" cols="20"></textarea><br>
-		Key size: 
+		Key size: <br>
 		<select name="keysize">
 			<option value="">default</option>
 			<option value="2048">2048 bits (safe)</option>
 			<option value="1024">1024 bits (less safe, practical for iotsa devices)</option>
 			<option value="512">512 bits (considered unsafe)</option>
-		</select>
+		</select><br>
 		<input type="submit" value="Generate Key and Certificate">
 	</form>
 	
-	<h2>Revoking a certificate</h2>
-	
-	<p>Look up the certificate sequence number (a hexadecimal string) in the <a href="/plugin/{{pluginName}}/list">certificate listing</a>.
-	Enter the number in the form below to revoke it:</p>
-	<form action="/plugin/{{pluginName}}/revoke">
-		Certificate sequence number: <input name="number"></br>
-		<input type="submit" value="Revoke Certificate">
-	</form>
 	<hr>
-	<p><a href="/">Return to Igor homepage</a></p>
 	{% if 'returnTo' in kwargs %}
 		<p><a href="{{kwargs['returnTo']}}">Return to {{kwargs['returnTo']}}.</a></p>
 	{% endif %}
+	<p><a href="/">Return to Igor homepage</a></p>
 </body>
 </html>

@@ -712,7 +712,7 @@ class IgorCA(object):
             return False
 
         # Verify it
-        certFile = prefix + '.crt'
+        certFile = prefix + '.crt.pem'
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', certFile)
         if not ok:
             return False
@@ -726,8 +726,8 @@ class IgorCA(object):
         if not prefix:
             _, prefix = tempfile.mkstemp(prefix="igorCA")
         
-        keyFile = prefix + '.key'
-        certFile = prefix + '.crt'
+        keyFile = prefix + '.key.pem'
+        certFile = prefix + '.crt.pem'
         csrFile = prefix + '.csr'
         csrConfigFile = prefix + '.csrConfig'
             

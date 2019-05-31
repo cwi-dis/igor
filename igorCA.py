@@ -206,7 +206,11 @@ class CARemoteInterface(object):
         return False
         
     def isOK(self):
-        rv = self.igor.get('/plugin/ca/status', format='text/plain')
+        try:
+            rv = self.igor.get('/plugin/ca/status', format='text/plain')
+        except igorVar.IgorError as e:
+            print("%s: %s" % (self.parent.argv0, e), file=sys.stderr)
+            return False
         rv = rv.strip()
         if rv:
             print("%s: remote CA: %s" % (self.parent.argv0, rv), file=sys.stderr)

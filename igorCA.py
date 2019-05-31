@@ -706,30 +706,40 @@ class IgorCA(object):
         if not prefix or not allNames:
             print("Usage: %s gen keyfilenameprefix commonName [subjectAltNames ...]" % sys.argv[0], file=sys.stderr)
             return False
-        
-        keyFile = prefix + '.key'
-        csrFile = prefix + '.csr'
-        csrConfigFile = prefix + '.csrConfig'
-        certFile = prefix + '.crt'
-        if os.path.exists(keyFile) and os.path.exists(certFile):
-            print('%s: %s and %s already exist' % (self.argv0, keyFile, certFile), file=sys.stderr)
-            return False
             
-        csr = self.do_genCSR(keyFile, csrFile, csrConfigFile, allNames)
-        if not csr:
+        keyData, certData = self.do_gen(prefix=prefix, cn=allNames[0], altNames=[allNames[1:]])
+        if not certData:
             return False
-            
-        cert = self.do_signCSR(csr)
-        if not cert:
-            return False
-        open(certFile, 'w').write(cert)
 
         # Verify it
         ok = self.runSSLCommand('x509', '-noout', '-text', '-in', certFile)
         if not ok:
             return False
         return True
-
+        
+    def do_gen(self, cn, altNames=None, prefix=None):
+        """Generate server key and certificate for CN (and optional altNames) and return as PEM strings"""
+        allNames = [cn]
+        if altNames:
+            allNames += altNames
+        if not prefix:
+            _, prefix = tempfile.mkstemp(prefix="igorCA")
+        
+        keyFile = prefix + '.key'
+        csrFile = prefix + '.csr'
+        csrConfigFile = prefix + '.csrConfig'
+            
+        csr = self.do_genCSR(keyFile, csrFile, csrConfigFile, allNames)
+        if not csr:
+            return None, None
+            
+        certData = self.do_signCSR(csr)
+        open(certFile, 'w').write(certData)
+        
+        keyData = open(keyFile, 'r').read()
+        
+        return keyData, certData
+        
     def cmd_list(self, cn=None):
         """Return list of certificates signed (optional arguments restricts to single Common Name)."""
         items = self.do_list(cn=cn)

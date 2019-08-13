@@ -155,6 +155,7 @@
             <delete>descendant</delete>
         </au:capability>
     </simpleActions>
+    <actorCollection></actorCollection>
 	<sandbox>
 	</sandbox>
 	<plugindata>

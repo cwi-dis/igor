@@ -28,6 +28,7 @@ from . import webApp
 from . import xmlDatabase
 from . import access
 from . import simpleActions
+from . import yogurtActions
 from . import sseListener
 from . import callUrl
 from . import pluginHandler
@@ -191,6 +192,7 @@ class IgorServer(object):
         # Other components will be started later, in preRun()
         #
         self.simpleActionHandler = None
+        self.yogurtActionHandler = None
         self.eventSources = None
         self.triggerHandler = None
         
@@ -198,6 +200,7 @@ class IgorServer(object):
         with self.app.tempContext('/__main__/preRun'):
             self.plugins.update(token=self.access.tokenForAdminUser())
         self.internal.updateSimpleActions()
+        self.internal.updateYogurtActions()
         self.internal.updateEventSources()
         self.internal.updateTriggers()
         # Start advertising on Rendezvous/mDNS
@@ -267,6 +270,9 @@ class IgorServer(object):
         if self.simpleActionHandler:
             self.simpleActionHandler.stop()
             self.simpleActionHandler = None
+        if self.yogurtActionHandler:
+            self.yogurtActionHandler.stop()
+            self.yogurtActionHandler = None
         if self.eventSources:
             self.eventSources.stop()
             self.eventSources = None
@@ -307,6 +313,7 @@ class IgorInternal(object):
         rv = ''
         if self.igor.urlCaller: rv += self.igor.urlCaller.dump() + '\n'
         if self.igor.simpleActionHandler: rv += self.igor.simpleActionHandler.dump() + '\n'
+        if self.igor.yogurtActionHandler: rv += self.igor.yogurtActionHandler.dump() + '\n'
         if self.igor.eventSources: rv += self.igor.eventSources.dump() + '\n'
         return rv
         
@@ -404,7 +411,19 @@ class IgorInternal(object):
         allActions += self.igor.database.getElements('plugindata/*/action', 'get', self.igor.access.tokenForIgor())
         if not self.igor.simpleActionHandler:
             self.igor.simpleActionHandler = simpleActions.ActionCollection(self.igor)
-        self.igor.simpleActionHandler.updateActions(allActions)
+        if not self.igor.yogurtActionHandler:
+            self.igor.yogurtActionHandler = yogurtActions.YogurtActionCollection(self.igor)
+        self.igor.yogurtActionHandler.updateActions(allActions)
+        return 'OK'
+
+    def updateYogurtActions(self, token=None):
+        """Recreate event handlers defined in the database. Not intended for human use"""
+        allActions = self.igor.database.getElements('actorCollection/actor', 'get', self.igor.access.tokenForIgor())
+        if not self.igor.yogurtActionHandler:
+            self.igor.yogurtActionHandler = yogurtActions.ActionCollection(self.igor)
+        if not self.igor.yogurtActionHandler:
+            self.igor.yogurtActionHandler = yogurtActions.YogurtActionCollection(self.igor)
+        self.igor.yogurtActionHandler.updateActions(allActions)
         return 'OK'
 
     def updateEventSources(self, token=None):
@@ -568,6 +587,7 @@ def main():
         if args.debug in ('callUrl', 'all'): callUrl.DEBUG = True
         elif args.debug in ('sseListener', 'all'): sseListener.DEBUG = True
         elif args.debug in ('simpleActions', 'all'): simpleActions.DEBUG = True
+        elif args.debug in ('yogurtActions', 'all'): yogurtActions.DEBUG = True
         elif args.debug in ('xmlDatabase', 'all'): xmlDatabase.DEBUG = True
         elif args.debug in ('webApp', 'all'): webApp.DEBUG = True
         elif args.debug in ('access', 'all'): access.DEBUG.append(True)

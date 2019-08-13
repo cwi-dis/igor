@@ -8,6 +8,6 @@ See the [say plugin](../say/readme.md) for an alternative way to present message
 
 To use the plugin as-is (as opposed to using it as sample code for other ways to display messages) requires a command line tool `lcdecho`. This tool is available as part of the [iotsa Display Server], _URL to be provided later_.
 
-## actions
+## simpleActions
 
 One action, to display the content of any element inside `environment/messages` whenever it changes.

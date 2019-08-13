@@ -300,7 +300,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         content = {'test61':{'data' : '0'}}
         action = {'action':dict(name='test61action', url='/data/sandbox/test61/data', method='PUT', data='{/data/sandbox/test61/data + 1}')}
         pAdmin.put('sandbox/test61', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         p.get('/action/test61action')
@@ -347,7 +347,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         pAdmin = self._igorVar(credentials='admin:')
 
         action = {'action':dict(name='test63action', url=self.servletUrl+'/api/get')}
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         self._create_caps_for_action(pAdmin, 'test63action', obj='/api/get', get='self', delegate='external')
@@ -387,7 +387,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         content = {'test71':{'src':'', 'sink':''}}
         action = {'action':dict(name='test71action', url='/data/sandbox/test71/sink', xpath='/data/sandbox/test71/src', method='PUT', data='copy-{.}-copy')}
         p.put('sandbox/test71', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
         
         p.put('sandbox/test71/src', 'seventy-one', datatype='text/plain')
@@ -405,7 +405,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         content = {'test72':{'src':''}}
         action = {'action':dict(name='test72action', url='/data/sandbox/test72/sink', xpath='/data/sandbox/test72/src', method='POST', data='{.}')}
         p.put('sandbox/test72', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         p.put('sandbox/test72/src', '72a', datatype='text/plain')
@@ -430,8 +430,8 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         action1 = {'action':dict(name='test73first', url='/action/test73second', xpath='/data/sandbox/test73/src')}
         action2 = {'action':dict(name='test73second', url='/data/sandbox/test73/sink', method='PUT', data='copy-{/data/sandbox/test73/src}-copy')}
         p.put('sandbox/test73', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action2), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action1), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action2), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
         
         p.put('sandbox/test73/src', 'seventy-three', datatype='text/plain')
@@ -449,7 +449,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         content = {'test74':{'src':'', 'sink':''}}
         action1 = {'action':dict(name='test74first', url=self.servletUrl+'/api/get', xpath='/data/sandbox/test74/src')}
         p.put('sandbox/test74', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action1), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         self._create_caps_for_action(pAdmin, 'test74first', obj='/api/get', get='self')
@@ -473,7 +473,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         content = {'test75':{'src':''}}
         action1 = {'action':dict(name='test75first', url=self.servletUrl+'/api/set?value={.}', method='GET', xpath='/data/sandbox/test75/src')}
         p.put('sandbox/test75', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action1), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         self._create_caps_for_action(pAdmin, 'test75first', obj='/api/set', get='self')
@@ -495,7 +495,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         content = {'test76':{'src':''}}
         action1 = {'action':dict(name='test76first', url=self.servletUrl+'/api/set', method='PUT', mimetype='text/plain', data='{.}', xpath='/data/sandbox/test76/src')}
         p.put('sandbox/test76', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action1), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action1), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         self._create_caps_for_action(pAdmin, 'test76first', obj='/api/set', put='self')
@@ -537,7 +537,7 @@ class IgorTest(unittest.TestCase, IgorSetupAndControl):
         content = {'test82' : {'src':'eighty-two', 'sink':''}}
         action = {'action':dict(name='test82action', url='/plugin/copytree?src=/data/sandbox/test82/src&dst=/data/sandbox/test82/sink')}
         pAdmin.put('sandbox/test82', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
         self._create_cap_for_plugin_for_action(pAdmin, 'test82action', 'copytree')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
@@ -780,7 +780,7 @@ class IgorTestCaps(IgorTest):
         pAdmin = self._igorVar(credentials='admin:')
 
         action = {'action':dict(name='test69action', url=self.servletUrl+'/api/get')}
-        actionPath = pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        actionPath = pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         optBearerToken = self._create_cap_for_call(pAdmin, 'test69action')
@@ -830,7 +830,7 @@ class IgorTestCaps(IgorTest):
         """Create capability so action caller can call a plugin"""
         newCapID = self._new_capability(pAdmin, 
             tokenId='admin-plugin', 
-            newOwner="/data/actions/action[name='%s']" % caller,
+            newOwner="/data/simpleActions/action[name='%s']" % caller,
             newPath='/plugin/%s' % callee,
             get='self',
             )
@@ -844,7 +844,7 @@ class IgorTestCaps(IgorTest):
             newKey = self._new_sharedkey(pAdmin, aud=audience)
             self.servlet.setIssuer(igorIssuer, newKey)
         if caller:
-            newOwner = "/data/actions/action[name='%s']" % caller
+            newOwner = "/data/simpleActions/action[name='%s']" % caller
         else:
             newOwner = "/data/identities/admin"
         newCapID = self._new_capability(pAdmin, 

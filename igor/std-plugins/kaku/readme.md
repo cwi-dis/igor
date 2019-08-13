@@ -15,6 +15,6 @@ Turns lights (or other devices) on and off using a [KlikAanKlikUit](https://www.
 	* `name`: human readable name (string).
 	* `id`: KAKU switch number (integer).
 
-## actions
+## simpleActions
 
 Whenever the value of any element in `environment/lights` changes the element name is looked up on `plugindata/kaku/switch` and the corresponding switch is turned on or off.

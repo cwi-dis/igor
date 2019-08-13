@@ -193,7 +193,7 @@ class IgorPerf(IgorSetupAndControl):
         content = {'test61':{'data' : '0'}}
         action = {'action':dict(name='test61action', url='/data/sandbox/test61/data', method='PUT', data='{/data/sandbox/test61/data + 1}')}
         pAdmin.put('sandbox/test61', json.dumps(content), datatype='application/json')
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         self._perfStart()
@@ -233,7 +233,7 @@ class IgorPerf(IgorSetupAndControl):
         pAdmin = self._igorVar(credentials='admin:')
 
         action = {'action':dict(name='test63action', url=self.servletUrl+'/api/get')}
-        pAdmin.post('actions/action', json.dumps(action), datatype='application/json')
+        pAdmin.post('simpleActions/action', json.dumps(action), datatype='application/json')
         self._flush(pAdmin, MAX_FLUSH_DURATION)
 
         self._create_caps_for_action(pAdmin, 'test63action', obj='/api/get', get='self', delegate='external')
@@ -347,7 +347,7 @@ class IgorPerfCaps(IgorPerf):
             newKey = self._new_sharedkey(pAdmin, aud=audience)
             self.servlet.setIssuer(igorIssuer, newKey)
         if caller:
-            newOwner = "/data/actions/action[name='%s']" % caller
+            newOwner = "/data/simpleActions/action[name='%s']" % caller
         else:
             newOwner = "/data/identities/admin"
         newCapID = self._new_capability(pAdmin, 

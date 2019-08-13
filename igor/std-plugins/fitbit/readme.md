@@ -65,7 +65,7 @@ If all this worked Igor can now get the health data for _yournamehere_. You can 
 		* `dateTime` For which date the value is.
 	* ...
 	
-## actions
+## simpleActions
 
 One for each user for which Igor needs to fetch Fitbit health data:
 

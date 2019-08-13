@@ -75,7 +75,7 @@ class IgorServer(object):
         Access to non-database portions of the REST API is allowed, so
         getting ``/action/save`` will have the side-effect of saving the database.
         
-        Full XPath syntax is allowed, so something like ``actions/action[name='save']``
+        Full XPath syntax is allowed, so something like ``simpleActions/action[name='save']``
         will retrieve the definition of the *save* action. For XPath expressions
         matching multiple elements you must specify *variant='multi'*.
         

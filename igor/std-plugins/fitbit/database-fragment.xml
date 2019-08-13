@@ -3,7 +3,7 @@
 	<sensors>
 		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
-	<actions>
+	<simpleActions>
 		<action own:plugin="{plugin}">
 			<interval>36000</interval>
 			<url>/plugin/{plugin}?user=jack</url>
@@ -13,7 +13,7 @@
 				<put>child</put>
 			</au:needCapability>
 		</action>
-	</actions>
+	</simpleActions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<au:needCapability>

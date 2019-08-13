@@ -16,7 +16,7 @@ It is a proof of concept.
 * `devices/tv/volume`: integer, TV sound volume.
 * many more...
 
-## actions
+## simpleActions
 Three actions:
 
 * Whenever `devices/tv/power` changes turn on or off the TV through the infrared transmitter.

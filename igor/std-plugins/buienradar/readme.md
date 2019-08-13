@@ -17,7 +17,7 @@ GPS location in `environmnt/location` is used to get rain forecast data, and thi
 	* `minute`: minute of `time` (int)
 * `plugindata/buienradar`: GPS location for which to present forecast. 
 	
-## actions
+## simpleActions
 
 Three actions:
 

@@ -3,13 +3,13 @@
 	<devices>
 		<{plugin} own:plugin="{plugin}"/>
 	</devices>
-	<actions>
+	<simpleActions>
 		<action own:plugin="{plugin}">
 			<xpath>/data/environment/messages/*</xpath>
 			<url>/plugin/{plugin}/script/message?args={.}</url>
 			<representing>devices/{plugin}</representing>
 		</action>
-	</actions>
+	</simpleActions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<au:needCapability>

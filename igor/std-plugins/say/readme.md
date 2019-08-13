@@ -10,6 +10,6 @@ The plugin uses a command line utility `say`, as available on OSX. If `say` is n
 * `plugindata/say/voice`: string, the voice to use (default is to use the default voice). Not supported on Linux.
 * `plugindata/say/remoteHost`: string, host on which to run the script (using _ssh_), default is the host Igor runs on. Only supported for OSX remote hosts.
 
-## actions
+## simpleActions
 
 When any element inside `environment/messages` is modified (usually these are `message` elements) the contents are spoken.

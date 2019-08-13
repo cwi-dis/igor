@@ -98,7 +98,7 @@
 			<cid>people-people</cid>
 		</au:capability>
 	</identities>
-	<actions>
+	<simpleActions>
 	    <action own:igor="igor">
 	        <name>_start</name>
 			<representing>igor/start</representing>
@@ -110,7 +110,7 @@
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
 			<representing>igor/save</representing>
-			<xpath>/data/plugindata//* | /data/actions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
+			<xpath>/data/plugindata//* | /data/simpleActions/* | /data/triggers/* | /data/identities//* | /data/sandbox/*</xpath>
 			<notBefore/>
 		</action>
         <action own:igor="igor">
@@ -122,9 +122,9 @@
         </action>
 		<action own:igor="igor">
 			<name>_updateActions</name>
-			<xpath>/data/actions/* | /data/plugindata/*/action</xpath>
+			<xpath>/data/simpleActions/* | /data/plugindata/*/action</xpath>
 			<representing>igor/core</representing>
-			<url>/internal/updateActions</url>
+			<url>/internal/updateSimpleActions</url>
 			<notBefore/>
 		</action>
 		<au:capability>
@@ -154,7 +154,7 @@
             <post>descendant</post>
             <delete>descendant</delete>
         </au:capability>
-    </actions>
+    </simpleActions>
 	<sandbox>
 	</sandbox>
 	<plugindata>

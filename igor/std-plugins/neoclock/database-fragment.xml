@@ -13,7 +13,7 @@
 			<timeoutStatus>0x600000</timeoutStatus>
 		</{plugin}>
 	</devices>
-	<actions>
+	<simpleActions>
 		<action own:plugin="{plugin}">
 			<xpath>/data/sensors/buienradar</xpath>
 			<url>/data/devices/{plugin}/outerStatus</url>
@@ -43,7 +43,7 @@
 				<put>descendant-or-self</put>
 			</au:needCapability>
 		</action>
-	</actions>
+	</simpleActions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>

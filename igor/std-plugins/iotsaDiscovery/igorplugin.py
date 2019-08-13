@@ -269,7 +269,7 @@ class IotsaDiscoveryPlugin(object):
         
     def _getActionsForDevice(self, device=None, token=None, callerToken=None):
         """Helper for templates: returns list of action names this device might trigger"""
-        list = self.igor.database.getValues('actions/action/name', token=token)
+        list = self.igor.database.getValues('simpleActions/action/name', token=token)
         return [x[1] for x in list]
         
     def _getTokensForDevice(self, device=None, token=None, callerToken=None):

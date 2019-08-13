@@ -483,8 +483,8 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         # If the new token may affect actions we should update the actions
         #
-        if newOwner.startswith('/data/actions') or newOwner.startswith('actions'):
-            self.igor.internal.queue('updateActions', _accessSelfToken)
+        if newOwner.startswith('/data/simpleActions') or newOwner.startswith('simpleActions'):
+            self.igor.internal.queue('updateSimpleActions', _accessSelfToken)
         #
         # Return the ID
         #

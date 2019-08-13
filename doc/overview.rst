@@ -155,8 +155,8 @@ Some of the plugins come with helper utilities or servers. See
 Actions
 ^^^^^^^
 
-Then there is an ``actions`` module, populated from a special section of the
-database, that allows actions to be triggered by events. Here, *actions* are
+Then there is an ``simpleActions`` module, populated from a special section of the
+database, that allows actions to be triggered by events. Here, *simpleActions* are
 REST operations (on the database itself or on external URLs) using data
 constructed from the database, and *events* are one or a combination of:
 
@@ -210,7 +210,7 @@ completely unstyled and ugly.
 
 There is no friendly user interface yet to manually modify the database.
 
-There is no friendly user interface yet to modify actions.
+There is no friendly user interface yet to modify simpleActions.
 
 Mirroring and distributing the database over multiple Igor instances is
 planned but not implemented yet.

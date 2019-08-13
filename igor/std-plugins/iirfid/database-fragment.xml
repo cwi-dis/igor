@@ -4,8 +4,8 @@
 		<{plugin}rfid own:plugin="{plugin}"/>
 		<tags/>
 	</sensors>
-    <actions>
-    </actions>
+    <simpleActions>
+    </simpleActions>
     <plugindata>
         <{plugin} own:plugin="{plugin}">
             <serial>/dev/tty.usbserial-A700ekiO</serial>

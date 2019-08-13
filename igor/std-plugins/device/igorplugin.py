@@ -244,7 +244,7 @@ class DevicePlugin(object):
             descr['status'] = statusEntries
             
             if representing:
-                actionElements = self.igor.database.getElements("actions/action[representing='%s']" % representing, 'get', callerToken)
+                actionElements = self.igor.database.getElements("simpleActions/action[representing='%s']" % representing, 'get', callerToken)
                 actionPaths = []
                 for e in actionElements:
                     actionPaths.append(self.igor.database.getXPathForElement(e))

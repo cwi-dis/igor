@@ -25,7 +25,7 @@ Some of the data is unique to the iirfid plugin, some other data (with _tags_ or
 	* `id`: 4 colon-separated hex bytes.
 	* `name`: human readable name.
 
-## actions
+## simpleActions
 
 * _start_: starts the rfid reader asynchronously, telling it to POST each tag presented to this Igor, `sensors/rfid/rfidtag`.
 * _cleanup_: remove all entries in `sensors/rfid` and `sensors/tags` except the last one.

@@ -20,7 +20,7 @@ The plugin parses the internal files of the Linux DHCP service, therefore it onl
 	* `id`: MAC-address (string, 6 colon-separated hex bytes).
 	* `name`: user-visible name.
 
-## actions
+## simpleActions
 
 Three actions:
 

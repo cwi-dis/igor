@@ -6,8 +6,8 @@
 			<current/>
 		</{plugin}>
 	</devices>
-	<actions>
-	</actions>
+	<simpleActions>
+	</simpleActions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>

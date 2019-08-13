@@ -186,7 +186,7 @@ class StructuralConsistency(object):
                 ('/identities',
                     ('/admin',)
                 ),
-                ('/actions',),
+                ('/simpleActions',),
                 ('/sandbox',),
                 ('/plugindata',),
             )
@@ -356,12 +356,12 @@ class CapabilityConsistency(StructuralConsistency):
             self._hasCapability(userPath, obj=userPath, get='descendant-or-self', put='descendant', post='descendant', delete='descendant', delegate='true')
             self._hasCapability(userPath, obj='/data/people/'+userName, put='descendant', post='descendant', delete='descendant', delegate='true')
     
-        self._hasCapability('/data/actions', cid='action-plugin', obj='/plugin', get='descendant')
-        self._hasCapability('/data/actions', cid='action-action', obj='/action', get='descendant')
-        self._hasCapability('/data/actions', cid='action-internal', obj='/internal', get='descendant')
-        self._hasCapability('/data/actions', cid='action-environment', obj='/data/environment', get='descendant', put='descendant', post='descendant', delete='descendant')
+        self._hasCapability('/data/simpleActions', cid='action-plugin', obj='/plugin', get='descendant')
+        self._hasCapability('/data/simpleActions', cid='action-action', obj='/action', get='descendant')
+        self._hasCapability('/data/simpleActions', cid='action-internal', obj='/internal', get='descendant')
+        self._hasCapability('/data/simpleActions', cid='action-environment', obj='/data/environment', get='descendant', put='descendant', post='descendant', delete='descendant')
         # Check that actions have the capabilities they need
-        for actionElement in self._getAllElements('/data/actions/action'):
+        for actionElement in self._getAllElements('/data/simpleActions/action'):
             actionXPath = self.database.getXPathForElement(actionElement)
             tokensNeeded = self._getTokensNeededByElement(actionElement, optional=self.extended)
             for item in tokensNeeded:
@@ -470,8 +470,8 @@ class CapabilityConsistency(StructuralConsistency):
             self._getAllElements('/data/au:access/au:unusedCapabilities') +
             self._getAllElements('/data/identities') +
             self._getAllElements('/data/identities/*') +
-            self._getAllElements('/data/actions') +
-            self._getAllElements('/data/actions/action') +
+            self._getAllElements('/data/simpleActions') +
+            self._getAllElements('/data/simpleActions/action') +
             self._getAllElements('/data/plugindata/*')
             )
         actualLocations = self._getAllElements('//au:capability/..')

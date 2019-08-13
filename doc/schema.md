@@ -181,7 +181,7 @@ If capability support is enabled, identity entries will also carry the set of ca
 
 A special user _admin_ will carry a set of _master capabilities_.
 
-## actions
+## simpleActions
 
 Stores triggers and actions that operate on the database. *(this name is hardcoded in the Igor implementation)* Action elements can also be present
 inside `plugindata` children.
@@ -204,31 +204,31 @@ If the action is triggered by an XPath expression then the XPath expressions wit
  
 Here is a description of the available elements:
 
-* `actions/action/name`: Name of the action (string). Action will trigger when `/actions/name` is accessed.
-* `actions/action/xpath`: XPath expression that must deliver a _node_ or _nodeset_ (string). Action will trigger if any of these nodes is modified.
-* `actions/action/multiple`: A boolean that signals what should happen if multiple elements are changed (and match the xpath expression) by the same operation. When false (the default) the action triggers once, with a random element as the context. When true the action will trigger for each element in the nodeset.
-* `actions/action/aggregate`: A boolean to indicate that multiple triggers of this action can be aggregated into a single call. Note that this is completely different from `multiple`, it can be used to forestall scheduling an action if the identical action is already waiting to be executed.
-* `actions/action/interval`: Interval in seconds (integer). Action will trigger at least once every _interval_ seconds.
-* `actions/action/minInterval`: Minimum interval in seconds (integer). Action will trigger at most once every _minInterval_ seconds.
-* `actions/action/notBefore`: Earliest time this action will trigger again (timestamp). This field is set by Igor whenever the action is triggered, using data from _minInterval_, and it is actually the way the _minInterval_ functionality is implemented.
-* `actions/action/condition`: XPath expression that is evaluated whenever a trigger has happened and that must return _true_ for the action to be executed. 
-* `actions/action/url`: The URL to which a request should be made (string). AVTs can be used in this field. This is the only required field.
-* `actions/action/method`: The method used to access the url, default GET (string).
-* `actions/action/data`: For POST and PUT methods, the data to supply to the operation (string). Can use AVTs.
-* `actions/action/mimetype`: The MIME type of _data_ (string), default `text/plain`.
-* `actions/action/representing`: The entity on whose behalf this action runs (string), for reporting in _systemHealth_.
-* `actions/action/creator`: The plugin that created this action (string), for showing the action in the plugin UI.
+* `simpleActions/action/name`: Name of the action (string). Action will trigger when `/actions/name` is accessed.
+* `simpleActions/action/xpath`: XPath expression that must deliver a _node_ or _nodeset_ (string). Action will trigger if any of these nodes is modified.
+* `simpleActions/action/multiple`: A boolean that signals what should happen if multiple elements are changed (and match the xpath expression) by the same operation. When false (the default) the action triggers once, with a random element as the context. When true the action will trigger for each element in the nodeset.
+* `simpleActions/action/aggregate`: A boolean to indicate that multiple triggers of this action can be aggregated into a single call. Note that this is completely different from `multiple`, it can be used to forestall scheduling an action if the identical action is already waiting to be executed.
+* `simpleActions/action/interval`: Interval in seconds (integer). Action will trigger at least once every _interval_ seconds.
+* `simpleActions/action/minInterval`: Minimum interval in seconds (integer). Action will trigger at most once every _minInterval_ seconds.
+* `simpleActions/action/notBefore`: Earliest time this action will trigger again (timestamp). This field is set by Igor whenever the action is triggered, using data from _minInterval_, and it is actually the way the _minInterval_ functionality is implemented.
+* `simpleActions/action/condition`: XPath expression that is evaluated whenever a trigger has happened and that must return _true_ for the action to be executed. 
+* `simpleActions/action/url`: The URL to which a request should be made (string). AVTs can be used in this field. This is the only required field.
+* `simpleActions/action/method`: The method used to access the url, default GET (string).
+* `simpleActions/action/data`: For POST and PUT methods, the data to supply to the operation (string). Can use AVTs.
+* `simpleActions/action/mimetype`: The MIME type of _data_ (string), default `text/plain`.
+* `simpleActions/action/representing`: The entity on whose behalf this action runs (string), for reporting in _systemHealth_.
+* `simpleActions/action/creator`: The plugin that created this action (string), for showing the action in the plugin UI.
 
 If capabilities are enabled each action can carry a set of capabilities and the _actions_ element itself can also carry a set (that will be inherited by each action).
 
-### Standard actions
+### Standard simpleActions
 
-There are a number of standard actions, which are used by Igor itself or used to fill some of the standard elements in the database. Multiple actions with the same name can exist, and all of them will fire (so you can add actions to do additional things if these events happen). These actions (by _name_) are:
+There are a number of standard simpleActions, which are used by Igor itself or used to fill some of the standard elements in the database. Multiple actions with the same name can exist, and all of them will fire (so you can add actions to do additional things if these events happen). These actions (by _name_) are:
 
 * _start_: fired when Igor is started (automatically by Igor). 
 * _save_: saves the in-memory copy of the database to the external file. Called periodically, and whenever a part of the database that is somehow considered important is changed.
 * _cleanup_: deletes old elements in `environment/messages` and such.
-* _updateActions_: updates the internal action datastructure whenever elements are added (not changed) in `actions`.
+* _updateActions_: updates the internal action datastructure whenever elements are added (not changed) in `simpleActions`.
 * _checkNight_: maintains the value of `environment/night`.
 * _updatePeople_: updates people availability in `people` when device availability in `environment/devices` changes.
 * _countPeopleAtHome_: updates `environment/people/count` when people availability changes.

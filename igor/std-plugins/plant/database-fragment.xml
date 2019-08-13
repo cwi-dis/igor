@@ -3,7 +3,7 @@
 	<devices>
 		<{plugin} own:plugin="{plugin}"/>
 	</devices>
-	<actions>
+	<simpleActions>
 		<action own:plugin="{plugin}">
 			<xpath>/data/devices/{plugin}/target</xpath>
 			<url>/plugin/{plugin}/push</url>
@@ -18,7 +18,7 @@
 			<minInterval>60</minInterval>
 			<condition>not(/data/environment/night)</condition>
 		</action>
-	</actions>
+	</simpleActions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>

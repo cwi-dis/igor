@@ -19,6 +19,6 @@ important. As an example, for service _internet_:
 * `service/internet/errorMessage`: If this element exists and is non-empty it means the _internet_ service has an error condition (and that that condition is serious enough that we want to inform the user about it). The message will be copied into `environment/systemHealth/messages/internet`.
 * `service/internet/ignoreErrorUntil`: If this value (timestamp) is set and is in the past it will be deleted. If it is in the future, the `errorMessage` field will not be copied into `environment/systemHealth`, effectively ignoring the error condition for some period of time.
 
-## actions
+## simpleActions
 
 The _systemHealth_ action triggers this plugin.

@@ -27,7 +27,7 @@
 		<input type="hidden" name="subject" value="{{hostname}}">
 		<input type="hidden" name="exportTokens" value="true">
 		Action: <select name="obj">
-			{% for _, actionName in igor.database.getValues('actions/action/name', token=callerToken) %}
+			{% for _, actionName in igor.database.getValues('simpleActions/action/name', token=callerToken) %}
 				<option value="/action/{{actionName}}">{{actionName}}</option>
 			{% endfor %}
 		</select><br>

@@ -29,7 +29,7 @@
 		</tr>
 	
 		{% for path, description in allActions|dictsort %}
-			{% set shortName = description.name if 'name' in description else path|replace('/data/actions/','') %}
+			{% set shortName = description.name if 'name' in description else path|replace('/data/simpleActions/','') %}
 			{% set _ = description.pop('notBefore', None) %}
 			{% set shortDescriptionList = description|dictsort %}
 			{% set shortDescription = shortDescriptionList|map('join', '=')|join(' ') %}

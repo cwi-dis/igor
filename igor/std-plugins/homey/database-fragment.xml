@@ -7,7 +7,7 @@
 	<devices>
 		<{plugin} own:plugin="{plugin}"/>
 	</devices>
-    <actions>
+    <simpleActions>
         <action own:plugin="{plugin}">
             <name>cleanup</name>
             <method>DELETE</method>
@@ -18,7 +18,7 @@
             <method>DELETE</method>
             <url>/data/sensors/tags/tag[position()&lt;last()]</url>
         </action>
-    </actions>
+    </simpleActions>
     <plugindata>
         <{plugin} own:plugin="{plugin}">
 			<au:needCapability>

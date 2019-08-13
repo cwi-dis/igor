@@ -38,7 +38,7 @@ The igor object has the following attributes that are considered part of its pub
 * ``databaseAccessor`` is a higher level, more secure API to the database (class ``webApp.XmlDatabaseAccess``).
 * ``urlCaller`` is used to make REST calls, both internally within Igor and to external services (class ``callUrl.UrlCaller``)
 * ``plugins`` is the plugin manager (class ``pluginHandler.IgorPlugins``)
-* ``actionHandler`` implements actions, when they are triggered and what they do (class ``actions.ActionCollection``)
+* ``simpleActionHandler`` implements simpleActions, when they are triggered and what they do (class ``simpleActions.ActionCollection``)
 
 Access Control Implementation
 -----------------------------

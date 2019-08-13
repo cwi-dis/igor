@@ -7,7 +7,7 @@ Iotsa devices are small internet-enabled appliances, see  <https://github.com/cw
 * `devices/iotsaDevice/target`: data to be copied to the device.
 * `devices/iotsaDevice/current`: data read from the device.
 
-## actions
+## simpleActions
 
 * Whenever `devices/iotsaDevice/target` changes this change is forwarded to the device.
 * Whenever `/action/action-iotsa` is called (and every 10 minutes anyway) the device data is copied to `current`.

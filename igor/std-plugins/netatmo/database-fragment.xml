@@ -6,8 +6,8 @@
 	<sensors>
 		<{plugin} own:plugin="{plugin}"/>
 	</sensors>
-	<actions>
-	</actions>
+	<simpleActions>
+	</simpleActions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<authentication>

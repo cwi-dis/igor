@@ -108,14 +108,14 @@ Capabilities this user will carry when logged in. Contains at least:
 - get(descendent-or-self)+put(descendent)+post(descendent)+delete(descendent), /data/identities/_user_
 - put(descendent)+post(descendent)+delete(descendent), /data/people/_user_
 
-### /data/actions
+### /data/simpleActions
 
 Capabilities that are carried by all actions. Contains at least:
 
 - get(descendant), /plugin
 - get(child), /action
 
-### /data/actions/action
+### /data/simpleActions/action
 
 Capabilities this action will carry when executing.
 
@@ -160,7 +160,7 @@ The following checks are done as a first order check, and ensure the base infras
 - `/data/identities` exists.
 - `/data/identities/admin` exists.
 - `/data/identities/admin/au:capability[cid='root']` exists.
-- `/data/actions` exists.
+- `/data/simpleActions` exists.
 
 As a second check we test that the default set of capabilities (as per the schema above) exist and are in their correct location.
 
@@ -177,7 +177,7 @@ As a fourth check we check that every capability is in an expected location. In 
 - Any of the containers in the first check, or
 - `/data/identities/*`
 - `/data/plugindata/*`
-- `/data/actions/action`
+- `/data/simpleActions/action`
 
 Capabilities that fail this check are moved into `/data/au:access/au:unusedCapabilities`.
 

@@ -19,7 +19,7 @@ Stores raw data (mac-address, last time seen) data for all devices in ```sensors
 	*	`id`: Mac address (string, 6 colon-separated hex bytes).
 	* `name`: User-visible name. 
 
-## actions
+## simpleActions
 
 Two actions:
 

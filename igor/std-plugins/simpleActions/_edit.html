@@ -44,7 +44,7 @@
 		{% set _ = description.update(mimetype=mimetype) if mimetype else None %}
 		{% set result = pluginObject._post(description, callerToken) %}
 		{% set description = result.description or {} %}
-	{% elif action == "replace" and not replaceXPath.startswith('/data/actions/action') %}
+	{% elif action == "replace" and not replaceXPath.startswith('/data/simpleActions/action') %}
 		{% set result = {'message' : 'Invalid XPath for replace: %s' % replaceXPath} %}
 		{% set description = {} %}
 	{% elif action == "replace"  %}

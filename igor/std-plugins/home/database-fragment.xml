@@ -5,7 +5,7 @@
 		<devices/>
 		<people/>
 	</environment>
-	<actions>
+	<simpleActions>
 		<action own:plugin="{plugin}">
 			<name>checkNight</name>
 			<interval>900</interval>
@@ -39,7 +39,7 @@
 			<representing>igor/std</representing>
 			<notBefore/>
 		</action>
-	</actions>
+	</simpleActions>
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 		</{plugin}>

@@ -147,12 +147,12 @@ class IgorPlugins(object):
         if newCapsNeeded:
             self.igor.access.createTokensNeededByElement(newCapsNeeded, token)
         if newActions:
-            self.igor.internal.updateActions(token=token)
+            self.igor.internal.updateSimpleActions(token=token)
         self.igor.save(token=self.igor.access.tokenForIgor())
         # If the plugin has a _start action ensure it is executed
         startNodes = self.igor.database.getElements('plugindata/{}/action[name="_start"]'.format(pluginName), 'get', token)
         if startNodes:
-            self.igor.internal.runAction('_start', token)
+            self.igor.internal.runSimpleAction('_start', token)
 
         return message
         
@@ -206,7 +206,7 @@ class IgorPlugins(object):
         self.igor.database.delValues(xp, token)
         xp = '//*[@own:plugin="%s"]//action' % pluginName
         self.igor.database.delValues(xp, token)
-        self.igor.internal.updateActions(token)
+        self.igor.internal.updateSimpleActions(token)
         # And remove all elements pertaining to the plugin
         xp = '//*[@own:plugin="%s"]' % pluginName
         self.igor.database.delValues(xp, token)

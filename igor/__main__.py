@@ -27,7 +27,7 @@ gevent.monkey.patch_all()
 from . import webApp
 from . import xmlDatabase
 from . import access
-from . import actions
+from . import simpleActions
 from . import sseListener
 from . import callUrl
 from . import pluginHandler
@@ -190,14 +190,14 @@ class IgorServer(object):
         #
         # Other components will be started later, in preRun()
         #
-        self.actionHandler = None
+        self.simpleActionHandler = None
         self.eventSources = None
         self.triggerHandler = None
         
     def preRun(self):
         with self.app.tempContext('/__main__/preRun'):
             self.plugins.update(token=self.access.tokenForAdminUser())
-        self.internal.updateActions()
+        self.internal.updateSimpleActions()
         self.internal.updateEventSources()
         self.internal.updateTriggers()
         # Start advertising on Rendezvous/mDNS
@@ -249,7 +249,7 @@ class IgorServer(object):
         #
         # Send start action to start any plugins
         #
-        self.internal.runAction('_start', self.access.tokenForIgor())
+        self.internal.runSimpleAction('_start', self.access.tokenForIgor())
         self.app.run(self.port)
         print('Igor terminating')
 
@@ -264,9 +264,9 @@ class IgorServer(object):
     def stop(self, token=None, save=True):
         """Exits igorServer after saving"""
         global PROFILER_STATS
-        if self.actionHandler:
-            self.actionHandler.stop()
-            self.actionHandler = None
+        if self.simpleActionHandler:
+            self.simpleActionHandler.stop()
+            self.simpleActionHandler = None
         if self.eventSources:
             self.eventSources.stop()
             self.eventSources = None
@@ -306,7 +306,7 @@ class IgorInternal(object):
         """Show internal run queues, action handlers and events"""
         rv = ''
         if self.igor.urlCaller: rv += self.igor.urlCaller.dump() + '\n'
-        if self.igor.actionHandler: rv += self.igor.actionHandler.dump() + '\n'
+        if self.igor.simpleActionHandler: rv += self.igor.simpleActionHandler.dump() + '\n'
         if self.igor.eventSources: rv += self.igor.eventSources.dump() + '\n'
         return rv
         
@@ -398,13 +398,13 @@ class IgorInternal(object):
             return self.igor.app.raiseSeeother(returnTo)
         return rv
         
-    def updateActions(self, token=None):
+    def updateSimpleActions(self, token=None):
         """Recreate event handlers defined in the database. Not intended for human use"""
-        allActions = self.igor.database.getElements('actions/action', 'get', self.igor.access.tokenForIgor())
+        allActions = self.igor.database.getElements('simpleActions/action', 'get', self.igor.access.tokenForIgor())
         allActions += self.igor.database.getElements('plugindata/*/action', 'get', self.igor.access.tokenForIgor())
-        if not self.igor.actionHandler:
-            self.igor.actionHandler = actions.ActionCollection(self.igor)
-        self.igor.actionHandler.updateActions(allActions)
+        if not self.igor.simpleActionHandler:
+            self.igor.simpleActionHandler = simpleActions.ActionCollection(self.igor)
+        self.igor.simpleActionHandler.updateActions(allActions)
         return 'OK'
 
     def updateEventSources(self, token=None):
@@ -424,11 +424,11 @@ class IgorInternal(object):
         """Recreate trigger handlers. Unimplemented. Not intended for human use"""
         pass
         
-    def runAction(self, actionname, token):
-        """Mechanism behind running actions. Not intended for human use."""
-        if not self.igor.actionHandler:
+    def runSimpleAction(self, actionname, token):
+        """Mechanism behind running simpleActions. Not intended for human use."""
+        if not self.igor.simpleActionHandler:
             self.igor.app.raiseNotfound()
-        nodes = self.igor.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
+        nodes = self.igor.database.getElements('simpleActions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
         # If this is an igor-administrative action also run it within plugins
         if actionname[0] == '_':
             nodes += self.igor.database.getElements('plugindata/*/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
@@ -436,18 +436,18 @@ class IgorInternal(object):
             # For a user-called action it's an error if it doesn't exist
             self.igor.app.raiseNotfound()
         for node in nodes:
-            self.igor.actionHandler.triggerAction(node)
+            self.igor.simpleActionHandler.triggerAction(node)
         return 'OK'
     
     def runPluginAction(self, pluginname, actionname, token):
         """Mechanism behind running plugin actions. Not intended for human use."""
-        if not self.igor.actionHandler:
+        if not self.igor.simpleActionHandler:
             self.igor.app.raiseNotfound()
         nodes = self.igor.database.getElements('plugindata/%s/action[name="%s"]'%(pluginname, actionname), 'get', self.igor.access.tokenForIgor())
         if not nodes:
             self.igor.app.raiseNotfound()
         for node in nodes:
-            self.igor.actionHandler.triggerAction(node)
+            self.igor.simpleActionHandler.triggerAction(node)
         return 'OK'
     
     def runTrigger(self, triggername, token):
@@ -567,7 +567,7 @@ def main():
     if args.debug:
         if args.debug in ('callUrl', 'all'): callUrl.DEBUG = True
         elif args.debug in ('sseListener', 'all'): sseListener.DEBUG = True
-        elif args.debug in ('actions', 'all'): actions.DEBUG = True
+        elif args.debug in ('simpleActions', 'all'): simpleActions.DEBUG = True
         elif args.debug in ('xmlDatabase', 'all'): xmlDatabase.DEBUG = True
         elif args.debug in ('webApp', 'all'): webApp.DEBUG = True
         elif args.debug in ('access', 'all'): access.DEBUG.append(True)

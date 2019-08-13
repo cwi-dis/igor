@@ -52,8 +52,8 @@
 		<p>To view known devices (and add or remove them) see the <a href="/plugin/device/page/index.html">devices page</a>.</p>
 	{% endif %}
 
-	{% if igor.plugins.exists('actions') %}
-		<p>To view known actions (and add or remove them) see the <a href="/plugin/actions/page/index.html">action editor</a>.</p>
+	{% if igor.plugins.exists('simpleActions') %}
+		<p>To view known simpleActions (and add or remove them) see the <a href="/plugin/simpleActions/page/index.html">action editor</a>.</p>
 	{% endif %}
 
 	{% if igor.internal.accessControl('hasCapabilitySupport') %}

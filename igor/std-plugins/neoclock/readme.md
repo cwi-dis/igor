@@ -21,7 +21,7 @@ This plugin uses the NeoClock to show three types of status information:
 
 Use of this plugin requires a [iotsa NeoClock], _URL to be provided later_.
 
-## actions
+## simpleActions
 
 Two actions:
 

@@ -2,7 +2,7 @@
 
 The lan plugin, which is badly named, tests availability of internet services. It works just as well for services on the LAN as for services out on the internet.
 
-When the plugin runs, usually from a timed action in `actions`, it accepts a number of parameters as URL query parameters. It attempts to open a tcp-connection to a service on a given host/port combination, and returns either `ok` or an error message. The plugin also sets the status of the service in `status/services/_name_/alive` and others based on whether this is successful or not.
+When the plugin runs, usually from a timed action in `simpleActions`, it accepts a number of parameters as URL query parameters. It attempts to open a tcp-connection to a service on a given host/port combination, and returns either `ok` or an error message. The plugin also sets the status of the service in `status/services/_name_/alive` and others based on whether this is successful or not.
 
 The following parameters are accepted:
 

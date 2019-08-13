@@ -20,7 +20,7 @@ class ActionsPlugin(object):
     def _list(self, creator=None, callerToken=None):
         """Return list of current actions, as tuple of (message, dict of xpath:description)."""
         rv = {}
-        path = "actions/action"
+        path = "simpleActions/action"
         if creator:
             path += "[creator='{}']".format(creator)
         try:
@@ -46,7 +46,7 @@ class ActionsPlugin(object):
         """Add a new action"""
         rv = {}
         try:
-            xpath = self.igor.databaseAccessor.put_key('actions/action', "text/plain", "ref", description, "application/x-python-object", callerToken, replace=False)
+            xpath = self.igor.databaseAccessor.put_key('simpleActions/action', "text/plain", "ref", description, "application/x-python-object", callerToken, replace=False)
             if hasattr(xpath, 'get_data'): xpath = xpath.get_data()
             if hasattr(xpath, 'decode'): xpath = xpath.decode('utf8')
             xpath = xpath.strip()

@@ -351,7 +351,7 @@ def get_action(actionname):
         myWebError('401 Unauthorized', 401)
 
     try:
-        return _SERVER.igor.internal.runAction(actionname, token)
+        return _SERVER.igor.internal.runSimpleAction(actionname, token)
     except xmlDatabase.DBAccessError:
         myWebError("401 Unauthorized (while running action)", 401)
         

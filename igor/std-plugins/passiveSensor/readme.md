@@ -30,7 +30,7 @@ Requires the _bleServer_, see ```../../../helpers```.
 	* `port`: which port the REST service runs on.
 	* `endpoint`: Rest of the REST URL after the initial /.
 	
-## actions
+## simpleActions
 
 One action:
 

@@ -11,7 +11,7 @@ The MotorServer repository <https://github.com/cwi-dis/iotsaMotorServer> contain
 * `devices/plant/speed`: float (read-only), current motor speed.
 * `devices/plant/inrange`: integer (read-only), nonzero if the cable is at an ultimate position, as indicated by the end stop microswitches.
 
-## actions
+## simpleActions
 
 * every minute the current position (and speed, etc) of the plant is retrieved and stored in `devices/plant`.
 * Whenever `environment/energy/electricity` changes and if `environment/night` is false `devices/plant/target` is updated. This action contains the formula to convert kW (unit of electricity use) to cm (unit of plant height).

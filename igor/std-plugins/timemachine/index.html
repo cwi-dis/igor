@@ -10,8 +10,8 @@
 	<title>Setup {{pluginName}}</title>
 </head>
 <body>
-	{% if igor.plugins.exists('actions') %}
-		{% set actionPlugin = igor.plugins._getPluginObject(pluginName="actions", token=callerToken) %}
+	{% if igor.plugins.exists('simpleActions') %}
+		{% set actionPlugin = igor.plugins._getPluginObject(pluginName="simpleActions", token=callerToken) %}
 		{% set message = "" %}
 		{% if action == "add" %}
 			{% set action = {} %}
@@ -24,7 +24,7 @@
 		{% set myActions = actionPlugin._list(creator=pluginName, callerToken=callerToken) %}
 		{% set message = message or myActions.message %}
 	{% else %}
-		{% set message = "actions plugin must be installed to be able to list and install services to watch" %}
+		{% set message = "simpleActions plugin must be installed to be able to list and install services to watch" %}
 	{% endif %}
 	<h1>Setup {{pluginName}}</h1>
 	

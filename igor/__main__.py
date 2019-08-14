@@ -541,7 +541,8 @@ class IgorInternal(object):
         return rv
         
 def main():
-    signal.signal(signal.SIGQUIT, _dump_app_stacks)
+    if hasattr(signal, 'SIGQUIT'):
+        signal.signal(signal.SIGQUIT, _dump_app_stacks)
     DEFAULTDIR=os.path.join(os.path.expanduser('~'), '.igor')
     if 'IGORSERVER_DIR' in os.environ:
         DEFAULTDIR = os.environ['IGORSERVER_DIR']

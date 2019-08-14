@@ -53,7 +53,3 @@ class YogurtActionCollection(threading.Thread):
         with self.lock:
             self.stopping = True
         self.join()
-        
-
-
-# Testing Branch Functionality

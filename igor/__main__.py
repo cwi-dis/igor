@@ -411,6 +411,7 @@ class IgorInternal(object):
         allActions += self.igor.database.getElements('plugindata/*/action', 'get', self.igor.access.tokenForIgor())
         if not self.igor.simpleActionHandler:
             self.igor.simpleActionHandler = simpleActions.ActionCollection(self.igor)
+        self.igor.simpleActionHandler.updateActions(allActions)
         if not self.igor.yogurtActionHandler:
             self.igor.yogurtActionHandler = yogurtActions.YogurtActionCollection(self.igor)
         self.igor.yogurtActionHandler.updateActions(allActions)

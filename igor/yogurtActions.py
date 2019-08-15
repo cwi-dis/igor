@@ -16,7 +16,7 @@ from . import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
-DEBUG=True
+DEBUG=False
                 
 class YogurtActionCollection(threading.Thread):
     def __init__(self, igor):
@@ -32,14 +32,13 @@ class YogurtActionCollection(threading.Thread):
         
     def run(self):
         """Thread that triggers timed actions as they become elegible"""
-        with self.lock:
-            while not self.stopping:
-                #
-                # Run all actions that have a scheduled time now (or in the past)
-                # and remember the earliest future action time
-                #
-                if DEBUG: print('YogurtActionCollection.run(t=%d)' % time.time())
-                time.sleep(1)
+        while not self.stopping:
+            #
+            # Run all actions that have a scheduled time now (or in the past)
+            # and remember the earliest future action time
+            #
+            if DEBUG: print('YogurtActionCollection.run(t=%d)' % time.time())
+            time.sleep(1)
 
     def updateActions(self, nodelist):
         """Called by upper layers when something has changed in the actions in the database"""
@@ -50,6 +49,5 @@ class YogurtActionCollection(threading.Thread):
         if DEBUG: print('YogurtActionCollection.triggerAction(%s)' % node)
             
     def stop(self):
-        with self.lock:
-            self.stopping = True
+        self.stopping = True
         self.join()

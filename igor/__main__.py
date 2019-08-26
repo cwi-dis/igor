@@ -412,19 +412,13 @@ class IgorInternal(object):
         if not self.igor.simpleActionHandler:
             self.igor.simpleActionHandler = simpleActions.ActionCollection(self.igor)
         self.igor.simpleActionHandler.updateActions(allActions)
-        if not self.igor.yogurtActionHandler:
-            self.igor.yogurtActionHandler = yogurtActions.YogurtActionCollection(self.igor)
-        self.igor.yogurtActionHandler.updateActions(allActions)
         return 'OK'
 
     def updateYogurtActions(self, token=None):
         """Recreate event handlers defined in the database. Not intended for human use"""
         allActions = self.igor.database.getElements('actorCollection/actor', 'get', self.igor.access.tokenForIgor())
-        if not self.igor.yogurtActionHandler:
-            self.igor.yogurtActionHandler = yogurtActions.ActionCollection(self.igor)
-        if not self.igor.yogurtActionHandler:
-            self.igor.yogurtActionHandler = yogurtActions.YogurtActionCollection(self.igor)
-        self.igor.yogurtActionHandler.updateActions(allActions)
+        self.igor.yogurtActionHandler = None
+        self.igor.yogurtActionHandler = yogurtActions.YogurtActionCollection(self.igor,allActions)
         return 'OK'
 
     def updateEventSources(self, token=None):

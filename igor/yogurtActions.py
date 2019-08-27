@@ -20,7 +20,7 @@ DEBUG=False
 class YogurtInstance:
     def __init__(self, actor):        # in here build the function that puts together XPaths
         self.actor = actor
-        self.actions = 
+        self.actions = actions
     def instantiateActions(self):
         for action in self.actions:
             self.actor.collection._addAction()

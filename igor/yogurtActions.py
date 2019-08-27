@@ -18,13 +18,13 @@ INTERPOLATION=re.compile(r'\{[^}]+\}')
 
 DEBUG=False
 class YogurtInstance:
-    def __init__(self, actor):
+    def __init__(self, actor):        # in here build the function that puts together XPaths
         self.actor = actor
-        self.actions = []
-
+        self.actions = 
     def instantiateActions(self):
         for action in self.actions:
             self.actor.collection._addAction()
+
 
 class YogurtActor:
     def __init__(self, collection, element):

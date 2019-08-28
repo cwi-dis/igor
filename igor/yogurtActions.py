@@ -16,14 +16,41 @@ from . import xmlDatabase
 
 INTERPOLATION=re.compile(r'\{[^}]+\}')
 
+def fixupXmlData(value):
+    if not value:
+        value = []
+    if not isinstance(value, list):
+        value = [value]
+    return value
+
 DEBUG=False
+
+
 class YogurtInstance:
-    def __init__(self, actor):        # in here build the function that puts together XPaths
+    def __init__(self, actor, name=None, location=None, inputs=None, actions=None, **kwargs):        # in here build the function that puts together XPaths | * all positional param that havent been assigned
         self.actor = actor
+        # assert name
+        # assert location
+        self.name = name
+        self.location = location
+        self.inputs = fixupXmlData(inputs)
         self.actions = actions
     def instantiateActions(self):
         for action in self.actions:
             self.actor.collection._addAction()
+    
+   
+    
+    def dump(self):
+        print(self.name)
+        print(self.location)
+        print(self.inputs)
+        print(self.actions)
+        print(self.actor)
+        return f'\n\tInstance {self.name}:\n\t\tlocation={self.location}\n\t\tinputs={self.inputs}'
+
+    
+    
 
 
 class YogurtActor:
@@ -32,32 +59,41 @@ class YogurtActor:
         self.element = element
         tag, self.content = self.collection.igor.database.tagAndDictFromElement(self.element)
         self.name = self.content.get('name')
-        states = self.content.get('states')
-        if not states:
-            states = []
-        elif not isinstance(states, list):
-            states = [states]
-        self.states = states
-        self.instances = []
-        self.localName = self.content.get('localName')
-        self.path = self.content.get('path')
-        self.ID = self.content.get('ID')
-        self.DBpath = self.content.get('DBpath')
-        self.input = self.content.get('input')
-        self.trigger = self.content.get('trigger')
-        self.target = self.content.get('target')
-        self.value = self.content.get('value')
-        self.type = self.content.get('type')
-        self.inputID = self.content.get('inputID')
+        
+        self.states = fixupXmlData(self.content.get('states'))
+    
+        instances = fixupXmlData(self.content.get('instances'))
+        print(repr(instances))
+        self.actions = fixupXmlData(self.content.get('actions'))
+        self.instances = [YogurtInstance(self, actions = self.actions, **instance["instance"]) for instance in instances] 
+        """
+        for key, instance in instances.items():
+            obj = YogurtInstance(self, **instance)      #** passes the dictionary keys 
+            self.instances[key] = obj
+        """
+
+        
+        #self.actions = [YogurtInstance(self, **action) for action in actions]
+        # self.actions = actions
+        # self.trigger = self.content.get('trigger')
+        # self.target = self.content.get('target')
+        # self.value = self.content.get('value')
             
     def dump(self):
-        return 'Description of actor %s: \n\tstates=%s\n\tcontent=%s' % (self.name, self.states, repr(self.content))
-
+        rv = 'Description of actor %s: \n\tstates=%s\n\tcontent=%s\n\tactions=%s' % (self.name, self.states, repr(self.content), repr(self.actions))
+        print(self.actions)
+        for i in self.instances:
+            rv += i.dump()
+        return rv
+    
     def instantiateActions(self):
         for instance in self.instances:
             print('xxx should instantiate instance')
             instance.instantiateActions()
 
+
+
+    
 class YogurtActionCollection(threading.Thread):
     def __init__(self, igor, elementList):
         threading.Thread.__init__(self)

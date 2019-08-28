@@ -419,6 +419,7 @@ class IgorInternal(object):
         allActions = self.igor.database.getElements('actorCollection/actor', 'get', self.igor.access.tokenForIgor())
         self.igor.yogurtActionHandler = None
         self.igor.yogurtActionHandler = yogurtActions.YogurtActionCollection(self.igor,allActions)
+        # self.igor.yogurtInstances = yogurtActions.YogurtInstance(allActions)
         return 'OK'
 
     def updateEventSources(self, token=None):

@@ -25,32 +25,85 @@ def fixupXmlData(value):
 
 DEBUG=False
 
+class YogurtTrigger:
+    def __init__(self, action, trigger):
+        self.action = action
+        parts = trigger.split(".")
+        if len(parts) == 1:
+            triggeringInstance = self.action.instance
+            triggeringStateName = parts[0]
+        elif len(parts) == 2:
+            triggeringInstance = self.action.instance.lookupTriggerInstance(parts[0])
+            triggeringStateName = parts[1]
+        else:
+            assert 0
+        self.xpath = triggeringInstance.lookupXPathForState(triggeringStateName)
+        
+    def dump(self):
+        return f"\n\t\t\ttrigger on xpath {self.xpath}"
+
+class YogurtAction:
+    def __init__(self, instance, on=None, update=None, **kwargs):
+        self.instance = instance
+        assert on
+        assert update
+        assert not kwargs
+        self.triggers = []
+        for trigger in fixupXmlData(on.get("trigger")):
+            self.triggers.append(YogurtTrigger(self, trigger))
+        self.update = update
+
+    def dump(self):
+        rv = f'\n\t\tAction:'
+        for t in self.triggers:
+            rv += t.dump()
+        return rv
 
 class YogurtInstance:
     def __init__(self, actor, name=None, location=None, inputs=None, actions=None, **kwargs):        # in here build the function that puts together XPaths | * all positional param that havent been assigned
         self.actor = actor
-        # assert name
-        # assert location
+        assert name
+        assert location
+        assert not kwargs
         self.name = name
         self.location = location
         self.inputs = fixupXmlData(inputs)
-        self.actions = actions
-    def instantiateActions(self):
-        for action in self.actions:
-            self.actor.collection._addAction()
-    
-   
-    
-    def dump(self):
-        print(self.name)
-        print(self.location)
-        print(self.inputs)
-        print(self.actions)
-        print(self.actor)
-        return f'\n\tInstance {self.name}:\n\t\tlocation={self.location}\n\t\tinputs={self.inputs}'
+        self.actions = []
+        for a in actions:
+            self.actions.append(YogurtAction(self, **a))
 
     
     
+    
+    def lookupTriggerInstance(self, name):
+        return self
+    
+    def lookupXPathForState(self, name):
+        return "/"
+
+   
+    # Function for finding instance states paths
+ 
+    def instantiateActions(self):
+        pass
+    
+    def dump(self):
+        print("Instance Name")
+        print(self.name)
+        print("Instance Location:")
+        print(self.location)
+        print("Instance actions")
+        print(self.actor.actions)
+        print("Instance Actors States")
+        print(self.actor.states)
+        for state in self.actor.states:
+            print(state)
+        
+        print("Test")
+        rv = f'\n\tInstance {self.name}:\n\t\tlocation={self.location}\n\t\tinputs={self.inputs}'
+        for a in self.actions:
+            rv += a.dump()
+        return rv
 
 
 class YogurtActor:
@@ -60,12 +113,12 @@ class YogurtActor:
         tag, self.content = self.collection.igor.database.tagAndDictFromElement(self.element)
         self.name = self.content.get('name')
         
-        self.states = fixupXmlData(self.content.get('states'))
+        self.states = fixupXmlData(self.content.get('states', {}).get('state'))
     
-        instances = fixupXmlData(self.content.get('instances'))
+        instances = fixupXmlData(self.content.get('instances', {}).get('instance'))
         print(repr(instances))
-        self.actions = fixupXmlData(self.content.get('actions'))
-        self.instances = [YogurtInstance(self, actions = self.actions, **instance["instance"]) for instance in instances] 
+        self.actions = fixupXmlData(self.content.get('actions', {}).get('action'))
+        self.instances = [YogurtInstance(self, actions = self.actions, **instance) for instance in instances] 
         """
         for key, instance in instances.items():
             obj = YogurtInstance(self, **instance)      #** passes the dictionary keys 

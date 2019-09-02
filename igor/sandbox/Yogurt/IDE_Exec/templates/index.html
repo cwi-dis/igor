@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <title>Yogurt IDE</title>
+    {{ codemirror.include_codemirror() }}
+  </head>
+  <body>
+    <h1>Yogurt IDE<h1>
+    <h3>Please type your Buttermilk program bellow:<h3>
+    <form name="source_code" id="source_code" method="POST">
+       {{ form.source_code }}
+       <input type="submit" value="Run Script">
+    </form>
+  </body>
+</html>

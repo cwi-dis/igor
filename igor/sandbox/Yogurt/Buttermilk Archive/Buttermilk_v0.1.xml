@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actor_collection>
+	<light>
+		<states>
+			
+		</states>
+		<actions>
+			<triggers>
+				switch.on
+				<guards>
+					dusk.night = False
+					switch.on = True
+					<update>
+						on = True
+						<then>
+							<triggers>
+								<guards>
+									<update>
+										on = False
+									</update>
+								</guards>
+							</triggers>	
+						</then>
+					</update>
+				</guards>
+			</triggers>
+		<actions>
+		<instances>
+			<kitchen_light>
+				<path></path>
+			</kitchen_light>
+		</instances>
+	</light>
+</actor_collection>
+

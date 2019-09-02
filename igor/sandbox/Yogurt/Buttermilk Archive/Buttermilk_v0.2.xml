@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actor_collection>
+	<actor>
+		<name>outside_thermometer</name>
+		<states>
+			<state>
+				<localName>temp</localName>
+				<path>/temperature</path>
+			</state>
+		</states>
+	</actor>
+	<actor>
+		<name>dusk_sensor</name>
+		<states>
+			<state>
+				<localName>night</localName>
+				<path>/active</path>
+			</state>
+		</states>
+	</actor>
+	<actor>
+		<name>PIR</name>
+		<states>
+			<state>
+				<localName>present</localName>
+				<path>/active</path>
+			</state>
+		</states>
+	</actor>
+	<actor>
+		<name>LED_Strip</name>
+		<states>
+			<state>
+				<localName>Red</localName>
+				<path>/R</path>
+			</state>
+			<state>
+				<localName>Green</localName>
+				<path>/G</path>
+			</state>
+			<state>
+				<localName>Blue</localName>
+				<path>/B</path>
+			</state>
+			<state>
+				<localName>brightness</localName>
+				<path>/intensity</path>
+			</state>
+			<state>
+				<localName>count</localName>
+				<path>/count</path>
+			</state>
+		</states>
+		<actions>
+			<action>
+				<triggers>
+					<trigger>PIR.present</trigger>
+				</triggers>
+				<guards>
+					<guard>
+						<check>PIR.present</check>
+						<operator>=</operator>
+						<against>True</against>
+					</guard>
+					<guard>
+						<check>dusk_sensor.night</check>
+						<operator>=</operator>
+						<against>True</against>
+					</guard>
+				</guards>
+				<updateExpressions>
+					<update>
+						<target></target>
+						<value></value>
+					</update>
+					<update>
+						<target></target>
+						<value></value>
+					</update>
+				</updateExpressions>
+			</action>
+		</actions>
+	</actor>
+</actor_collection>
+<function_collection>
+	<setColor>
+		<input>color</input>
+		<input>param</input>
+		<body>
+			if color == warm:
+				R = 201
+				G = 226
+				B = 255
+			elif color == cool:
+				R = 255
+				G = 214
+				B = 170
+			if param == R:
+				return R
+			elif param == G:
+				return G
+			else:
+				return B
+		</body>
+	</setColor>
+</function_collection>
+

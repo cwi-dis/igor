@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actor_collection>
+	<actor>
+		<name>outside_thermometer</name>
+		<states>
+			<state>
+				<localName>temp</localName>
+				<path>/temperature</path>
+			</state>
+		</states>
+		<instances>
+			<instance>
+				<name>outsideTemp</name>
+				<path>//data/sensors/thermometer[IP='192.168.37.154']</path>
+			</instance>
+		</instances>
+	</actor>
+	<actor>
+		<name>dusk_sensor</name>
+		<states>
+			<state>
+				<localName>night</localName>
+				<path>/active</path>
+			</state>
+		</states>
+		<instances>
+			<instance>
+				<name>nightSensor</name>
+				<path>//data/sensors/dusk[uuid='08a13960b72748f59de419ad2b5ee343']</path>
+			</instance>
+		</instances>
+	</actor>
+	<actor>
+		<name>PIR</name>
+		<states>
+			<state>
+				<localName>present</localName>
+				<path>/active</path>
+			</state>
+		</states>
+		<instances>
+			<instance>
+				<name>entrancePIR</name>
+				<path>//data/sensors/PIR[uuid='d06a66e10b6d4a1285143080c88b029c']</path>
+			</instance>
+		</instances>
+	</actor>
+	<actor>
+		<name>LED_Strip</name>
+		<states>
+			<state>
+				<localName>Red</localName>
+				<path>/R</path>
+			</state>
+			<state>
+				<localName>Green</localName>
+				<path>/G</path>
+			</state>
+			<state>
+				<localName>Blue</localName>
+				<path>/B</path>
+			</state>
+			<state>
+				<localName>brightness</localName>
+				<path>/intensity</path>
+			</state>
+			<state>
+				<localName>count</localName>
+				<path>/count</path>
+			</state>
+		</states>
+		<actions>
+			<action>
+				<triggers>
+					<trigger>PIR.present</trigger>
+				</triggers>
+				<guards>
+					<guard>
+						<when>
+							<check>PIR.present</check>
+							<operator>=</operator>
+							<against>True</against>
+						</when>	
+						<guard>
+							<when>
+								<check>dusk_sensor.night</check>
+								<operator>=</operator>
+								<against>True</against>
+							</when>			
+							<update>
+								<target>brightness</target>
+								<value>100</value>
+							</update>						
+							<guard>
+								<when>
+									<check>outside_thermometer.temp</check>
+									<operator>>=</operator>
+									<against>20</against>
+								</when>
+								<updateExpressions>
+									<update>
+										<target>Red</target>
+										<value>setColor(warm, Red)</value>
+									</update>
+									<update>
+										<target>Green</target>
+										<value>setColor(warm, Green)</value>
+									</update>
+									<update>
+										<target>Blue</target>
+										<value>setColor(warm, Blue)</value>
+									</update>
+								</updateExpressions>
+							</guard>
+							<guard>
+								<when>
+									<check>outside_thermometer.temp</check>
+									<operator><</operator>
+									<against>20</against>
+								</when>
+								<updateExpressions>
+									<update>
+										<target>Red</target>
+										<value>setColor(cool, Red)</value>
+									</update>
+									<update>
+										<target>Green</target>
+										<value>setColor(cool, Green)</value>
+									</update>
+									<update>
+										<target>Blue</target>
+										<value>setColor(cool, Blue)</value>
+									</update>
+								</updateExpressions>
+							</guard>
+							<else>
+								<updateExpressions>
+									<update>
+										<target>brightness</target>
+										<value>0</value>
+									</update>
+								</updateExpressions>
+							</else>
+						</guard>
+						<else>
+							<updateExpressions>
+								<update>
+									<target>brightness</target>
+									<value>0</value>
+								</update>
+							</updateExpressions>
+						</else>
+					</guard>
+				</guards>
+			</action>
+		</actions>
+		<instances>
+			<instance>
+				<name>entranceLight</name>
+				<path>LED_Strip(//data/devices/led[IP='192.168.37.45']</path>
+				<inputs>
+					<input>
+						<type>PIR</type>
+						<id>entrancePIR</id>
+					</input>
+					<input>
+						<type>dusk_sensor</type>
+						<id>nightSensor</id>
+					</input>
+					<input>
+						<type>outside_thermometer</type>
+						<id>outsideTemp</id>
+					</input>
+				</inputs>
+			</instance>
+		</instances>
+	</actor>
+</actor_collection>
+<function_collection>
+	<function>
+		<name>setColor</name>
+		<input>color</input>
+		<input>param</input>
+		<body>
+			if color == warm:
+				Red = 201
+				Green = 226
+				Blue = 255
+			elif color == cool:
+				Red = 255
+				Green = 214
+				Blue = 170
+			if param == Red:
+				return Red
+			elif param == Green:
+				return Green
+			else:
+				return Blue
+		</body>
+	</function>
+</function_collection>
+small test
+

@@ -38,7 +38,9 @@ class YogurtTrigger:
         else:
             assert 0
         self.xpath = triggeringInstance.lookupXPathForState(triggeringStateName)
-        
+        print("Testing Trigger Name:")
+        print(triggeringStateName)
+
     def dump(self):
         return f"\n\t\t\ttrigger on xpath {self.xpath}"
 
@@ -76,10 +78,11 @@ class YogurtInstance:
     
     
     def lookupTriggerInstance(self, name):
-        return self
+        return "The Trigger Instance Look up Output"
     
     def lookupXPathForState(self, name):
-        return "/"
+        state_local_name = name
+        return "State local name: " + state_local_name 
 
    
     # Function for finding instance states paths
@@ -100,6 +103,8 @@ class YogurtInstance:
             print(state)
         
         print("Test")
+        print("Look Up Trigger Instance check:")
+        print(lookupTriggerInstance("kitchen_light"))
         rv = f'\n\tInstance {self.name}:\n\t\tlocation={self.location}\n\t\tinputs={self.inputs}'
         for a in self.actions:
             rv += a.dump()

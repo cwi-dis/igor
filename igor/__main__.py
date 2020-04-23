@@ -495,7 +495,11 @@ class IgorInternal(object):
     def restart(self, token):
         """Attempt to gracefully stop and restart Igor"""
         self.save(token)
-        os.closerange(3, subprocess.MAXFD)
+        try:
+            maxfd = os.dup(1)
+        except:
+            maxfd = 999
+        os.closerange(3, maxfd)
         os.execl(sys.executable, sys.executable, *sys.argv)
 
     def version(self, token):

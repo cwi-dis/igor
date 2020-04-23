@@ -201,15 +201,15 @@ The API will need just the user name, and the same access control rules as for a
 
 ### Actions on adding a new device
 
-- Create SSL key with `igorCA` (or `iotsa/extras/make-igor-signed-cert.sh` or via _/plugin/ca_) and copy the key and certificate to the device.
-- Create a shared secret key with new device as audience, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
+- Create SSL key with `igorCA` (or `iotsa/extras/make-igor-signed-cert.sh` or via `/plugin/ca`) and copy the key and certificate to the device.
+- Create a shared secret key with new device as audience, via `/capabilities.html` or `/internal/accessControl`, and copy the secret key to the device.
 - Create an initial "allow all API actions" capability for the device (TBD) and store it in some users' space (current user? admin user?)
 	- Igor should automatically pick up the correct secret key and encode the capability with it, when talking to the device.
 - If the device is also a _sensor_, i.e. if it can also trigger actions in Igor, all of the _sensor_ actions must also be done.
 
 ### Actions on adding a new sensor
 
-- Create a shared secret key with the new sensor as subject, via _/capabilities.html_ or _/internal/accessControl_, and copy the secret key to the device.
+- Create a shared secret key with the new sensor as subject, via `/capabilities.html` or `/internal/accessControl`, and copy the secret key to the device.
 - Create a capability (with the sensor as subject and audience Igor) for each action the sensor should be able to trigger.
 - Export these capabilities (Igor will pick up the correct secret key based on the subject) and copy them to the sensor.
 
@@ -223,7 +223,7 @@ Data to be supplied to this action:
 - Hostname or IP address of the sensor (defaults to name with _.local_ appended).
 	- if _isDevice_ this will be used as the _audience_ of the first shared key.
 	- If _isSensor_ this will be used as the _subject_ of the second shared key.
-- if _isDevice_: Partial URL of the API of this device (such as _/api_). Will be the _object_ of the device access capability stored in the users' _identities_ entry.
+- if _isDevice_: Partial URL of the API of this device (such as `/api`). Will be the _object_ of the device access capability stored in the users' _identities_ entry.
 - if _isSensor_: List of (_name_, _verb_, _object_) this sensor will contact (or empty for non-sensor devices). If non-empty the sensor shared key (audience Igor, subject the sensor) will be used to sign these.
 
 Data returned:
@@ -233,7 +233,7 @@ Data returned:
 	- SSL certificate
 	- shared device key
 - if _isSensor_:
-	- List of (_name_, _verb_, _url_, _signed capability_).
+	- List of (_name_, _verb_, _url_, signed capability).
 
 Data saved in Igor database:
 

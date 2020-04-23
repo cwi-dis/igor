@@ -35,6 +35,62 @@ various different formats (text, xml, json, python).
 		such as expressions with a toplevel XPath function, it may be necessary to
 		pass the ``--eval`` switch.
 		
+Some examples may help understanding how *igorVar* can be used to access and modify your
+database. The following command will create a variable (in the ``sandbox`` section of the
+database, which is specifically there for experimenting), assuming it does not exist yet.
+It will print the full XPath of the variable created.
+
+.. code-block:: sh
+
+	igorVar --put text/plain --data "Hello world" sandbox/helloworld
+	
+Running that command multiple times will overwrite the variable. Running the following
+command is completely equivalent:
+
+.. code-block:: sh
+
+	echo "Hello World" | igorVar --put text/plain sandbox/helloworld
+
+You can get the plaintext value of variable with either of the following commands (which are completely equivalent):
+
+.. code-block:: sh
+
+	igorVar --mimetype text/plain sandbox/helloworld
+	igorVar --mimetype text/plain /data/sandbox/helloworld
+		
+The default mimetype, however, is ``application/xml`` because *igorVar* is primarily meant
+for use in scripts, not interactively by a human.
+
+To delete a variable, if it exists, use
+
+.. code-block:: sh
+
+	igorVar --delete sandbox/helloworld
+	
+Post is similar to put, but always create a new entry. So if you have no
+*helloworld* variable yet the following command line is equivalent to the first
+example. But if you run it three times you will have three variables, named
+``sandbox/helloworld[1]``, ``sandbox/helloworld[2]`` and ``sandbox/helloworld[3]``:
+
+.. code-block:: sh
+
+	igorVar --post text/plain --data "Hello world one" sandbox/helloworld
+	igorVar --post text/plain --data "Hello world two" sandbox/helloworld
+	igorVar --post text/plain --data "Hello world three" sandbox/helloworld
+	
+To retrieve one of these you *must* supply the index. Or use ``--variant multi`` but
+that only works when you want the value in JSON or XML:
+
+.. code-block:: sh
+
+	igorVar --mimetype text/plain 'sandbox/helloworld[2]'
+	igorVar --mimetype application/json --variant multi sandbox/helloworld
+	
+Note that this ``[2]`` construct is an XPath expression. Read up on XPath, it is a very
+powerful but simple language to select variables in your database. Also note that many XPath
+operators are also magical to the shell, so put your variable name in single or double
+quotes when in doubt. 
+
 igorCA
 ------
 .. index::

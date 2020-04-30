@@ -13,9 +13,15 @@
 			<host>{plugin}.local</host>
 			<protocol>https</protocol>
 			<endpoint>api</endpoint>
+			<pushMethod>PUT</pushMethod>
 			<action>
 				<xpath>/data/devices/{plugin}/target</xpath>
 				<url>/plugin/{plugin}/push</url>
+				<representing>devices/{plugin}</representing>
+			</action>
+			<action>
+				<name>pull-{plugin}</name>
+				<url>/plugin/{plugin}/pull</url>
 				<representing>devices/{plugin}</representing>
 			</action>
 			<au:needCapability>

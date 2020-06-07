@@ -1,3 +1,6 @@
+igor 0.99.3 - in progress
+- Getting rid of Python 2.7 support
+
 igor 0.99.2 - June 2020
 - Last release with Python 2.7 support
 - various cleanups in CA code

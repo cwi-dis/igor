@@ -162,7 +162,7 @@ class IgorSetupAndControl(object):
         cmd = cmdHead + ["-m", "igor", "--nologstderr", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs
         if PROFILE:
             cmd += ["--profile"]
-        if DEBUG_TEST: print('IgorTest: Start server')
+        if DEBUG_TEST: print('IgorTest: Start server: ', ' '.join(cmd))
         cls.igorProcess = subprocess.Popen(cmd)
         if DEBUG_TEST: print('IgorTest: Start servlet')
         cls.servlet = ServletHelper(

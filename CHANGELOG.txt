@@ -1,3 +1,11 @@
+igor 0.99.3 - in progress
+- Getting rid of Python 2.7 support
+
+igor 0.99.2 - June 2020
+- Last release with Python 2.7 support
+- various cleanups in CA code
+- fixed startup delay when new plugins installed
+
 igor 0.99.1 - March 2018
 - bleServer now supports nearables, iBeacons
 - new stdplugin passiveSensor (for nearables, iBeacons)

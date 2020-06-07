@@ -60,7 +60,7 @@ class IotsaPlugin(object):
         host = self.pluginData.get('host', '%s.local' % self.pluginName)
         endpoint = self.pluginData.get('endpoint', 'api')
         url = "%s://%s/%s" % (protocol, host, endpoint)
-        method = 'PUT'
+        method = self.pluginData.get('pushMethod', 'PUT')
         
         headers = {'Content-Type' : 'application/json'}
         addedTokenId = token.addToHeadersFor(headers, url)

@@ -119,7 +119,10 @@ class Action(object):
             return
         # Test whether we are allowed to run, depending on minInterval
         now = time.time()
-        if self._earliestRunTimeAfter(now) > now:
+        nextTime = self._earliestRunTimeAfter(now)
+        if nextTime > now:
+            if self.nextTime < nextTime:
+                self.nextTime = nextTime            
             return
         # Run for each node (or once, if no node present because we were not triggered by an xpath)        
         if not nodelist:

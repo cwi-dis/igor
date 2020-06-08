@@ -10,12 +10,6 @@ meaning expected rain level is 123 at 13:45.
 
 http://www.buienradar.nl/overbuienradar/gratis-weerdata has description of the format.
 """
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from past.utils import old_div
 import sys
 import os
 import urllib.request, urllib.parse, urllib.error
@@ -53,8 +47,8 @@ def process(input):
     measurementList = []
     for level, (hh, mm) in parselines(input):
         timestamp = nearestTime(hh, mm)
-        intensity = 10**(old_div((level-109),32.0))
-        intensity = old_div(int(intensity*100),100.0)
+        intensity = 10**((level-109) / 32.0)
+        intensity = int(intensity)
         measurementList.append(dict(time=timestamp, hour=hh, minute=mm, level=level, mm=intensity))
     if not measurementList: return False
     rv = dict(lastActivity=datetime.datetime.now().isoformat(), data=measurementList)

@@ -1,10 +1,8 @@
 """Sample plugin module for Igor"""
-from __future__ import unicode_literals
 import requests
 import os
 import lnetatmo
 
-from builtins import object
 class NetatmoPlugin(object):
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor

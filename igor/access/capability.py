@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 from .vars import *
 import base64
 import urllib.parse

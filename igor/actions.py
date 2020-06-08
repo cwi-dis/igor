@@ -1,11 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from past.builtins import cmp
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import re
 import urllib.request, urllib.parse, urllib.error
 import time
@@ -242,8 +234,18 @@ class Action(object):
             text = text[match.end():]
         return newtext
         
-    def __cmp__(self, other):
-        return cmp(self.nextTime, other.nextTime)
+    def __eq__(self, other):
+        return self.nextTime == other.nextTime
+    def __ne__(self, other):
+        return self.nextTime != other.nextTime
+    def __lt__(self, other):
+        return self.nextTime < other.nextTime
+    def __le__(self, other):
+        return self.nextTime <= other.nextTime
+    def __gt__(self, other):
+        return self.nextTime > other.nextTime
+    def __ge__(self, other):
+        return self.nextTime >= other.nextTime
         
     def __hash__(self):
         return id(self)

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-from builtins import object
 __author__ = 'erik@precompiled.com'
 
 import usb.core

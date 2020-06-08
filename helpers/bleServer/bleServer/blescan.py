@@ -1,10 +1,4 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 DEBUG = False
 # BLE scanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 # BLE scanner, based on https://code.google.com/p/pybluez/source/browse/trunk/examples/advanced/inquiry-with-rssi.py

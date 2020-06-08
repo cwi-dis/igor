@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 AU_NAMESPACE = {
     "au":"http://jackjansen.nl/igor/authentication",

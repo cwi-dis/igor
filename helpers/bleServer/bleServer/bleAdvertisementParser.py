@@ -6,10 +6,6 @@ Created on Tue Feb  7 15:50:37 2017
 @author: Sergio Cabrero
 @email: s.cabrero@cwi.nl
 """
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import str
-from past.utils import old_div
 from struct import unpack
 import uuid
 import binascii
@@ -123,9 +119,9 @@ def parse_mf_sensortag(payload):
     correct = True
     adv['version'] = unpack("B", payload[0:1])[0]
 
-    x_axis = old_div(unpack("h", payload[3:5])[0], float(old_div(32768, 2)))
-    y_axis = old_div(unpack("h", payload[5:7])[0], float(old_div(32768, 2)))
-    z_axis = old_div(unpack("h", payload[7:9])[0], float(old_div(32768, 2)))
+    x_axis = unpack("h", payload[3:5])[0]) / 32768
+    y_axis = unpack("h", payload[5:7])[0]) / 32768
+    z_axis = unpack("h", payload[7:9])[0]) / 32768
     adv['accelerometer'] = {'x':x_axis, 'y': y_axis, 'z': z_axis}
 
     def __compute_temp(raw_temp):
@@ -154,9 +150,9 @@ def parse_mf_estimote(payload):
     raw_temp = (unpack("<H", payload[11:13])[0] & 0x0fff) << 4
 
     if (raw_temp & 0x8000) != 0:
-        adv['temp'] = old_div(((raw_temp & 0x7fff) - 32768), 256.0)
+        adv['temp'] = ((raw_temp & 0x7fff) - 32768) / 256
     else:
-        adv['temp']  = old_div(raw_temp, 256.0)
+        adv['temp']  = raw_temp / 256
 
     adv['moving'] = unpack("B", payload[13:14])[0] & 0x40 != 0
 

@@ -1,9 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from builtins import str
-from past.builtins import basestring
-from builtins import object
 import gevent.pywsgi
 from flask import Flask, Response, request, abort, redirect, jsonify, make_response, after_this_request, session
 import werkzeug.exceptions
@@ -802,7 +796,7 @@ class XmlDatabaseAccess(object):
         
     def convertto(self, value, mimetype, variant):
         if variant == 'ref':
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 myWebError("400 Bad request, cannot use .VARIANT=ref for this operation", 400)
             if mimetype == "application/json":
                 return json.dumps({"ref":value})+'\n'

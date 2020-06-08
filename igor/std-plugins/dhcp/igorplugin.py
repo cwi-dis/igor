@@ -1,11 +1,9 @@
 """Sample plugin module for Igor"""
-from __future__ import unicode_literals
 import requests
 import os
 import dhcpleases
 import time
 
-from builtins import object
 class DHCPPlugin(object):
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor

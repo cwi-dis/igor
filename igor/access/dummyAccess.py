@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-# Access control
-from builtins import object
 from .consistency import StructuralConsistency
 
 NAMESPACES = { 

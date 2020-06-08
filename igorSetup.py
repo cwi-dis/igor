@@ -266,7 +266,8 @@ class IgorSetup:
         keyFilename = os.path.join(self.database, 'igor.key')
         certFilename = os.path.join(self.database, 'igor.crt')
     
-        open(confFilename, 'w').write(confData)
+        with open(confFilename, 'w') as fp:
+            fp.write(confData)
         sslCommand = OPENSSL_COMMAND % (confFilename, keyFilename, certFilename)
         self.runcmds += [sslCommand]
         return True

@@ -128,14 +128,14 @@ class IgorSetupAndControl:
         setup.postprocess(run=True)
 
         logFile = os.path.join(cls.igorDir, 'igor.log')
-        logFP = open(logFile, 'a')
         
         if cls.igorProtocol == 'https':
             if DEBUG_TEST: print('IgorTest: setup self-signed signature')
             ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname)
 #            ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname, cls.igorHostname2, '127.0.0.1', '::1')
             assert ok
-            setup.postprocess(run=True, subprocessArgs=dict(stdout=logFP, stderr=subprocess.STDOUT))
+            with open(logFile, 'a') as outputfile:
+                setup.postprocess(run=True, subprocessArgs=dict(stdout=outputfile, stderr=subprocess.STDOUT))
             certFile = os.path.join(cls.igorDir, 'igor.crt')
             cls.igorVarArgs['certificate'] = certFile
 #            cls.igorVarArgs['noverify'] = True

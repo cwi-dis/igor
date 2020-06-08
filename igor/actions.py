@@ -69,6 +69,9 @@ class Action:
         
     def __eq__(self, other):
         return id(self) == id(other)
+
+    def __hash__(self):
+        return id(self)
         
     def matches(self, element):
         """Check to see whether this action matches the given element (used during update)"""
@@ -233,22 +236,6 @@ class Action:
             newtext = newtext + text[:match.start()] + replacement
             text = text[match.end():]
         return newtext
-        
-    def __eq__(self, other):
-        return self.nextTime == other.nextTime
-    def __ne__(self, other):
-        return self.nextTime != other.nextTime
-    def __lt__(self, other):
-        return self.nextTime < other.nextTime
-    def __le__(self, other):
-        return self.nextTime <= other.nextTime
-    def __gt__(self, other):
-        return self.nextTime > other.nextTime
-    def __ge__(self, other):
-        return self.nextTime >= other.nextTime
-        
-    def __hash__(self):
-        return id(self)
                 
 class ActionCollection(threading.Thread):
     def __init__(self, igor):

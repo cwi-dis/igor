@@ -2,13 +2,13 @@ language: python
 python: 
     - "3.6"
 install:
-    - pip install future coverage coveralls
-    - pip install -r requirements.txt
-    - python setup.py -q install
+    - python3 -m pip install future coverage coveralls
+    - python3 -m pip install -r requirements.txt
+    - python3 setup.py -q install
 script:
-    - COVERAGE_PROCESS_START=.coveragerc.thread python setup.py test
-    - COVERAGE_PROCESS_START=.coveragerc.gevent python setup.py test
-    - python -m test.perf_igor
+    - COVERAGE_PROCESS_START=.coveragerc.thread python3 setup.py test
+    - COVERAGE_PROCESS_START=.coveragerc.gevent python3 setup.py test
+    - python3 -m test.perf_igor
 #    - cat test/fixtures/testIgor*/igor.log
 after_success:
     - coverage combine

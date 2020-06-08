@@ -84,13 +84,13 @@ class TokenStorage:
     def _loadTokenWithIdentifier(self, identifier):
         if identifier in self._tokenCache:
             return self._tokenCache[identifier]
-        capNodeList = self.igor.database.getElements("//au:capability[cid='%s']" % identifier, 'get', _accessSelfToken, namespaces=NAMESPACES)
+        capNodeList = self.igor.database.getElements(f"//au:capability[cid='{identifier}']", 'get', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
-            print('access: Warning: Cannot get token %s because it is not in the database' % identifier)
-            self.igor.app.raiseHTTPError("500 Access: no capability with cid=%s" % identifier)
+            print(f'access: Warning: Cannot get token {identifier} because it is not in the database')
+            self.igor.app.raiseHTTPError(f"500 Access: no capability with cid={identifier}")
         elif len(capNodeList) > 1:
-            print('access: Error: Cannot get token %s because it occurs %d times in the database' % (identifier, len(capNodeList)))
-            self.igor.app.raiseHTTPError("500 Access: multiple capabilities with cid=%s" % identifier)
+            print(f'access: Error: Cannot get token {identifier} because it occurs {len(capNodeList)} times in the database')
+            self.igor.app.raiseHTTPError(f"500 Access: multiple capabilities with cid={identifier}")
         capData = self.igor.database.tagAndDictFromElement(capNodeList[0])[1]
         return AccessToken(capData)
 
@@ -109,11 +109,11 @@ class TokenStorage:
         """Internal method - Return token(s) for a user with the given name"""
         if not username or '/' in username:
             self.igor.app.raiseHTTPError('401 Illegal username')
-        elements = self.igor.database.getElements('identities/%s' % username, 'get', _accessSelfToken)
+        elements = self.igor.database.getElements(f'identities/{username}', 'get', _accessSelfToken)
         if len(elements) != 1:
-            self.igor.app.raiseHTTPError('501 Database error: %d users named %s' % (len(elements), username))
+            self.igor.app.raiseHTTPError('f501 Database error: {len(elements)} users named {username}')
         element = elements[0]
-        token = self._tokenForElement(element, owner='identities/%s' % username)
+        token = self._tokenForElement(element, owner=f'identities/{username}')
         tokenForAllUsers = self._tokenForElement(element.parentNode)
         token = _combineTokens(token, tokenForAllUsers)
         return _combineTokens(token, self._defaultToken())
@@ -181,7 +181,7 @@ class UserPasswords:
             return False
         if '/' in username:
             self.igor.app.raiseHTTPError('401 Illegal username')
-        encryptedPassword = self.igor.database.getValue('identities/%s/encryptedPassword' % username, _accessSelfToken)
+        encryptedPassword = self.igor.database.getValue(f'identities/{username}/encryptedPassword', _accessSelfToken)
         if not encryptedPassword:
             if DEBUG: print('access: basic authentication: no encryptedPassword for user', username)
             return True
@@ -203,12 +203,12 @@ class UserPasswords:
         import passlib.hash
         passwordHash = passlib.hash.pbkdf2_sha256.hash(password)
         element = self.igor.database.elementFromTagAndData('encryptedPassword', passwordHash)
-        self.igor.database.delValues('identities/%s/encryptedPassword' % username, token)
-        parentElements = self.igor.database.getElements('identities/%s' % username, 'post', token, postChild='encryptedPassword')
+        self.igor.database.delValues(f'identities/{username}/encryptedPassword', token)
+        parentElements = self.igor.database.getElements(f'identities/{username}', 'post', token, postChild='encryptedPassword')
         if len(parentElements) == 0:
-            self.igor.app.raiseHTTPError('404 User %s not found' % username)
+            self.igor.app.raiseHTTPError(f'404 User {username} not found')
         if len(parentElements) > 1:
-            self.igor.app.raiseHTTPError('404 Multiple entries for user %s' % username)
+            self.igor.app.raiseHTTPError(f'404 Multiple entries for user {username}')
         parentElement = parentElements[0]
         parentElement.appendChild(element)
         self.igor.database.setChanged()
@@ -246,24 +246,24 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             return DefaultAccessChecker(self)
         path = self.igor.database.getXPathForElement(element)
         if not path:
-            print('access: ERROR: attempt to get checkerForElement(%s) that has no XPath' % repr(element))
+            print(f'access: ERROR: attempt to get checkerForElement({repr(element)}) that has no XPath')
             return DefaultAccessChecker(self)
         if not path.startswith('/data'):
-            print('access: ERROR: attempt to get checkerForElement(%s) with unexpected XPath: %s' % (repr(element), path))
+            print(f'access: ERROR: attempt to get checkerForElement({repr(element)}) with unexpected XPath: {path}')
             return DefaultAccessChecker(self)
         return AccessChecker(self, path)
         
     def checkerForNewElement(self, path):
         """Returns an AccessChecker for an element that does not exist yet (specified by XPath)"""
         if not path.startswith('/data'):
-            print('access: ERROR: attempt to get checkerForNewElement() with unexpected XPath: %s' %  path)
+            print(f'access: ERROR: attempt to get checkerForNewElement() with unexpected XPath: {path}')
             return DefaultAccessChecker(self)
         return AccessChecker(self, path)
             
     def checkerForEntrypoint(self, entrypoint):
         """Returns an AccessChecker for an external entrypoint that is not a tree element"""
         if not entrypoint or entrypoint[0] != '/' or entrypoint.startswith('/data'):
-            print('access: ERROR: attempt to get checkerForEntrypoint(%s)' % entrypoint)
+            print(f'access: ERROR: attempt to get checkerForEntrypoint({entrypoint})')
             return DefaultAccessChecker(self)
         return AccessChecker(self, entrypoint)
         
@@ -271,18 +271,18 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         if not kwargs.get('tentative'):
             # We don't report errors for tentative checking of access
             if kwargs.get('defaultChecker'):
-                print('\taccess: %s ???: no access allowed by default checker' % operation)
+                print(f'\taccess: {operation} ???: no access allowed by default checker')
             else:
                 identifiers = kwargs.get('capID', [])
-                print('\taccess: %s %s: no access allowed by %d tokens:' % (kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers)))
+                print('\taccess: {} {}: no access allowed by {} tokens:'.format(kwargs.get('operation', '???'), kwargs.get('path', '???'), len(identifiers)))
                 for i in identifiers:
-                    print('\t\t%s' % i)
+                    print(f'\t\t{i}')
             if 'requestPath' in kwargs:
-                print('\taccess: On behalf of request to %s' % kwargs['requestPath'])
+                print('\taccess: On behalf of request to {}'.format(kwargs['requestPath']))
             if 'action' in kwargs:
-                print('\taccess: On behalf of action %s' % kwargs['action'])
+                print('\taccess: On behalf of action {}'.format(kwargs['action']))
             if 'representing' in kwargs:
-                print('\taccess: Representing  %s' % kwargs['representing'])
+                print('\taccess: Representing  {}'.format(kwargs['representing']))
             self.igor.internal._accessFailure(kwargs)
             if self.warnOnly:
                 print('\taccess: allowed anyway because of --warncapabilities mode')
@@ -306,7 +306,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         assert self.igor
         assert self.igor.database
         tokenForPlugin = None
-        elements = self.igor.database.getElements("plugindata/%s" % pluginname, 'get', _accessSelfToken)
+        elements = self.igor.database.getElements(f"plugindata/{pluginname}", 'get', _accessSelfToken)
         if elements:
             tokenForPlugin = self._tokenForElement(elements[0])
         token = _combineTokens(token, tokenForPlugin)
@@ -340,7 +340,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                     return self._consumeOTPForToken(decoded)
                 else:
                     username, password = decoded.split(':')
-                    if DEBUG: print('access: tokenForRequest: searching for token for Authorization: Basic %s:xxxxxx header' % username)
+                    if DEBUG: print(f'access: tokenForRequest: searching for token for Authorization: Basic {username}:xxxxxx header')
                     if self.userAndPasswordCorrect(username, password):
                         # _tokenForUser already includes the default set, so just return.
                         return self._tokenForUser(username)
@@ -350,10 +350,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             return _combineTokens(token, self._defaultToken())
         user = self.igor.app.getSessionItem('user')
         if user:
-            if DEBUG: print('access: tokenForRequest: returning token for session.user %s' % user)
+            if DEBUG: print(f'access: tokenForRequest: returning token for session.user {user}')
             return self._tokenForUser(user)
         # xxxjack should we allow carrying tokens in cookies?
-        if DEBUG: print('access: no token found for request %s' % headers.get('PATH_INFO', '???'), 'returning', self._defaultToken())
+        if DEBUG: print('access: no token found for request {}'.format(headers.get('PATH_INFO', '???')), 'returning', self._defaultToken())
         return self._defaultToken()
         
     def externalTokenForHost(self, host, token=None):
@@ -392,10 +392,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         content = self._decodeIncomingData(data)
         cid = content.get('cid')
         if not cid:
-            print('access: ERROR: no cid on bearer token %s' % content)
+            print(f'access: ERROR: no cid on bearer token {content}')
             self.igor.app.raiseHTTPError('400 Missing cid on key')
         if singleton._isTokenOnRevokeList(cid):
-            print('access: ERROR: token has been revoked: %s' % content)
+            print(f'access: ERROR: token has been revoked: {content}')
             self.igor.app.raiseHTTPError('400 Revoked token')
         return ExternalAccessTokenImplementation(content)
     
@@ -406,10 +406,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             token = token._getTokenWithIdentifier(tokenId)
             if not token:
                 identifiers = originalToken.getIdentifiers()
-                print('\taccess: getTokenDescription: no such token ID: %s. Tokens:' % tokenId)
+                print(f'\taccess: getTokenDescription: no such token ID: {tokenId}. Tokens:')
                 for i in identifiers:
-                    print('\t\t%s' % i)
-                self.igor.app.raiseHTTPError('404 No such token: %s' % tokenId)
+                    print(f'\t\t{i}')
+                self.igor.app.raiseHTTPError(f'404 No such token: {tokenId}')
         return token._getTokenDescription()
         
     def newToken(self, token, tokenId, newOwner, newPath=None, **kwargs):
@@ -436,10 +436,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
                 newPath = token._getObject()
         if not token:
             identifiers = originalToken.getIdentifiers()
-            print('\taccess: newToken: no such token ID: %s. Tokens:' % tokenId)
+            print(f'\taccess: newToken: no such token ID: {tokenId}. Tokens:')
             for i in identifiers:
-                print('\t\t%s' % i)
-            self.igor.app.raiseHTTPError('404 No such token: %s' % tokenId)
+                print(f'\t\t{i}')
+            self.igor.app.raiseHTTPError(f'404 No such token: {tokenId}')
         if not token._allowsDelegation(newPath, newRights, content.get('aud')):
             self.igor.app.raiseHTTPError('401 Delegation not allowed')
         #
@@ -447,7 +447,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         #
         parentElement = self.igor.database.getElements(newOwner, 'post', _accessSelfToken, namespaces=NAMESPACES)
         if len(parentElement) != 1:
-            if DEBUG_DELEGATION: print('access: newToken: no unique destination %s' % newOwner)
+            if DEBUG_DELEGATION: print(f'access: newToken: no unique destination {newOwner}')
             self.igor.app.raiseNotfound()
         parentElement = parentElement[0]
         #
@@ -503,7 +503,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             # Otherwise we have to create it from the tokens we are carrying
             compatibleTokenIDs = self.findCompatibleTokens(token, path, **need)
             if not compatibleTokenIDs:
-                self.igor.app.raiseHTTPError("401 No rights to create capability for %s" % self.igor.database.getXPathForElement(needElement))
+                self.igor.app.raiseHTTPError(f"401 No rights to create capability for {self.igor.database.getXPathForElement(needElement)}")
             # Remember for later creation
             toCreate.append((compatibleTokenIDs[0], path, need, newOwner))
         # Now create all the needed capabilities
@@ -540,17 +540,17 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         tokenToPass = token._getTokenWithIdentifier(tokenId)
         if not tokenToPass:
             identifiers = originalToken.getIdentifiers()
-            print('\taccess: passToken: no such token ID: %s. Tokens:' % tokenId)
+            print(f'\taccess: passToken: no such token ID: {tokenId}. Tokens:')
             for i in identifiers:
-                print('\t\t%s' % i)
-            self.igor.app.raiseHTTPError("401 No such token: %s" % tokenId)
+                print(f'\t\t{i}')
+            self.igor.app.raiseHTTPError(f"401 No such token: {tokenId}")
         oldOwner = tokenToPass._getOwner()
         if not oldOwner:
-            self.igor.app.raiseHTTPError("401 Not owner of token %s" % tokenId)
+            self.igor.app.raiseHTTPError(f"401 Not owner of token {tokenId}")
         if oldOwner == newOwner:
             return ''
         if not tokenToPass._setOwner(newOwner):
-            self.igor.app.raiseHTTPError("401 Cannot move token %s to new owner %s" % (tokenId, newOwner))
+            self.igor.app.raiseHTTPError(f"401 Cannot move token {tokenId} to new owner {newOwner}")
         token._removeToken(tokenId)
         #
         # Save
@@ -563,10 +563,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         parentToken = token._getTokenWithIdentifier(parentId)
         if not parentToken:
             identifiers = token.getIdentifiers()
-            print('\taccess: revokeToken: no such token ID: %s. Tokens:' % parentId)
+            print(f'\taccess: revokeToken: no such token ID: {parentId}. Tokens:')
             for i in identifiers:
-                print('\t\t%s' % i)
-            self.igor.app.raiseHTTPError("404 No such parent token: %s" % parentId)
+                print(f'\t\t{i}')
+            self.igor.app.raiseHTTPError(f"404 No such parent token: {parentId}")
         self._revokeRecursive(parentToken, tokenId, raiseError=True)
         #
         # Save
@@ -578,11 +578,11 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """Helper for revoking a token"""
         childToken = parentToken._getTokenWithIdentifier(childTokenId)
         if not childToken:
-            print('\taccess: revokeToken: no such token ID: %s. Tokens:' % childTokenId)
+            print(f'\taccess: revokeToken: no such token ID: {childTokenId}. Tokens:')
             for i in identifiers:
-                print('\t\t%s' % i)
+                print(f'\t\t{i}')
             if raiseError:
-                self.igor.app.raiseHTTPError("404 No such token: %s" % childTokenId)
+                self.igor.app.raiseHTTPError(f"404 No such token: {childTokenId}")
             print('Warning: ignored unknown token during recursive revoke')
             return
         # First do the recursion
@@ -625,7 +625,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
             parentToken = token._getTokenWithIdentifier(tokenId)
             tokenToExport = parentToken._getTokenWithIdentifier(newTokenId)
         if not tokenToExport:
-            self.igor.app.raiseHTTPError('500 created token %s but it does not exist' % newTokenId)
+            self.igor.app.raiseHTTPError(f'500 created token {newTokenId} but it does not exist')
         #
         # Create the external representation
         #
@@ -643,10 +643,10 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         tokenToExport = token._getTokenWithIdentifier(tokenId, recursive=True)
         if not tokenToExport:
             identifiers = token.getIdentifiers()
-            print('\taccess: externalRepresentation: no such token ID: %s. Tokens:' % tokenId)
+            print(f'\taccess: externalRepresentation: no such token ID: {tokenId}. Tokens:')
             for i in identifiers:
-                print('\t\t%s' % i)
-            self.igor.app.raiseHTTPError("401 No such token: %s" % tokenId)
+                print(f'\t\t{i}')
+            self.igor.app.raiseHTTPError(f"401 No such token: {tokenId}")
         assert tokenToExport._hasExternalRepresentationFor(self.getSelfAudience())
         externalRepresentation = tokenToExport._getExternalRepresentation()
         return externalRepresentation

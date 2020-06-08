@@ -221,7 +221,7 @@ class IgorServer:
         protocol = 'http'
         if self._do_ssl:
             protocol = 'https'
-        url = '%s://%s:%d/data' % (protocol, hostName, self.port)
+        url = f'{protocol}://{hostName}:{self.port}/data'
         oldRebootCount = self.database.getValue('/data/services/igor/rebootCount', token=self.access.tokenForIgor())
         rebootCount = 0
         if oldRebootCount:
@@ -347,7 +347,7 @@ class IgorInternal:
         else:
             _ = self.igor.databaseAccessor.put_key(key + '/lastFailure', 'application/x-python-object', None, lastActivity, 'application/x-python-object', token)
             if not resultData:
-                resultData = '%s failed without error message' % representing
+                resultData = f'{representing} failed without error message'
         if type(resultData) == type({}):
             for k, v in list(resultData.items()):
                 _ = self.igor.databaseAccessor.put_key(key + '/' + k, 'application/x-python-object', None, v, 'application/x-python-object', token)
@@ -421,10 +421,10 @@ class IgorInternal:
         """Mechanism behind running actions. Not intended for human use."""
         if not self.igor.actionHandler:
             self.igor.app.raiseNotfound()
-        nodes = self.igor.database.getElements('actions/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
+        nodes = self.igor.database.getElements(f'actions/action[name="{actionname}"]', 'get', self.igor.access.tokenForIgor())
         # If this is an igor-administrative action also run it within plugins
         if actionname[0] == '_':
-            nodes += self.igor.database.getElements('plugindata/*/action[name="%s"]'%actionname, 'get', self.igor.access.tokenForIgor())
+            nodes += self.igor.database.getElements(f'plugindata/*/action[name="{actionname}"]', 'get', self.igor.access.tokenForIgor())
         elif not nodes:
             # For a user-called action it's an error if it doesn't exist
             self.igor.app.raiseNotfound()
@@ -436,7 +436,7 @@ class IgorInternal:
         """Mechanism behind running plugin actions. Not intended for human use."""
         if not self.igor.actionHandler:
             self.igor.app.raiseNotfound()
-        nodes = self.igor.database.getElements('plugindata/%s/action[name="%s"]'%(pluginname, actionname), 'get', self.igor.access.tokenForIgor())
+        nodes = self.igor.database.getElements(f'plugindata/{pluginname}/action[name="{actionname}"]', 'get', self.igor.access.tokenForIgor())
         if not nodes:
             self.igor.app.raiseNotfound()
         for node in nodes:
@@ -448,11 +448,11 @@ class IgorInternal:
         self.igor.app.raiseHTTPError("502 triggers not yet implemented")
         if not self.igor.triggerHandler:
             self.igor.app.raiseNotfound()
-        triggerNodes = self.igor.database.getElements('triggers/%s' % triggername, 'get', self.igor.access.tokenForIgor())
+        triggerNodes = self.igor.database.getElements(f'triggers/{triggername}', 'get', self.igor.access.tokenForIgor())
         if not triggerNodes:
             self.igor.app.raiseNotfound()
         if len(triggerNodes) > 1:
-            self.igor.app.raiseHTTPError("502 multiple triggers %s in database" % triggername)
+            self.igor.app.raiseHTTPError(f"502 multiple triggers {triggername} in database")
         triggerNode = triggerNodes[0]
         self.igor.triggerHandler.triggerTrigger(triggerNode)
         
@@ -467,7 +467,7 @@ class IgorInternal:
         
     def queue(self, subcommand, token):
         """Queues an internal command through callUrl (used for save/stop/restart). Not intended for human use."""
-        self.igor.urlCaller.callURL(dict(method='GET', url='/internal/%s' % subcommand, token=token))
+        self.igor.urlCaller.callURL(dict(method='GET', url=f'/internal/{subcommand}', token=token))
         return 'OK'
         
     def flush(self, token=None, timeout=None):
@@ -515,7 +515,7 @@ class IgorInternal:
         commands.sort()
         rv = 'Internal Igor commands:\n'
         for name, doc in commands:
-            rv += '%s - %s\n' % (name, doc)
+            rv += f'{name} - {doc}\n'
         return rv
         
 def main():
@@ -528,7 +528,7 @@ def main():
         DEFAULTDIR = int(os.environ['IGORSERVER_PORT'])
         
     parser = argparse.ArgumentParser(description="Run the Igor home automation server")
-    parser.add_argument("-d", "--database", metavar="DIR", help="Database and scripts are stored in DIR (default: %s, environment IGORSERVER_DIR)" % DEFAULTDIR, default=DEFAULTDIR)
+    parser.add_argument("-d", "--database", metavar="DIR", help=f"Database and scripts are stored in DIR (default: {DEFAULTDIR}, environment IGORSERVER_DIR)" , default=DEFAULTDIR)
     parser.add_argument("-p", "--port", metavar="PORT", type=int, help="Port to serve on (default: 9333, environment IGORSERVER_PORT)", default=DEFAULTPORT)
     parser.add_argument("-s", "--nossl", action="store_true", help="Do no use https (ssl) on the service, even if certificates are available")
     parser.add_argument("--noCapabilities", action="store_true", help="Disable access control via capabilities (allowing all access)")
@@ -569,13 +569,13 @@ def main():
         elif args.debug in ('webApp', 'all'): webApp.DEBUG = True
         elif args.debug in ('access', 'all'): access.DEBUG.append(True)
         else:
-            print("%s: --debug argument should be modulename or 'all'" % sysargv[0], file=sys.stderr)
+            print(f"{sys.argv[0]}: --debug argument should be modulename or 'all'", file=sys.stderr)
             sys.eit(1)
     datadir = args.database
-    print('igorServer %s running from %s' % (VERSION, sys.argv[0]), file=sys.stderr)
-    print('igorServer from %s' % __file__, file=sys.stderr)
+    print(f'igorServer {VERSION} running from {sys.argv[0]}', file=sys.stderr)
+    print(f'igorServer from {__file__}', file=sys.stderr)
     print('igorServer using python %d.%d.%d' % sys.version_info[:3], file=sys.stderr)
-    print('igorServer port %d' % args.port, file=sys.stderr)
+    print(f'igorServer port {args.port}', file=sys.stderr)
     
     if args.rootCertificates:
         os.putenv('REQUESTS_CA_BUNDLE', args.rootCertificates)
@@ -590,8 +590,8 @@ def main():
     try:
         igorServer = IgorServer(datadir, args.port, args.advertise, profile=args.profile, nossl=args.nossl, nologger=args.nologfile)
     except IOError as arg:
-        print('%s: Cannot open database: %s' % (sys.argv[0], arg), file=sys.stderr)
-        print('%s: Use --help option to see command line arguments' % sys.argv[0], file=sys.stderr)
+        print(f'{sys.argv[0]}: Cannot open database: {arg}', file=sys.stderr)
+        print(f'{sys.argv[0]}: Use --help option to see command line arguments', file=sys.stderr)
         sys.exit(1)
     if args.fix or args.check:
         igorServer.check(args.fix, extended=args.extended)

@@ -20,6 +20,7 @@ def parselines(input):
     """Return a buienradard input file as (level, (hh, mm)) tuples."""
     for line in input:
         line = line.strip()
+        if not isinstance(line, str): line = line.decode('utf-8')
         levelStr, hhmmStr = line.split('|')
         hhStr, mmStr = hhmmStr.split(':')
         yield (int(levelStr), (int(hhStr), int(mmStr)))

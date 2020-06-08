@@ -1,10 +1,8 @@
 """Sample plugin module for Igor"""
-from __future__ import unicode_literals
 import requests
 import os
 
-from builtins import object
-class IotsaPlugin(object):
+class IotsaPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName
@@ -60,7 +58,7 @@ class IotsaPlugin(object):
         host = self.pluginData.get('host', '%s.local' % self.pluginName)
         endpoint = self.pluginData.get('endpoint', 'api')
         url = "%s://%s/%s" % (protocol, host, endpoint)
-        method = 'PUT'
+        method = self.pluginData.get('pushMethod', 'PUT')
         
         headers = {'Content-Type' : 'application/json'}
         addedTokenId = token.addToHeadersFor(headers, url)

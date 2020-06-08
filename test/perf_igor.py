@@ -1,10 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from past.utils import old_div
 import os
 import sys
 import json
@@ -27,9 +20,9 @@ MEASUREMENT_MIN_DURATION=2
 MEASUREMENT_MIN_COUNT=10
 
 def _meanAndSigma(measurements):
-    mean = old_div(sum(measurements),len(measurements))
+    mean = sum(measurements) // len(measurements)
     sumSquares = sum([(x-mean)**2 for x in measurements])
-    sigma = math.sqrt(old_div(sumSquares,(len(measurements)-1)))
+    sigma = math.sqrt(sumSquares // (len(measurements)-1))
     return mean, sigma
             
 class IgorPerf(IgorSetupAndControl):

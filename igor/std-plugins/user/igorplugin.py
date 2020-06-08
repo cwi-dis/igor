@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import object
 import os
 import sys
 import re
@@ -9,7 +6,7 @@ NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
 DEBUG=False
 
-class UserPlugin(object):
+class UserPlugin:
     def __init__(self, igor):
         self.igor = igor
     

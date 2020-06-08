@@ -5,7 +5,6 @@ Prerequisites
 -------------
 
 You need to have Python 3.6 or later installed.
-(Python 2.7 is also still supported but Python 3 is preferred).
 
 You need *pip* and *setuptools* (if not already included in your Python installation). Installing Python's package installation program *pip* will also install *setuptools*.
 

@@ -1,11 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-# Access control
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import random
 import urllib.parse
 import os
@@ -19,7 +11,7 @@ from .. import xmlDatabase
 
 _accessSelfToken = None # Set by __init__ after importing
 
-class IssuerInterface(object):
+class IssuerInterface:
     """Implement interface to the issuer"""
     def __init__(self):
         self._self_audience = None

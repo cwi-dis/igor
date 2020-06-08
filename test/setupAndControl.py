@@ -1,7 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
 # Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
 try:
     import coverage
@@ -30,7 +26,7 @@ if DEBUG_TEST:
     igorVar.VERBOSE=DEBUG_TEST
     igorServlet.DEBUG=DEBUG_TEST
 
-class ServletHelper(object):
+class ServletHelper:
     def __init__(self, port, protocol, capabilities, database, audience):
         self.lock = threading.Lock()
         self.requestReceived = threading.Condition(self.lock)
@@ -96,7 +92,7 @@ class ServletHelper(object):
     def setIssuer(self, issuer, sharedKey):
         return self.server.setIssuer(issuer, sharedKey)
     
-class IgorSetupAndControl(object):
+class IgorSetupAndControl:
     """Mixin class for both testing and performance measurements"""
     
     #
@@ -132,14 +128,14 @@ class IgorSetupAndControl(object):
         setup.postprocess(run=True)
 
         logFile = os.path.join(cls.igorDir, 'igor.log')
-        logFP = open(logFile, 'a')
         
         if cls.igorProtocol == 'https':
             if DEBUG_TEST: print('IgorTest: setup self-signed signature')
             ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname)
 #            ok = setup.cmd_certificateSelfsigned('/CN=%s' % cls.igorHostname, cls.igorHostname, cls.igorHostname2, '127.0.0.1', '::1')
             assert ok
-            setup.postprocess(run=True, subprocessArgs=dict(stdout=logFP, stderr=subprocess.STDOUT))
+            with open(logFile, 'a') as outputfile:
+                setup.postprocess(run=True, subprocessArgs=dict(stdout=outputfile, stderr=subprocess.STDOUT))
             certFile = os.path.join(cls.igorDir, 'igor.crt')
             cls.igorVarArgs['certificate'] = certFile
 #            cls.igorVarArgs['noverify'] = True
@@ -162,7 +158,7 @@ class IgorSetupAndControl(object):
         cmd = cmdHead + ["-m", "igor", "--nologstderr", "--database", cls.igorDir, "--port", str(cls.igorPort)] + cls.igorServerArgs
         if PROFILE:
             cmd += ["--profile"]
-        if DEBUG_TEST: print('IgorTest: Start server')
+        if DEBUG_TEST: print('IgorTest: Start server: ', ' '.join(cmd))
         cls.igorProcess = subprocess.Popen(cmd)
         if DEBUG_TEST: print('IgorTest: Start servlet')
         cls.servlet = ServletHelper(

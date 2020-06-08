@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 import serial
 import sys
 import argparse
@@ -16,7 +11,7 @@ DEFAULT_SERIAL='/dev/tty.usbserial-A700ekiO'
 DEFAULT_BAUD=57600
 DEFAULT_TIMEOUT=0.5
 
-class RFIDReader(object):
+class RFIDReader:
     def __init__(self, port, baudrate, timeout):
         if DEBUG: print('opening', port)
         self.port = serial.Serial(port, baudrate=baudrate, timeout=timeout)

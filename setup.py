@@ -13,7 +13,6 @@ except ImportError:
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 # To use a consistent encoding
-from codecs import open
 from os import path
 import os
 import sys
@@ -92,7 +91,6 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
     ],
 
@@ -111,7 +109,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires= ["future", "httplib2", "requests", "flask", "gevent", "python-dateutil", "py-dom-xpath-six", "passlib", "pyjwt", "pyopenssl", "markdown"],
+    install_requires= ["httplib2", "requests", "flask", "gevent", "python-dateutil", "py-dom-xpath-six", "passlib", "pyjwt", "pyopenssl", "markdown"],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

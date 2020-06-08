@@ -1,12 +1,10 @@
-from __future__ import unicode_literals
-from builtins import object
 __author__ = 'erik@precompiled.com'
 
 import usb.core
 import usb.util
 
 
-class TPC300(object):
+class TPC300:
     """
     This is the pure Python implementation of the TPC300 class.
     While the Windows version uses the TCP300A.DLL that can be

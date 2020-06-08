@@ -1,5 +1,4 @@
 """Sample plugin module for Igor"""
-from __future__ import unicode_literals
 import requests
 import os
 import iotsaControl
@@ -7,8 +6,7 @@ import json
 import urllib
 import socket
 
-from builtins import object
-class IotsaDiscoveryPlugin(object):
+class IotsaDiscoveryPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

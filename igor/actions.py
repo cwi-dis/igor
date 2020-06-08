@@ -1,11 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from past.builtins import cmp
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import re
 import urllib.request, urllib.parse, urllib.error
 import time
@@ -19,7 +11,7 @@ INTERPOLATION=re.compile(r'\{[^}]+\}')
 DEBUG=False
 
 @functools.total_ordering
-class NeverSmaller(object):
+class NeverSmaller:
     def __le__(self, other):
         return False
         
@@ -38,7 +30,7 @@ assert not (NEVER == 0)
 assert time.time() < NEVER
 assert not (NEVER < time.time())
 
-class Action(object):
+class Action:
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
     def __init__(self, collection, element):
@@ -77,6 +69,9 @@ class Action(object):
         
     def __eq__(self, other):
         return id(self) == id(other)
+
+    def __hash__(self):
+        return id(self)
         
     def matches(self, element):
         """Check to see whether this action matches the given element (used during update)"""
@@ -119,7 +114,10 @@ class Action(object):
             return
         # Test whether we are allowed to run, depending on minInterval
         now = time.time()
-        if self._earliestRunTimeAfter(now) > now:
+        nextTime = self._earliestRunTimeAfter(now)
+        if nextTime > now:
+            if self.nextTime < nextTime:
+                self.nextTime = nextTime            
             return
         # Run for each node (or once, if no node present because we were not triggered by an xpath)        
         if not nodelist:
@@ -238,12 +236,6 @@ class Action(object):
             newtext = newtext + text[:match.start()] + replacement
             text = text[match.end():]
         return newtext
-        
-    def __cmp__(self, other):
-        return cmp(self.nextTime, other.nextTime)
-        
-    def __hash__(self):
-        return id(self)
                 
 class ActionCollection(threading.Thread):
     def __init__(self, igor):

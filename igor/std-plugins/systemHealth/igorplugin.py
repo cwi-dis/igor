@@ -1,28 +1,23 @@
 """Test liveness of hosts"""
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
-from past.utils import old_div
 import socket
 import time
 
 def niceDelta(delta):
     if delta < 60:
         return "%d seconds" % delta
-    delta = old_div((delta+1), 60)
+    delta = delta // 60
     if delta < 60:
         return "%d minutes" % delta
-    delta = old_div((delta+1), 60)
+    delta = delta // 60
     if delta < 48:
         return "%d hours" % delta
-    delta = old_div((delta+1), 24)
+    delta = delta // 24
     if delta < 14:
         return "%d days" % delta
-    delta = old_div((delta+1), 7)
+    delta = delta // 7
     return "%d weeks" % delta
     
-class SystemHealthPlugin(object):
+class SystemHealthPlugin:
     def __init__(self, igor, pluginData):
         self.igor = igor
         self.pluginData = pluginData

@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 import os
 import sys
 import re
@@ -13,7 +8,7 @@ NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
 DEBUG=False
 
-class DevicePlugin(object):
+class DevicePlugin:
     def __init__(self, igor):
         self.igor = igor
         self.hasCapabilities = self.igor.internal.accessControl('hasCapabilitySupport')

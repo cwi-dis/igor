@@ -16,7 +16,7 @@ x)
 	command="$commandPrefix kaku"
 	;;
 x*)
-	command="$commandPrefix python $igor_script"
+	command="$commandPrefix python3 $igor_script"
 	;;
 esac
 case x$igor_id in

@@ -2,7 +2,7 @@
 if [ -x /usr/libexec/path_helper ]; then
 	eval `/usr/libexec/path_helper -s`
 fi
-philipsPowerCmd="ssh jack@mediacentre.local python bin/tvcmd.py "
+philipsPowerCmd="ssh jack@mediacentre.local python3 bin/tvcmd.py "
 case x$igor_power in
 xon|xtrue)
 	$philipsPowerCmd 32

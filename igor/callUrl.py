@@ -1,9 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import threading
 import requests
 import queue
@@ -151,7 +145,7 @@ class URLCallRunner(threading.Thread):
         except RuntimeError:
             pass # This can happen if we are actually running via callUrl ourselves...
         
-class URLCaller(object):
+class URLCaller:
     def __init__(self, igor):
         self.lock = threading.Lock()
         self.flushedCV = threading.Condition(self.lock)

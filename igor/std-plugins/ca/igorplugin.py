@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-from builtins import object
 import json
 import igorCA
 import os
@@ -9,7 +7,7 @@ import urllib
 
 DEBUG=False
 
-class CAPlugin(object):
+class CAPlugin:
     def __init__(self, igor, pluginData):
         self.igor = igor
         self.ca = None

@@ -1,13 +1,11 @@
 """Sample plugin module for Igor"""
-from __future__ import unicode_literals
 import requests
 import os
 import json
 import urllib
 import socket
 
-from builtins import object
-class EditDataPlugin(object):
+class EditDataPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

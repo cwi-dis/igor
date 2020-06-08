@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 import threading
 import requests
 import queue
@@ -117,7 +112,7 @@ class EventSource(SSEListener):
         datetime = time.strftime('%d/%b/%Y %H:%M:%S')
         print('- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message), file=sys.stderr)
     
-class EventSourceCollection(object):
+class EventSourceCollection:
     def __init__(self, igor):
         self.igor = igor
         self.eventSources = []

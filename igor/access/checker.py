@@ -1,9 +1,6 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import object
 from .vars import *
 
-class AccessChecker(object):
+class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
 
     def __init__(self, access, destination):

@@ -1,13 +1,6 @@
 #
 # First imports for python2/3 compatibility
 #
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 # Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
 try:
     import coverage
@@ -91,7 +84,7 @@ def enable_thread_profiling():
 #
 # Helper for determining how to run pip
 #
-class Struct(object):
+class Struct:
     pass
     
 # class IgorLogger(wsgilog.WsgiLog):
@@ -112,7 +105,7 @@ class Struct(object):
 #             backups = self.IGOR_LOG_BACKUPS
 #             )
 # 
-class IgorServer(object):
+class IgorServer:
     def __init__(self, datadir, port=9333, advertise=False, profile=False, nossl=False, nologger=False):
         #
         # Store all pathnames and such
@@ -296,7 +289,7 @@ class IgorServer(object):
         """Saves the database to the filesystem"""
         self.database.saveFile()
                 
-class IgorInternal(object):
+class IgorInternal:
     """ Implements all internal commands for Igor"""
     def __init__(self, igor):
         self.igor = igor

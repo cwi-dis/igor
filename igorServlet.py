@@ -1,7 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
 # Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
 try:
     import coverage
@@ -365,7 +361,7 @@ def main():  # pragma: no cover
     DEBUG = True
     if DEBUG: print('igorServlet: main called')
     
-    class HelloClass(object):
+    class HelloClass:
         """Example class that returns static data (which may be recomputed every call)"""
         
         def __init__(self):

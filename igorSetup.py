@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import zip
-from builtins import range
-from builtins import object
+#!/usr/bin/env python3
 # Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
 try:
     import coverage
@@ -79,7 +74,7 @@ nsComment           = "OpenSSL Generated Certificate"
 %s
 """
 
-class IgorSetup(object):
+class IgorSetup:
     def __init__(self, database=None, progname='igorSetup'):
         self.progname = progname
         # Find username even when sudoed
@@ -271,7 +266,8 @@ class IgorSetup(object):
         keyFilename = os.path.join(self.database, 'igor.key')
         certFilename = os.path.join(self.database, 'igor.crt')
     
-        open(confFilename, 'w').write(confData)
+        with open(confFilename, 'w') as fp:
+            fp.write(confData)
         sslCommand = OPENSSL_COMMAND % (confFilename, keyFilename, certFilename)
         self.runcmds += [sslCommand]
         return True

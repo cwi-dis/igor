@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+#!/usr/bin/env python3
 # Enable coverage if installed and enabled through COVERAGE_PROCESS_START environment var
 try:
     import coverage
@@ -33,7 +28,7 @@ class IgorError(EnvironmentError):
 
 VERBOSE=False
 
-class IgorServer(object):
+class IgorServer:
     """Main object used to access an Igor server.
     
     The object is instantiated with parameters that specify how to contact Igor. After that it provides

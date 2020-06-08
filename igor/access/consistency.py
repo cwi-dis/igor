@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import object
 import random
 
 VERBOSE=False
@@ -10,7 +7,7 @@ OWN_NAMESPACE="http://jackjansen.nl/igor/owner" # Shoulnd't be here, really...
 class CannotFix(Exception):
     pass
     
-class StructuralConsistency(object):
+class StructuralConsistency:
     def __init__(self, igor, fix, namespaces, token, extended=False):
         self.igor = igor
         self.database = self.igor.database

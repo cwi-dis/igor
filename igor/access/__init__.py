@@ -1,11 +1,4 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
 # Access control
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import xpath
 import base64
 import random
@@ -46,7 +39,7 @@ def _combineTokens(token1, token2):
     return MultiAccessToken(tokenList=[token1, token2])
 
 
-class OTPHandler(object):
+class OTPHandler:
     """Handle implementation of one-time-passwords (for passing tokens to plugins and scripts)"""
     def __init__(self):
         self._otp2token = {}
@@ -74,7 +67,7 @@ class OTPHandler(object):
         if otp in self._otp2token:
             del self._otp2token[otp]
 
-class TokenStorage(object):
+class TokenStorage:
     """Handle storing and retrieving capabilities"""
     
     def __init__(self):
@@ -143,7 +136,7 @@ class TokenStorage(object):
             nodelist += xpath.find(".//au:mayNeedCapability", element, namespaces=NAMESPACES)
         return nodelist
         
-class RevokeList(object):
+class RevokeList:
     """Handles revocation list"""
     def __init__(self):
         self._revokeList = []
@@ -172,7 +165,7 @@ class RevokeList(object):
     def _loadRevokeList(self):
         self._revokeList = self.igor.database.getValues('au:access/au:revokedCapabilities/au:revokedCapability/cid', _accessSelfToken, namespaces=NAMESPACES)
         
-class UserPasswords(object):
+class UserPasswords:
     """Implements checking of passwords for users"""
     
     def __init__(self):

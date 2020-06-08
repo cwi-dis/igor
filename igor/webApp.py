@@ -1,9 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from builtins import str
-from past.builtins import basestring
-from builtins import object
 import gevent.pywsgi
 from flask import Flask, Response, request, abort, redirect, jsonify, make_response, after_this_request, session
 import werkzeug.exceptions
@@ -683,7 +677,7 @@ def _best_return_mimetype():
         return _SERVER.igor.databaseAccessor.MIMETYPES[0]
     return mimetypematch.match(acceptable, _SERVER.igor.databaseAccessor.MIMETYPES)
 
-class XmlDatabaseAccess(object):
+class XmlDatabaseAccess:
     """Class to access the database in a somewhat rest-like manner. Instantiated once, in the igor object."""
     
     MIMETYPES = ["application/xml", "application/json", "text/plain"]
@@ -802,7 +796,7 @@ class XmlDatabaseAccess(object):
         
     def convertto(self, value, mimetype, variant):
         if variant == 'ref':
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 myWebError("400 Bad request, cannot use .VARIANT=ref for this operation", 400)
             if mimetype == "application/json":
                 return json.dumps({"ref":value})+'\n'

@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-# Access control
-from builtins import object
 from .consistency import StructuralConsistency
 
 NAMESPACES = { 
@@ -8,7 +5,7 @@ NAMESPACES = {
      }
 
 
-class AccessToken(object):
+class AccessToken:
     def __init__(self):
         pass
 
@@ -29,7 +26,7 @@ _token = AccessToken()
 class AccessControlError(ValueError):
     pass
           
-class AccessChecker(object):
+class AccessChecker:
     """An object that checks whether an operation (or request) has the right permission"""
 
     def __init__(self):
@@ -40,7 +37,7 @@ class AccessChecker(object):
         
 _checker = AccessChecker()
 
-class OTPHandler(object):
+class OTPHandler:
 
     def produceOTPForToken(self, token):
         """Produce a one-time-password form of this token, for use internally or for passing to a plugin script (to be used once)"""
@@ -51,13 +48,13 @@ class OTPHandler(object):
         pass
             
     
-class TokenStorage(object):
+class TokenStorage:
     pass
         
-class RevokeList(object):
+class RevokeList:
     pass
     
-class IssuerInterface(object):
+class IssuerInterface:
 
     def getSelfAudience(self, token=None):
         """Return an audience identifier that refers to us"""
@@ -91,7 +88,7 @@ class IssuerInterface(object):
         """Delete a shared key"""
         self.igor.app.raiseHTTPError("400 This Igor does not have shared key support")
 
-class UserPasswords(object):
+class UserPasswords:
         
     def userAndPasswordCorrect(self, username, password):
         """Return True if username/password combination is valid"""

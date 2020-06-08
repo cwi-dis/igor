@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import object
 import logging
 import logging.handlers
 import sys
@@ -11,7 +8,7 @@ logging.basicConfig()
 DEBUG=False
 
 # Send stdout and stderr to the logger as well.
-class StreamToLogger(object):
+class StreamToLogger:
     def __init__(self, logger, log_level=logging.INFO):
         self.logger = logger
         self.log_level = log_level

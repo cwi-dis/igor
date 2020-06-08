@@ -789,7 +789,7 @@ class IgorTestCaps(IgorTest):
         
         self._flush(pAdmin, MAX_FLUSH_DURATION)
         # Check that the access failure is recorded correctly
-        self.assertEqual(p.get("services/igor/accessFailures/accessFailure[action='%s']/operation" % actionPath.strip(), format="text/plain"), "get\n")
+        self.assertEqual(p.get(f"services/igor/accessFailures/accessFailure[action='{actionPath.strip()}']/operation", format="text/plain"), "get\n")
 
     # xxxjack need a test that an action can use privilege escalation (by carrying the required capabiity)
 

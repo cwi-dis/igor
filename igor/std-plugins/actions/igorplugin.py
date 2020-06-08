@@ -20,11 +20,11 @@ class ActionsPlugin:
         rv = {}
         path = "actions/action"
         if creator:
-            path += "[creator='{}']".format(creator)
+            path += f"[creator='{creator}']"
         try:
             allActions = self.igor.databaseAccessor.get_key(path, 'application/x-python-object', 'multi', callerToken)
         except self.igor.app.getHTTPError() as e:
-            rv['message'] = "Error listing actions: {}".format(self.igor.app.stringFromHTTPError(e))
+            rv['message'] = f"Error listing actions: {self.igor.app.stringFromHTTPError(e)}"
         else:
             assert isinstance(allActions, dict)
             rv.update(allActions)
@@ -37,7 +37,7 @@ class ActionsPlugin:
             rv['description'] = self.igor.databaseAccessor.get_key(xpath, 'application/x-python-object', None, callerToken)
             rv['xpath'] = xpath
         except self.igor.app.getHTTPError() as e:
-            rv['message'] = "Error getting action {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+            rv['message'] = f"Error getting action {xpath}: {self.igor.app.stringFromHTTPError(e)}"
         return rv
         
     def _post(self, description, callerToken):
@@ -49,13 +49,13 @@ class ActionsPlugin:
             if hasattr(xpath, 'decode'): xpath = xpath.decode('utf8')
             xpath = xpath.strip()
         except self.igor.app.getHTTPError() as e:
-            rv['message'] = "Error adding action: {}".format(self.igor.app.stringFromHTTPError(e))
+            rv['message'] = f"Error adding action: {self.igor.app.stringFromHTTPError(e)}"
         else:
             try:
                 rv['description'] = self.igor.databaseAccessor.get_key(xpath, 'application/x-python-object', None, callerToken)
                 rv['xpath'] = xpath
             except self.igor.app.getHTTPError() as e:
-                rv['message'] = "Error getting action {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+                rv['message'] = f"Error getting action {xpath}: {self.igor.app.stringFromHTTPError(e)}"
             self.igor.internal.save(callerToken) # xxxjack should not be needed, but it seems it is...
         return rv
         
@@ -70,13 +70,13 @@ class ActionsPlugin:
             if hasattr(xpath, 'decode'): xpath = xpath.decode('utf8')
             xpath = xpath.strip()
         except self.igor.app.getHTTPError() as e:
-            rv['message'] = "Error replacing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+            rv['message'] = f"Error replacing {xpath}: {self.igor.app.stringFromHTTPError(e)}"
         else:
             try:
                 rv['description'] = self.igor.databaseAccessor.get_key(xpath, 'application/x-python-object', None, callerToken)
                 rv['xpath'] = xpath
             except self.igor.app.getHTTPError() as e:
-                rv['message'] = "Error getting action {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+                rv['message'] = f"Error getting action {xpath}: {elf.igor.app.stringFromHTTPError(e)}"
             self.igor.internal.save(callerToken) # xxxjack should not be needed, but it seems it is...
         return rv
         

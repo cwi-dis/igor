@@ -24,7 +24,7 @@ class EditDataPlugin:
             rawxmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', "raw", callerToken)
             if hasattr(rawxmldata, 'get_data'): rawxmldata = rawxmldata.get_data()
         except self.igor.app.getHTTPError() as e:
-            message = "Error accessing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+            message = f"Error accessing {xpath}: {self.igor.app.stringFromHTTPError(e)}"
         else:
             if xmldata != rawxmldata:
                 message = "Element contains hidden (namespaced) data such as capabilities or ownership information. Editing is not possible."
@@ -40,7 +40,7 @@ class EditDataPlugin:
             if hasattr(xpath, 'decode'): xpath = xpath.decode('utf8')
             xpath = xpath.strip()
         except self.igor.app.getHTTPError() as e:
-            message = "Error replacing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+            message = f"Error replacing {xpath}: {self.igor.app.stringFromHTTPError(e)}"
         else:
             xmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', None, callerToken)
             if hasattr(xmldata, 'get_data'): xmldata = xmldata.get_data()
@@ -56,7 +56,7 @@ class EditDataPlugin:
             rawxmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', "raw", callerToken)
             if hasattr(rawxmldata, 'get_data'): rawxmldata = rawxmldata.get_data()
         except self.igor.app.getHTTPError() as e:
-            message = "Error accessing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+            message = f"Error accessing {xpath}: {self.igor.app.stringFromHTTPError(e)}"
             return dict(message=message, xpath=xpath, xmldata=xmldata)
         if rawxmldata.strip() != oldData.strip():
             message = "Old data does not match. Element may have changed in the mean time, or it contains hidden (namespaced) data and cannot be edited."
@@ -67,7 +67,7 @@ class EditDataPlugin:
                 if hasattr(xpath, 'decode'): xpath = xpath.decode('utf8')
                 xpath = xpath.strip()
             except self.igor.app.getHTTPError() as e:
-                message = "Error replacing {}: {}".format(xpath, self.igor.app.stringFromHTTPError(e))
+                message = f"Error replacing {xpath}: {self.igor.app.stringFromHTTPError(e)}"
             else:
                 xmldata = self.igor.databaseAccessor.get_key(xpath, 'application/xml', None, callerToken)
                 if hasattr(xmldata, 'get_data'): xmldata = xmldata.get_data()

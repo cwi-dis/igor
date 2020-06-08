@@ -67,7 +67,8 @@ class DevicePlugin:
         if hostname:
             rv['hostname'] = hostname
 
-        tokenOwner = 'identities/{}'.format(self.igor.app.getSessionItem('user', 'admin'))
+        _owner = self.igor.app.getSessionItem('user', 'admin')
+        tokenOwner = f'identities/{_owner}'
         if hasPlugin:
             pluginName = description.get('plugin', '')
             if not pluginName:
@@ -75,7 +76,7 @@ class DevicePlugin:
             msg = self.igor.plugins.installstd(pluginName=name, stdName=pluginName, token=callerToken)
             if msg:
                 rv['message'] = msg
-            tokenWantedOwner = 'plugindata/{}'.format(pluginName)
+            tokenWantedOwner = f'plugindata/{pluginName}'
         else:
             # Create item
             entryValues = {}
@@ -120,7 +121,8 @@ class DevicePlugin:
                 
     def addActionCap(self, callerToken, subject=None, verb='get', obj=None, returnTo=None, tokenOwner=None, exportTokens=False):
         if tokenOwner == None:
-            tokenOwner = 'identities/{}'.format(igor.app.getSessionItem('user', 'admin'))
+            _owner = igor.app.getSessionItem('user', 'admin')
+            tokenOwner = f'identities/{_owner}'
         rv = self._addActionCap(callerToken, subject, verb, obj, tokenOwner, exportTokens)
         rv['tokenOwner'] = tokenOwner
         if returnTo:

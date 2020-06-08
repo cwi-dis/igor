@@ -278,7 +278,7 @@ class IotsaDiscoveryPlugin:
             items = []
             for k in ['obj', 'get', 'put', 'post', 'delete']:
                 if k in desc:
-                    items.append('{}={}'.format(k, desc[k]))
+                    items.append(f'{k}={desc[k]}')
             rv.append((' '.join(items), desc['cid']))
         return rv
         

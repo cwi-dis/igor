@@ -741,7 +741,7 @@ class IgorCA:
         items = self.do_list(cn=cn)
         for item in items:
             for k,v in item.items():
-                print('{}={}'.format(k,v), end=' ')
+                print(f'{k}={v}', end=' ')
             print()
         return False
         

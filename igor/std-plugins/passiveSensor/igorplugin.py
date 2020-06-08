@@ -72,13 +72,13 @@ class PassiveSensorPlugin:
         try:
             r = requests.request(method, url, headers=headers, **kwargs)
         except requests.exceptions.ConnectionError as e:
-            return "No REST server running at {}".format(url)
+            return f"No REST server running at {url}"
         except requests.exceptions.Timeout as e:
-            return "Timeout conecting to REST server at {}".format(url)
+            return f"Timeout conecting to REST server at {url}"
         except requests.exceptions.RequestException as e:
-            return "Error connecting to REST server at {}".format(url)
+            return f"Error connecting to REST server at {url}"
         if r.status_code != 200:
-            return "REST server at {} returns status code {}".format(url, r.status_code)
+            return f"REST server at {url} returns status code {r.status_code}"
         return None
         
 def igorPlugin(igor, pluginName, pluginData):

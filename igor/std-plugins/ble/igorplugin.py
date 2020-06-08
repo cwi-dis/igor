@@ -70,13 +70,13 @@ class BLEPlugin:
         try:
             r = requests.request(method, url, headers=headers, **kwargs)
         except requests.exceptions.ConnectionError as e:
-            return "No bleServer running at {}".format(url)
+            return f"No bleServer running at {url}"
         except requests.exceptions.Timeout as e:
-            return "Timeout conecting to bleServer at {}".format(url)
+            return f"Timeout conecting to bleServer at {url}"
         except requests.exceptions.RequestException as e:
-            return "Error connecting to bleServer at {}".format(url)
+            return f"Error connecting to bleServer at {url}"
         if r.status_code != 200:
-            return "bleServer at {} returns status code {}".format(url, r.status_code)
+            return f"bleServer at {url} returns status code {r.status_code}"
         return None
         
 def igorPlugin(igor, pluginName, pluginData):

@@ -324,12 +324,12 @@ class DBImpl(DBSerializer):
             newFilename = self.filename + time.strftime('.%Y%m%d%H%M%S')
             if os.path.exists(newFilename):
                 for i in range(10):
-                    nf2 = '{}.{}'.format(newFilename, i)
+                    nf2 = f'{newFilename}.{i}'
                     if not os.path.exists(nf2):
                         newFilename = nf2
                         break
                 else:
-                    raise DBParamError('Cannot create tempfile {}'.format(newFilename))
+                    raise DBParamError(f'Cannot create tempfile {newFilename}')
             with self.saveLock:
                 docToSave = self._filterBeforeSave(self._doc, self.access.tokenForIgor())
             docToSave.writexml(open(newFilename, 'w'), addindent="\t", newl="\n")
@@ -346,7 +346,7 @@ class DBImpl(DBSerializer):
                 os.unlink(os.path.join(dir, fn))
 
             self.savedGeneration = self.currentGeneration
-            print('xmlDatabase: saving to {}'.format(newFilename))
+            print(f'xmlDatabase: saving to {newFilename}')
             
     def initialize(self, xmlstring=None, filename=None):
         """Reset the document to a known value (passed as an XML string"""

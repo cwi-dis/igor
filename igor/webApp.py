@@ -178,7 +178,7 @@ class MyServer:
     def stringFromHTTPError(self, e):
         """Return the string representation for an HTTPError"""
         if e.code and e.description:
-            return "{} {}".format(e.code, e.description)
+            return f"{e.code} {e.description}"
         resp = e.get_response()
         if resp.status:
             return str(resp.status)
@@ -616,7 +616,7 @@ def get_data(name):
             }
         method = methods.get(methodName)
         if not method:
-            myWebError("400 Unknown .METHOD={}".format(methodName))
+            myWebError(f"400 Unknown .METHOD={methodName}")
         if methodName == 'POST':
             kwargs['replace'] = False
         rv = method(name, optArgs, mimetype="application/x-www-form-urlencoded", **kwargs)

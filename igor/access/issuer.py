@@ -24,7 +24,7 @@ class IssuerInterface:
             if os.path.exists(shadowFilename):
                 self._shadowDatabase = xmlDatabase.DBImpl(shadowFilename)
             else:
-                print('Warning: secret keys in main database, no shadow database {}'.format(shadowFilename))
+                print(f'Warning: secret keys in main database, no shadow database {shadowFilename}')
                 if now:
                     self._shadowDatabase = self.igor.database
         return

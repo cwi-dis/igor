@@ -144,7 +144,7 @@ class IgorPlugins:
             self.igor.internal.updateActions(token=token)
         self.igor.save(token=self.igor.access.tokenForIgor())
         # If the plugin has a _start action ensure it is executed
-        startNodes = self.igor.database.getElements('plugindata/{}/action[name="_start"]'.format(pluginName), 'get', token)
+        startNodes = self.igor.database.getElements(f'plugindata/{pluginName}/action[name="_start"]', 'get', token)
         if startNodes:
             self.igor.internal.runAction('_start', token)
 

@@ -41,7 +41,7 @@ class Action:
         self.content.pop('notBefore', None)
         assert tag == 'action'
         if not 'url' in self.content:
-            print("ERROR: action {} misses required url element".format(self.actionXPath))
+            print(f"ERROR: action {self.actionXPath} misses required url element")
             self.content['url'] = '/missing-action-url'
         self.interval = self.content.get('interval')
         self.minInterval = self.content.get('minInterval', 0)

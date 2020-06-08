@@ -360,13 +360,13 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
         """If an external token for the given host is available (with the current token) return it"""
         # If the current token gives access to the plugindata for the plugin with this <host> field we also allow access.
         # xxxjack whether we should check for GET access or something else is open to discussion
-        pluginElements = self.igor.database.getElements("/data/plugindata/*[host='{}']".format(host), 'get', token)
+        pluginElements = self.igor.database.getElements(f"/data/plugindata/*[host='{host}']", 'get', token)
         for pe in pluginElements:
             pluginName = pe.tagName
             token = self.tokenForPlugin(pluginName, token)
         tid = token._hasExternalRepresentationFor(host)
         if not tid:
-            print('access: WARNING: requested external token for request to {} but not available'.format(host))
+            print(f'access: WARNING: requested external token for request to {host} but not available')
             return
         extToken = token._getTokenWithIdentifier(tid)
         assert extToken
@@ -377,7 +377,7 @@ class Access(OTPHandler, TokenStorage, RevokeList, IssuerInterface, UserPassword
     def tokensForSubject(self, sub, token):
         """Return list of token descriptions (accessible via token) valid for subject sub"""
         # First get the list of all tokens valid for this subject (we filter later for accessible tokens)
-        idExpr = "au:access/au:exportedCapabilities/au:capability[sub='{}']/cid".format(sub)
+        idExpr = f"au:access/au:exportedCapabilities/au:capability[sub='{sub}']/cid"
         idList = self.igor.database.getValues(idExpr, _accessSelfToken, namespaces=NAMESPACES)
         # Now attempt to get each of these through the token we carry
         rv = []

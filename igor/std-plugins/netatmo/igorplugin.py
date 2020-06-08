@@ -26,14 +26,14 @@ class NetatmoPlugin:
         try:
             authorization = lnetatmo.ClientAuth(**authentication)
         except lnetatmo.AuthFailure as e:
-            return self.igor.app.raiseHTTPError("502 netatmo: {}".format(str(e)))
+            return self.igor.app.raiseHTTPError(f"502 netatmo: {str(e)}")
             
         # xxxjack could also add `station` parameter here for multiple weather statiosn
         # xxxjack could also add other types, such as ThermostatData
         weatherDataAccessor = lnetatmo.WeatherStationData(authorization)
         weatherData = weatherDataAccessor.lastData()
         for stationName in weatherData:
-            path = '/data/sensors/{}/{}'.format(self.pluginName, stationName)
+            path = f'/data/sensors/{self.pluginName}/{stationName}'
             data = weatherData[stationName]
             rv = self.igor.databaseAccessor.put_key(path, 'text/plain', None, data, 'application/x-python-object', token, replace=True)
 
@@ -56,7 +56,7 @@ class NetatmoPlugin:
             if password:
                 authentication['password'] = password
         # Store in database
-        path = '/data/plugindata/{}/authentication'.format(self.pluginName)
+        path = f'/data/plugindata/{self.pluginName}/authentication'
         self.igor.databaseAccessor.put_key(path, 'text/plain', None, authentication, 'application/x-python-object', token, replace=True)
         # And keep for ourselves too
         self.pluginData['authentication'] = authentication

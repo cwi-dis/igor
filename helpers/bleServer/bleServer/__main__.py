@@ -12,11 +12,11 @@ def main():
         baseDir = os.path.dirname(__file__)
         initPath = os.path.join(baseDir, "initscript-bleServer")
         if not os.path.exists(initPath):
-            print("Init.d script missing: {}".format(initPath))
+            print(f"Init.d script missing: {initPath}")
             sys.exit(1)
         print("# Run the following commands:")
         print("(")
-        print("\tsudo cp {} /etc/init.d/bleServer".format(initPath))
+        print(f"\tsudo cp {initPath} /etc/init.d/bleServer")
         print("\tsudo update-rc.d bleServer defaults")
         print("\tsudo service bleServer start")
         print(")")

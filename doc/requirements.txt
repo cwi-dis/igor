@@ -1,5 +1,6 @@
 -r ../requirements.txt
 Sphinx
 sphinx-argparse
+sphinxcontrib-autoprogram
 recommonmark
 -e git+https://github.com/rtfd/recommonmark.git#egg=recommonmark

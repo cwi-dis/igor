@@ -3,7 +3,7 @@ import requests
 import os
 import lnetatmo
 
-class NetatmoPlugin(object):
+class NetatmoPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

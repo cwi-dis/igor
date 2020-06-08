@@ -74,7 +74,7 @@ nsComment           = "OpenSSL Generated Certificate"
 %s
 """
 
-class IgorSetup(object):
+class IgorSetup:
     def __init__(self, database=None, progname='igorSetup'):
         self.progname = progname
         # Find username even when sudoed

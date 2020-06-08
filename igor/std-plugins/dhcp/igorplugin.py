@@ -4,7 +4,7 @@ import os
 import dhcpleases
 import time
 
-class DHCPPlugin(object):
+class DHCPPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

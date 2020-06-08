@@ -66,7 +66,7 @@ TYPE_TO_NAME = {
 	0x0f : ("ad_pairing_randomizer", noparser),
 	0x10 : ("ad_device_id", noparser),
 }
-class BleScanner(object):
+class BleScanner:
 	def __init__(self):
 		self.sock = None
 		self.old_filter = None

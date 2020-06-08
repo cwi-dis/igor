@@ -6,7 +6,7 @@ NAME_RE = re.compile(r'[a-zA-Z_][-a-zA-Z0-9_.]+')
 
 DEBUG=False
 
-class UserPlugin(object):
+class UserPlugin:
     def __init__(self, igor):
         self.igor = igor
     

@@ -677,7 +677,7 @@ def _best_return_mimetype():
         return _SERVER.igor.databaseAccessor.MIMETYPES[0]
     return mimetypematch.match(acceptable, _SERVER.igor.databaseAccessor.MIMETYPES)
 
-class XmlDatabaseAccess(object):
+class XmlDatabaseAccess:
     """Class to access the database in a somewhat rest-like manner. Instantiated once, in the igor object."""
     
     MIMETYPES = ["application/xml", "application/json", "text/plain"]

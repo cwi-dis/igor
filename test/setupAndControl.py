@@ -26,7 +26,7 @@ if DEBUG_TEST:
     igorVar.VERBOSE=DEBUG_TEST
     igorServlet.DEBUG=DEBUG_TEST
 
-class ServletHelper(object):
+class ServletHelper:
     def __init__(self, port, protocol, capabilities, database, audience):
         self.lock = threading.Lock()
         self.requestReceived = threading.Condition(self.lock)
@@ -92,7 +92,7 @@ class ServletHelper(object):
     def setIssuer(self, issuer, sharedKey):
         return self.server.setIssuer(issuer, sharedKey)
     
-class IgorSetupAndControl(object):
+class IgorSetupAndControl:
     """Mixin class for both testing and performance measurements"""
     
     #

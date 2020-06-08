@@ -28,7 +28,7 @@ class IgorError(EnvironmentError):
 
 VERBOSE=False
 
-class IgorServer(object):
+class IgorServer:
     """Main object used to access an Igor server.
     
     The object is instantiated with parameters that specify how to contact Igor. After that it provides

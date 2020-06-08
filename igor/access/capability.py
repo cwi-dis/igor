@@ -2,7 +2,7 @@ from .vars import *
 import base64
 import urllib.parse
 
-class BaseAccessToken(object):
+class BaseAccessToken:
     """An access token (or set of tokens) that can be carried by a request"""
 
     def __init__(self):

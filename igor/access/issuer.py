@@ -11,7 +11,7 @@ from .. import xmlDatabase
 
 _accessSelfToken = None # Set by __init__ after importing
 
-class IssuerInterface(object):
+class IssuerInterface:
     """Implement interface to the issuer"""
     def __init__(self):
         self._self_audience = None

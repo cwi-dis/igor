@@ -8,7 +8,7 @@ import requests
 import httplib2
 import urllib.parse
 
-class CopyTree(object):
+class CopyTree:
     def __init__(self, igor):
         self.igor = igor
 

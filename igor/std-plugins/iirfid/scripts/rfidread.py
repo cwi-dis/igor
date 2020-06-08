@@ -11,7 +11,7 @@ DEFAULT_SERIAL='/dev/tty.usbserial-A700ekiO'
 DEFAULT_BAUD=57600
 DEFAULT_TIMEOUT=0.5
 
-class RFIDReader(object):
+class RFIDReader:
     def __init__(self, port, baudrate, timeout):
         if DEBUG: print('opening', port)
         self.port = serial.Serial(port, baudrate=baudrate, timeout=timeout)

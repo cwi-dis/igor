@@ -20,7 +20,7 @@ def niceDelta(delta):
     delta = delta // 7
     return "%d weeks" % delta
     
-class LastFileAccess(object):
+class LastFileAccess:
     def __init__(self, igor):
         self.igor = igor
         

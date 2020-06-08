@@ -145,7 +145,7 @@ class URLCallRunner(threading.Thread):
         except RuntimeError:
             pass # This can happen if we are actually running via callUrl ourselves...
         
-class URLCaller(object):
+class URLCaller:
     def __init__(self, igor):
         self.lock = threading.Lock()
         self.flushedCV = threading.Condition(self.lock)

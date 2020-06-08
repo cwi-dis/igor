@@ -361,7 +361,7 @@ def main():  # pragma: no cover
     DEBUG = True
     if DEBUG: print('igorServlet: main called')
     
-    class HelloClass(object):
+    class HelloClass:
         """Example class that returns static data (which may be recomputed every call)"""
         
         def __init__(self):

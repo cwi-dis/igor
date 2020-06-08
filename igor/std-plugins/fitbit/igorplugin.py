@@ -22,7 +22,7 @@ KEYS_PER_APP=['client_id', 'client_secret']
 KEYS_PER_USER = ['access_token', 'refresh_token']
 DEFAULT_METHODS=['get_bodyweight']
 
-class FitbitPlugin(object):
+class FitbitPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

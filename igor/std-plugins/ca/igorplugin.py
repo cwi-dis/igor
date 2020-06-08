@@ -7,7 +7,7 @@ import urllib
 
 DEBUG=False
 
-class CAPlugin(object):
+class CAPlugin:
     def __init__(self, igor, pluginData):
         self.igor = igor
         self.ca = None

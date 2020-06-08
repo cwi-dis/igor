@@ -17,7 +17,7 @@ def niceDelta(delta):
     delta = delta // 7
     return "%d weeks" % delta
     
-class SystemHealthPlugin(object):
+class SystemHealthPlugin:
     def __init__(self, igor, pluginData):
         self.igor = igor
         self.pluginData = pluginData

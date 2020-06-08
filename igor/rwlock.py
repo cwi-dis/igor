@@ -8,7 +8,7 @@ import threading
 
 DEBUG=False
 
-class _RWReadLock(object):
+class _RWReadLock:
     """Helper class to enable with and enter/exit on ReadWriteLock"""
     def __init__(self, mainLock):
         self.__mainLock = mainLock
@@ -22,7 +22,7 @@ class _RWReadLock(object):
     def locked(self):
         return self.__mainLock._locked_read()
         
-class _RWWriteLock(object):
+class _RWWriteLock:
     """Helper class to enable with and enter/exit on ReadWriteLock"""
     def __init__(self, mainLock):
         self.__mainLock = mainLock
@@ -37,7 +37,7 @@ class _RWWriteLock(object):
         return self.__mainLock._locked_write()
         
         
-class ReadWriteLock(object):
+class ReadWriteLock:
     """ An implementation of a read-write lock for Python. 
     Any number of readers can work simultaneously but they 
     are mutually exclusive with any writers (which can 

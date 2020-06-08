@@ -5,7 +5,7 @@ import json
 import urllib
 import socket
 
-class ActionsPlugin(object):
+class ActionsPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

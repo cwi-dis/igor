@@ -2,7 +2,7 @@
 import requests
 import os
 
-class IotsaPlugin(object):
+class IotsaPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

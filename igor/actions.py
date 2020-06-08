@@ -11,7 +11,7 @@ INTERPOLATION=re.compile(r'\{[^}]+\}')
 DEBUG=False
 
 @functools.total_ordering
-class NeverSmaller(object):
+class NeverSmaller:
     def __le__(self, other):
         return False
         
@@ -30,7 +30,7 @@ assert not (NEVER == 0)
 assert time.time() < NEVER
 assert not (NEVER < time.time())
 
-class Action(object):
+class Action:
     """Object to implement calling methods on URLs whenever some XPath changes."""
     
     def __init__(self, collection, element):

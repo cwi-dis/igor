@@ -7,7 +7,7 @@ OWN_NAMESPACE="http://jackjansen.nl/igor/owner" # Shoulnd't be here, really...
 class CannotFix(Exception):
     pass
     
-class StructuralConsistency(object):
+class StructuralConsistency:
     def __init__(self, igor, fix, namespaces, token, extended=False):
         self.igor = igor
         self.database = self.igor.database

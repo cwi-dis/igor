@@ -2,7 +2,7 @@
 import time
 import _thread
 
-class WatchdogClass(object):
+class WatchdogClass:
     _singleton = None
     
     def __init__(self):

@@ -2,7 +2,7 @@
 import requests
 import os
 
-class NeoclockPlugin(object):
+class NeoclockPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

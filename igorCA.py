@@ -70,7 +70,7 @@ Usage: %s [options] command [args]
 Initialize or use igor Certificate Authority.
 """
 
-class CAInterface(object):
+class CAInterface:
     """Helper class to implement commands on local CA (using openSSL tool)"""
     
     def __init__(self, parent, database):
@@ -186,7 +186,7 @@ class CAInterface(object):
         """Return filename for an openssl config file to be used as a template for new reequests"""
         return self.intConfigFile
         
-class CARemoteInterface(object):
+class CARemoteInterface:
     """Helper class to implement commands on remote CA (using REST calls to Igor server)"""
 
     def __init__(self, parent, igorServer):
@@ -237,7 +237,7 @@ class CARemoteInterface(object):
         open(configFile, 'w').write(rv)
         return configFile
         
-class IgorCA(object):
+class IgorCA:
     """Interface to Certificate Authority for Igor.
     
     Arguments:

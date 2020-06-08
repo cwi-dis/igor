@@ -6,7 +6,7 @@ import json
 import urllib
 import socket
 
-class IotsaDiscoveryPlugin(object):
+class IotsaDiscoveryPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

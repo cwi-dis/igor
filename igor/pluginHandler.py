@@ -7,7 +7,7 @@ from . import xmlDatabase
 from . import access
 import xpath
 
-class IgorPlugins(object):
+class IgorPlugins:
     """Class to handle access to plugins"""
     
     def __init__(self, igor):

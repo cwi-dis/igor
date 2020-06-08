@@ -1,6 +1,6 @@
 """Sample plugin module for Igor"""
 
-class TestPlugin(object):
+class TestPlugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName

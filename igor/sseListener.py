@@ -112,7 +112,7 @@ class EventSource(SSEListener):
         datetime = time.strftime('%d/%b/%Y %H:%M:%S')
         print('- - - [%s] "- %s %s" - %s' % (datetime, self.method, self.url, message), file=sys.stderr)
     
-class EventSourceCollection(object):
+class EventSourceCollection:
     def __init__(self, igor):
         self.igor = igor
         self.eventSources = []

@@ -21,7 +21,7 @@ VPMT_DISCOVER=1
 
 VOODOO_DISCOVER = struct.pack('<l28xll16s96s96s96s', VOODOO_VERSION, VPMT_DISCOVER, 0, '1234567890123456', 'Python Control', 'Jack', 'Philips.py')
 
-class JointSpaceRemote(object):
+class JointSpaceRemote:
     def __init__(self, ipaddr=None):
         self.tv = None
         

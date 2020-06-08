@@ -1,6 +1,8 @@
 # Rest entry points
 
-The Igor HTTP or HTTPS server has the following REST entrypoints:
+The Igor HTTP or HTTPS server has a number of REST entrypoints. In the descriptions below, `*` can be a sequence of non-special characters (letters, digits, hyphens, etc), `**` can also include special characters such as `/` and others (for pathnames and XPath expressions) and square brackets (`[` and `]`) denote optional parts.
+
+Per entrypoint (URL path) the allowed methods are listed. If an entry point accepts query parameters (the bit after the `?` in the URL) this is also explained.
 
 ## /data/**
 Accesses data elements. GET, PUT, POST and DELETE allowed. The argument is technically an XPath expression that should resolve to a single element (but see below). Data can be provided with mimetypes `application/xml`, `application/json` or `text/plain`.

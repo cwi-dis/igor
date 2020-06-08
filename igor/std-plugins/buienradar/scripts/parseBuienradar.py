@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Parse buienradar expected rain data.
 
 Pass a URL with longitude/lattitude (maximum 2 digits precision, more does not work)

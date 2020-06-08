@@ -9,7 +9,7 @@ class BaseAccessToken:
         self.identifier = None
 
     def __repr__(self):
-        return "%s(0x%x, cids:%s)" % (self.__class__.__name__, id(self), '/'.join(self.getIdentifiers()))
+        return "{}({:x}, cids:{})".format(self.__class__.__name__, id(self), '/'.join(self.getIdentifiers()))
         
     def getIdentifiers(self):
         """Returns a list of all token IDs of this token (and any subtokens it contains)"""
@@ -28,7 +28,7 @@ class BaseAccessToken:
         
     def _allows(self, operation, accessChecker):
         """Internal method - return True if this token allows 'operation' on the element represented by 'accessChecker'"""
-        if DEBUG: print('access: %s %s: no access at all allowed by %s' % (operation, accessChecker.destination, self))
+        if DEBUG: print(f'access: {operation} {accessChecker.destination}: no access at all allowed by {self}')
         return False
         
     def _allowsDelegation(self, path, rights, aud=None):
@@ -92,8 +92,8 @@ class IgorAccessToken(BaseAccessToken):
         
     def _allows(self, operation, accessChecker):
         if not operation in NORMAL_OPERATIONS:
-            if DEBUG: print('access: %s %s: not allowed by supertoken' % (operation, accessChecker.destination))
-        if DEBUG: print('access: %s %s: allowed by supertoken' % (operation, accessChecker.destination))
+            if DEBUG: print(f'access: {operation} {accessChecker.destination}: not allowed by supertoken')
+        if DEBUG: print(f'access: {operation} {accessChecker.destination}: allowed by supertoken')
         return True
 
     def _allowsDelegation(self, path, rights, aud=None):
@@ -127,13 +127,13 @@ class AccessToken(BaseAccessToken):
             audience = content['aud']
             ourUrl = singleton.getSelfAudience()
             self.validForSelf = (audience == ourUrl)
-            if DEBUG: print('access: <aud> matches: %s' % self.validForSelf)
+            if DEBUG: print(f'access: <aud> matches: {self.validForSelf}')
         else:
             self.validForSelf = True
         if DEBUG:  print('access: Created:', repr(self))
         
     def __repr__(self):
-        return "%s(0x%x, %s)" % (self.__class__.__name__, id(self), repr(self.content))
+        return "{}(0x{:x}, {})".format(self.__class__.__name__, id(self), repr(self.content))
         
     def __eq__(self, other):
         if not isinstance(other, AccessToken):
@@ -144,11 +144,11 @@ class AccessToken(BaseAccessToken):
         if not 'aud' in self.content:
             return None
         if url.startswith(self.content['aud']):
-            if DEBUG: print('access: capability %s matches url %s' % (self, url))
+            if DEBUG: print(f'access: capability {self} matches url {url}')
             return self.identifier
         p = urllib.parse.urlparse(url)
         if p.netloc == self.content['aud']:
-            if DEBUG: print('access: capability %s matches hostname in %s' % (self, url))
+            if DEBUG: print(f'access: capability {self} matches hostname in {url}')
             return self.identifier
         return None
 
@@ -169,38 +169,38 @@ class AccessToken(BaseAccessToken):
     def _allows(self, operation, accessChecker):
         # First check this this capability is for us.
         if not self.validForSelf:
-            if DEBUG: print('access: Not for this Igor: AccessToken %s' % self)
+            if DEBUG: print(f'access: Not for this Igor: AccessToken {self}')
             return False
         cascadingRule = self.content.get(operation)
         if not cascadingRule:
-            if DEBUG: print('access: %s %s: no %s access allowed by AccessToken %s' % (operation, accessChecker.destination, operation, self))
+            if DEBUG: print(f'access: {operation} {accessChecker.destination}: no {operation} access allowed by AccessToken {self}')
             return False
         path = self.content.get('obj')
         if not path:
-            if DEBUG: print('access: %s %s: no path-based access allowed by AccessToken %s' % (operation, accessChecker.destination, self))
+            if DEBUG: print(f'access: {operation} {accessChecker.destination}: no path-based access allowed by AccessToken {self}')
             return False
         dest = accessChecker.destination
         destHead = dest[:len(path)]
         destTail = dest[len(path):]
         if cascadingRule == 'self':
             if dest != path:
-                if DEBUG: print('access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path))
+                if DEBUG: print(f'access: {operation} {dest}: does not match cascade={cascadingRule} for path={path}')
                 return False
         elif cascadingRule == 'descendant-or-self':
             if destHead != path or destTail[:1] not in ('', '/'):
-                if DEBUG: print('access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path))
+                if DEBUG: print(f'access: {operation} {dest}: does not match cascade={cascadingRule} for path={path}')
                 return False
         elif cascadingRule == 'descendant':
             if destHead != path or destTail[:1] != '/':
-                if DEBUG: print('access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path))
+                if DEBUG: print(f'access: {operation} {dest}: does not match cascade={cascadingRule} for path={path}')
                 return False
         elif cascadingRule == 'child':
             if destHead != path or destTail[:1] != '/' or destTail.count('/') != 1:
-                if DEBUG: print('access: %s %s: does not match cascade=%s for path=%s' % (operation, dest, cascadingRule, path))
+                if DEBUG: print(f'access: {operation} {dest}: does not match cascade={cascadingRule} for path={path}')
                 return False
         else:
-            raise AccessControlError('Capability has unknown cascading rule %s for operation %s' % (cascadingRule, operation))
-        if DEBUG: print('access: %s %s: allowed by AccessToken %s' % (operation, accessChecker.destination, self))
+            raise AccessControlError(f'Capability has unknown cascading rule {cascadingRule} for operation {operation}')
+        if DEBUG: print(f'access: {operation} {accessChecker.destination}: allowed by AccessToken {self}')
         return True
 
     def _allowsDelegation(self, newPath, newRights, aud=None):
@@ -208,7 +208,7 @@ class AccessToken(BaseAccessToken):
         # Check whether this token can be delegated
         canDelegate = self.content.get('delegate')
         if not canDelegate:
-            if DEBUG_DELEGATION: print('access: delegate %s: no delegation right on AccessToken %s' % (newPath, self))
+            if DEBUG_DELEGATION: print(f'access: delegate {newPath}: no delegation right on AccessToken {self}')
             return False
         # Check whether this is the external-supertoken and whether we want to create a new external token
         if canDelegate == 'external':
@@ -217,24 +217,24 @@ class AccessToken(BaseAccessToken):
                 # xxxjack no further checks for external tokens. This may need refining.
                 return True
             else:
-                if DEBUG_DELEGATION: print('access: delegate %s: only allowed for external audience' % newPath)
+                if DEBUG_DELEGATION: print(f'access: delegate {newPath}: only allowed for external audience')
                 return False
         elif 'aud' in self.content:
             if aud != self.content.get('aud'):
-                if DEBUG_DELEGATION: print('access: delegate %s: audience %s, capability is for %s' % (newPath, aud, self.content.get('aud')))
+                if DEBUG_DELEGATION: print('access: delegate {}: audience {}, capability is for {}'.format(newPath, aud, self.content.get('aud')))
                 return False
         else:
             if aud and aud != singleton.getSelfAudience():
-                if DEBUG_DELEGATION: print('access: delegate %s: cannot delegate to external %s' % (newPath, aud))
+                if DEBUG_DELEGATION: print(f'access: delegate {newPath}: cannot delegate to external {aud}')
                 return False
         # Check whether the path is contained in our path
         path = self.content.get('obj')
         if not path:
-            if DEBUG_DELEGATION: print('access: delegate %s: no path-based access allowed by AccessToken %s' % (newPath, self))
+            if DEBUG_DELEGATION: print(f'access: delegate {newPath}: no path-based access allowed by AccessToken {self}')
             return False
         subPath = newPath[len(path):]
         if not newPath.startswith(path) or not subPath[:1] in ('', '/'):
-            if DEBUG_DELEGATION: print('access: delegate %s: path not contained within path for AccessToken %s' % (newPath, self))
+            if DEBUG_DELEGATION: print(f'access: delegate {newPath}: path not contained within path for AccessToken {self}')
             return False
         newIsSelf = subPath == ''
         newIsChild = subPath.count('/') == 1
@@ -246,21 +246,21 @@ class AccessToken(BaseAccessToken):
             oldCascadingRule = self.content.get(operation)
             if not oldCascadingRule:
                 # If the operation isn't allowed at all it's definitely not okay.
-                if DEBUG_DELEGATION: print('access: delegate %s: no %s access allowed by AccessToken %s' % (newPath, operation, self))
+                if DEBUG_DELEGATION: print(f'access: delegate {newPath}: no {operation} access allowed by AccessToken {self}')
                 return False
             if newIsSelf:
                 if not newCascadingRule in CASCADING_RULES_IMPLIED.get(oldCascadingRule, {}):
-                    if DEBUG_DELEGATION: print('access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self))
+                    if DEBUG_DELEGATION: print(f'access: delegate {newPath}: {operation}={newCascadingRule} not allowed by {operation}={oldCascadingRule} for AccessToken {self}')
                     return False
             elif newIsChild:
                 # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
-                    if DEBUG_DELEGATION: print('access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self))
+                    if DEBUG_DELEGATION: print(f'access: delegate {newPath}: {operation}={newCascadingRule} not allowed by {operation}={oldCascadingRule} for AccessToken {self}')
                     return False
             else:
                 # xxxjack for now only allow if original rule includes all descendants
                 if not oldCascadingRule in ('descendant', 'descendant-or-self'):
-                    if DEBUG_DELEGATION: print('access: delegate %s: %s=%s not allowed by %s=%s for AccessToken %s' % (newPath, operation, newCascadingRule, operation, oldCascadingRule, self))
+                    if DEBUG_DELEGATION: print(f'access: delegate {newPath}: {operation}={newCascadingRule} not allowed by {operation}={oldCascadingRule} for AccessToken {self}')
                     return False
         # Everything seems to be fine.
         return True       
@@ -295,7 +295,7 @@ class AccessToken(BaseAccessToken):
         
     def addToHeadersFor(self, headers, url):
         # xxxjack assume checking has been done
-        if DEBUG: print('access: add token %s to headers for request to %s' % (self, url))
+        if DEBUG: print(f'access: add token {self} to headers for request to {url}')
         externalRepresentation = self._getExternalRepresentation()
         if not externalRepresentation:
             return
@@ -311,7 +311,7 @@ class AccessToken(BaseAccessToken):
         
     def _addChild(self, childId):
         """Register a new child token to this one"""
-        if DEBUG_DELEGATION: print('access: adding child %s to %s' % (childId, self.identifier))
+        if DEBUG_DELEGATION: print(f'access: adding child {childId} to {self.identifier}')
         children = self.content.get('child', [])
         if type(children) != type([]):
             children = [children]
@@ -321,7 +321,7 @@ class AccessToken(BaseAccessToken):
         
     def _delChild(self, childId):
         """Unregister a child token"""
-        if DEBUG_DELEGATION: print('access: adding child %s to %s' % (childId, self.identifier))
+        if DEBUG_DELEGATION: print(f'access: deleting child {childId} from {self.identifier}')
         children = self.content.get('child', [])
         if type(children) != type([]):
             children = [children]
@@ -331,14 +331,14 @@ class AccessToken(BaseAccessToken):
         
     def _save(self):
         """Saves a token back to stable storage"""
-        if DEBUG_DELEGATION: print('access: saving capability %s' % self.identifier)
-        capNodeList = singleton.igor.database.getElements("//au:capability[cid='%s']" % self.identifier, 'put', _accessSelfToken, namespaces=NAMESPACES)
+        if DEBUG_DELEGATION: print(f'access: saving capability {self.identifier}')
+        capNodeList = singleton.igor.database.getElements(f"//au:capability[cid='{self.identifier}']", 'put', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
-            print('access: Warning: Cannot save token %s because it is not in the database' % self.identifier)
+            print(f'access: Warning: Cannot save token {self.identifier} because it is not in the database')
             return
         elif len(capNodeList) > 1:
-            print('access: Error: Cannot save token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList)))
-            raise AccessControlError("Database Error: multiple capabilities with cid=%s" % self.identifier)
+            print(f'access: Error: Cannot save token {self.identifier} because it occurs {len(capNodeList)} times in the database')
+            raise AccessControlError(f"Database Error: multiple capabilities with cid={self.identifier}")
         oldCapElement = capNodeList[0]
         newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=AU_NAMESPACE)
         parentElement = oldCapElement.parentNode
@@ -350,23 +350,23 @@ class AccessToken(BaseAccessToken):
         
     def _setOwner(self, newOwner):
         """Set new owner of this token"""
-        if DEBUG_DELEGATION: print('access: set owner %s on capability %s' % (newOwner, self.identifier))
-        capNodeList = singleton.igor.database.getElements("//au:capability[cid='%s']" % self.identifier, 'delete', _accessSelfToken, namespaces=NAMESPACES)
+        if DEBUG_DELEGATION: print(f'access: set owner {newOwner} on capability {self.identifier}')
+        capNodeList = singleton.igor.database.getElements(f"//au:capability[cid='{self.identifier}']", 'delete', _accessSelfToken, namespaces=NAMESPACES)
         if len(capNodeList) == 0:
-            print('access: Warning: Cannot setOwner token %s because it is not in the database' % self.identifier)
+            print(f'access: Warning: Cannot setOwner token {self.identifier} because it is not in the database')
             return False
         elif len(capNodeList) > 1:
-            print('access: Error: Cannot setOwner token %s because it occurs %d times in the database' % (self.identifier, len(capNodeList)))
-            raise AccessControlError("Database Error: multiple capabilities with cid=%s" % self.identifier)
+            print(f'access: Error: Cannot setOwner token {self.identifier} because it occurs {len(capNodeList)} times in the database')
+            raise AccessControlError(f"Database Error: multiple capabilities with cid={self.identifier}")
         oldCapElement = capNodeList[0]
         parentElement = oldCapElement.parentNode
         newParentElementList = singleton.igor.database.getElements(newOwner, "post", _accessSelfToken)
         if len(newParentElementList) == 0:
-            print('access: cannot setOwner %s because it is not in the database')
-            raise AccessControlError("Internal Error: Unknown new token owner %s" % newOwner)
+            print(f'access: cannot setOwner {newOwner} because it is not in the database')
+            raise AccessControlError(f"Internal Error: Unknown new token owner {newOwner}")
         if len(newParentElementList) > 1:
-            print('access: cannot setOwner %s because it occurs multiple times in the database')
-            raise AccessControlError("Database Error: Multiple new token owner %s" % newOwner)
+            print(f'access: cannot setOwner {newOwner} because it occurs multiple times in the database')
+            raise AccessControlError(f"Database Error: Multiple new token owner {newOwner}")
         newParentElement = newParentElementList[0]
         newCapElement = singleton.igor.database.elementFromTagAndData("capability", self.content, namespace=AU_NAMESPACE)
         newParentElement.appendChild(oldCapElement) # This also removes it from where it is now...
@@ -379,13 +379,13 @@ class AccessToken(BaseAccessToken):
 
     def _revoke(self):
         """Revoke this token"""
-        if DEBUG_DELEGATION: print('access: revoking capability %s' % self.identifier)
+        if DEBUG_DELEGATION: print(f'access: revoking capability {self.identifier}')
         children = self.content.get('child', [])
         if type(children) != type([]):
             children = [children]
         for ch in children:
-            print('access: WARNING: Recursive delete of capability not yet implemented: %s' % ch)
-        singleton.igor.database.delValues("//au:capability[cid='%s']" % self.identifier, _accessSelfToken, namespaces=NAMESPACES)
+            print(f'access: WARNING: Recursive delete of capability not yet implemented: {ch}')
+        singleton.igor.database.delValues(f"//au:capability[cid='{self.identifier}']", _accessSelfToken, namespaces=NAMESPACES)
           
 class ExternalAccessTokenImplementation(AccessToken):
     def __init__(self, content):
@@ -413,15 +413,15 @@ class MultiAccessToken(BaseAccessToken):
         for t in self.tokens:
             tid = t._hasExternalRepresentationFor(url)
             if tid:
-                if DEBUG: print('access: capability %s has child matching url %s' % (self, url))
+                if DEBUG: print(f'access: capability {self} has child matching url {url}')
                 self.externalTokenCache[url] = t
                 return tid
-        if DEBUG: print('access: capability %s has no children matching url %s' % (self, url))
+        if DEBUG: print('faccess: capability {self} has no children matching url {url}')
         self.externalTokenCache[url] = False
         return None
         
     def _allows(self, operation, accessChecker):
-        if DEBUG: print('access: %s %s: MultiAccessToken(%d)' % (operation, accessChecker.destination, len(self.tokens)))
+        if DEBUG: print(f'access: {operation} {accessChecker.destination}: MultiAccessToken({len(self.tokens)})')
         for t in self.tokens:
             if t == self:
                 raise AccessControlError("Database Error: Recursive capability")
@@ -449,7 +449,7 @@ class MultiAccessToken(BaseAccessToken):
             # xxxjack should cache
             return t.addToHeadersFor(headers, url)
         else:
-            if DEBUG: print('access: %s has no token for %s' % (self, url))
+            if DEBUG: print(f'access: {self} has no token for {url}')
 
     def _removeToken(self, tokenId):
         """Remove token tokenId from this set"""

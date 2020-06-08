@@ -12,7 +12,7 @@ class AccessChecker:
         if not token:
             return self._failed(operation, token, tentative)
         if not operation in ALL_OPERATIONS:
-            self.access.igor.app.raiseHTTPError("500 Access: unknown operation '%s'" % operation)
+            self.access.igor.app.raiseHTTPError(f"500 Access: unknown operation '{operation}'")
         ok = token._allows(operation, self)
         if not ok:
             ok = self._failed(operation, token, tentative)

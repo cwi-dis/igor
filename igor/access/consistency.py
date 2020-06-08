@@ -28,11 +28,11 @@ class StructuralConsistency:
         
     def _checkExists(self, path, dontfix=False, context=None):
         if VERBOSE:
-            print('consistency._checkExists(%s)' % path)
+            print(f'consistency._checkExists({path})')
         if type(context) == type(''):
             contextElements = self.database.getElements(context, 'get', self.token, namespaces=self.namespaces)
             if len(contextElements) != 1:
-                self._status('Non-singleton context: %s' % context)
+                self._status(f'Non-singleton context: {context}')
                 raise CannotFix
             context = contextElements[0]
                 
@@ -42,7 +42,7 @@ class StructuralConsistency:
                 parentPath, tag = self.database.splitXPath(path, allowNamespaces=True)
                 parentElements = self.database.getElements(parentPath, 'post', self.token, namespaces=self.namespaces)
                 if len(parentElements) != 1:
-                    self._status('Cannot create element: non-singleton parent %s' % parentPath)
+                    self._status(f'Cannot create element: non-singleton parent {parentPath}')
                     raise CannotFix
                 parentElement = parentElements[0]
                 if tag[:3] == 'au:':
@@ -52,31 +52,31 @@ class StructuralConsistency:
                 parentElement.appendChild(newElement)
                 self.database.setChanged()
                 self.nChanges += 1
-                self._status('Created: %s' % path, isError=False)
+                self._status(f'Created: {path}', isError=False)
             else:
-                self._status('Missing: %s' % path)
+                self._status(f'Missing: {path}')
         
     def _checkUnique(self, path, dontfix=False, context=None):
         if VERBOSE:
-            print('consistency._checkUnique(%s)' % path)
+            print(f'consistency._checkUnique({path})')
         if type(context) == type(''):
             contextElements = self.database.getElements(context, 'get', self.token, namespaces=self.namespaces)
             if len(contextElements) != 1:
-                self._status('Non-singleton context: %s' % context)
+                self._status(f'Non-singleton context: {context}')
                 raise CannotFix
             context = contextElements[0]
                 
         allElements = self.database.getElements(path, 'get', self.token, namespaces=self.namespaces, context=context)
         if len(allElements) > 1:
             if self.fix and not dontfix:
-                self._status('Cannot fix yet: should remove additional %s' % path)
+                self._status(f'Cannot fix yet: should remove additional {path}')
                 raise CannotFix # Net yet implemented
             else:
-                self._status('Non-unique: %s' % path)
+                self._status(f'Non-unique: {path}')
         
     def _checkSingleton(self, path1, path2, dontfix=False, context=None):
         if VERBOSE:
-            print('consistency._checkSingleton(%s, %s)' % (path1, path2))
+            print(f'consistency._checkSingleton({path1}, {path2})')
         self._checkExists(path1 + '/' + path2, dontfix=dontfix, context=context)
         self._checkUnique(path1 + '/' + path2, dontfix=dontfix, context=context)
 #        if self.extended:
@@ -85,14 +85,14 @@ class StructuralConsistency:
     def _getAllElements(self, path):
         rv = self.database.getElements(path, 'get', self.token, namespaces=self.namespaces)
         if VERBOSE:
-            print('consistency._getAllElements(%s) returns %d items' % (path, len(rv)))
+            print(f'consistency._getAllElements({path}) returns {len(rv)} items')
         return rv
         
     def _getValues(self, path, context=None):
         if type(context) == type(''):
             contextElements = self.database.getElements(context, 'get', self.token, namespaces=self.namespaces)
             if len(contextElements) != 1:
-                self._status('Non-singleton context: %s' % context)
+                self._status(f'Non-singleton context: {context}')
                 raise CannotFix
             context = contextElements[0]
         return [x[1] for x in self.database.getValues(path, token=self.token, namespaces=self.namespaces, context=context)]
@@ -105,7 +105,7 @@ class StructuralConsistency:
             return values[0]
         if context and type(context) != type(''):
             context = self.database.getXPathForElement(context)
-        self._status('Non-unique value: %s (context=%s)' % (path, context))
+        self._status(f'Non-unique value: {path} (context={context})')
         raise CannotFix
 
     def _checkInfrastructureItem(self, path, item):
@@ -128,11 +128,11 @@ class StructuralConsistency:
             if have != nsUrl:
                 if self.fix:
                     rootElement.setAttribute('xmlns:' + nsName, nsUrl)
-                    self._status('Added namespace declaration for xmlns:%s=%s' % (nsName, nsUrl), isError=False)
+                    self._status(f'Added namespace declaration for xmlns:{nsName}={nsUrl}', isError=False)
                     self.database.setChanged()
                     self.nChanges += 1
                 else:
-                    self._status('Missing namespace declaration xmlns:%s=%s' % (nsName, nsUrl))
+                    self._status(f'Missing namespace declaration xmlns:{nsName}={nsUrl}')
                     raise CannotFix
 
     def _checkPlugins(self):
@@ -151,14 +151,14 @@ class StructuralConsistency:
             if self.fix:
                 self.database.delValues(xp, self.token)
                 self.database.setChanged()
-                self._status('Deleted %s, belonged to missing plugin %s' % (xp, owner), isError=False)
+                self._status(f'Deleted {xp}, belonged to missing plugin {owner}', isError=False)
                 self.nChanges += 1
             else:
-                self._status('Missing plugin "%s" owns %s' % (owner, xp))
+                self._status(f'Missing plugin "{owner}" owns {xp}')
         for plugin in installedPlugins:
             if plugin in mentionedPlugins:
                 continue
-            self._status('Warning: plugin "%s" does not own anything in the database' % plugin, isError=False)
+            self._status(f'Warning: plugin "{plugin}" does not own anything in the database', isError=False)
         
     def do_check(self):
         databaseTemplate = (
@@ -212,7 +212,7 @@ class StructuralConsistency:
             if ':' in userName or '{' in userName:
                 continue # This is not a user but a capability
             self._checkUnique(userName, context='/data/identities', dontfix=True)
-            self._checkSingleton('/data/identities/%s' % userName, 'plugindata')
+            self._checkSingleton(f'/data/identities/{userName}', 'plugindata')
     
         #
         # Now check that all plugins exist
@@ -239,23 +239,23 @@ class CapabilityConsistency(StructuralConsistency):
     def _hasCapability(self, location, **kwargs):
         expr = location + '/au:capability'
         for k, v in list(kwargs.items()):
-            subExpr = "[%s='%s']" % (k, v)
+            subExpr = f"[{k}='{v}']"
             expr += subExpr
         allCaps = self.database.getElements(expr, 'get', token=self.token, namespaces=self.namespaces)
         if len(allCaps) == 0:
             # If this is a standard capability check whether it exists with incorrect settings
             if 'cid' in kwargs:
-                allCaps = self.database.getElements("//au:capability[cid='%s']" % kwargs['cid'], 'get', token=self.token, namespaces=self.namespaces)
+                allCaps = self.database.getElements("//au:capability[cid='{}']".format(kwargs['cid']), 'get', token=self.token, namespaces=self.namespaces)
                 if len(allCaps):
-                    self._status('Standard capability %s is in wrong place or has wrong content' % expr)
+                    self._status(f'Standard capability {expr} is in wrong place or has wrong content')
                     raise CannotFix
             if self.fix:
                 self._createCapability(location, kwargs)
-                self._status('Fixed: Missing standard capability %s' % expr, isError=False)
+                self._status(f'Fixed: Missing standard capability {expr}', isError=False)
             else:
-                self._status('Missing standard capability %s' % expr)
+                self._status(f'Missing standard capability {expr}')
         elif len(allCaps) > 1:
-                self._status('Duplicate standard capability %s' % expr)
+                self._status(f'Duplicate standard capability {expr}')
             
     def _createCapability(self, location, content):
         if not 'cid' in content:
@@ -265,7 +265,7 @@ class CapabilityConsistency(StructuralConsistency):
         newElement = self.database.elementFromTagAndData('capability', content, namespace=self.namespaces)
         parentElements = self.database.getElements(location, 'post', token=self.token, namespaces=self.namespaces)
         if len(parentElements) != 1:
-            self._status('Cannot create capability: non-singleton destination %s' % location)
+            self._status(f'Cannot create capability: non-singleton destination {location}')
             raise CannotFix
         parentElement = parentElements[0]
         parentElement.appendChild(newElement)
@@ -275,9 +275,9 @@ class CapabilityConsistency(StructuralConsistency):
             return
         # Update parent, if needed
         parentCid = content['parent']
-        parent = self._getAllElements("//au:capability[cid='%s']" % parentCid)
+        parent = self._getAllElements(f"//au:capability[cid='{parentCid}']")
         if len(parent) != 1:
-            self._status('Cannot update parent capability: Multiple capabilities with cid=%s' % parentCid)
+            self._status(f'Cannot update parent capability: Multiple capabilities with cid={parentCid}')
             raise CannotFix
         parent = parent[0]
         parent.appendChild(self.database.elementFromTagAndData('child', content['cid']))
@@ -287,9 +287,9 @@ class CapabilityConsistency(StructuralConsistency):
         parentCid = 'root'
         cap.appendChild(self.database.elementFromTagAndData('parent', parentCid))
         self.database.setChanged()
-        parent = self._getAllElements("//au:capability[cid='%s']" % parentCid)
+        parent = self._getAllElements(f"//au:capability[cid='{parentCid}']")
         if len(parent) != 1:
-            self._status('Cannot update parent capability: Multiple capabilities with cid=%s' % parentCid)
+            self._status(f'Cannot update parent capability: Multiple capabilities with cid={parentCid}')
             raise CannotFix
         parent = parent[0]
         parent.appendChild(self.database.elementFromTagAndData('child', cid))
@@ -369,7 +369,7 @@ class CapabilityConsistency(StructuralConsistency):
             pluginName = pluginElement.tagName
             if ':' in pluginName or '{' in pluginName:
                 continue
-            pluginDataPath = '/data/plugindata/%s' % pluginName
+            pluginDataPath = f'/data/plugindata/{pluginName}'
             # Plugins specify all capabilities they need in their au:needCapability elements
             # But we ensure that it always needs access to its own plugindata
             tokensNeeded = [dict(obj=pluginDataPath, get='descendant-or-self')]
@@ -386,7 +386,7 @@ class CapabilityConsistency(StructuralConsistency):
             for c in set(allCapIDs):
                 allCapIDs.remove(c)
             for c in allCapIDs:
-                self._status('Non-unique cid: %s' % c)
+                self._status(f'Non-unique cid: {c}')
             raise CannotFix
         allCaps = self._getAllElements('//au:capability')
         cid2cap = {}
@@ -396,10 +396,10 @@ class CapabilityConsistency(StructuralConsistency):
             cid = self._getValue('cid', cap)
             if not cid:
                 if self.fix:
-                    self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
+                    self._status(f'Cannot fix yet: Capability {self.database.getXPathForElement(cap)} has no cid')
                     raise CannotFix
                 else:
-                    self._status('Cannot fix yet: Capability %s has no cid' % self.database.getXPathForElement(cap))
+                    self._status(f'Cannot fix yet: Capability {self.database.getXPathForElement(cap)} has no cid')
             cid2cap[cid] = cap
         # Check parent/child relation for each capability
         for cap in allCaps:
@@ -409,18 +409,18 @@ class CapabilityConsistency(StructuralConsistency):
             for childCid in self._getValues('child::child', cap):
                 if not childCid in cid2cap:
                     if self.fix:
-                        self.database.delValues("child::child[text()='%s']" % childCid, token=self.token, context=cap)
+                        self.database.delValues(f"child::child[text()='{childCid}']", token=self.token, context=cap)
                         self.database.setChanged()
                         self.nChanges += 1
-                        self._status('Removed child %s from %s' % (childCid, cid), isError=False)
+                        self._status(f'Removed child {childCid} from {cid}', isError=False)
                     else:
-                        self._status('Non-existing child %s in %s' % (childCid, cid))
+                        self._status(f'Non-existing child {childCid} in {cid}')
                 elif childCid in cid2parent:
                     if self.fix:
-                        self._status('Cannot fix yet: Child with multiple parents: %s' % childCid)
+                        self._status(f'Cannot fix yet: Child with multiple parents: {childCid}')
                         raise CannotFix
                     else:
-                        self._status('Child with multiple parents: %s' % childCid)
+                        self._status(f'Child with multiple parents: {childCid}')
                 else:
                     cid2parent[childCid] = cid
         # Check child/parent relation for each capability
@@ -436,10 +436,10 @@ class CapabilityConsistency(StructuralConsistency):
                 if self.fix:
                     if expectedParent:
                         if parentCid:
-                            self._status('Cannot fix yet: Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
+                            self._status(f'Cannot fix yet: Inconsistent parent for {cid} ({parentCid} versus {expectedParent})')
                             raise CannotFix
                         else:
-                            self._status('Cannot fix yet: %s has no parent, but is listed as child of %s' % (cid, expectedParent))
+                            self._status(f'Cannot fix yet: {cid} has no parent, but is listed as child of {expectedParent}')
                             raise CannotFix
                     self.database.delValues('child::parent', token=self.token, context=cap)
                     self.database.setChanged()
@@ -447,17 +447,17 @@ class CapabilityConsistency(StructuralConsistency):
                     parentCid = None
                 else:
                     if expectedParent and not parentCid:
-                        self._status('Capability %s has no parent but listed by %s as child' % (cid, expectedParent))
+                        self._status(f'Capability {cid} has no parent but listed by {expectedParent} as child')
                     elif parentCid and not expectedParent:
-                        self._status('Parent for %s is %s but not listed there as child' % (cid, parentCid))
+                        self._status(f'Parent for {cid} is {parentCid} but not listed there as child')
                     else:
-                        self._status('Inconsistent parent for %s (%s versus %s)' % (cid, parentCid, expectedParent))
+                        self._status(f'Inconsistent parent for {cid} ({parentCid} versus {expectedParent})')
             if not parentCid:
                 if self.fix:
                     self._fixParentCapability(cap, cid)
-                    self._status('Orphaned capability %s given parent root' % cid, isError=False)
+                    self._status(f'Orphaned capability {cid} given parent root', isError=False)
                 else:
-                    self._status('Capability %s has no parent' % self.database.getXPathForElement(cap))
+                    self._status(f'Capability {self.database.getXPathForElement(cap)} has no parent')
         #
         # Third set of checks: are capabilities stored in the correct places
         #
@@ -481,14 +481,14 @@ class CapabilityConsistency(StructuralConsistency):
             parentPath = self.database.getXPathForElement(loc)
             cidList = self._getValues('au:capability/cid', context=loc)
             if not cidList:
-                self._status('Listed as parent of capabilities but cannot find them: %s' % parentPath)
+                self._status(f'Listed as parent of capabilities but cannot find them: {parentPath}')
                 continue
             for cid in cidList:
                 if self.fix:
-                    self._status('Cannot fix yet: Capability %s: in unexpected location %s' % (cid, parentPath))
+                    self._status(f'Cannot fix yet: Capability {cid}: in unexpected location {parentPath}')
                     raise CannotFix
                 else:
-                    self._status('Capability %s: in unexpected location %s' % (cid, parentPath))
+                    self._status(f'Capability {cid}: in unexpected location {parentPath}')
         #
         # Fourth set: that we have all the expected capabilities
         #

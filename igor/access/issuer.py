@@ -47,34 +47,34 @@ class IssuerInterface:
             iss = self.getSelfIssuer()
         if aud is None:
             aud = self.getSelfAudience()
-        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']/externalKey" % (iss, aud)
+        keyPath = f"au:access/au:sharedKeys/au:sharedKey[iss='{iss}'][aud='{aud}']/externalKey"
         externalKey = self._shadowDatabase.getValue(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         if not externalKey:
-            print('access: _getExternalRepresentation: no key found at %s' % keyPath)
-            self.igor.app.raiseHTTPError('404 No shared key found for iss=%s, aud=%s' % (iss, aud))
+            print(f'access: _getExternalRepresentation: no key found at {keyPath}')
+            self.igor.app.raiseHTTPError(f'404 No shared key found for iss={iss}, aud={aud}')
         return externalKey
 
     def _decodeIncomingData(self, data):
         sharedKey = self._getSharedKey()
         if DEBUG: 
-            print('access._decodeIncomingData: %s: externalRepresentation %s' % (self, data))
-            print('access._decodeIncomingData: %s: externalKey %s' % (self, sharedKey))
+            print(f'access._decodeIncomingData: {self}: externalRepresentation {data}')
+            print(f'access._decodeIncomingData: {self}: externalKey {sharedKey}')
         try:
             content = jwt.decode(data, sharedKey, issuer=self.getSelfIssuer(), audience=self.getSelfAudience(), algorithms=['RS256', 'HS256'])
         except jwt.DecodeError:
-            print('access: ERROR: incorrect signature on bearer token %s' % data)
-            print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
+            print(f'access: ERROR: incorrect signature on bearer token {data}')
+            print(f'access: ERROR: content: {jwt.decode(data, verify=False)}')
             self.igor.app.raiseHTTPError('400 Incorrect signature on key')
         except jwt.InvalidIssuerError:
-            print('access: ERROR: incorrect issuer on bearer token %s' % data)
-            print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
+            print(f'access: ERROR: incorrect issuer on bearer token {data}')
+            print(f'access: ERROR: content: {jwt.decode(data, verify=False)}')
             self.igor.app.raiseHTTPError('400 Incorrect issuer on key')
         except jwt.InvalidAudienceError:
-            print('access: ERROR: incorrect audience on bearer token %s' % data)
-            print('access: ERROR: content: %s' % jwt.decode(data, verify=False))
+            print(f'access: ERROR: incorrect audience on bearer token {data}')
+            print(f'access: ERROR: content: {jwt.decode(data, verify=False)}')
             self.igor.app.raiseHTTPError('400 Incorrect audience on key')
         if DEBUG: 
-            print('access._decodeIncomingData: %s: tokenContent %s' % (self, content))
+            print(f'access._decodeIncomingData: {self}: tokenContent {content}')
         return content
 
     def _encodeOutgoingData(self, tokenContent):
@@ -83,14 +83,14 @@ class IssuerInterface:
         # xxxjack Could check for multiple aud values based on URL to contact...
         if not iss or not aud:
             print('access: _getExternalRepresentation: no iss and aud, so no external representation')
-            self.igor.app.raiseHTTPError('404 Cannot lookup shared key for iss=%s aud=%s' % (iss, aud))
+            self.igor.app.raiseHTTPError(f'404 Cannot lookup shared key for iss={iss} aud={aud}')
         externalKey = self._getSharedKey(iss, aud)
         externalRepresentation = jwt.encode(tokenContent, externalKey, algorithm='HS256')
         externalRepresentation = externalRepresentation.decode('ascii')
         if DEBUG: 
-            print('access._encodeOutgoingData: %s: tokenContent %s' % (self, tokenContent))
-            print('access._encodeOutgoingData: %s: externalKey %s' % (self, externalKey))
-            print('access._encodeOutgoingData: %s: externalRepresentation %s' % (self, externalRepresentation))
+            print(f'access._encodeOutgoingData: {self}: tokenContent {tokenContent}')
+            print(f'access._encodeOutgoingData: {self}: externalKey {externalKey}')
+            print(f'access._encodeOutgoingData: {self}: externalRepresentation {externalRepresentation}')
         return externalRepresentation
         
     def getSubjectList(self, token=None):
@@ -154,9 +154,9 @@ class IssuerInterface:
         iss = self.getSelfIssuer()
         if not aud:
             aud = self.getSelfAudience()
-        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
+        keyPath = f"au:access/au:sharedKeys/au:sharedKey[iss='{iss}'][aud='{aud}']"
         if sub:
-            keyPath += "[sub='%s']" % sub
+            keyPath += f"[sub='{sub}']"
         keyElements = self._shadowDatabase.getElements(keyPath, 'get', _accessSelfToken, namespaces=NAMESPACES)
         if keyElements:
             self.igor.app.raiseHTTPError('409 Shared key already exists')
@@ -181,9 +181,9 @@ class IssuerInterface:
             iss = self.getSelfIssuer()
         if not aud:
             aud = self.getSelfAudience()
-        keyPath = "au:access/au:sharedKeys/au:sharedKey[iss='%s'][aud='%s']" % (iss, aud)
+        keyPath = f"au:access/au:sharedKeys/au:sharedKey[iss='{iss}'][aud='{aud}']"
         if sub:
-            keyPath += "[sub='%s']" % sub
+            keyPath += f"[sub='{sub}']"
         self._shadowDatabase.delValues(keyPath, _accessSelfToken, namespaces=NAMESPACES)
         self._shadowDatabase.saveFile()
         return ''

@@ -78,7 +78,7 @@ class URLCallRunner(threading.Thread):
                     r = requests.request(method, url, data=data, headers=headers, **kwargs)
                     if r.status_code == 401:
                         # If we get a 401 Unauthorized error we also report it through the access control errors
-                        print('401 error from external call, was carrying capability %s' % addedTokenId)
+                        print(f'401 error from external call, was carrying capability {addedTokenId}')
                         failureDescription = dict(operation=method.lower(), path=url, external=True, capID=token.getIdentifiers())
                         if 'representing' in env:
                             failureDescription['representing'] = env['representing']
@@ -95,15 +95,15 @@ class URLCallRunner(threading.Thread):
             except requests.exceptions.RequestException:
                 eType, eValue, _ = sys.exc_info()
                 msg = traceback.format_exception_only(eType, eValue)[0].strip()
-                resultStatus = '502 URLCaller: %s' % msg
+                resultStatus = f'502 URLCaller: {msg}'
                 errorMessage = msg
             except:
-                resultStatus = '502 URLCaller: exception while calling URL %s' % url
+                resultStatus = f'502 URLCaller: exception while calling URL {url}'
                 print(resultStatus)
                 sys.stdout.flush()
                 errorMessage = resultStatus
                 traceback.print_exc(file=sys.stdout)
-            print('- - - [%s] "- %s %s" - %s' % (datetime, method, url, resultStatus), file=sys.stderr)
+            print('- - - [{}] "- {} {}" - {}'.format(datetime, method, url, resultStatus), file=sys.stderr)
             alive = resultStatus[:3] == '200'
             if not alive or DEBUG:
                 if resultData and resultData.strip() != resultStatus.strip():
@@ -118,16 +118,16 @@ class URLCallRunner(threading.Thread):
                     resultData = errorMessage
                 args = dict(alive=alive, resultData=resultData)
                 # xxxjack should we add the token here too?
-                self.igor.app.request('/internal/updateStatus/%s' % representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
+                self.igor.app.request(f'/internal/updateStatus/{representing}', method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 
     def dump(self):
-        rv = 'URLCaller %s (%s):\n' % (repr(self), self.what)
+        rv = f'URLCaller {self!r} ({self.what}):\n'
         for qel in self.queue.queue:
             rv += '\t' + repr(qel) + '\n'
         return rv
         
     def callURL(self, tocall):
-        if DEBUG: print('URLCaller.callURL(%s)' % repr(tocall))
+        if DEBUG: print(f'URLCaller.callURL({tocall!r})')
         if not callable(tocall):
             assert 'token' in tocall
             if tocall.get('aggregate'):

@@ -212,7 +212,7 @@ class IgorServer:
         try:
             self._advertiser = subprocess.Popen(cmd)
         except OSError:
-            print("advertisement command failed: %s" % (' '.join(cmd)), file=sys.stderr)
+            print("advertisement command failed: {}".format(' '.join(cmd)), file=sys.stderr)
     
     
     def _fillSelfData(self):

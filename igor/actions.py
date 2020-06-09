@@ -65,7 +65,7 @@ class Action:
         self.install()
         
     def __repr__(self):
-        return 'Action(0x%x, %s)' % (id(self), repr(self.content))
+        return f'Action(0x{id(self):x}, {repr(self.content)})'
         
     def __eq__(self, other):
         return id(self) == id(other)
@@ -110,7 +110,7 @@ class Action:
     def callback(self, *nodelist):
         """Schedule the action, if it is runnable at this time, and according to the condition"""
         if not self.collection:
-            print('ERROR: %s.callback() called but it is already deleted' % repr(self))
+            print(f'ERROR: {repr(self.content)}.callback() called but it is already deleted')
             return
         # Test whether we are allowed to run, depending on minInterval
         now = time.time()
@@ -122,23 +122,23 @@ class Action:
         # Run for each node (or once, if no node present because we were not triggered by an xpath)        
         if not nodelist:
             nodelist = [None]
-        if DEBUG: print('Action%s.callback(%s)' % (repr(self), repr(nodelist)))
+        if DEBUG: print(f'Action{repr(self)}.callback({repr(nodelist)})')
         for node in nodelist:
             # Test whether we are allowed to run according to our condition
             if self.condition:
                 shouldRun = self.collection.igor.database.getValue(self.condition, token=self.token, context=node)
                 if not shouldRun:
-                    if DEBUG: print('\t%s: condition failed' % repr(node))
+                    if DEBUG: print(f'\t{repr(node)}: condition failed')
                     continue
             # Evaluate URL and paramters
             try:
                 url = self._evaluate(self.url, node, True)
-                if DEBUG: print('\t%s: calling %s' % (repr(node), url))
+                if DEBUG: print(f'\t{node!r}: calling {url}')
                 data = self._evaluate(self.data, node, False)
             except xmlDatabase.DBAccessError:
                 actionPath = self.collection.igor.database.getXPathForElement(self.element)
                 nodePath = self.collection.igor.database.getXPathForElement(node)
-                print("actions: Error: action %s lacks AWT permission for '%s' or '%s'" % (actionPath, self.url, self.data))
+                print(f"actions: Error: action {actionPath} lacks AWT permission for '{self.url}' or '{self.data}'")
                 # self.collection.igor.app.request('/internal/updateStatus/%s' % self.representing, method='POST', data=json.dumps(args), headers={'Content-type':'application/json'})
                 continue
             # Prepare to run
@@ -180,7 +180,6 @@ class Action:
         earliestNextRun = int(time.time())
         if self.minInterval:
             earliestNextRun += self.minInterval
-        #if DEBUG: print 'Action%s._willRunNow, t=%d' % (self, earliestNextRun)
         nbElements = self.element.getElementsByTagName("notBefore")
         if nbElements:
             nbElement = nbElements[0]
@@ -253,7 +252,7 @@ class ActionCollection(threading.Thread):
         self.start()
         
     def dump(self):
-        rv = 'ActionCollection %s, nothingBefore %s:\n' % (repr(self), self.nothingBefore)
+        rv = f'ActionCollection {self!r}, nothingBefore {self.nothingBefore}:\n'
         with self.lock:
             for a in self.actions:
                 rv += '\t' + a.dump() + '\n'
@@ -289,7 +288,7 @@ class ActionCollection(threading.Thread):
                     waitTime = None
                 else:
                     waitTime = self.nothingBefore - time.time()
-                if DEBUG: print('ActionCollection.run wait(%s)' % waitTime)
+                if DEBUG: print(f'ActionCollection.run wait({waitTime})')
                 self.actionsChanged.wait(waitTime)
         
     def actionTimeChanged(self):
@@ -300,7 +299,7 @@ class ActionCollection(threading.Thread):
         
     def updateActions(self, nodelist):
         """Called by upper layers when something has changed in the actions in the database"""
-        if DEBUG: print('ActionCollection(%s).updateActions(t=%d)' % (repr(self), time.time()))
+        if DEBUG: print(f'ActionCollection({self!r}).updateActions(t={time.time()})')
         if DEBUG: print(self.dump())
         with self.updateLock:
             with self.lock:
@@ -368,7 +367,7 @@ class ActionCollection(threading.Thread):
         
     def triggerAction(self, node):
         """Called by the upper layers when a single action needs to be triggered"""
-        if DEBUG: print('ActionCollection.triggerAction(%s)' % node)
+        if DEBUG: print(f'ActionCollection.triggerAction({node})')
         tocall = None
         with self.lock:
             for a in self.actions:
@@ -376,7 +375,7 @@ class ActionCollection(threading.Thread):
                     tocall = a
                     break
             else:
-                print('ERROR: triggerAction called for unknown element %s %s' % (repr(node), self.igor.database.getXPathForElement(node)))
+                print(f'ERROR: triggerAction called for unknown element {node!r} {self.igor.database.getXPathForElement(node)}')
                 return
         tocall.callback()
             

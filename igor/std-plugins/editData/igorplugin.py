@@ -27,7 +27,7 @@ class EditDataPlugin:
             message = f"Error accessing {xpath}: {self.igor.app.stringFromHTTPError(e)}"
         else:
             if xmldata != rawxmldata:
-                message = "Element contains hidden (namespaced) data such as capabilities or ownership information. Editing is not possible."
+                message = f"Element {xpath} contains hidden (namespaced) data such as capabilities or ownership information. Editing is not possible."
         return dict(message=message, xpath=xpath, xmldata=xmldata)
         
     def _post(self, xpath, newData, callerToken, save=None):

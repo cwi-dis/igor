@@ -14,7 +14,7 @@ class SmartmeterIotsaPlugin:
     def pull(self, token=None, callerToken=None):
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', f'{self.pluginName}.local')
-        url = f"{protocol}://{host}}/p1?format=json"
+        url = f"{protocol}://{host}/p1?format=json"
         method = 'GET'
         
         headers = {}

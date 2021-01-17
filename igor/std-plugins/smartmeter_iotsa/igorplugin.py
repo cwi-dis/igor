@@ -27,14 +27,14 @@ class SmartmeterIotsaPlugin:
         try:
             r = requests.request(method, url, headers=headers, **kwargs)
         except requests.exceptions.ConnectionError as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: cannot connect" % (url))
+            return self.igor.app.raiseHTTPError(f"502 Error accessing {url}: cannot connect: {e}")
         except requests.exceptions.Timeout as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: timeout during connect" % (url))
+            return self.igor.app.raiseHTTPError(f"502 Error accessing {url}: timeout during connect: {e}")
         except requests.exceptions.RequestException as e:
-            return self.igor.app.raiseHTTPError("502 Error accessing %s: %s" % (url, repr(e)))
+            return self.igor.app.raiseHTTPError(f"502 Error accessing {url}: {e}")
         if r.status_code == 401:
             # If we get a 401 Unauthorized error we also report it through the access control errors
-            print('401 error from external call, was carrying capability %s' % addedTokenId)
+            print(f'401 error from external call, was carrying capability {addedTokenId}')
             failureDescription = dict(operation=method.lower(), path=url, external=True, capID=token.getIdentifiers(), plugin=self.pluginName)
             self.igor.internal._accessFailure(failureDescription)
         r.raise_for_status()
@@ -43,10 +43,10 @@ class SmartmeterIotsaPlugin:
         jsonData = r.text
         tocall = dict(
             method='PUT', 
-            url='/data/sensors/%s' % self.pluginName, 
+            url=f'/data/sensors/{self.pluginName}', 
             mimetype='application/json', 
             data=jsonData, 
-            representing='sensors/%s' % self.pluginName, 
+            representing=f'sensors/{self.pluginName}', 
             token=token)
         self.igor.urlCaller.callURL(tocall)
         return 'ok\n'

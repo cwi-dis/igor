@@ -32,18 +32,40 @@
 		{% if returnTo %}
 			<input type="hidden" name="returnTo" value="{{returnTo}}">
 		{% endif %}
-		
-		<label>Path:</label>
-		<input type="text" name="xpath" size="40" value="{{result.xpath}}" readonly>
-		<br>
-		<label>Old:</label>
-	<textarea name="oldData" rows="10" cols="60" readonly>{{result.xmldata}}</textarea>
-		<br>
-		<label>New:</label>
-		<textarea name="newData" rows="10" cols="60">{{result.xmldata}}</textarea>
-		<br>
-		<input type="submit" value="Replace">
-		<input type="submit" name="save" value="Replace and save database">
+		<table>
+			<tr>
+				<td>
+					<label>Path:</label>
+				</td>
+				<td>
+					<input type="text" name="xpath" size="40" value="{{result.xpath}}" readonly>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>Old:</label>
+				</td>
+				<td>
+					<textarea name="oldData" rows="10" cols="60" readonly>{{result.xmldata}}</textarea>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>New:</label>
+				</td>
+				<td>
+					<textarea name="newData" rows="10" cols="60">{{result.xmldata}}</textarea>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					{% if not result.message %}
+						<input type="submit" value="Replace">
+						<input type="submit" name="save" value="Replace and save database">
+					{% endif %}
+				</td>
+			</tr>
+		</table>
 	</form>
 	
 	<form action="_edit.html">

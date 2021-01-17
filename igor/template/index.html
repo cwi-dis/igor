@@ -13,6 +13,10 @@
 		port {{igor.database.getValue('/data/services/igor/port', token)}}. Welcome!
 	</p>
 	<p>
+		Documentation (including installation instructions, links to the source code, etc) can be found at
+		<a href="https://igor-iot.readthedocs.io/en/latest/" target="_blank">igor-iot.readthedocs.io</a>.
+	</p>
+	<p>
 		It has been running since {{igor.database.getValue('igor_dateTime(/data/services/igor/startTime)', token)}},
 		and was rebooted {{igor.database.getValue('/data/services/igor/rebootCount', token)}} times during its lifetime.
 	</p>

@@ -39,21 +39,21 @@
 	<h2>Installed {{pluginName}} service actions</h2>
 	<table>
 		<tr>
+			<th>Service name</th>
 			<th>Interval</th>
 			<th>Command</th>
 			<th>OP</th>
 		</tr>
 		{% for xpath, actionDescr in myActions.items() %}
 			<tr>
+				<td>{{actionDescr.representing}}</td>
 				<td>{{actionDescr.interval}}</td>
 				<td>{{actionDescr.url}}</td>
 				<td>
-					<a href="{{xpath}}?.METHOD=DELETE">Delete this action</a>
 					<form action="{{xpath}}">
 						<input type="hidden" name=".METHOD" value="DELETE">
 						<input type="submit" value="Delete">
 					</form>
-					<br>
 					<form action="/plugin/editData/page/_edit.html">
 						<input type="hidden" name="action" value="get">
 						<input type="hidden" name="path" value="{{xpath}}">

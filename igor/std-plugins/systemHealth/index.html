@@ -47,6 +47,9 @@
 	<h1>Igor System Health</h1>
 	
 	<p>
+	    This report was generated at {{igor.database.getValue('igor_dateTime()', token)}}.
+	</p>
+	<p>
 		Igor has been running since {{igor.database.getValue('igor_dateTime(/data/services/igor/startTime)', token)}},
 		and was rebooted {{igor.database.getValue('/data/services/igor/rebootCount', token)}} times during its lifetime.
 	</p>

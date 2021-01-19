@@ -56,7 +56,8 @@
 					</form>
 					<form action="/plugin/editData/page/_edit.html">
 						<input type="hidden" name="action" value="get">
-						<input type="hidden" name="path" value="{{xpath}}">
+						<input type="hidden" name="xpath" value="{{xpath}}">
+						<input type="hidden" name="returnTo" value="/plugin/{{pluginName}}/page/index.html">
 						<input type="submit" value="Edit">
 					</form>
 				</td>
@@ -70,6 +71,9 @@
 	
 	<form>
 		<input type="hidden" name="action" value="add">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
 		Name: <input name="name" value="" required>(name of this service)<br>
 		Report path: <input name="service" value="">(defaults to <tt>services/</tt><i>name</i>, change for watching other things like sensors)<br>
 		URL: <input name="url" value="" required> (URL to contact)<br>
@@ -84,6 +88,9 @@
 	
 	<form>
 		<input type="hidden" name="action" value="add">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
 		Name: <input name="name" value="" required>(name of this service)<br>
 		Report path: <input name="service" value="">(defaults to <tt>services/</tt><i>name</i>, change for watching other things like sensors)<br>
 		Host: <input name="ip" value="" required> (full hostname or IP address)<br>
@@ -97,6 +104,9 @@
 	<h3>Internet Router Health</h3>
 	<form>
 		<input type="hidden" name="action" value="add">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
 		Name: <input name="name" value="net.router" required>(name of this service)<br>
 		Host: <input name="ip" value="192.168.1.1" required> (IP address (or full local hostname) of your internet router)<br>
 		Port: <input name="port" value="80"> (TCP port number)<br>
@@ -106,6 +116,9 @@
 	<h3>Internet Connection Health</h3>
 	<form>
 		<input type="hidden" name="action" value="add">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
 		Name: <input name="name" value="net.internet" required>(name of this service)<br>
 		Host: <input name="ip" value="google.com" required> (full hostname (or IP address) of a machine on the internet that is always up)<br>
 		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
@@ -114,6 +127,9 @@
 	<h3>Igor Web Interface Health</h3>
 	<form>
 		<input type="hidden" name="action" value="add">
+		{% if returnTo %}
+			<input type="hidden" name="returnTo" value="{{returnTo}}">
+		{% endif %}
 		Name: <input name="name" value="igor" required><br>
 		Report path: <input name="service" value="igor/web"><br>
 		URL: <input name="url" value="{/data/services/igor/url}/services/igor/host" required><br>

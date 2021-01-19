@@ -11,8 +11,9 @@
 </head>
 <body>
 	<h1>Edit XML data</h1>
-	
-	{% if action == "get" %}
+	{% if not xpath %}
+		{% set result = {'message' : 'xpath argument not set (probably internal error)'} %}
+	{% elif action == "get" %}
 		{% set result = pluginObject._get(xpath, callerToken) %}
 	{% elif action == "add" %}
 		{% set result = pluginObject._post(xpath, newData, callerToken, save=save) %}

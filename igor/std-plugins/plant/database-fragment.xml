@@ -5,11 +5,13 @@
 	</devices>
 	<actions>
 		<action own:plugin="{plugin}">
+			<comment>Forward {plugin} position database changes to hardware. Don't change.</comment>
 			<xpath>/data/devices/{plugin}/target</xpath>
 			<url>/plugin/{plugin}/push</url>
 			<representing>devices/{plugin}</representing>
 		</action>
 		<action own:plugin="{plugin}">
+			<comment>Change {plugin} position when energy usage changes.</comment>
 			<xpath>/data/environment/energy/electricity</xpath>
 			<url>/data/devices/{plugin}/target</url>
 			<method>PUT</method>

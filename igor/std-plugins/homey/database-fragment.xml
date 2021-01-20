@@ -9,11 +9,13 @@
 	</devices>
     <actions>
         <action own:plugin="{plugin}">
+        	<comment>On automatic cleanup action: remove old {plugin} RFID detections.</comment>
             <name>cleanup</name>
             <method>DELETE</method>
             <url>/data/sensors/rfid/rfidtag[position()&lt;last()]</url>
         </action>
         <action own:plugin="{plugin}">
+        	<comment>On automatic cleanup action: remove old {plugin} named tag detections.</comment>
             <name>cleanup</name>
             <method>DELETE</method>
             <url>/data/sensors/tags/tag[position()&lt;last()]</url>

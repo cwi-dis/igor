@@ -23,19 +23,23 @@
 	<h2>List of current actions</h2>	
 	<table style="width:100%">
 		<tr>
-			<th>Name</th>
-			<th>Abbreviated description</th>
+			<th>Action Name<br><i>(for external triggering)</i></th>
+			<th>Action Description</th>
 			<th>Operation</th>
 		</tr>
 	
 		{% for path, description in allActions|dictsort %}
 			{% set shortName = description.name if 'name' in description else path|replace('/data/actions/','') %}
 			{% set _ = description.pop('notBefore', None) %}
-			{% set shortDescriptionList = description|dictsort %}
-			{% set shortDescription = shortDescriptionList|map('join', '=')|join(' ') %}
+			{% set descriptionTitle = '' %}
+			{% if description['comment'] %}
+				{% set descriptionTitle = '<i>' + description.pop('comment') + '</i><br><br>' %}
+			{% endif %}
+			{% set descriptionList = description|dictsort %}
+			{% set descriptionHtml = descriptionList|map('join', '=')|join('<br>') %}
 			<tr>
 				<td>{{shortName}}</td>
-				<td>{{shortDescription}}</td>
+				<td>{{descriptionTitle}}{{descriptionHtml}}</td>
 				<td>
 					<form action="_edit.html">
 						<input type="hidden" name="xpath" value="{{path}}">

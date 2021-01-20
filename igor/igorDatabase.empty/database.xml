@@ -101,11 +101,13 @@
 	<actions>
 	    <action own:igor="igor">
 	        <name>_start</name>
+			<comment>Internal action automatically called when Igor starts. Don't edit.</comment>
 			<representing>igor/start</representing>
 	        <url>/internal/started</url>
 	    </action>
 		<action own:igor="igor">
 			<name>_save</name>
+			<comment>Internal action automatically called to save Igor database to disk. Don't edit.</comment>
 			<interval>3600</interval>
 			<minInterval>60</minInterval>
 			<url>/internal/save</url>
@@ -115,6 +117,7 @@
 		</action>
         <action own:igor="igor">
             <name>_cleanup</name>
+			<comment>Internal action automatically called to clean up old messages. Don't edit.</comment>
             <method>DELETE</method>
 			<representing>igor/std</representing>
             <url>/data/environment/messages/message[position()&lt;last()]</url>
@@ -122,6 +125,7 @@
         </action>
 		<action own:igor="igor">
 			<name>_updateActions</name>
+			<comment>Internal action automatically called to update internal datastructures when actions change. Don't edit.</comment>
 			<xpath>/data/actions/* | /data/plugindata/*/action</xpath>
 			<representing>igor/core</representing>
 			<url>/internal/updateActions</url>

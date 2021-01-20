@@ -5,6 +5,7 @@
 	</devices>
 	<actions>
 		<action own:plugin="{plugin}">
+			<comment>Show new messages on the {plugin} display</comment>
 			<xpath>/data/environment/messages/*</xpath>
 			<url>/plugin/{plugin}/script/message?args={.}</url>
 			<representing>devices/{plugin}</representing>

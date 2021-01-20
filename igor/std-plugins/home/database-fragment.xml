@@ -8,6 +8,7 @@
 	<actions>
 		<action own:plugin="{plugin}">
 			<name>checkNight</name>
+			<comment>Set Igor Night-mode, which should silence sounds and other disturbances.</comment>
 			<interval>900</interval>
 			<method>PUT</method>
 			<url>/data/environment/night</url>
@@ -18,6 +19,7 @@
 		</action>
 		<action own:plugin="{plugin}">
 			<name>updatePeople</name>
+			<comment>Update "is at home" status for people, depending on whether their personal devices are detected.</comment>
 			<xpath>/data/environment/devices/*</xpath>
 			<condition>/data/identities/*[device=name($originalContext)]</condition>
 			<url>/data/people/{name(/data/identities/*[device=name($originalContext)])}/home</url>
@@ -30,6 +32,7 @@
 		</action>
 		<action own:plugin="{plugin}">
 			<name>countPeopleAtHome</name>
+			<comment>Update number of people currently at home.</comment>
 			<interval>3600</interval>
 			<xpath>/data/people/*/home</xpath>
 			<method>PUT</method>

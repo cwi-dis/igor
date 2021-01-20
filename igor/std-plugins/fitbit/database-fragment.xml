@@ -5,6 +5,7 @@
 	</sensors>
 	<actions>
 		<action own:plugin="{plugin}">
+			<comment>Periodically retrieve {plugin} data from could service for user jack</comment>
 			<interval>36000</interval>
 			<url>/plugin/{plugin}?user=jack</url>
 			<representing>sensors/{plugin}</representing>

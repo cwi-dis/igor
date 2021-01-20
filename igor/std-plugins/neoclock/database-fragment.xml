@@ -15,6 +15,7 @@
 	</devices>
 	<actions>
 		<action own:plugin="{plugin}">
+			<comment>Update {plugin} outer ring based on buienradar data.</comment>
 			<xpath>/data/sensors/buienradar</xpath>
 			<url>/data/devices/{plugin}/outerStatus</url>
 			<mimetype>text/plain</mimetype>
@@ -31,6 +32,7 @@
 			</au:needCapability>
 		</action>
 		<action own:plugin="{plugin}">
+			<comment>Set {plugin} inner ring to orange when Igor knows about error conditions in the environment.</comment>
 			<xpath>/data/environment/systemHealth/messages</xpath>
 			<interval>60</interval>
 			<url>/data/devices/{plugin}/innerStatus</url>

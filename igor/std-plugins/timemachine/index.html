@@ -14,9 +14,11 @@
 		{% set actionPlugin = igor.plugins._getPluginObject(pluginName="actions", token=callerToken) %}
 		{% set message = "" %}
 		{% if action == "add" %}
+			{% set comment = "Check that there are recent "  + remoteHost + " Apple Time Machine backups" %}
 			{% set action = {} %}
 			{% set url = "/plugin/" + pluginName + "/script/get?name=" + name %}
 			{% set url = url + (("&remoteHost=" + remoteHost) if remoteHost else "") %} 
+			{% set url = url + (("&comment=" + comment) if comment else "") %} 
 			{% set description = {'url' : url, 'representing' : 'services/' + name, 'aggregate' : True, 'creator' : pluginName, 'interval' : interval} %}
 			{% set result = actionPlugin._post(description, callerToken) %}
 			{% set message = result.message %}

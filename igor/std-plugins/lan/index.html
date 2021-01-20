@@ -14,6 +14,9 @@
 		{% set actionPlugin = igor.plugins._getPluginObject(pluginName="actions", token=callerToken) %}
 		{% set message = "" %}
 		{% if action == "add" %}
+			{% if not comment %}
+				{% set comment = "Use " + pluginName + " plugin to periodically check status of " + name %}
+			{% endif %}
 			{% set action = {} %}
 			{% set actionUrl = "/plugin/" + pluginName + "?name=" + name %}
 			{% set actionUrl = actionUrl + (("&service=" + service) if service else "") %} 
@@ -21,8 +24,8 @@
 			{% set actionUrl = actionUrl + (("&url=" + url) if url else "") %} 
 			{% set actionUrl = actionUrl + (("&ip=" + ip) if ip else "") %} 
 			{% set actionUrl = actionUrl + (("&port=" + port) if port else "") %} 
-			{% set actionUrl = actionUrl + (("&timeout=" + timeout) if timeout else "") %} 
-			{% set description = {'url' : actionUrl, 'aggregate' : True, 'creator' : pluginName, 'interval' : interval} %}
+			{% set actionUrl = actionUrl + (("&timeout=" + timeout) if timeout else "") %}
+			{% set description = {'url' : actionUrl, 'aggregate' : True, 'creator' : pluginName, 'interval' : interval, 'representing' : 'services/' + name, 'comment' : comment } %}
 			{% set result = actionPlugin._post(description, callerToken) %}
 			{% set message = result.message %}
 		{% endif %}
@@ -78,6 +81,7 @@
 		Report path: <input name="service" value="">(defaults to <tt>services/</tt><i>name</i>, change for watching other things like sensors)<br>
 		URL: <input name="url" value="" required> (URL to contact)<br>
 		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		Comment: <input name="comment" value="">(Description of what this watches, will be automatically supplied if empty)<br>
 		<input type="submit" value="Add watcher">
 	</form>
 
@@ -97,6 +101,7 @@
 		Port: <input name="port" value="80"> (TCP port number)<br>
 		Timeout: <input name="timeout" value="">(How long to try contacting the service before giving up. Default 5 seconds)<br>
 		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		Comment: <input name="comment" value="">(Description of what this watches, will be automatically supplied if empty)<br>
 		<input type="submit" value="Add watcher">
 	</form>
 
@@ -111,6 +116,7 @@
 		Host: <input name="ip" value="192.168.1.1" required> (IP address (or full local hostname) of your internet router)<br>
 		Port: <input name="port" value="80"> (TCP port number)<br>
 		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		Comment: <input name="comment" value="Use {{plugin}} plugin to check internet router status">(Description of what this watches, will be automatically supplied if empty)<br>
 		<input type="submit" value="Add watcher">
 	</form>
 	<h3>Internet Connection Health</h3>
@@ -122,6 +128,7 @@
 		Name: <input name="name" value="net.internet" required>(name of this service)<br>
 		Host: <input name="ip" value="google.com" required> (full hostname (or IP address) of a machine on the internet that is always up)<br>
 		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		Comment: <input name="comment" value="Use {{plugin}} plugin to check internet connection status">(Description of what this watches, will be automatically supplied if empty)<br>
 		<input type="submit" value="Add watcher">
 	</form>
 	<h3>Igor Web Interface Health</h3>
@@ -134,6 +141,7 @@
 		Report path: <input name="service" value="igor/web"><br>
 		URL: <input name="url" value="{/data/services/igor/url}/services/igor/host" required><br>
 		Interval: <input name="interval" value="60">(how often to check, in seconds)<br>
+		Comment: <input name="comment" value="Use {{plugin}} plugin to check that Igor's own web interface works">(Description of what this watches, will be automatically supplied if empty)<br>
 		<input type="submit" value="Add watcher">
 	</form>
 	<hr>

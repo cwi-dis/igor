@@ -541,13 +541,16 @@ def main():
     parser.add_argument("--nologfile", action="store_true", help="Do not install logging to files (output to stdout only)")
     parser.add_argument("--nologstderr", action="store_true", help="Do not install logging to stderr (output to logfile only)")
     parser.add_argument('--logLevel', metavar='SPEC', help="Set log levels (comma-separated list of [loggername:]LOGLEVEL)")
+    parser.add_argument('--logRequests', action='store_true', help="Supply this if you want --logLevel requests.packages.urllib3:DEBUG to work")
     parser.add_argument('--check', action="store_true", help="Do not run the server, only check the database for consistency")
     parser.add_argument('--fix', action="store_true", help="Do not run the server, only check the database for consistency and possibly fix it if needed")
     parser.add_argument('--extended', action="store_true", help="For --check and --fix also check some extended consistency checks")
     parser.add_argument('--rootCertificates', metavar='FILE', help='Use root certificates from FILE')
     parser.add_argument('--noSystemRootCertificates', action="store_true", help='Do not use system root certificates, use REQUESTS_CA_BUNDLE or what requests package has')
     args = parser.parse_args()
-    
+    if args.logRequests:
+        import http.client
+        http.client.HTTPConnection.debuglevel = 1
     myLogger.install(args.logLevel, nologfile=args.nologfile, nologstderr=args.nologstderr, logdir=args.database)
     if args.version:
         print(VERSION, file=sys.stderr)

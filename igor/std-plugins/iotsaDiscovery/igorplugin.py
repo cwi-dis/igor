@@ -1,7 +1,7 @@
 """Sample plugin module for Igor"""
 import requests
 import os
-import iotsaControl
+import iotsa
 import json
 import urllib
 import socket
@@ -11,7 +11,7 @@ class IotsaDiscoveryPlugin:
         self.igor = igor
         self.pluginName = pluginName
         self.pluginData = pluginData
-        self.wifi = iotsaControl.api.IotsaWifi()
+        self.wifi = iotsa.api.IotsaWifi()
         
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
@@ -20,7 +20,7 @@ class IotsaDiscoveryPlugin:
         rv = {}
         try:
             rv['networks'] = self.wifi.findNetworks()
-        except iotsaControl.api.UserIntervention as e:
+        except iotsa.api.UserIntervention as e:
             rv['message'] = e
         return rv
     
@@ -28,7 +28,7 @@ class IotsaDiscoveryPlugin:
         rv = {}
         try:
             rv['devices'] = self.wifi.findDevices()
-        except iotsaControl.api.UserIntervention as e:
+        except iotsa.api.UserIntervention as e:
             rv['message'] = e
         return rv
         
@@ -41,7 +41,7 @@ class IotsaDiscoveryPlugin:
         # Get a handle on the module
         #
         rv = dict(device=device, module=module)
-        accessor = iotsaControl.api.IotsaConfig(handler, module)
+        accessor = iotsa.api.IotsaEndpoint(handler, module)
         try:
             self._load(accessor)
         except self.igor.app.getHTTPError() as e:
@@ -52,7 +52,7 @@ class IotsaDiscoveryPlugin:
         # Also load global device config, if wanted
         #
         if includeConfig and module != "config":
-            acConfig = iotsaControl.api.IotsaConfig(handler, "config")
+            acConfig = iotsa.api.IotsaEndpoint(handler, "config")
             try:
                 self._load(acConfig)
             except self.igor.app.getHTTPError() as e:
@@ -73,7 +73,7 @@ class IotsaDiscoveryPlugin:
                 if isinstance(returned, dict):
                     for k, v in returned.items():
                         rv[k] = v
-            except iotsaControl.api.UserIntervention as e:
+            except iotsa.api.UserIntervention as e:
                 rv['message'] = str(e)
         return rv
         
@@ -95,7 +95,7 @@ class IotsaDiscoveryPlugin:
             #
             # Get a handle on the module
             #
-            accessor = iotsaControl.api.IotsaConfig(handler, mod)
+            accessor = iotsa.api.IotsaEndpoint(handler, mod)
             try:
                 self._load(accessor)
                 data = accessor.status
@@ -112,7 +112,7 @@ class IotsaDiscoveryPlugin:
         #
         # Get a handle on the module
         #
-        accessor = iotsaControl.api.IotsaConfig(handler, module)
+        accessor = iotsa.api.IotsaEndpoint(handler, module)
         self._load(accessor)
         newdata = self.igor.databaseAccessor.get_key(key, 'application/x-python-object', None, token)
         if not isinstance(newdata, dict):
@@ -125,7 +125,7 @@ class IotsaDiscoveryPlugin:
             if isinstance(returned, dict):
                 for k, v in returned.items():
                     rv[k] = v
-        except iotsaControl.api.UserIntervention as e:
+        except iotsa.api.UserIntervention as e:
             rv['message'] = str(e)
         return self._returnOrSeeother(rv, returnTo)
                     
@@ -157,7 +157,7 @@ class IotsaDiscoveryPlugin:
         else:
             noverify = sessionItem.get('noverify')
         self.igor.app.setSessionItem('iotsaDiscovery', sessionItem)
-        handler = iotsaControl.api.IotsaDevice(
+        handler = iotsa.api.IotsaDevice(
             device, 
             protocol=(protocol if protocol else 'https'), 
             port=(int(port) if port else None), 
@@ -238,13 +238,13 @@ class IotsaDiscoveryPlugin:
         """Helper for templates: change settings for a single entry for a module that has multiple entries"""
         handler = self._getHandler(device, protocol, credentials, port, noverify, token)
         apiName = "%s/%d" % (module, int(index))
-        accessor = iotsaControl.api.IotsaConfig(handler, apiName)
+        accessor = iotsa.api.IotsaEndpoint(handler, apiName)
         for k, v in newSettings.items():
             accessor.set(k, v)
         rv = ""
         try:
             _ = self._save(accessor)
-        except iotsaControl.api.UserIntervention as e:
+        except iotsa.api.UserIntervention as e:
             rv = str(e)
         except self.igor.app.getHTTPError() as e:
             rv = self.igor.app.stringFromHTTPError(e)

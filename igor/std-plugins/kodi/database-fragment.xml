@@ -16,7 +16,7 @@
 			<url>/data/environment/mediaPlayback</url>
 			<mimetype>text/plain</mimetype>
 			<method>PUT</method>
-			<data>Music: {audio/label} ({audio/displayartist}: {audio/album})&#10;TV: {video/label} ({video/channel} {igor_ifthenelse(video/type = "channel","(live TV)","")})</data>
+			<data>Music: {audio/title} ({audio/displayartist}: {audio/album})&#10;TV: {video/title} ({video/channel} {igor_ifthenelse(video/type = "channel","(live TV)","")})</data>
 			<representing>devices/{plugin}</representing>
 			<au:needCapability>
 				<obj>/data/devices/{plugin}/current</obj>

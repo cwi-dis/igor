@@ -19,13 +19,15 @@ Assuming you are using Python 3, run the following command:
 
 .. code-block:: sh
 
-	sudo python3 -m pip install igor-iot
+	[sudo] python3 -m pip install igor-iot
 	
 Depending on your system installation
 you may be able to run it without ``sudo``, but even if this gives no permission
 errors it may actually still install in your home directory in stead of in the
 system directories, which may cause problems later if you want to run Igor as a
-system daemon.
+system daemon. But, to make matters more complicated, some times it is better to run
+*without* ``sudo``, for example when installing on MacOS with a ``brew`` installed Python.
+Sorry, you have to find out yourself what works best...
 
 Note that installing with ``--user`` or installing in a *virtualenv* has not
 been tested, at least not extensively.
@@ -46,13 +48,22 @@ Then change into the ``igor`` directory, and install with
 
 .. code-block:: sh
 
-   sudo pip3 install -r requirements.txt
-   python3 setup.py build
-   sudo python3 setup.py install
+   [sudo] python3 -m pip install .
+   
+This will allow uninstalling as well, so it is the preferred method of installation. You
+can also supply the ``--editable`` flag if you know what you are doing.
+
+	*Side note:* If you really want you can also install with setuptools, but this is not recommended:
+
+	.. code-block:: sh
+
+	   [sudo] pip3 install -r requirements.txt
+	   python3 setup.py build
+	   [sudo] python3 setup.py install
 
 This installs the main binary ``igorServer`` and the utilties ``igorVar``\ , ``igorSetup``\ , ``igorControl`` and ``igorCA``.
 
-The instructions above, using ``sudo`` for installation, will install Igor and the required dependencies for all users on your system. Installing for the current user only may be possible but is untested.
+These instructions should install Igor and the required dependencies for all users on your system. Installing for the current user only may be possible but is untested.
 
 You may also want to install some of the helper utilities from the ``helpers`` subdirectory.
 
@@ -100,13 +111,19 @@ In the ``igor`` directory, do
 
    git pull
 
-and repeat the three steps from earlier:
+and repeat the installation step steps from earlier. Either
 
 .. code-block:: sh
 
-   sudo pip3 install -r requirements.txt
+	[sudo] python3 -m pip install .
+	
+or
+
+.. code-block:: sh
+
+   [sudo] pip3 install -r requirements.txt
    python3 setup.py build
-   sudo python3 setup.py install
+   [sudo] python3 setup.py install
 
 Restart the server:
 

@@ -525,7 +525,7 @@ def main():
         DEFAULTDIR = os.environ['IGORSERVER_DIR']
     DEFAULTPORT=9333
     if 'IGORSERVER_PORT' in os.environ:
-        DEFAULTDIR = int(os.environ['IGORSERVER_PORT'])
+        DEFAULTPORT = int(os.environ['IGORSERVER_PORT'])
         
     parser = argparse.ArgumentParser(description="Run the Igor home automation server")
     parser.add_argument("-d", "--database", metavar="DIR", help=f"Database and scripts are stored in DIR (default: {DEFAULTDIR}, environment IGORSERVER_DIR)" , default=DEFAULTDIR)

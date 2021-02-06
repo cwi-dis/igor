@@ -14,6 +14,7 @@ import getpass
 import tempfile
 import argparse
 import subprocess
+import tempfile
 
 USAGE="""
 Usage: %(prog)s [options] command [command-args]
@@ -101,6 +102,8 @@ class IgorSetup:
             
         elif cmd == 'initialize':
             ok = self.cmd_initialize()
+        elif cmd == 'sandbox':
+            ok = self.cmd_sandbox()
         else:
             # For the rest of the commands the Igor database should already exist.
             if not os.path.exists(self.database):
@@ -149,6 +152,26 @@ class IgorSetup:
         os.symlink(os.path.join(self.igorDir, 'std-plugins'), os.path.join(self.database, 'std-plugins'))
         return True
 
+    def cmd_sandbox(self):
+        """sandbox - Initialize and run Igor (on port 19333) in a fresh minimal database"""
+        igorDir = tempfile.mkdtemp(prefix="igor-")
+        os.rmdir(igorDir)
+        igorPort = 19333
+        os.putenv("IGORSERVER_DIR", igorDir)
+        self.database = igorDir
+        os.putenv("IGORSERVER_PORT", str(igorPort))
+        print(f"export IGORSERVER_DIR=\"{igorDir}\"")
+        print(f"export IGORSERVER_PORT={igorPort}")
+        # Initialize database
+        ok = self.cmd_initialize()
+        if not ok: return ok
+        # Add standard plugins
+        ok = self.cmd_addstd("systemHealth","ca","user","device","actions","editData")
+        if not ok: return ok
+        # Run igor interactively
+        subprocess.run(["igorServer"])
+        return True
+        
     def cmd_list(self):
         """list - show all installed plugins"""
         names = os.listdir(self.plugindir)

@@ -209,14 +209,19 @@ Igor can be started automatically at system boot with the following command:
 On OSX and Linux this should start Igor as a deamon process. Igor will run under your user ID, and use the `.igor` database in your
 home directory.
 
-Debugging Igor
---------------
+Running a temporary igor
+------------------------
 
 Sometimes you want to run a copy of igor, for example to debug a plugin. This is fairly easy, because
 there are environment variables that are honoured by ``igorServer`` and by all the utlities.
 
-The following set of commands creates a new, empty, igor and runs it on port ``19333`` interactively, so you can see the
-log output in a terminal window:
+Create and run a fresh igor on port 19333 with:
+
+.. code-block:: sh
+
+	igorSetup sandbox
+
+That command is roughly equivalent to the following sequence of commands:
 
 .. code-block:: sh
 
@@ -226,6 +231,9 @@ log output in a terminal window:
 	igorSetup addstd systemHealth ca user device actions editData
 	igorServer
 	
+Debugging Igor
+--------------
+
 It is also possible to run the igorServer with a ``python`` command line.
 This may be useful if you want to use ``python3 -i`` so you can then ``import pdb ; pdb.pm()``
 to debug an igor crash.

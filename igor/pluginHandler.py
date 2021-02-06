@@ -235,7 +235,8 @@ class IgorPlugins:
     def info(self, pluginName, token=None):
         pluginPath = os.path.join(self.igor.pathnames.plugindir, pluginName)
         if not os.path.isdir(pluginPath):
-            return None
+            print(f"pluginHandler.info: {pluginPath} is not a directory")
+            return {}
         isStd = os.path.islink(pluginPath)
         rv = dict(name="pluginName", std=isStd)
         if isStd:

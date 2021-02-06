@@ -42,37 +42,44 @@
 			{% set pluginNames = igor.plugins.list(token) %}
 			{% for pluginName in  pluginNames|sort %}
 				{% set pluginData = igor.plugins.info(pluginName, token) %}
-				<tr>
-					<td>{{pluginName}}</td>
-					<td>{{pluginData.get('stdName', '')}}</td>
-					<td>
-						{% if 'doc' in pluginData %}
-							<a href="{{pluginData.doc}}">readme.md</a>
-						{% endif %}
-					</td>
-					<td>
-						{% for page in pluginData.pages %}
-							<a href="{{page}}">{{page.split('/')[-1]}}</a><br>
-						{% endfor %}
-					</td>
-					<td>
-						{% if 'pluginData' in pluginData %}
-							<a href="{{pluginData.pluginData}}">{{pluginData.pluginData}}</a>
-						{% endif %}
-					</td>
-					<td>
-						{% for userData in pluginData.get('userData', []) %}
-							<a href="{{userData}}">{{userData}}</a><br>
-						{% endfor %}
-					</td>
-					<td>
-						<form action="/plugins.html">
-							<input type="hidden" name="action" value="delete">
-							<input type="hidden" name="pluginName" value="{{pluginName}}">
-							<input type="submit" value="Remove">
-						</form>
-					</td>
-				</tr>
+				{% if pluginData %}
+					<tr>
+						<td>{{pluginName}}</td>
+						<td>{{pluginData.get('stdName', '')}}</td>
+						<td>
+							{% if 'doc' in pluginData %}
+								<a href="{{pluginData.doc}}">readme.md</a>
+							{% endif %}
+						</td>
+						<td>
+							{% for page in pluginData.pages %}
+								<a href="{{page}}">{{page.split('/')[-1]}}</a><br>
+							{% endfor %}
+						</td>
+						<td>
+							{% if 'pluginData' in pluginData %}
+								<a href="{{pluginData.pluginData}}">{{pluginData.pluginData}}</a>
+							{% endif %}
+						</td>
+						<td>
+							{% for userData in pluginData.get('userData', []) %}
+								<a href="{{userData}}">{{userData}}</a><br>
+							{% endfor %}
+						</td>
+						<td>
+							<form action="/plugins.html">
+								<input type="hidden" name="action" value="delete">
+								<input type="hidden" name="pluginName" value="{{pluginName}}">
+								<input type="submit" value="Remove">
+							</form>
+						</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td>{{pluginName}}</td>
+						<td><i>Missing pluginData</i></td> 
+					</tr>
+				{% endif %}
 			{% endfor %}
 		</table>
 		

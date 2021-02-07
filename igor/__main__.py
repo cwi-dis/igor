@@ -573,7 +573,7 @@ def main():
         elif args.debug in ('access', 'all'): access.DEBUG.append(True)
         else:
             print(f"{sys.argv[0]}: --debug argument should be modulename or 'all'", file=sys.stderr)
-            sys.eit(1)
+            sys.exit(1)
     datadir = args.database
     print(f'igorServer {VERSION} running from {sys.argv[0]}', file=sys.stderr)
     print(f'igorServer from {__file__}', file=sys.stderr)

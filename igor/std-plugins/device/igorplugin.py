@@ -36,7 +36,8 @@ class DevicePlugin:
             description = json.loads(description)
         if type(description) != type({}):
             self.igor.app.raiseHTTPError('400 description must be dictionary or json object')
-            
+        if secured:
+            description['secured'] = True 
         deviceType = description.get('deviceType', None)
         if not deviceType:
             self.igor.app.raiseHTTPError('400 deviceType missing')
@@ -77,13 +78,25 @@ class DevicePlugin:
             if msg:
                 rv['message'] = msg
             tokenWantedOwner = f'plugindata/{pluginName}'
+            #
+            # Copy relevant items from description into plugindata
+            #
+            # hostname has been handled already (xxxjack double-check...)
+            # xxxjack pushMethod might be useful too...
+            if 'protocol' in description:
+                self.igor.databaseAccessor.put_key(f'plugindata/{name}/protocol', 'text/plain', 'ref', description['protocol'], 'text/plain', callerToken, replace=True)
+            if 'secured' in description:
+                self.igor.databaseAccessor.put_key(f'plugindata/{name}/secured', 'text/plain', 'ref', '1', 'text/plain', callerToken, replace=True)
+            if 'credentials' in description:
+                self.igor.databaseAccessor.put_key(f'plugindata/{name}/credentials', 'text/plain', 'ref', description['credentials'], 'text/plain', callerToken, replace=True)
+            if 'obj' in description:
+                self.igor.databaseAccessor.put_key(f'plugindata/{name}/endpoint', 'text/plain', 'ref', description['obj'], 'text/plain', callerToken, replace=True)
         else:
             # Create item
             entryValues = {}
             self.igor.databaseAccessor.put_key(databaseEntry, 'text/plain', 'ref', entryValues, 'application/x-python-object', callerToken, replace=True)
             # Create status item
             self.igor.databaseAccessor.put_key('status/' + databaseEntry, 'text/plain', 'ref', '', 'text/plain', callerToken, replace=True)
-
         
         if secured and isDevice and self.hasCapabilities:
             deviceKey = self._genSecretKey(callerToken, aud=hostname)

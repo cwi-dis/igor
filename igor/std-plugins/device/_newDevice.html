@@ -11,7 +11,7 @@
 	</style>
 </head>
 <body>
-	{% set result = pluginObject._add(name=name, deviceType=deviceType, hostname=hostname, plugin=plugin, obj=obj, protocol=protocol, secured=not not secured, callerToken=callerToken) %}
+	{% set result = pluginObject._add(name=name, deviceType=deviceType, hostname=hostname, plugin=plugin, obj=obj, protocol=protocol, secured=not not secured, credentials=credentials, callerToken=callerToken) %}
 	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
 
 	<h1>New Device</h1>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>433 Home Automation Appliances</title>
+	<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	</style>
+</head>
+<body>
+	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
+	<h1>433 Home Automation Appliances</h1>
+	{% set user = igor.app.getSessionItem('user', None) %}
+	{% if user %}
+		<p>
+			You are logged in as {{user}}.
+			{% if user != 'admin' %}
+				You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
+			{% endif %}
+		</p>
+	{% else %}
+		<p>
+			You are not logged in. This page will probably not render correctly.
+		</p>
+	{% endif %}
+	
+	<h2>Introduction</h2>
+	
+	<p>Home automation 433MHz appliances tend to be bought in sets from some  <em>brand</em>, 
+	such as one remote with 4 220V switching outlets. </p>
+
+	<p>Each outlet controls one electrical <em>appliance</em> such as a specific lamp,
+	with one set of ON and OFF buttons on the remote to control the <em>state</em> of the appliance.</p>
+	
+	<p>The remote and the outlets tend to have little DIP-switches to <em>group</em> the remote and the outlets.
+	The outlets usually also have another set of DIP-switches to bind the outlet to a specific pair of ON/OFF buttons
+	on the remote.</p>
+
+	<p>This module treats both the pair of ON/OFF buttons and the corresponding outlet as one <em>appliance</em>.</p>
+
+	<h2>Recently received remote control commands</h2>
+	</p>
+	
+	<table style="width:100%">
+		<tr>
+			<th rowspan="2">Seconds ago</th>
+			<th rowspan="2">Brand</th>
+			<th rowspan="2">Group</th>
+			<th rowspan="2">Appliance</th>
+			<th rowspan="2">State</th>
+			<th colspan="5">Low-level telegram</th>
+		</tr>
+		<tr>
+			<th>protocol</th>
+			<th>bits</th>
+			<th>pulsewidth</th>
+			<th>tristate</th>
+			<th>binary</th>
+		</tr>
+		{% set receiverState = pluginObject._get_basic(callerToken, '/api/433receive') %}
+		{% set received = receiverState.received %}
+		{% for r in received %}
+			<tr>
+				<td>{{r.get('time') }}</td>
+				<td>{{r.get('brand', '') }}</td>
+				<td>{{r.get('group', '') }}</td>
+				<td>{{r.get('appliance', '') }}</td>
+				<td>{{r.get('state', '') }}</td>
+				<td>{{r.get('telegram_protocol', '') }}</td>
+				<td>{{r.get('telegram_bits', '') }}</td>
+				<td>{{r.get('telegram_pulsewidth', '') }}</td>
+				<td>{{r.get('telegram_tristate', '') }}</td>
+				<td>{{r.get('telegram_binary', '') }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+	<form><input type="submit" value="Refresh"></form>
+
+	<h2>Send manual command</h2>
+	<p>To be provided</p>
+	<hr>
+	{% if returnTo %}
+		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>
+	{% endif %}
+	<a href="/">Return to Igor homepage</a>
+
+</body>
+</html>

@@ -34,7 +34,6 @@ class Iotsa433Plugin:
             endpoint = self.pluginData.get('endpoint', 'api')
         url = f"{protocol}://{host}"
         url = urllib.parse.urljoin(url, endpoint)
-        method = 'GET'
         
         headers, kwargs, addedTokenId = self._prepareRequest(token)
         for k, v in extraHeaders.items():
@@ -55,10 +54,10 @@ class Iotsa433Plugin:
         r.raise_for_status()
         return r
 
-    def _put_basic(self, callerToken, endpoint, data):
+    def _put_basic(self, callerToken, endpoint, data, method='PUT'):
         """low-level method to PUT data to any endpoint (in python form)"""
         jsondata = json.dumps(data)
-        r = self._sendrequest('PUT', endpoint, {'Contept-type': 'application/json'}, None, callerToken, data=jsondata)
+        r = self._sendrequest(method, endpoint, {'Content-type': 'application/json'}, None, callerToken, data=jsondata)
         return r.text
 
     def _get_basic(self, callerToken, endpoint):
@@ -67,10 +66,54 @@ class Iotsa433Plugin:
         rv = json.loads(r.text)
         return rv
 
+    def _get_registered_appliances(self, callerToken):
+        """Return list of registered appliances, for index.html"""
+        db = self.igor.databaseAccessor.get_key(f'devices/{self.pluginName}', 'application/x-python-object', 'content', callerToken)
+        rv = []
+        for brand, branddb in db.items():
+            for group, groupdb in branddb.items():
+                for appliance, state in groupdb.items():
+                    rv.append((brand, group, appliance, state))
+                else:
+                    rv.append((brand, group, '', ''))
+            else:
+                rv.append((brand, '', '', ''))
+        return rv
+
+    def _do_register(self, callerToken, brand, group, appliance):
+        # First create database entry
+        if appliance:
+            appdata = dict(appliance='')
+        else:
+            appdata = ''
+        data = dict(brand=dict(group=appdata))
+        self.igor.databaseAccessor.put_key(f'devices/{self.pluginName}', 'text/plain', 'ref', data, 'application/x-python-object', callerToken, replace=True)
+        # Now submit callback to iotsa433. First get our URL.
+        url = self.igor.databaseAccessor.get_key('services/igor/url', 'text/plain', 'content', callerToken)
+        url = urllib.parse.urljoin(url, f'/plugin/{self.pluginName}/changed')
+        callbackData = dict(brand=brand, group=group, url=url, parameters=True)
+        try:
+            ok = self._put_basic(callerToken, '/api/433receive', callbackData, method='POST')
+        except self.igor.app.getHTTPError() as e:
+            return str(e)
+        if ok.lower().strip() == 'ok':
+            return None
+        return ok.strip()
+
+    def _do_send(self, callerToken, brand, group, appliance, state):
+        data = dict(brand=brand, group=group, appliance=appliance, state=state)
+        try:
+            ok = self._put_basic(callerToken, '/api/433send', data)
+        except self.igor.app.getHTTPError() as e:
+            return str(e)
+        if ok.lower().strip() == 'ok':
+            return None
+        return ok.strip()
+    
     def changed(self, brand=None, group=None, appliance=None, state=None, token=None, callerToken=None, **kwargs):
         """Callback URL for iotsa433 device. If all of brand, group, appliance and state are set: enter into the database"""
         if brand and group and appliance and state:
-            ref = f'/data/devices/{self.pluginName}/{brand}/{group}/{appliance}'
+            ref = f'devices/{self.pluginName}/{brand}/{group}/{appliance}'
             current = self.igor.databaseAccessor.get_key(ref, 'text/plain', 'content', token)
             if current == state:
                 print(f'{self.pluginName}: changed: ignore duplicate brand={brand} group={group} appliance={appliance} state={state}')

@@ -11,22 +11,25 @@
 	</style>
 </head>
 <body>
-	{% set hasCapabilitySupport = igor.internal.accessControl('hasCapabilitySupport') %}
 	<h1>433 Home Automation Appliances</h1>
-	{% set user = igor.app.getSessionItem('user', None) %}
-	{% if user %}
-		<p>
-			You are logged in as {{user}}.
-			{% if user != 'admin' %}
-				You may not have sufficient permissions for the commands below unless you login as user <i>admin</i>.
-			{% endif %}
-		</p>
-	{% else %}
-		<p>
-			You are not logged in. This page will probably not render correctly.
-		</p>
+	
+	{% if op == "register" %}
+		{% set message = pluginObject._do_register(callerToken, brand=brand, group=group, appliance=appliance) %}
+		{% if message %}
+			<p><em>Registration failed:</em> {{message}}</p>
+		{% endif %}
+	{% endif %}
+	{% if op == "send" %}
+		{% set message = pluginObject._do_send(callerToken, brand=brand, group=group, appliance=appliance, state=state) %}
+		{% if message %}
+			<p><em>Send failed:</em> {{message}}</p>
+		{% endif %}
 	{% endif %}
 	
+	{% set receiverState = pluginObject._get_basic(callerToken, '/api/433receive') %}
+	{% set received = receiverState.received %}
+	{% set forwarders = receiverState.forwarders %}
+		
 	<h2>Introduction</h2>
 	
 	<p>Home automation 433MHz appliances tend to be bought in sets from some  <em>brand</em>, 
@@ -79,8 +82,88 @@
 	</table>
 	<form><input type="submit" value="Refresh"></form>
 
+	<h2>Registered appliances</h2>
+
+	<p>This igor instance knows about the following 433MHz appliances handled by {{pluginObject.pluginName}}:</p>
+
+	{% set currentStates = pluginObject._get_registered_appliances(callerToken) %}
+	<table>
+		<tr>
+			<th>Brand</th>
+			<th>Group</th>
+			<th>Appliance</th>
+			<th>State</th>
+		</tr>
+		{% for item in forwarders %}
+			<tr>
+				<td>{{item[0]}}</td>
+				<td>{{item[1]}}</td>
+				<td>{{item[2]}}</td>
+				<td>{{item[3]}}</td>
+			</tr>
+		{% endfor %}
+	</table>
+
+	<h2>Registered appliance callbacks</h2>
+
+	<p>The {{pluginObject.pluginName}} 433MHz bridge has the following callbacks registered:</p>
+
+	<table>
+		<tr>
+			<th>Brand</th>
+			<th>Group</th>
+			<th>Appliance</th>
+			<th>State</th>
+			<th>URL</th>
+			<th>more...</th>
+		</tr>
+		{% for item in forwarders %}
+			<tr>
+				<td>{{item.pop('brand')}}</td>
+				<td>{{item.pop('group')}}</td>
+				<td>{{item.pop('appliance')}}</td>
+				<td>{{item.pop('state')}}</td>
+				<td>{{item.pop('url')}}</td>
+				<td>
+					{% for k, v in item.items() %}
+						{% if v %}
+							{{k}}<br>
+						{% endif %}
+					{% endfor %}
+				</td>
+			</tr>
+		{% endfor %}
+
+	</table>
+	
+	<h2>
+
+	<h2>Register new appliance or appliance group</h2>
+
+	<p>Submit this to register a new appliance (or all appliances in a group by leaving the appliance field empty). The appliances will
+	be registered both in this Igor instance (so you can control them for lighting, etc) and in the {{pluginObject.pluginName}} appliance 
+	callbacks (so you can trigger on remote control button presses).</p>
+
+	<p>When registering all appliances, after registering press all buttons on the remote, one by one, to fill the Igor data fields with all
+	appliances.</p>
+
+	<form>
+		<input type="hidden" name="op" value="register">
+		Brand: <input name="brand"><br>
+		Group: <input name="group"><br>
+		Appliance: <input name="appliance">(leave empty for all appliances in the group)</br>
+		<input type="submit" value="Add">
+	</form>
+
 	<h2>Send manual command</h2>
-	<p>To be provided</p>
+	<form>
+		<input type="hidden" name="op" value="send">
+		Brand: <input name="brand"><br>
+		Group: <input name="group"><br>
+		Appliance: <input name="appliance"></br>
+		State: <input name="state"></br>
+		<input type="submit" value="Send">
+	</form>
 	<hr>
 	{% if returnTo %}
 		<a href="{{returnTo}}">Return to {{returnTo}}.</a><br>

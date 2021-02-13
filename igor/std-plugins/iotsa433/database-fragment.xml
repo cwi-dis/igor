@@ -9,7 +9,7 @@
 	<plugindata>
 		<{plugin} own:plugin="{plugin}">
 			<host>{plugin}.local</host>
-			<protocol>https</protocol>
+			<protocol>http</protocol>
 			<pushMethod>PUT</pushMethod>
 			<action>
 				<xpath>/data/devices/{plugin}//*</xpath>

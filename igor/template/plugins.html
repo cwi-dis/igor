@@ -72,6 +72,11 @@
 								<input type="hidden" name="pluginName" value="{{pluginName}}">
 								<input type="submit" value="Remove">
 							</form>
+							<form action="/plugins.html">
+								<input type="hidden" name="action" value="reload">
+								<input type="hidden" name="pluginName" value="{{pluginName}}">
+								<input type="submit" value="Reload">
+							</form><br>
 						</td>
 					</tr>
 				{% else %}
@@ -111,6 +116,9 @@
 		<p>Plugins from external sources have full control over your Igor database (and even over the machine Igor is running on).
 		For this reason you must use the command-line interface to install such plugins. 
 		See the <a target="_blank" href="https://igor-iot.readthedocs.io/en/latest/programs.html#igorsetup">igorSetup command line tool documentation</p> for details.</p>
+	{% elif action == 'reload' %}
+		<p>{{igor.plugins.reload(pluginName, token)}}</p>
+		<p><a href="/plugins.html">Return to plugin listing</a></p>
 		
 	{% elif action == 'delete' %}
 		<p>{{igor.plugins.uninstall(pluginName, token)}}</p>

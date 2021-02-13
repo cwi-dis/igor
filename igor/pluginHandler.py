@@ -64,6 +64,18 @@ class IgorPlugins:
         pluginObject = factory(self.igor, pluginName, pluginData)
         return pluginObject
 
+    def _unloadPluginObject(self, pluginName, token=None):
+        """Unload the plugin module (possibly for reloading)"""
+        moduleName = 'igor.plugins.'+pluginName
+        if not moduleName in sys.modules:
+            return
+        # Imported previously. Get the old one and try to free it.
+        pluginObject = self._getPluginObject(pluginName, token)
+        if hasattr(pluginObject, 'unload'):
+            pluginObject.unload()
+        del pluginObject
+        del sys.modules[moduleName]
+
     def _getPluginScriptDir(self, pluginName, token=None):
         """Return directory with scripts for pluginName"""
         return os.path.join(self.igor.pathnames.plugindir, pluginName, 'scripts')
@@ -188,10 +200,15 @@ class IgorPlugins:
                 self.igor.app.raiseHTTPError('500 Installing requirements for plugin returned error %d' % sts)
         return message
         
-    def install(self, pluginname=None, zipfile=None, token=None):
+    def install(self, pluginname, zipfile=None, token=None):
         self.igor.app.raiseHTTPError('500 Not yet implemented')
     
-    def uninstall(self, pluginName=None, token=None):
+    def reload(self, pluginName, token=None):
+        self._unloadPluginObject(pluginName, token)
+        self._getPluginObject(pluginName, token)
+        return f'Reloaded {pluginName}\n'
+
+    def uninstall(self, pluginName, token=None):
         checker = self.igor.access.checkerForEntrypoint('/filesystem')
         if not checker.allowed('get', token):
             return

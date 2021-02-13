@@ -9,6 +9,7 @@ class Iotsa433Plugin:
         self.igor = igor
         self.pluginName = pluginName
         self.pluginData = pluginData
+        print(f'Loaded {self.pluginName}, created object')
         
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")

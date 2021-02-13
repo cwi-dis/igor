@@ -67,7 +67,36 @@ class Iotsa433Plugin:
         rv = json.loads(r.text)
         return rv
 
-    def pull(self, token=None, callerToken=None):
+    def changed(self, brand=None, group=None, appliance=None, state=None, token=None, callerToken=None, **kwargs):
+        """Callback URL for iotsa433 device. If all of brand, group, appliance and state are set: enter into the database"""
+        if brand and group and appliance and state:
+            ref = f'/data/devices/{self.pluginName}/{brand}/{group}/{appliance}'
+            current = self.igor.databaseAccessor.get_key(ref, 'text/plain', 'content', token)
+            if current == state:
+                print(f'{self.pluginName}: changed: ignore duplicate brand={brand} group={group} appliance={appliance} state={state}')
+            else:
+                # self.igor.databaseAccessor.put_key(f'plugindata/{name}/protocol', 'text/plain', 'ref', description['protocol'], 'text/plain', callerToken, replace=True)
+
+                self.igor.databaseAccessor.put_key(ref, 'text/plain', 'ref', state, 'text/plain', callerToken, replace=True)
+                if 0:
+                    tocall = dict(
+                        method='PUT', 
+                        url=ref, 
+                        mimetype='text/plain', 
+                        data=state, 
+                        representing='devices/%s' % self.pluginName, 
+                        token=token)
+                    self.igor.urlCaller.callURL(tocall)
+            return 'ok\n'
+        else:
+            print(f'{self.pluginName}: changed: ignore unknown brand={brand} group={group} appliance={appliance} state={state} rest={kwargs}')
+            return 'ignored\n'
+
+    def push(self, *args, **kwargs):
+        print(f'{self.pluginName}: push: args={args} kwargs={kwargs}')
+        return 'ok\n'
+
+    def oldpull(self, token=None, callerToken=None):
         print(f"xxxjack IotsaPlugin.pull() called. token={token}, callerToken={callerToken}")
         r = self._sendrequest('GET', None, {}, token, callerToken)
         
@@ -82,8 +111,8 @@ class Iotsa433Plugin:
             token=token)
         self.igor.urlCaller.callURL(tocall)
         return 'ok\n'
-        
-    def push(self, token=None, callerToken=None):
+
+    def _oldpush(self, token=None, callerToken=None):
         target = self.igor.databaseAccessor.get_key('devices/%s/target' % self.pluginName, 'application/json', 'content', token)
         method = self.pluginData.get('pushMethod', 'PUT')
         r = relf._sendrequest(method, {'Content-Type': 'application/json'}, None, token, callerToken, data=target)

@@ -12,8 +12,13 @@ class WatchdogClass:
         WatchdogClass._singleton = self
         
     def __del__(self):
+        self.unload()
+
+    def unload(self):
         if self.watchdog_device:
             self.watchdog_device.magic_close()
+            self.watchdog_device = None
+            WatchdogClass._singleton = None
         
     def index(self, timeout=None, device='/dev/watchdog', token=None, callerToken=None):
         """Initialize and/or feed the watchdog"""

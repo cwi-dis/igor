@@ -4,17 +4,19 @@ import os
 import json
 import urllib
 
+DEBUG=True
+
 class Iotsa433Plugin:
     def __init__(self, igor, pluginName, pluginData):
         self.igor = igor
         self.pluginName = pluginName
         self.pluginData = pluginData
-        print(f'Loaded {self.pluginName}, created object')
+        # print(f'Loaded {self.pluginName}, created object')
         
     def index(self, *args, **kwargs):
         return self.igor.app.raiseHTTPError("404 No index method for this plugin")
     
-    def _prepareRequest(self, token):
+    def _prepareRequest(self, url, token):
         """Prepare headers and kwargs for a GET or PUT request"""
         headers = {}
         kwargs = {}
@@ -36,11 +38,13 @@ class Iotsa433Plugin:
         url = f"{protocol}://{host}"
         url = urllib.parse.urljoin(url, endpoint)
         
-        headers, kwargs, addedTokenId = self._prepareRequest(token)
-        for k, v in extraHeaders.items():
-            headers[k] = v
+        allheaders, allkwargs, addedTokenId = self._prepareRequest(url, token)
+        allheaders.update(extraHeaders)
+        allkwargs.update(kwargs)
+        if DEBUG:
+            print(f'{self.pluginName}: requests.request({method}, {url}, headers={allheaders}, **{allkwargs})')
         try:
-            r = requests.request(method, url, headers=headers, **kwargs)
+            r = requests.request(method, url, headers=allheaders, **allkwargs)
         except requests.exceptions.ConnectionError as e:
             return self.igor.app.raiseHTTPError("502 Error accessing %s: cannot connect" % (url))
         except requests.exceptions.Timeout as e:

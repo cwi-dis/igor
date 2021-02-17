@@ -152,7 +152,8 @@ class Iotsa433Plugin:
         return 'ok\n'
 
     def oldpull(self, token=None, callerToken=None):
-        print(f"xxxjack IotsaPlugin.pull() called. token={token}, callerToken={callerToken}")
+        if DEBUG:
+            print(f"{self.pluginName}.pull(token={token}, callerToken={callerToken})")
         r = self._sendrequest('GET', None, {}, token, callerToken)
         
         # Note we do not decode the JSON here. Keep as-is and let database-put do that

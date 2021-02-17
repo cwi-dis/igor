@@ -47,9 +47,9 @@ class MyWSGICaller:
             data = json.dumps(data)
         environ = self._buildRequestEnviron(url, method, data, headers, env)
         rv = app(environ, self._start_response)
-        if self.status[:2] != '20':
-            print('Warning: %s %s returned %s' % (method, url, self.status) )
         self._feed(rv)
+        if self.status[:2] != '20':
+            print(f'Warning: {method} {url} returned {self.status}: {self.data}')
         
     def _start_response(self, status, headers):
         self.status = status
@@ -245,7 +245,7 @@ def WebApp(igor):
     return _SERVER
 
 def myWebError(msg, code=400):
-    if DEBUG:
+    if 1 or DEBUG:
         print(f"myWebError(code={code}, msg={msg}")
     resp = make_response(msg, code)
     abort(resp)

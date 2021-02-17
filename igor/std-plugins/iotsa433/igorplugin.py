@@ -4,7 +4,7 @@ import os
 import json
 import urllib
 
-DEBUG=True
+DEBUG=False
 
 class Iotsa433Plugin:
     def __init__(self, igor, pluginName, pluginData):
@@ -88,10 +88,15 @@ class Iotsa433Plugin:
     def _do_register(self, callerToken, brand, group, appliance):
         # First create database entry
         if appliance:
-            appdata = dict(appliance='')
+            appdata = {f"appliance_{appliance}": ""}
         else:
-            appdata = ''
-        data = dict(brand=dict(group=appdata))
+            appdata = ""
+        data = {
+            f"brand_{brand}" : {
+                f"group_{group}" : appdata
+            }
+        }
+
         self.igor.databaseAccessor.put_key(f'devices/{self.pluginName}', 'text/plain', 'ref', data, 'application/x-python-object', callerToken, replace=True)
         # Now submit callback to iotsa433. First get our URL.
         url = self.igor.databaseAccessor.get_key('services/igor/url', 'text/plain', 'content', callerToken)
@@ -118,8 +123,10 @@ class Iotsa433Plugin:
     def changed(self, brand=None, group=None, appliance=None, state=None, token=None, callerToken=None, **kwargs):
         """Callback URL for iotsa433 device. If all of brand, group, appliance and state are set: enter into the database"""
         if brand and group and appliance and state:
-            ref = f'devices/{self.pluginName}/{brand}/{group}/{appliance}'
-            current = self.igor.databaseAccessor.get_key(ref, 'text/plain', 'content', token)
+            ref = f'devices/{self.pluginName}/brand_{brand}/group_{group}/appliance_{appliance}'
+            current = self.igor.databaseAccessor.get_key(ref, 'application/x-python-object', 'content', token)
+            if DEBUG:
+                print(f'{self.pluginName}: changed({ref}): current={current}, state={state}')
             if current == state:
                 print(f'{self.pluginName}: changed: ignore duplicate brand={brand} group={group} appliance={appliance} state={state}')
             else:

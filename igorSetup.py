@@ -169,7 +169,13 @@ class IgorSetup:
         ok = self.cmd_addstd("systemHealth","ca","user","device","actions","editData")
         if not ok: return ok
         # Run igor interactively
-        subprocess.run(["igorServer"])
+        try:
+            subprocess.run(["igorServer"])
+        except KeyboardInterrupt:
+            print(f"\nTo run Igor again with the same database:\n")
+            print(f"export IGORSERVER_DIR=\"{igorDir}\"")
+            print(f"export IGORSERVER_PORT={igorPort}")
+            print(f"igorServer")
         return True
         
     def cmd_list(self):

@@ -676,7 +676,7 @@ class DBImpl(DBSerializer):
         
     def getElements(self, location, operation, token, context=None, namespaces=NAMESPACES, postChild=None):
         """Return a list of DOM nodes (elements only, for now) that match the location"""
-        #assert not self.readlock().locked() and not self.writelock().locked()        
+        #assert not self.readlock().locked() and not self.writelock().locked()
         with self.readlock():
             if context is None:
                 context = self._doc.documentElement

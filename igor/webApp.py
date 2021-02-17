@@ -245,6 +245,8 @@ def WebApp(igor):
     return _SERVER
 
 def myWebError(msg, code=400):
+    if DEBUG:
+        print(f"myWebError(code={code}, msg={msg}")
     resp = make_response(msg, code)
     abort(resp)
 
@@ -851,7 +853,11 @@ class XmlDatabaseAccess:
                 myWebError("500 Unimplemented mimetype %s for multi, nodeset" % mimetype, 500)
         # Final case: single node return (either no variant or variant='raw')
         if len(value) == 0:
-            abort(404)
+            if mimetype == "application/json":
+                return "none"
+            if mimetype == "application/x-python-object":
+                return None
+            myWebError("404 No data found for given ref", 404)
         if mimetype == "application/json":
             if len(value) > 1:
                 myWebError("400 Bad request, cannot return multiple items without .VARIANT=multi", 400)

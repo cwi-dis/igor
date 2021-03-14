@@ -74,15 +74,25 @@ class Iotsa433Plugin:
     def _get_registered_appliances(self, callerToken):
         """Return list of registered appliances, for index.html"""
         db = self.igor.databaseAccessor.get_key(f'devices/{self.pluginName}', 'application/x-python-object', 'content', callerToken)
+        if DEBUG:
+            print(f"{self.pluginName}: _get_registered_appliances: {db}")
         rv = []
         for brand, branddb in db.items():
-            for group, groupdb in branddb.items():
-                for appliance, state in groupdb.items():
-                    rv.append((brand, group, appliance, state))
-                else:
-                    rv.append((brand, group, '', ''))
-            else:
+            brand = brand.removeprefix("brand_")
+            if not branddb:
                 rv.append((brand, '', '', ''))
+                continue
+            for group, groupdb in branddb.items():
+                group = group.removeprefix("group_")
+                if not groupdb:
+                    rv.append((brand, group, '', ''))
+                    continue
+                for appliance, state in groupdb.items():
+                    appliance = appliance.removeprefix("appliance_")
+                    rv.append((brand, group, appliance, state))
+                
+        if DEBUG:
+            print(f"{self.pluginName}: _get_registered_appliances: rv={rv}")
         return rv
 
     def _do_register(self, callerToken, brand, group, appliance):

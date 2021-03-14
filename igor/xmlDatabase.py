@@ -706,11 +706,18 @@ class DBImpl(DBSerializer):
             if context is None:
                 context = self._doc.documentElement
             parentElements = xpath.find(parentPath, context, namespaces=namespaces)
-            if not parentElements:
-                raise DBParamError("Parent not found: %s" % parentPath)
-            if len(parentElements) > 1:
+            if len(parentElements) == 1:
+                parent = parentElements[0]
+            elif len(parentElements) > 1:
                 raise DBParamError("Multiple parents: %s" % parentPath)
-            parent = parentElements[0]
+            else:
+                # If parent element doesn't exist yet we create it.
+                # Not 100% sure this is always a good idea, so leaving the old code (abort if parent doesn't exist)
+                # in here as well, so we can always add a parameter.
+                if True:
+                    parent = self._ensureElement(parentPath, token, context=context, namespaces=namespaces)
+                else:
+                    raise DBParamError("Parent not found: %s" % parentPath)
             self._checkAccess('post', parent, token, tag)        
             #
             # Add new node to the end of the parent
@@ -725,6 +732,20 @@ class DBImpl(DBSerializer):
         if callbacks:
             self._runSignalCallbacks(callbacks)
     
+    def _ensureElement(self, path, token, context=None, namespaces=NAMESPACES):
+        """Create an element, if it doesn't exist yet"""
+        elements = xpath.find(path, context, namespaces=namespaces)
+        if len(elements) == 1: 
+            # Exists already, nothing to do.
+            return elements[0]
+        if len(elements) > 1:
+            raise DBParamError("Multiple patches for path: {path}")
+        parentPath, tag = self.splitXPath(path, stripPredicate=True)
+        parentElement = self._ensureElement(parentPath, token, context=context, namespaces=namespaces)
+        element = self._elementFromTagAndData(tag, None)
+        parentElement.appendChild(element)
+        return element
+
     def replaceElement(self, oldElement, newElement, token, context=None, namespaces=NAMESPACES):
         """Replace an existing element in the database. Returns True if nothing changed"""
         #

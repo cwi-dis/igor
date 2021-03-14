@@ -4,7 +4,7 @@ import os
 import json
 import urllib
 
-DEBUG=False
+DEBUG=True
 
 class Iotsa433Plugin:
     def __init__(self, igor, pluginName, pluginData):
@@ -124,7 +124,12 @@ class Iotsa433Plugin:
         """Callback URL for iotsa433 device. If all of brand, group, appliance and state are set: enter into the database"""
         if brand and group and appliance and state:
             ref = f'devices/{self.pluginName}/brand_{brand}/group_{group}/appliance_{appliance}'
-            current = self.igor.databaseAccessor.get_key(ref, 'application/x-python-object', 'content', token)
+            try:
+                current = self.igor.databaseAccessor.get_key(ref, 'application/x-python-object', 'content', token)
+            except self.igor.app.getHTTPError():
+                if DEBUG:
+                    print(f'{self.pluginName}: changed({ref}): no old value in database')
+                current = None
             if DEBUG:
                 print(f'{self.pluginName}: changed({ref}): current={current}, state={state}')
             if current == state:
@@ -171,7 +176,7 @@ class Iotsa433Plugin:
     def _oldpush(self, token=None, callerToken=None):
         target = self.igor.databaseAccessor.get_key('devices/%s/target' % self.pluginName, 'application/json', 'content', token)
         method = self.pluginData.get('pushMethod', 'PUT')
-        r = relf._sendrequest(method, {'Content-Type': 'application/json'}, None, token, callerToken, data=target)
+        r = self._sendrequest(method, {'Content-Type': 'application/json'}, None, token, callerToken, data=target)
         return 'ok\n'
     
 def igorPlugin(igor, pluginName, pluginData):

@@ -25,6 +25,12 @@
 			<p><em>Send failed:</em> {{message}}</p>
 		{% endif %}
 	{% endif %}
+	{% if op == "setstate" %}
+		{% set message = pluginObject._do_setstate(callerToken, brand=brand, group=group, appliance=appliance, state=state) %}
+		{% if message %}
+			<p><em>Setstate failed:</em> {{message}}</p>
+		{% endif %}
+	{% endif %}
 	
 	{% set receiverState = pluginObject._get_basic(callerToken, '/api/433receive') %}
 	{% set received = receiverState.received %}
@@ -93,13 +99,24 @@
 			<th>Group</th>
 			<th>Appliance</th>
 			<th>State</th>
+			<th>Change State</th>
 		</tr>
 		{% for item in currentStates %}
 			<tr>
-				<td>{{item[0]}}</td>
-				<td>{{item[1]}}</td>
-				<td>{{item[2]}}</td>
-				<td>{{item[3]}}</td>
+				<td>{{item.brand}}</td>
+				<td>{{item.group}}</td>
+				<td>{{item.appliance}}</td>
+				<td>{{item.state}}</td>
+				<td>
+					<form>
+						<input type="hidden" name="op" value="setstate">
+						<input type="hidden" name="brand" value="{{item.brand}}">
+						<input type="hidden" name="group" value="{{item.group}}">
+						<input type="hidden" name="appliance" value="{{item.appliance}}">
+						<input name="state" value="{{item.state}}">
+						<input type="submit" value="Set">
+					</form>
+				</td>
 			</tr>
 		{% endfor %}
 	</table>

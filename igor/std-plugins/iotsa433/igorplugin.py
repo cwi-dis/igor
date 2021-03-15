@@ -31,6 +31,7 @@ class Iotsa433Plugin:
         return headers, kwargs, addedTokenId
 
     def _sendrequest(self, method, endpoint, extraHeaders, token, callerToken, **kwargs):
+        """Helper method to send REST request"""
         protocol = self.pluginData.get('protocol', 'http')
         host = self.pluginData.get('host', '%s.local' % self.pluginName)
         if not endpoint:
@@ -60,19 +61,19 @@ class Iotsa433Plugin:
         return r
 
     def _put_basic(self, callerToken, endpoint, data, method='PUT'):
-        """low-level method to PUT data to any endpoint (in python form)"""
+        """low-level method to PUT data to any endpoint in iotsa433 device (in python form)"""
         jsondata = json.dumps(data)
         r = self._sendrequest(method, endpoint, {'Content-type': 'application/json'}, None, callerToken, data=jsondata)
         return r.text
 
     def _get_basic(self, callerToken, endpoint):
-        """low-level method to GET data from any endpoint (in python form)"""
+        """low-level method to GET data from any endpoint of iotsa433 device (in python form)"""
         r = self._sendrequest('GET', endpoint, {}, None, callerToken)
         rv = json.loads(r.text)
         return rv
 
     def _get_registered_appliances(self, callerToken):
-        """Return list of registered appliances, for index.html"""
+        """Return list of registered appliances from Igor database, for index.html"""
         db = self.igor.databaseAccessor.get_key(f'devices/{self.pluginName}', 'application/x-python-object', 'content', callerToken)
         if DEBUG:
             print(f"{self.pluginName}: _get_registered_appliances: {db}")
@@ -80,22 +81,23 @@ class Iotsa433Plugin:
         for brand, branddb in db.items():
             brand = brand.removeprefix("brand_")
             if not branddb:
-                rv.append((brand, '', '', ''))
+                rv.append(dict(brand=brand))
                 continue
             for group, groupdb in branddb.items():
                 group = group.removeprefix("group_")
                 if not groupdb:
-                    rv.append((brand, group, '', ''))
+                    rv.append(dict(brand=brand, group=group))
                     continue
                 for appliance, state in groupdb.items():
                     appliance = appliance.removeprefix("appliance_")
-                    rv.append((brand, group, appliance, state))
+                    rv.append(dict(brand=brand, group=group, appliance=appliance, state=state))
                 
         if DEBUG:
             print(f"{self.pluginName}: _get_registered_appliances: rv={rv}")
         return rv
 
     def _do_register(self, callerToken, brand, group, appliance):
+        """Create igor database entry for this appliance, and set callback in iotsa433 device"""
         # First create database entry
         if appliance:
             appdata = {f"appliance_{appliance}": ""}
@@ -121,6 +123,7 @@ class Iotsa433Plugin:
         return ok.strip()
 
     def _do_send(self, callerToken, brand, group, appliance, state):
+        """Send a command straight to the iotsa433 iotsa433 device"""
         data = dict(brand=brand, group=group, appliance=appliance, state=state)
         try:
             ok = self._put_basic(callerToken, '/api/433send', data)
@@ -129,6 +132,14 @@ class Iotsa433Plugin:
         if ok.lower().strip() == 'ok':
             return None
         return ok.strip()
+
+    def _do_setstate(self, callerToken, brand, group, appliance, state):
+        """Change device state in Igor database. 
+        This will probably trigger an update to be sent to the iotsa433 device, but that is not
+        handled by this call."""
+        ref = f"devices/{self.pluginName}/brand_{brand}/group_{group}/appliance_{appliance}"
+        self.igor.databaseAccessor.put_key(ref, 'text/plain', 'ref', state, 'text/plain', callerToken, replace=True)
+       
     
     def changed(self, brand=None, group=None, appliance=None, state=None, token=None, callerToken=None, **kwargs):
         """Callback URL for iotsa433 device. If all of brand, group, appliance and state are set: enter into the database"""
